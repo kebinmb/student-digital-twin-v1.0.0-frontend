@@ -9,11 +9,23 @@ export const routes: Routes = [
     redirectTo: 'dashboard'
   },
 
-  // Public / Guest Only Route
+  // Public / Guest Only Routes
   {
     path: 'login',
     loadComponent: () =>
       import('./features/login/login-component/login-component').then(m => m.LoginComponent),
+    canActivate: [guestGuard]
+  },
+  {
+    path: 'forgot-password',
+    loadComponent: () =>
+      import('./features/login/forgot-password-component/forgot-password-component').then(m => m.ForgotPasswordComponent),
+    canActivate: [guestGuard]
+  },
+  {
+    path: 'reset-password',
+    loadComponent: () =>
+      import('./features/login/reset-password-component/reset-password-component').then(m => m.ResetPasswordComponent),
     canActivate: [guestGuard]
   },
 

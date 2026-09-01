@@ -3,12 +3,7 @@
     <!-- Brand / Institution Header -->
     <header class="login-header">
       <div class="brand-badge">
-        <img 
-          src="chmsu-logo.png" 
-          alt="CHMSU Logo" 
-          class="brand-logo" 
-          width="44" 
-          height="44" />
+        <img src="chmsu-logo.png" alt="CHMSU Logo" class="brand-logo" width="44" height="44" />
         <div class="brand-text">
           <span class="institution-name">Carlos Hilado Memorial State University</span>
           <span class="system-tag">Student Digital Twin</span>
@@ -23,20 +18,16 @@
 
     <!-- Error Alert Banner -->
     @if (errorMessage()) {
-      <div class="alert-compact" role="alert" aria-live="assertive">
-        <i class="pi pi-exclamation-circle alert-icon"></i>
-        <div class="alert-content">
-          <span class="alert-title">Unable to sign in</span>
-          <span class="alert-desc">{{ errorMessage() }}</span>
-        </div>
-        <button 
-          type="button" 
-          class="alert-close" 
-          (click)="errorMessage.set(null)" 
-          aria-label="Dismiss error">
-          <i class="pi pi-times"></i>
-        </button>
+    <div class="alert-compact" role="alert" aria-live="assertive">
+      <i class="pi pi-exclamation-circle alert-icon"></i>
+      <div class="alert-content">
+        <span class="alert-title">Unable to sign in</span>
+        <span class="alert-desc">{{ errorMessage() }}</span>
       </div>
+      <button type="button" class="alert-close" (click)="errorMessage.set(null)" aria-label="Dismiss error">
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
     }
 
     <!-- Login Form -->
@@ -44,26 +35,20 @@
       <!-- Username / Email Field -->
       <div class="form-field">
         <label for="usernameOrEmail" class="field-label">Student ID or Email</label>
-        <input 
-          pInputText 
-          id="usernameOrEmail" 
-          type="text" 
-          formControlName="usernameOrEmail" 
-          autocomplete="username"
-          placeholder="e.g. 2024-1234 or student@chmsu.edu.ph"
-          class="w-full compact-input"
+        <input pInputText id="usernameOrEmail" type="text" formControlName="usernameOrEmail" autocomplete="username"
+          placeholder="e.g. 2024-1234 or student@chmsu.edu.ph" class="w-full compact-input"
           [invalid]="isFieldInvalid('usernameOrEmail')" />
 
         @if (isFieldInvalid('usernameOrEmail')) {
-          <div class="field-error" role="alert">
-            <i class="pi pi-exclamation-circle"></i>
-            @if (usernameOrEmail?.errors?.['required']) {
-              <span>Student ID or email is required.</span>
-            }
-            @if (usernameOrEmail?.errors?.['minlength']) {
-              <span>Must be at least 3 characters.</span>
-            }
-          </div>
+        <div class="field-error" role="alert">
+          <i class="pi pi-exclamation-circle"></i>
+          @if (usernameOrEmail?.errors?.['required']) {
+          <span>Student ID or email is required.</span>
+          }
+          @if (usernameOrEmail?.errors?.['minlength']) {
+          <span>Must be at least 3 characters.</span>
+          }
+        </div>
         }
       </div>
 
@@ -71,40 +56,27 @@
       <div class="form-field">
         <div class="label-row">
           <label for="password" class="field-label">Password</label>
-          <a 
-            href="javascript:void(0)" 
-            class="forgot-link"
-            title="Contact university ICT helpdesk to reset password">
+          <a routerLink="/forgot-password" class="forgot-link" tabindex="0">
             Forgot password?
           </a>
         </div>
-        <p-password 
-          id="password" 
-          formControlName="password" 
-          [feedback]="false" 
-          [toggleMask]="true" 
-          [autocomplete]="'current-password'"
-          placeholder="Enter your password"
-          [fluid]="true"
-          class="w-full"
+        <p-password id="password" formControlName="password" [feedback]="false" [toggleMask]="true"
+          [autocomplete]="'current-password'" placeholder="Enter your password" [fluid]="true" class="w-full"
           [invalid]="isFieldInvalid('password')">
         </p-password>
 
         @if (isFieldInvalid('password')) {
-          <div class="field-error" role="alert">
-            <i class="pi pi-exclamation-circle"></i>
-            <span>Password is required.</span>
-          </div>
+        <div class="field-error" role="alert">
+          <i class="pi pi-exclamation-circle"></i>
+          <span>Password is required.</span>
+        </div>
         }
       </div>
 
       <!-- Stay Signed In Option -->
       <div class="options-row">
         <div class="remember-group">
-          <p-checkbox 
-            formControlName="rememberMe" 
-            [binary]="true" 
-            inputId="rememberMe">
+          <p-checkbox formControlName="rememberMe" [binary]="true" inputId="rememberMe">
           </p-checkbox>
           <label for="rememberMe" class="remember-label">Stay signed in</label>
         </div>
@@ -112,16 +84,10 @@
 
       <!-- Submit Action Button (Behance-styled solid pill button) -->
       <div class="action-row">
-        <p-button 
-  type="submit" 
-  [disabled]="isLoading()"
-  [loading]="isLoading()"
-  [label]="isLoading() ? 'Signing in...' : 'Continue'"
-  icon="pi pi-arrow-right"
-  iconPos="right"
-  [fluid]="true"
-  styleClass="continue-btn">
-</p-button>
+        <p-button type="submit" [disabled]="isLoading()" [loading]="isLoading()"
+          [label]="isLoading() ? 'Signing in...' : 'Continue'" icon="pi pi-arrow-right" iconPos="right" [fluid]="true"
+          styleClass="continue-btn">
+        </p-button>
       </div>
 
       <!-- Security / Policy Note -->
