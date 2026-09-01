@@ -1,0 +1,181 @@
+<div class="dashboard-page">
+  <!-- Top Welcome & Status Banner -->
+  <section class="welcome-banner" aria-label="Student Digital Twin Overview">
+    <div class="welcome-info">
+      <div class="welcome-badge">
+        <span class="pulse-dot"></span>
+        <span>Student Digital Twin • Live Model Telemetry</span>
+      </div>
+      <h1 class="welcome-title">Welcome back, {{ studentName() }}</h1>
+      <p class="welcome-subtitle">
+        Bachelor of Science in Information Technology • 3rd Year • Academic Year 2026-2027
+      </p>
+    </div>
+
+    <div class="welcome-meta">
+      <div class="date-chip">
+        <i class="pi pi-calendar"></i>
+        <span>{{ currentTime() }}</span>
+      </div>
+      <p-button type="button" icon="pi pi-sync" label="Sync Data" severity="secondary" [outlined]="true"
+        [rounded]="true">
+      </p-button>
+    </div>
+  </section>
+
+  <!-- Metric KPI Cards Grid -->
+  <section class="metrics-grid" aria-label="Key Performance Indicators">
+    @for (card of metrics; track card.title) {
+    <div class="metric-card">
+      <div class="metric-header">
+        <span class="metric-title">{{ card.title }}</span>
+        <div class="metric-icon-box">
+          <i [class]="card.icon"></i>
+        </div>
+      </div>
+      <div class="metric-body">
+        <span class="metric-value">{{ card.value }}</span>
+        <div class="metric-footer">
+          <span class="metric-subtext">{{ card.subtext }}</span>
+          @if (card.trend) {
+          <span class="metric-trend" [class.trend-positive]="card.trendUp">
+            {{ card.trend }}
+          </span>
+          }
+        </div>
+      </div>
+    </div>
+    }
+  </section>
+
+  <!-- Main 2-Column Responsive Dashboard Content -->
+  <div class="dashboard-columns">
+    <!-- Left Column (Primary Focus: Schedule & Competency Twin) -->
+    <div class="column-primary">
+      <!-- Today's Classes Schedule Widget -->
+      <div class="widget-card">
+        <div class="widget-header">
+          <div class="widget-title-group">
+            <h2 class="widget-title">Today's Class Schedule</h2>
+            <span class="widget-subtitle">3 enrolled course sessions scheduled today</span>
+          </div>
+          <a routerLink="/dashboard/schedule" class="widget-action-link">View Full Calendar</a>
+        </div>
+
+        <div class="schedule-list">
+          @for (session of todayClasses; track session.courseCode) {
+          <div class="schedule-item" [class.current-session]="session.status === 'In Progress'">
+            <div class="session-time-col">
+              <span class="session-time">{{ session.time }}</span>
+              <span class="session-badge" [class.badge-active]="session.status === 'In Progress'"
+                [class.badge-completed]="session.status === 'Completed'"
+                [class.badge-upcoming]="session.status === 'Upcoming'">
+                {{ session.status }}
+              </span>
+            </div>
+
+            <div class="session-detail-col">
+              <div class="session-code-row">
+                <span class="session-code">{{ session.courseCode }}</span>
+                <span class="session-room">
+                  <i class="pi pi-map-marker"></i>
+                  {{ session.room }}
+                </span>
+              </div>
+              <h3 class="session-title">{{ session.courseTitle }}</h3>
+              <span class="session-instructor">
+                <i class="pi pi-user"></i>
+                {{ session.instructor }}
+              </span>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+
+      <!-- Digital Twin Competency Profiling Widget -->
+      <div class="widget-card">
+        <div class="widget-header">
+          <div class="widget-title-group">
+            <h2 class="widget-title">Digital Twin Competency Profiling</h2>
+            <span class="widget-subtitle">AI-synthesized academic performance & skill indices</span>
+          </div>
+          <span class="competency-index-badge">Overall Score: 90%</span>
+        </div>
+
+        <div class="competency-list">
+          @for (item of competencies; track item.skill) {
+          <div class="competency-item">
+            <div class="competency-label-row">
+              <div class="competency-info">
+                <span class="skill-name">{{ item.skill }}</span>
+                <span class="skill-category">{{ item.category }}</span>
+              </div>
+              <span class="skill-score">{{ item.score }}%</span>
+            </div>
+            <div class="progress-track" role="progressbar" [attr.aria-valuenow]="item.score" aria-valuemin="0"
+              aria-valuemax="100">
+              <div class="progress-fill" [style.width.%]="item.score"></div>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column (Notices, Announcements & Quick Actions) -->
+    <div class="column-secondary">
+      <!-- Quick Actions Grid -->
+      <div class="widget-card">
+        <div class="widget-header">
+          <div class="widget-title-group">
+            <h2 class="widget-title">Quick Actions</h2>
+            <span class="widget-subtitle">Fast-access university services</span>
+          </div>
+        </div>
+
+        <div class="quick-actions-grid">
+          <button type="button" class="action-tile">
+            <i class="pi pi-file-pdf action-tile-icon"></i>
+            <span class="action-tile-label">Download COR</span>
+          </button>
+          <button type="button" class="action-tile">
+            <i class="pi pi-id-card action-tile-icon"></i>
+            <span class="action-tile-label">Digital ID Card</span>
+          </button>
+          <button type="button" class="action-tile">
+            <i class="pi pi-check-square action-tile-icon"></i>
+            <span class="action-tile-label">Clearance Status</span>
+          </button>
+          <button type="button" class="action-tile">
+            <i class="pi pi-headphones action-tile-icon"></i>
+            <span class="action-tile-label">ICT Support</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- University Notices & Updates -->
+      <div class="widget-card">
+        <div class="widget-header">
+          <div class="widget-title-group">
+            <h2 class="widget-title">Academic Notices</h2>
+            <span class="widget-subtitle">Official announcements & advisories</span>
+          </div>
+          <span class="notice-count-badge">3 New</span>
+        </div>
+
+        <div class="notices-list">
+          @for (notice of notices; track notice.id) {
+          <div class="notice-item" [class.unread]="notice.unread">
+            <div class="notice-meta">
+              <span class="notice-category">{{ notice.category }}</span>
+              <span class="notice-date">{{ notice.date }}</span>
+            </div>
+            <h3 class="notice-title">{{ notice.title }}</h3>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

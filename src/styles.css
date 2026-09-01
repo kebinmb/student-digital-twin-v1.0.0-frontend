@@ -1,1 +1,20 @@
-/* You can add global styles to this file, and also import other style files */
+@import "primeicons/primeicons.css";
+
+/* src/styles.css */
+:root {
+  /* CHMSU Brand Tokens */
+  --chmsu-green-main: #116834;
+  --chmsu-green-dark: #1b4332;
+  --chmsu-green-light: #15803d;
+  --chmsu-gold: #f59e0b;       /* Sun rays & gear */
+  --chmsu-yellow: #facc15;     /* Outer sun tips */
+  --chmsu-orange: #ea580c;     /* Torch flame & anvil */
+  --chmsu-blue: #1d4ed8;       /* Torch torchbearer icon */
+}
+
+/* src/styles.css */
+body {
+  font-family: var(--p-font-family, 'Inter', system-ui, sans-serif);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}

@@ -1,0 +1,602 @@
+/* ==========================================================================
+   Dashboard Overview & Widget Styles
+   Carlos Hilado Memorial State University • Student Digital Twin
+   ========================================================================== */
+
+:host {
+  display: block;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.dashboard-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ==========================================================================
+   Welcome & Overview Banner
+   ========================================================================== */
+.welcome-banner {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.welcome-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.welcome-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #116834;
+  background: #ecfdf5;
+  border: 1px solid #bbf7d0;
+  padding: 0.2rem 0.65rem;
+  border-radius: 9999px;
+  width: fit-content;
+}
+
+.pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #116834;
+}
+
+.welcome-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.02em;
+  margin: 0.15rem 0 0;
+}
+
+.welcome-subtitle {
+  font-size: 0.84375rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.welcome-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.date-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  font-size: 0.8125rem;
+  color: #4b5563;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+:host ::ng-deep .quick-sync-btn {
+  background: #116834 !important;
+  border-color: #116834 !important;
+  border-radius: 8px !important;
+  font-size: 0.8125rem !important;
+  height: 38px !important;
+  padding: 0 0.95rem !important;
+  font-weight: 600 !important;
+}
+
+:host ::ng-deep .quick-sync-btn:hover {
+  background: #0c5027 !important;
+  border-color: #0c5027 !important;
+}
+
+/* ==========================================================================
+   KPI Metric Cards Grid
+   ========================================================================== */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.metric-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.75rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.metric-card:hover {
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+
+.metric-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.metric-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.metric-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #ecfdf5;
+  color: #116834;
+  font-size: 1rem;
+}
+
+.metric-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.metric-value {
+  font-size: 1.65rem;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.metric-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.metric-subtext {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.metric-trend {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 0.12rem 0.4rem;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.trend-positive {
+  background: #ecfdf5;
+  color: #15803d;
+}
+
+/* ==========================================================================
+   2-Column Responsive Dashboard Layout
+   ========================================================================== */
+.dashboard-columns {
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.column-primary,
+.column-secondary {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Shared Widget Card Container */
+.widget-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.widget-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 0.75rem;
+}
+
+.widget-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.widget-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.widget-subtitle {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.widget-action-link {
+  font-size: 0.8125rem;
+  color: #116834;
+  text-decoration: none;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.widget-action-link:hover {
+  text-decoration: underline;
+  color: #0c5027;
+}
+
+.competency-index-badge,
+.notice-count-badge {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  background: #ecfdf5;
+  color: #116834;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  border: 1px solid #bbf7d0;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   Class Schedule List
+   ========================================================================== */
+.schedule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.schedule-item {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0.875rem 1rem;
+  border: 1px solid #f1f5f9;
+  border-radius: 8px;
+  background: #f8fafc;
+  transition: all 0.12s ease;
+}
+
+.schedule-item:hover {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+
+.schedule-item.current-session {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  border-left: 3px solid #116834;
+}
+
+.session-time-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 140px;
+}
+
+.session-time {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.session-badge {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 0.12rem 0.45rem;
+  border-radius: 4px;
+  width: fit-content;
+}
+
+.badge-active {
+  background: #116834;
+  color: #ffffff;
+}
+
+.badge-completed {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.badge-upcoming {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.session-detail-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+}
+
+.session-code-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.session-code {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #116834;
+  letter-spacing: 0.03em;
+}
+
+.session-room {
+  font-size: 0.75rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.session-room i {
+  font-size: 0.7rem;
+}
+
+.session-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.session-instructor {
+  font-size: 0.75rem;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.session-instructor i {
+  font-size: 0.7rem;
+}
+
+/* ==========================================================================
+   Competency Progress Bars
+   ========================================================================== */
+.competency-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.competency-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.competency-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.competency-info {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.skill-name {
+  font-size: 0.84375rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.skill-category {
+  font-size: 0.71875rem;
+  color: #94a3b8;
+}
+
+.skill-score {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #116834;
+}
+
+.progress-track {
+  height: 7px;
+  background: #f1f5f9;
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #116834;
+  border-radius: 9999px;
+  transition: width 0.4s ease;
+}
+
+/* ==========================================================================
+   Quick Actions 2x2 Grid
+   ========================================================================== */
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.action-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.15rem 0.75rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.12s ease-in-out;
+}
+
+.action-tile:hover {
+  background: #ffffff;
+  border-color: #116834;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.action-tile-icon {
+  font-size: 1.25rem;
+  color: #116834;
+}
+
+.action-tile-label {
+  font-size: 0.78125rem;
+  font-weight: 600;
+  color: #374151;
+  text-align: center;
+}
+
+/* ==========================================================================
+   Academic Notices List
+   ========================================================================== */
+.notices-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.notice-item {
+  padding: 0.75rem;
+  border: 1px solid #f1f5f9;
+  border-radius: 8px;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  transition: all 0.12s ease;
+}
+
+.notice-item:hover {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+
+.notice-item.unread {
+  border-left: 3px solid #116834;
+  background: #ffffff;
+}
+
+.notice-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.notice-category {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #116834;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.notice-date {
+  font-size: 0.6875rem;
+  color: #94a3b8;
+}
+
+.notice-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+  line-height: 1.35;
+}
+
+/* ==========================================================================
+   Responsive Adaptations
+   ========================================================================== */
+@media (max-width: 1200px) {
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 991px) {
+  .dashboard-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .welcome-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .welcome-meta {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 640px) {
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .schedule-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.65rem;
+  }
+
+  .session-time-col {
+    min-width: unset;
+  }
+
+  .quick-actions-grid {
+    grid-template-columns: 1fr;
+  }
+}

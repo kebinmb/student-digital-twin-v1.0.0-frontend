@@ -1,0 +1,138 @@
+<div class="layout-wrapper" [class.sidebar-collapsed]="!isMobile() && isSidebarCollapsed()">
+  <!-- Mobile Drawer Backdrop Overlay -->
+  @if (isMobile() && isSidebarOpen()) {
+  <div class="mobile-backdrop" (click)="closeMobileSidebar()" aria-hidden="true">
+  </div>
+  }
+
+  <!-- Global Sidebar Navigation -->
+  <aside class="layout-sidebar" [class.mobile-open]="isMobile() && isSidebarOpen()"
+    [class.collapsed]="!isMobile() && isSidebarCollapsed()" role="navigation" aria-label="Main Navigation">
+
+    <!-- Sidebar Header / Logo -->
+    <div class="sidebar-header">
+      <div class="sidebar-brand" [routerLink]="['/dashboard']">
+        <img src="chmsu-logo.png" alt="CHMSU Seal" class="sidebar-logo" width="36" height="36" />
+        @if (isMobile() || !isSidebarCollapsed()) {
+        <div class="brand-copy">
+          <span class="brand-institution">CHMSU</span>
+          <span class="brand-title">Student Twin</span>
+        </div>
+        }
+      </div>
+
+      <!-- Desktop Collapse Toggle Button -->
+      @if (!isMobile()) {
+      <button type="button" class="collapse-toggle" (click)="toggleSidebar()"
+        [title]="isSidebarCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'" aria-label="Toggle sidebar collapse">
+        <i [class]="isSidebarCollapsed() ? 'pi pi-chevron-right' : 'pi pi-chevron-left'"></i>
+      </button>
+      }
+    </div>
+
+    <!-- Navigation Sections -->
+    <nav class="sidebar-nav">
+      @for (section of navSections; track section.title) {
+      <div class="nav-section">
+        @if (isMobile() || !isSidebarCollapsed()) {
+        <span class="nav-section-heading">{{ section.title }}</span>
+        } @else {
+        <div class="nav-section-divider"></div>
+        }
+
+        <ul class="nav-list">
+          @for (item of section.items; track item.routerLink) {
+          <li class="nav-item">
+            <a [routerLink]="item.routerLink" [routerLinkActiveOptions]="{ exact: !!item.exact }"
+              routerLinkActive="active-nav-item" class="nav-link" (click)="closeMobileSidebar()"
+              [title]="!isMobile() && isSidebarCollapsed() ? item.label : ''">
+              <i [class]="item.icon" class="nav-icon"></i>
+              @if (isMobile() || !isSidebarCollapsed()) {
+              <span class="nav-label">{{ item.label }}</span>
+              @if (item.badge) {
+              <p-badge [value]="item.badge" [severity]="item.badgeSeverity || 'info'" class="nav-badge">
+              </p-badge>
+              }
+              }
+            </a>
+          </li>
+          }
+        </ul>
+      </div>
+      }
+    </nav>
+
+    <!-- Sidebar Bottom Status Footer -->
+    @if (isMobile() || !isSidebarCollapsed()) {
+    <div class="sidebar-footer">
+      <div class="twin-status-card">
+        <div class="status-indicator">
+          <span class="status-dot-pulse"></span>
+          <span class="status-heading">Digital Twin Online</span>
+        </div>
+        <p class="status-description">Academic models synchronized in real time.</p>
+      </div>
+    </div>
+    }
+  </aside>
+
+  <!-- Main Content Layout Container -->
+  <div class="layout-main-wrapper">
+    <!-- Global Header (Top Bar) -->
+    <header class="layout-topbar" role="banner">
+      <div class="topbar-left">
+        <!-- Mobile Drawer Toggle Hamburger -->
+        <button type="button" class="topbar-icon-btn mobile-menu-btn" (click)="toggleSidebar()"
+          aria-label="Open mobile navigation">
+          <i class="pi pi-bars"></i>
+        </button>
+
+        <!-- Search Bar -->
+        <div class="topbar-search">
+          <i class="pi pi-search search-icon"></i>
+          <input pInputText type="text" [(ngModel)]="searchQuery" placeholder="Search courses, curriculum, schedule..."
+            class="search-input" />
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <!-- Digital Twin Sync Indicator -->
+        <div class="topbar-sync-badge">
+          <span class="sync-dot"></span>
+          <span class="sync-label">Sync Active</span>
+        </div>
+
+        <!-- Notifications Action Button -->
+        <button type="button" class="topbar-icon-btn notif-btn" title="3 notifications" aria-label="View notifications">
+          <i class="pi pi-bell"></i>
+          <p-badge value="3" severity="danger" class="notif-badge"></p-badge>
+        </button>
+
+        <!-- User Profile Trigger & Menu -->
+        <div class="user-profile-btn" (click)="profileMenu.toggle($event)" tabindex="0" role="button"
+          aria-haspopup="true" aria-label="User account menu">
+          <p-avatar [label]="userInitials()" shape="circle" class="user-avatar">
+          </p-avatar>
+          <div class="user-meta">
+            <span class="user-name">{{ userName() }}</span>
+            <span class="user-role">{{ userRole() }}</span>
+          </div>
+          <i class="pi pi-chevron-down user-chevron"></i>
+        </div>
+
+        <!-- Button trigger -->
+        <p-button icon="pi pi-user" (onClick)="profileMenu.toggle($event)" [rounded]="true" [text]="true" />
+
+        <!-- PrimeNG Menu -->
+        <p-menu #profileMenu [model]="profileMenuItems()" [popup]="true" appendTo="body" />
+      </div>
+    </header>
+
+    <!-- Main Dynamic Content Container -->
+    <main class="layout-content" role="main">
+      <div class="content-viewport">
+        <router-outlet></router-outlet>
+      </div>
+    </main>
+  </div>
+</div>
