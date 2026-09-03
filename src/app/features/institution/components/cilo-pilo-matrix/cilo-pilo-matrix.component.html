@@ -1,0 +1,121 @@
+<div class="institution-sub-card">
+  <div class="card-header-row">
+    <div>
+      <h2 class="card-section-title">Outcome Alignment Matrix (CILO-PILO)</h2>
+      <p class="card-section-subtitle">
+        Curricular constructive alignment mapping Course Learning Outcomes (CILOs) to Program Educational Outcomes (PILOs).
+      </p>
+    </div>
+
+    <!-- Legend -->
+    <div class="matrix-legend">
+      <span class="legend-title">Level:</span>
+      <span class="legend-item"><span class="badge-i">I</span> Introduced</span>
+      <span class="legend-item"><span class="badge-e">E</span> Emphasized</span>
+      <span class="legend-item"><span class="badge-d">D</span> Demonstrated</span>
+    </div>
+  </div>
+
+  <!-- Selectors for Program and Course -->
+  <div class="selector-row">
+    <div class="selector-item">
+      <label class="selector-label">Degree Program (PILO Source) *</label>
+      <p-select
+        [options]="programOptions()"
+        [(ngModel)]="selectedProgramId"
+        (onChange)="onProgramChange()"
+        placeholder="Select Degree Program"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full">
+      </p-select>
+    </div>
+
+    <div class="selector-item">
+      <label class="selector-label">Target Course (CILO Source) *</label>
+      <p-select
+        [options]="courseOptions()"
+        [(ngModel)]="selectedCourseId"
+        (onChange)="onCourseChange()"
+        placeholder="Select Course"
+        optionLabel="label"
+        optionValue="value"
+        [filter]="true"
+        filterBy="label"
+        styleClass="w-full">
+      </p-select>
+    </div>
+  </div>
+
+  <!-- State: No course or program selected -->
+  @if (!selectedProgramId || !selectedCourseId) {
+    <div class="guidance-banner">
+      <i class="pi pi-info-circle guidance-icon"></i>
+      <div>
+        <h4 class="guidance-title">Select Program and Course</h4>
+        <p class="guidance-text">Choose a Degree Program to load its Program Outcomes (PILOs) and a Course to populate its Intended Learning Outcomes (CILOs).</p>
+      </div>
+    </div>
+  } @else if (cilos().length === 0) {
+    <div class="guidance-banner warn-state">
+      <i class="pi pi-exclamation-triangle guidance-icon"></i>
+      <div>
+        <h4 class="guidance-title">No CILOs Defined for Selected Course</h4>
+        <p class="guidance-text">This course has no registered Course Intended Learning Outcomes. Configure CILOs in the Course Catalog before establishing matrix alignments.</p>
+      </div>
+    </div>
+  } @else if (pilos().length === 0) {
+    <div class="guidance-banner warn-state">
+      <i class="pi pi-exclamation-triangle guidance-icon"></i>
+      <div>
+        <h4 class="guidance-title">No PILOs Defined for Selected Program</h4>
+        <p class="guidance-text">This degree program has no registered Program Intended Learning Outcomes.</p>
+      </div>
+    </div>
+  } @else {
+    <!-- 2D Alignment Matrix -->
+    <div class="matrix-wrapper">
+      <table class="alignment-table">
+        <thead>
+          <tr>
+            <th class="cilo-header-cell">Course Outcomes (CILOs)</th>
+            @for (pilo of pilos(); track pilo.id) {
+              <th class="pilo-header-cell" [title]="pilo.description">
+                <div class="pilo-code">{{ pilo.code }}</div>
+                <div class="pilo-desc-tooltip">{{ pilo.description }}</div>
+              </th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (cilo of cilos(); track cilo.id) {
+            <tr>
+              <td class="cilo-row-cell">
+                <div class="cilo-code-title">
+                  <span class="code-badge">{{ cilo.code }}</span>
+                  <p-tag [value]="cilo.bloomsLevel" severity="secondary" styleClass="text-xs"></p-tag>
+                </div>
+                <div class="cilo-desc-text">{{ cilo.description }}</div>
+              </td>
+              @for (pilo of pilos(); track pilo.id) {
+                <td class="cell-action-square">
+                  <button
+                    type="button"
+                    class="cell-matrix-btn"
+                    [class.cell-i]="getMapping(cilo.id, pilo.id) === 'I'"
+                    [class.cell-e]="getMapping(cilo.id, pilo.id) === 'E'"
+                    [class.cell-d]="getMapping(cilo.id, pilo.id) === 'D'"
+                    [disabled]="!canManage() || isUpdatingCell(cilo.id, pilo.id)"
+                    (click)="cycleMapping(cilo.id, pilo.id)"
+                    [title]="getMappingTooltip(cilo.id, pilo.id)">
+                    {{ getMapping(cilo.id, pilo.id) || '—' }}
+                  </button>
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

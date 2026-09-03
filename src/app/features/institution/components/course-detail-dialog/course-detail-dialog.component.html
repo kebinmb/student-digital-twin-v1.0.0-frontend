@@ -1,0 +1,223 @@
+<p-dialog
+  [header]="dialogTitle"
+  [(visible)]="visible"
+  (visibleChange)="onVisibilityChange($event)"
+  [modal]="true"
+  [style]="{ width: '800px', maxWidth: '95vw' }">
+  
+  @if (course) {
+    <div class="course-summary-banner">
+      <div class="summary-left">
+        <span class="course-code-pill">{{ course.code }}</span>
+        <span class="course-name">{{ course.title }}</span>
+      </div>
+      <div class="summary-right">
+        <span class="units-badge">{{ course.creditUnits }} Credit Units ({{ course.lectureUnits }} Lec / {{ course.labUnits }} Lab)</span>
+      </div>
+    </div>
+
+    <div class="dialog-tabs-header">
+      <p-selectbutton
+        [options]="tabs"
+        [(ngModel)]="activeTab"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="dialog-tab-switch">
+      </p-selectbutton>
+    </div>
+
+    <!-- TAB 1: Course Learning Outcomes (CILOs) -->
+    @if (activeTab === 'outcomes') {
+      <div class="tab-panel-content">
+        <div class="panel-action-bar">
+          <span class="section-instruction">
+            Defined Course Intended Learning Outcomes (CILOs) and aligned Bloom's taxonomy levels.
+          </span>
+          @if (canManage() && !isAddingCilo()) {
+            <p-button
+              label="Add Outcome (CILO)"
+              icon="pi pi-plus"
+              size="small"
+              severity="primary"
+              (onClick)="startAddCilo()">
+            </p-button>
+          }
+        </div>
+
+        <!-- Inline CILO Creation / Edit Form -->
+        @if (isAddingCilo() && canManage()) {
+          <div class="inline-form-card">
+            <div class="inline-form-header">
+              <span class="inline-title">{{ editingCiloId() ? 'Edit Outcome' : 'Define New Course Outcome' }}</span>
+              <p-button icon="pi pi-times" [text]="true" size="small" severity="secondary" (onClick)="cancelCiloForm()"></p-button>
+            </div>
+            <form [formGroup]="ciloForm" (ngSubmit)="submitCiloForm()">
+              <div class="form-row-2col">
+                <div class="form-group">
+                  <label class="form-label">CILO Code *</label>
+                  <input pInputText type="text" formControlName="code" placeholder="e.g. CILO 1" class="form-control-input" [readOnly]="!!editingCiloId()" />
+                  @if (ciloForm.controls.code.touched && ciloForm.controls.code.invalid) {
+                    <span class="error-hint">Code is required (max 30 chars).</span>
+                  }
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Bloom's Taxonomy Level *</label>
+                  <p-select [options]="bloomsOptions" formControlName="bloomsLevel" placeholder="Select Bloom's Level" optionLabel="label" optionValue="value" styleClass="w-full"></p-select>
+                </div>
+              </div>
+              <div class="form-group mt-2">
+                <label class="form-label">Outcome Statement / Description *</label>
+                <textarea pTextarea formControlName="description" rows="2" placeholder="State measurable performance criteria (e.g. Design normalized relational database schemas...)" class="w-full"></textarea>
+                @if (ciloForm.controls.description.touched && ciloForm.controls.description.invalid) {
+                  <span class="error-hint">Description statement is required.</span>
+                }
+              </div>
+              <div class="inline-form-actions mt-2">
+                <p-button label="Cancel" size="small" severity="secondary" [outlined]="true" type="button" (onClick)="cancelCiloForm()"></p-button>
+                <p-button [label]="editingCiloId() ? 'Update CILO' : 'Save CILO'" icon="pi pi-check" size="small" severity="primary" type="submit" [disabled]="ciloForm.invalid || isSavingCilo()"></p-button>
+              </div>
+            </form>
+          </div>
+        }
+
+        <p-table [value]="outcomes()" [loading]="isLoadingOutcomes()" responsiveLayout="scroll" styleClass="p-datatable-sm nested-table">
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 110px;">CILO Code</th>
+              <th>Outcome Description</th>
+              <th style="width: 140px;">Bloom's Level</th>
+              @if (canManage()) {
+                <th style="width: 100px; text-align: right;">Actions</th>
+              }
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-outcome>
+            <tr>
+              <td><span class="code-badge">{{ outcome.code }}</span></td>
+              <td>{{ outcome.description }}</td>
+              <td>
+                <p-tag [severity]="getBloomsSeverity(outcome.bloomsLevel)" [value]="outcome.bloomsLevel"></p-tag>
+              </td>
+              @if (canManage()) {
+                <td style="text-align: right;">
+                  <p-button icon="pi pi-pencil" size="small" [text]="true" severity="secondary" (onClick)="startEditCilo(outcome)"></p-button>
+                  <p-button icon="pi pi-trash" size="small" [text]="true" severity="danger" (onClick)="confirmDeleteCilo(outcome)"></p-button>
+                </td>
+              }
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td [attr.colspan]="canManage() ? 4 : 3" class="empty-table-cell">
+                <p>No learning outcomes defined for this course yet.</p>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    }
+
+    <!-- TAB 2: Course Prerequisites -->
+    @if (activeTab === 'prerequisites') {
+      <div class="tab-panel-content">
+        <div class="panel-action-bar">
+          <span class="section-instruction">
+            Prerequisites, co-requisites, and academic standing rules governing enrollment eligibility.
+          </span>
+          @if (canManage() && !isAddingPrereq()) {
+            <p-button
+              label="Add Prerequisite Rule"
+              icon="pi pi-plus"
+              size="small"
+              severity="primary"
+              (onClick)="startAddPrereq()">
+            </p-button>
+          }
+        </div>
+
+        <!-- Inline Prerequisite Creation Form -->
+        @if (isAddingPrereq() && canManage()) {
+          <div class="inline-form-card">
+            <div class="inline-form-header">
+              <span class="inline-title">Define Prerequisite Constraint</span>
+              <p-button icon="pi pi-times" [text]="true" size="small" severity="secondary" (onClick)="cancelPrereqForm()"></p-button>
+            </div>
+            <form [formGroup]="prereqForm" (ngSubmit)="submitPrereqForm()">
+              <div class="form-group">
+                <label class="form-label">Required Prerequisite Course *</label>
+                <p-select
+                  [options]="filteredAvailableCourses"
+                  formControlName="prerequisiteCourseId"
+                  placeholder="Select Prerequisite Course"
+                  optionLabel="label"
+                  optionValue="value"
+                  [filter]="true"
+                  filterBy="label"
+                  styleClass="w-full">
+                </p-select>
+                <span class="field-hint">The current course itself ({{ course.code }}) is strictly excluded to prevent self-prerequisite references.</span>
+              </div>
+
+              <div class="form-row-2col mt-2">
+                <div class="form-group">
+                  <label class="form-label">Rule Type *</label>
+                  <p-select [options]="ruleTypeOptions" formControlName="ruleType" optionLabel="label" optionValue="value" styleClass="w-full"></p-select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Minimum Required Grade</label>
+                  <input pInputText type="text" formControlName="minGradeRequired" placeholder="e.g. 3.00" class="form-control-input" />
+                </div>
+              </div>
+
+              <div class="inline-form-actions mt-2">
+                <p-button label="Cancel" size="small" severity="secondary" [outlined]="true" type="button" (onClick)="cancelPrereqForm()"></p-button>
+                <p-button label="Add Prerequisite" icon="pi pi-check" size="small" severity="primary" type="submit" [disabled]="prereqForm.invalid || isSavingPrereq()"></p-button>
+              </div>
+            </form>
+          </div>
+        }
+
+        <p-table [value]="prerequisites()" [loading]="isLoadingPrereqs()" responsiveLayout="scroll" styleClass="p-datatable-sm nested-table">
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 140px;">Prerequisite Code</th>
+              <th>Prerequisite Course Title</th>
+              <th style="width: 140px;">Rule Type</th>
+              <th style="width: 120px;">Min Grade</th>
+              @if (canManage()) {
+                <th style="width: 80px; text-align: right;">Action</th>
+              }
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-prereq>
+            <tr>
+              <td><span class="code-badge">{{ prereq.prerequisiteCourseCode }}</span></td>
+              <td>{{ prereq.prerequisiteCourseTitle || '—' }}</td>
+              <td>
+                @switch (prereq.ruleType) {
+                  @case ('HARD') { <p-tag severity="danger" value="HARD PREREQ"></p-tag> }
+                  @case ('CO_REQUISITE') { <p-tag severity="info" value="CO-REQUISITE"></p-tag> }
+                  @default { <p-tag severity="warn" [value]="prereq.ruleType"></p-tag> }
+                }
+              </td>
+              <td><span class="grade-pill">{{ prereq.minGradeRequired || '3.00' }}</span></td>
+              @if (canManage()) {
+                <td style="text-align: right;">
+                  <p-button icon="pi pi-trash" size="small" [text]="true" severity="danger" (onClick)="confirmDeletePrereq(prereq)"></p-button>
+                </td>
+              }
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td [attr.colspan]="canManage() ? 5 : 4" class="empty-table-cell">
+                <p>No prerequisite rules assigned. This course has no prior course requirements.</p>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    }
+  }
+</p-dialog>

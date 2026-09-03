@@ -1,0 +1,134 @@
+:host { display: block; }
+.course-summary-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.summary-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.course-code-pill {
+  font-family: monospace;
+  font-weight: 700;
+  background: #116834;
+  color: #ffffff;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+}
+.course-name {
+  font-weight: 600;
+  color: #0f172a;
+  font-size: 0.9375rem;
+}
+.units-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #475569;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+}
+.dialog-tabs-header {
+  margin-bottom: 1rem;
+}
+.panel-action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.section-instruction {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+.inline-form-card {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 3px 0 rgba(0,0,0,0.05);
+}
+.inline-form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+.inline-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.form-row-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+.form-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #374151;
+}
+.form-control-input {
+  width: 100%;
+  font-size: 0.8125rem;
+}
+.error-hint {
+  font-size: 0.6875rem;
+  color: #dc2626;
+}
+.field-hint {
+  font-size: 0.6875rem;
+  color: #64748b;
+}
+.inline-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+.code-badge {
+  font-family: monospace;
+  font-weight: 600;
+  background: #f1f5f9;
+  color: #0f172a;
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  font-size: 0.8125rem;
+}
+.grade-pill {
+  font-family: monospace;
+  font-weight: 600;
+  color: #047857;
+  background: #ecfdf5;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+}
+.empty-table-cell {
+  text-align: center;
+  padding: 1.5rem !important;
+  color: #94a3b8;
+  font-size: 0.8125rem;
+}
+.mt-2 { margin-top: 0.5rem; }
+.w-full { width: 100%; }

@@ -1,0 +1,289 @@
+<div class="institution-sub-card">
+  <div class="card-header-row">
+    <div>
+      <h2 class="card-section-title">Degree Programs & Outcomes</h2>
+      <p class="card-section-subtitle">
+        Manage institutional degree programs and their Program Educational Outcomes (PILOs) under academic departments.
+      </p>
+    </div>
+    <div class="header-actions">
+      <p-button
+        label="Register Program"
+        icon="pi pi-plus"
+        size="small"
+        severity="primary"
+        [disabled]="!canManage() || departments().length === 0"
+        (onClick)="openCreateDialog()">
+      </p-button>
+    </div>
+  </div>
+
+  <!-- Prerequisite Warning: If no departments exist -->
+  @if (!isLoading() && departments().length === 0) {
+    <div class="mb-4">
+      <p-message
+        severity="warn"
+        text="Prerequisite Notice: No academic departments found. Please create a Department under an active Campus first."
+        styleClass="w-full">
+      </p-message>
+    </div>
+  }
+
+  <!-- Department Filter Selector -->
+  <div class="filter-row">
+    <label class="filter-label">Filter by Department:</label>
+    <p-select
+      [options]="departmentFilterOptions()"
+      [(ngModel)]="selectedDepartmentId"
+      (onChange)="onDepartmentFilterChange()"
+      placeholder="All Departments"
+      optionLabel="label"
+      optionValue="value"
+      styleClass="dept-filter-dropdown">
+    </p-select>
+  </div>
+
+  <!-- Programs Data Table -->
+  <p-table
+    [value]="filteredPrograms()"
+    [loading]="isLoading()"
+    responsiveLayout="scroll"
+    styleClass="p-datatable-sm p-datatable-gridlines">
+    <ng-template #header>
+      <tr>
+        <th style="width: 130px">Program Code</th>
+        <th>Program Name</th>
+        <th style="width: 140px">Department</th>
+        <th style="width: 130px">Degree Level</th>
+        <th style="width: 100px; text-align: center">Units</th>
+        <th style="width: 90px; text-align: center">Status</th>
+        <th style="width: 170px; text-align: right">Actions</th>
+      </tr>
+    </ng-template>
+
+    <ng-template #body let-p>
+      <tr>
+        <td class="font-mono font-bold text-primary">{{ p.code }}</td>
+        <td>
+          <div class="prog-title">{{ p.name }}</div>
+          @if (p.major) {
+            <div class="prog-major">Major in {{ p.major }}</div>
+          }
+        </td>
+        <td><span class="dept-badge">{{ p.departmentCode || getDeptCode(p.departmentId) }}</span></td>
+        <td><p-tag [value]="p.degreeLevel" severity="info" styleClass="text-xs"></p-tag></td>
+        <td style="text-align: center">{{ p.totalUnitsRequired || '—' }}</td>
+        <td style="text-align: center">
+          <p-tag [value]="p.isActive ? 'Active' : 'Inactive'" [severity]="p.isActive ? 'success' : 'secondary'"></p-tag>
+        </td>
+        <td style="text-align: right">
+          <div class="action-buttons-cell">
+            <p-button
+              icon="pi pi-flag"
+              size="small"
+              label="PILOs"
+              [outlined]="true"
+              severity="help"
+              title="Manage Program Outcomes"
+              (onClick)="openPiloDialog(p)">
+            </p-button>
+            <p-button
+              icon="pi pi-pencil"
+              size="small"
+              [text]="true"
+              severity="secondary"
+              [disabled]="!canManage()"
+              title="Edit Program"
+              (onClick)="openEditDialog(p)">
+            </p-button>
+            <p-button
+              icon="pi pi-trash"
+              size="small"
+              [text]="true"
+              severity="danger"
+              [disabled]="!canManage()"
+              title="Delete Program"
+              (onClick)="confirmDelete(p)">
+            </p-button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="7" class="empty-message-cell">
+          No degree programs found for the selected criteria.
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <!-- Program Create/Edit Modal -->
+  <p-dialog
+    [header]="isEditing ? 'Edit Degree Program' : 'Register Degree Program'"
+    [(visible)]="displayDialog"
+    [modal]="true"
+    [style]="{ width: '480px', maxWidth: '95vw' }"
+    (onHide)="resetForm()">
+    
+    <form [formGroup]="programForm" (ngSubmit)="saveProgram()" class="dialog-form">
+      <!-- Target Department -->
+      @if (!isEditing) {
+        <div class="form-group">
+          <label class="form-label">Parent Department *</label>
+          <p-select
+            [options]="departmentOptions()"
+            formControlName="departmentId"
+            placeholder="Select Department"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full">
+          </p-select>
+        </div>
+      }
+
+      <div class="form-group">
+        <label class="form-label">Program Code *</label>
+        <input
+          pInputText
+          formControlName="code"
+          placeholder="e.g. BSIT"
+          class="form-input"
+          [readonly]="isEditing" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Program Name / Title *</label>
+        <input
+          pInputText
+          formControlName="name"
+          placeholder="e.g. Bachelor of Science in Information Technology"
+          class="form-input" />
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">Degree Level *</label>
+          <p-select
+            [options]="degreeLevelOptions"
+            formControlName="degreeLevel"
+            placeholder="Select Level"
+            styleClass="w-full">
+          </p-select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Total Units Required *</label>
+          <p-inputnumber
+            formControlName="totalUnitsRequired"
+            placeholder="e.g. 146"
+            [min]="1"
+            styleClass="w-full">
+          </p-inputnumber>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Major / Specialization (Optional)</label>
+        <input
+          pInputText
+          formControlName="major"
+          placeholder="e.g. Enterprise Application Development"
+          class="form-input" />
+      </div>
+
+      <div class="dialog-actions">
+        <p-button
+          label="Cancel"
+          size="small"
+          [outlined]="true"
+          severity="secondary"
+          (onClick)="displayDialog = false">
+        </p-button>
+        <p-button
+          [label]="isEditing ? 'Save Changes' : 'Register Program'"
+          icon="pi pi-check"
+          size="small"
+          severity="primary"
+          type="submit"
+          [disabled]="programForm.invalid || isSubmitting">
+        </p-button>
+      </div>
+    </form>
+  </p-dialog>
+
+  <!-- PILO Management Modal -->
+  <p-dialog
+    [header]="'Program Educational Outcomes: ' + (activePiloProgram?.code || '')"
+    [(visible)]="displayPiloDialog"
+    [modal]="true"
+    [style]="{ width: '650px', maxWidth: '95vw' }">
+    <div class="pilo-dialog-container">
+      <p class="dialog-subtext">
+        Outcomes defining the graduate profile and competencies for {{ activePiloProgram?.name }}.
+      </p>
+
+      <!-- Add PILO inline -->
+      @if (canManage()) {
+        <div class="pilo-inline-add">
+          <input
+            pInputText
+            [(ngModel)]="newPiloCode"
+            placeholder="PILO Code (e.g. PILO-1)"
+            style="width: 140px; font-size: 0.8125rem" />
+          <input
+            pInputText
+            [(ngModel)]="newPiloDescription"
+            placeholder="Outcome Description"
+            class="flex-1"
+            style="font-size: 0.8125rem" />
+          <p-button
+            label="Add"
+            icon="pi pi-plus"
+            size="small"
+            severity="primary"
+            [disabled]="!newPiloCode.trim() || !newPiloDescription.trim()"
+            (onClick)="addPilo()">
+          </p-button>
+        </div>
+      }
+
+      <!-- PILO List Table -->
+      <p-table [value]="programOutcomes()" [loading]="isLoadingPilos" styleClass="p-datatable-sm">
+        <ng-template #header>
+          <tr>
+            <th style="width: 110px">Code</th>
+            <th>Outcome Statement</th>
+            @if (canManage()) {
+              <th style="width: 70px; text-align: right">Action</th>
+            }
+          </tr>
+        </ng-template>
+        <ng-template #body let-po>
+          <tr>
+            <td class="font-mono font-bold">{{ po.code }}</td>
+            <td class="text-xs">{{ po.description }}</td>
+            @if (canManage()) {
+              <td style="text-align: right">
+                <p-button
+                  icon="pi pi-trash"
+                  size="small"
+                  [text]="true"
+                  severity="danger"
+                  (onClick)="deletePilo(po.id)">
+                </p-button>
+              </td>
+            }
+          </tr>
+        </ng-template>
+        <ng-template #emptymessage>
+          <tr>
+            <td [attr.colspan]="canManage() ? 3 : 2" class="empty-message-cell">
+              No program outcomes registered yet.
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </p-dialog>
+</div>

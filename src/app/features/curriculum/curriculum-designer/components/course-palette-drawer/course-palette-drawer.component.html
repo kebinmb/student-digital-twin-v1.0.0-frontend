@@ -1,0 +1,103 @@
+<p-drawer
+  [visible]="store.isDrawerOpen()"
+  (visibleChange)="store.isDrawerOpen.set($event)"
+  position="right"
+  [style]="{ width: '460px', maxWidth: '100vw' }"
+  header="Available Course Catalog">
+  
+  <div class="drawer-content-container">
+    
+    <!-- Search Input with PrimeNG IconField -->
+    <div>
+      <p-iconfield style="width: 100%;">
+        <p-inputicon class="pi pi-search" style="color: #94a3b8; font-size: 0.8125rem;"></p-inputicon>
+        <input
+          pInputText
+          type="text"
+          placeholder="Search course code or title..."
+          style="width: 100%; font-size: 0.8125rem;"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="onSearchChanged($event)" />
+      </p-iconfield>
+    </div>
+
+    <!-- Catalog Status Counter -->
+    <div class="catalog-status-bar">
+      <span class="catalog-status-tag">
+        <span class="status-dot"></span>
+        {{ store.availableCourses().length }} unassigned course(s) found
+      </span>
+      @if (store.isSearching()) {
+        <span style="color: #116834; display: flex; align-items: center; gap: 0.35rem; font-weight: 600;">
+          <i class="pi pi-spin pi-spinner" style="font-size: 0.75rem;"></i> Searching...
+        </span>
+      }
+    </div>
+
+    <!-- Course List Cards -->
+    <div class="catalog-scroll-list">
+      @for (course of store.availableCourses(); track course.courseId) {
+        <div class="catalog-course-card">
+          
+          <!-- Card Header -->
+          <div class="catalog-card-header">
+            <div>
+              <span class="catalog-course-code">{{ course.code }}</span>
+              <h4 class="catalog-course-title">{{ course.title }}</h4>
+            </div>
+            <p-tag [value]="course.creditUnits + ' Units'" severity="info"></p-tag>
+          </div>
+
+          <!-- Course Load Breakdown -->
+          <div class="catalog-load-row">
+            <span class="load-tag">Lec: {{ course.lectureUnits }}h</span>
+            <span class="load-tag">Lab: {{ course.labUnits * 3 }}h</span>
+            <span style="margin-left: auto; font-weight: 500;">Load: {{ course.contactHoursLec + course.contactHoursLab }} hrs/wk</span>
+          </div>
+
+          <!-- Quick Target Placement Selector & Action -->
+          @if (store.canEdit()) {
+            <div class="placement-action-row">
+              <div class="term-select-controls">
+                <select
+                  #yearSelect
+                  aria-label="Target Year Level"
+                  class="term-select">
+                  <option value="1">Year 1</option>
+                  <option value="2">Year 2</option>
+                  <option value="3">Year 3</option>
+                  <option value="4">Year 4</option>
+                </select>
+
+                <select
+                  #semSelect
+                  aria-label="Target Semester"
+                  class="term-select">
+                  <option value="1ST_SEM">1st Sem</option>
+                  <option value="2ND_SEM">2nd Sem</option>
+                  <option value="SUMMER">Summer</option>
+                </select>
+              </div>
+
+              <p-button
+                icon="pi pi-plus"
+                label="Assign to Term"
+                size="small"
+                severity="primary"
+                [disabled]="store.isSaving()"
+                (onClick)="onAddCourse(course.courseId, +yearSelect.value, semSelect.value)">
+              </p-button>
+            </div>
+          }
+        </div>
+      } @empty {
+        <div class="catalog-empty-view">
+          <i class="pi pi-inbox" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 0.75rem;"></i>
+          <p style="font-size: 0.875rem; font-weight: 600; color: #475569; margin: 0;">No unassigned courses found</p>
+          <p style="font-size: 0.75rem; margin-top: 0.25rem; color: #94a3b8;">All catalog subjects may already be allocated to terms or no search matches exist.</p>
+        </div>
+      }
+    </div>
+
+  </div>
+</p-drawer>

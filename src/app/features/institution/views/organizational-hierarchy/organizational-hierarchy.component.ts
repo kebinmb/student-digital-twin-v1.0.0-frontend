@@ -18,44 +18,8 @@ import { ProgramManagerComponent } from '../../components/program-manager/progra
     DepartmentManagerComponent,
     ProgramManagerComponent
   ],
-  template: `
-    <div class="hierarchy-container">
-      <div class="hierarchy-nav">
-        <p-selectbutton
-          [options]="subTabs"
-          [(ngModel)]="activeSubTab"
-          optionLabel="label"
-          optionValue="value"
-          styleClass="p-buttonset-sm">
-        </p-selectbutton>
-      </div>
-
-      <div class="hierarchy-content">
-        @switch (activeSubTab) {
-          @case ('campuses') {
-            <app-campus-manager></app-campus-manager>
-          }
-          @case ('departments') {
-            <app-department-manager></app-department-manager>
-          }
-          @case ('programs') {
-            <app-program-manager></app-program-manager>
-          }
-        }
-      </div>
-    </div>
-  `,
-  styles: [`
-    .hierarchy-container {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-    .hierarchy-nav {
-      display: flex;
-      align-items: center;
-    }
-  `]
+  templateUrl: './organizational-hierarchy.component.html',
+  styleUrl: './organizational-hierarchy.component.css'
 })
 export class OrganizationalHierarchyComponent {
   activeSubTab = 'campuses';

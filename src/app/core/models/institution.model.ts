@@ -141,6 +141,14 @@ export interface UpdateProgramRequest {
 }
 
 // 3. Curriculum & Course Structure
+export type CourseCategory = 
+  | 'GEN_ED' 
+  | 'PROFESSIONAL_MAJOR' 
+  | 'ELECTIVE' 
+  | 'CAPSTONE' 
+  | 'PRACTICUM' 
+  | 'MANDATED';
+
 export interface Course {
   id: number;
   code: string;
@@ -150,6 +158,7 @@ export interface Course {
   creditUnits: number;
   contactHoursLec: number;
   contactHoursLab: number;
+  category: CourseCategory;
   description?: string;
   isActive: boolean;
 }
@@ -161,6 +170,7 @@ export interface CreateCourseRequest {
   labUnits: number;
   contactHoursLec: number;
   contactHoursLab: number;
+  category: CourseCategory;
   description?: string;
 }
 
@@ -170,6 +180,7 @@ export interface UpdateCourseRequest {
   labUnits: number;
   contactHoursLec: number;
   contactHoursLab: number;
+  category: CourseCategory;
   description?: string;
 }
 

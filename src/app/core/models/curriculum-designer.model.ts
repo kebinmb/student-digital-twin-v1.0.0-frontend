@@ -89,6 +89,7 @@ export interface AvailableCourseDto {
   creditUnits: number;
   contactHoursLec: number;
   contactHoursLab: number;
+  category?: string;
 }
 
 export interface DiagnosticMessage {

@@ -1,0 +1,75 @@
+<div class="obe-card">
+  <div class="obe-header">
+    <div>
+      <h3 class="obe-title">Outcome-Based Education (OBE) Alignment Matrix</h3>
+      <p class="obe-subtitle">
+        CHED CMO 2D Mapping: Course Outcomes (CILO) vs. Program Outcomes (PILO). Emphasis:
+        <span style="font-weight: 600; color: #1d4ed8;">I (Introduced)</span>,
+        <span style="font-weight: 600; color: #b45309;">E (Enabled)</span>,
+        <span style="font-weight: 600; color: #116834;">D (Demonstrated)</span>.
+      </p>
+    </div>
+    <div>
+      <p-tag severity="info" value="Phase 2 OBE Mapping"></p-tag>
+    </div>
+  </div>
+
+  <!-- Matrix Table -->
+  <div class="obe-table-wrapper">
+    <table class="obe-table">
+      <thead>
+        <tr>
+          <th class="sticky-header-col">Course Code & Title</th>
+          @for (pilo of programOutcomes(); track pilo.code) {
+            <th class="pilo-header-col" [title]="pilo.description">
+              <div>{{ pilo.code }}</div>
+              <span class="pilo-label">{{ pilo.shortLabel }}</span>
+            </th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (course of allCourses(); track course.curriculumCourseId) {
+          <tr class="obe-data-row">
+            <td class="sticky-course-col">
+              <div class="course-code-cell">{{ course.code }}</div>
+              <div class="course-title-cell">{{ course.title }}</div>
+            </td>
+            @for (pilo of programOutcomes(); track pilo.code) {
+              @let val = getCell(course.code, pilo.code);
+              <td
+                class="obe-cell"
+                [ngClass]="{
+                  'cell-i': val === 'I',
+                  'cell-e': val === 'E',
+                  'cell-d': val === 'D',
+                  'cell-empty': !val
+                }"
+                (click)="toggleCell(course.code, pilo.code)">
+                {{ val || '-' }}
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+      <tfoot>
+        <tr class="obe-footer-row">
+          <td class="sticky-header-col" style="font-weight: 700; color: #334155;">PILO Attainment Coverage (I / E / D)</td>
+          @for (pilo of programOutcomes(); track pilo.code) {
+            @let counts = getPiloCounts(pilo.code);
+            <td style="text-align: center; padding: 0.625rem; font-size: 0.6875rem;">
+              <div style="display: flex; justify-content: center; gap: 0.2rem; font-weight: 700;">
+                <span style="color: #1d4ed8;">{{ counts.i }}</span>/
+                <span style="color: #b45309;">{{ counts.e }}</span>/
+                <span style="color: #116834;">{{ counts.d }}</span>
+              </div>
+              @if (counts.d === 0) {
+                <span style="font-size: 0.625rem; color: #dc2626; font-weight: 600; display: block; margin-top: 0.15rem;">Missing D</span>
+              }
+            </td>
+          }
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>

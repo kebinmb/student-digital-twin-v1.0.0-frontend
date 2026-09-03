@@ -1,0 +1,131 @@
+:host { display: block; }
+.institution-sub-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0,0,0,0.04), 0 1px 2px -1px rgba(0,0,0,0.04);
+}
+.card-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+  gap: 1rem;
+}
+.card-section-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+.card-section-subtitle {
+  font-size: 0.8125rem;
+  color: #64748b;
+  margin: 0.25rem 0 0;
+}
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  background: #f8fafc;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+}
+.filter-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #475569;
+}
+.dept-filter-dropdown {
+  min-width: 240px;
+}
+.prog-title {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.8125rem;
+}
+.prog-major {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+.dept-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #116834;
+  background: #ecfdf5;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  border: 1px solid #bbf7d0;
+}
+.action-buttons-cell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.25rem;
+}
+.empty-message-cell {
+  text-align: center;
+  padding: 2rem !important;
+  color: #94a3b8;
+  font-size: 0.8125rem;
+}
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.form-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #374151;
+}
+.form-input {
+  width: 100%;
+  font-size: 0.8125rem;
+}
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f1f5f9;
+}
+.pilo-dialog-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.dialog-subtext {
+  font-size: 0.8125rem;
+  color: #64748b;
+  margin: 0;
+}
+.pilo-inline-add {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  background: #f8fafc;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+.w-full { width: 100%; }
+.flex-1 { flex: 1; }
+.text-xs { font-size: 0.75rem !important; }
+.font-mono { font-family: monospace; }
+.font-bold { font-weight: 700; }
+.text-primary { color: #116834; }

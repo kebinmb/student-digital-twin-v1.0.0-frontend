@@ -1,0 +1,221 @@
+<div class="institution-sub-card">
+  <div class="card-header-row">
+    <div>
+      <h2 class="card-section-title">Academic Grading Scales & Transmutation</h2>
+      <p class="card-section-subtitle">
+        Configure institutional grade point brackets, score percentage equivalents, and passing evaluation thresholds.
+      </p>
+    </div>
+    <div class="header-actions">
+      <p-button
+        label="Add Grade Bracket"
+        icon="pi pi-plus"
+        size="small"
+        severity="primary"
+        [disabled]="!canManage()"
+        (onClick)="openCreateDialog()">
+      </p-button>
+    </div>
+  </div>
+
+  <!-- Live Transmutation Calculator Simulator -->
+  <div class="calculator-panel">
+    <div class="calc-header">
+      <i class="pi pi-calculator calc-icon"></i>
+      <span class="calc-title">Transmutation Simulation Engine</span>
+    </div>
+    <div class="calc-controls">
+      <div class="calc-input-group">
+        <label class="calc-label">Raw Score / Percentage:</label>
+        <p-inputnumber
+          [(ngModel)]="simulatedPercentage"
+          [min]="0"
+          [max]="100"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="2"
+          suffix="%"
+          placeholder="e.g. 88.50"
+          (onInput)="simulateTransmutation()"
+          styleClass="calc-input">
+        </p-inputnumber>
+      </div>
+      <div class="calc-result-box">
+        @if (simulatedScaleResult()) {
+          <div class="result-content">
+            <span class="result-code">{{ simulatedScaleResult()!.code }}</span>
+            <span class="result-remarks">({{ simulatedScaleResult()!.remarks }})</span>
+            <p-tag
+              [value]="simulatedScaleResult()!.isPassing ? 'PASSED' : 'FAILED'"
+              [severity]="simulatedScaleResult()!.isPassing ? 'success' : 'danger'"
+              styleClass="text-xs">
+            </p-tag>
+          </div>
+        } @else {
+          <span class="result-placeholder">Enter a score between 0.00% and 100.00% to simulate transmutation</span>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Grading Scale Table -->
+  <p-table
+    [value]="gradingScales()"
+    [loading]="isLoading()"
+    responsiveLayout="scroll"
+    styleClass="p-datatable-sm p-datatable-gridlines">
+    <ng-template #header>
+      <tr>
+        <th style="width: 100px">Grade Code</th>
+        <th style="width: 170px">Percentage Range</th>
+        <th>Descriptor / Remarks</th>
+        <th style="width: 110px; text-align: center">Classification</th>
+        <th style="width: 90px; text-align: center">Status</th>
+        <th style="width: 110px; text-align: right">Actions</th>
+      </tr>
+    </ng-template>
+
+    <ng-template #body let-g>
+      <tr>
+        <td class="font-mono font-bold text-primary">{{ g.code }}</td>
+        <td class="font-mono">
+          @if (g.isNonNumeric) {
+            <span class="text-secondary">—</span>
+          } @else {
+            {{ g.percentageMin }}% – {{ g.percentageMax }}%
+          }
+        </td>
+        <td>{{ g.remarks || g.description }}</td>
+        <td style="text-align: center">
+          <p-tag
+            [value]="g.isNonNumeric ? 'NON-NUMERIC' : 'NUMERIC'"
+            [severity]="g.isNonNumeric ? 'warn' : 'info'"
+            styleClass="text-xs">
+          </p-tag>
+        </td>
+        <td style="text-align: center">
+          <p-tag
+            [value]="g.isPassing ? 'PASSED' : 'FAILED'"
+            [severity]="g.isPassing ? 'success' : 'danger'"
+            styleClass="text-xs">
+          </p-tag>
+        </td>
+        <td style="text-align: right">
+          <div class="action-buttons-cell">
+            <p-button
+              icon="pi pi-pencil"
+              size="small"
+              [text]="true"
+              severity="secondary"
+              [disabled]="!canManage()"
+              title="Edit Bracket"
+              (onClick)="openEditDialog(g)">
+            </p-button>
+            <p-button
+              icon="pi pi-trash"
+              size="small"
+              [text]="true"
+              severity="danger"
+              [disabled]="!canManage()"
+              title="Delete Bracket"
+              (onClick)="confirmDelete(g)">
+            </p-button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="6" class="empty-message-cell">
+          No grading scale brackets registered.
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <!-- Create/Edit Modal -->
+  <p-dialog
+    [header]="isEditing ? 'Edit Grading Scale Bracket' : 'Add Grading Scale Bracket'"
+    [(visible)]="displayDialog"
+    [modal]="true"
+    [style]="{ width: '460px', maxWidth: '95vw' }">
+    
+    <form [formGroup]="form" (ngSubmit)="saveGradingScale()" class="dialog-form">
+      <div class="form-group">
+        <label class="form-label">Grade Code / Point *</label>
+        <input
+          pInputText
+          formControlName="code"
+          placeholder="e.g. 1.25 or INC"
+          class="form-input"
+          [readonly]="isEditing" />
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">Min Percentage (%) *</label>
+          <p-inputnumber
+            formControlName="percentageMin"
+            [min]="0"
+            [max]="100"
+            [minFractionDigits]="2"
+            [maxFractionDigits]="2"
+            styleClass="w-full">
+          </p-inputnumber>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Max Percentage (%) *</label>
+          <p-inputnumber
+            formControlName="percentageMax"
+            [min]="0"
+            [max]="100"
+            [minFractionDigits]="2"
+            [maxFractionDigits]="2"
+            styleClass="w-full">
+          </p-inputnumber>
+        </div>
+      </div>
+      @if (form.hasError('percentageRangeInvalid')) {
+        <span class="field-error-text">Minimum percentage cannot exceed maximum percentage.</span>
+      }
+
+      <div class="form-group">
+        <label class="form-label">Remarks / Description *</label>
+        <input
+          pInputText
+          formControlName="remarks"
+          placeholder="e.g. Superior Performance"
+          class="form-input" />
+      </div>
+
+      <div class="toggles-row">
+        <div class="toggle-item">
+          <label class="toggle-label">Passing Grade</label>
+          <p-toggleswitch formControlName="isPassing"></p-toggleswitch>
+        </div>
+        <div class="toggle-item">
+          <label class="toggle-label">Non-Numeric Mark</label>
+          <p-toggleswitch formControlName="isNonNumeric"></p-toggleswitch>
+        </div>
+      </div>
+
+      <div class="dialog-actions">
+        <p-button
+          label="Cancel"
+          size="small"
+          [outlined]="true"
+          severity="secondary"
+          (onClick)="displayDialog = false">
+        </p-button>
+        <p-button
+          [label]="isEditing ? 'Update Bracket' : 'Add Bracket'"
+          icon="pi pi-check"
+          size="small"
+          severity="primary"
+          type="submit"
+          [disabled]="form.invalid || isSubmitting">
+        </p-button>
+      </div>
+    </form>
+  </p-dialog>
+</div>

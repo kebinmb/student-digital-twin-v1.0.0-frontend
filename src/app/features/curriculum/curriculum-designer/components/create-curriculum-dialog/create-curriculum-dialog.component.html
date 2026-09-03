@@ -1,0 +1,126 @@
+<p-dialog
+  header="Create New Academic Curriculum"
+  [visible]="visible"
+  (visibleChange)="visibleChange.emit($event)"
+  [modal]="true"
+  [style]="{ width: '520px', maxWidth: '95vw' }">
+  
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="dialog-content-body">
+    <p class="dialog-intro-text">
+      Establish a new academic curriculum draft revision for an institutional degree program under CHED CMO guidelines.
+    </p>
+
+    <!-- Prerequisite Banner: No operational Academic Year -->
+    @if (!isLoadingPrereqs() && !currentAcademicYear()) {
+      <div class="prereq-alert">
+        <p-message
+          severity="warn"
+          text="Notice: No operational Academic Year is currently active. You may specify the effective year manually or set one in the Institutional Registry."
+          styleClass="w-full text-xs">
+        </p-message>
+      </div>
+    }
+
+    <!-- Prerequisite Check: If No Programs Exist -->
+    @if (!isLoadingPrereqs() && programs().length === 0) {
+      <div class="empty-programs-card">
+        <i class="pi pi-exclamation-circle empty-card-icon"></i>
+        <div class="empty-card-info">
+          <span class="empty-card-title">No Degree Programs Found</span>
+          <span class="empty-card-subtext">A Degree Program must be registered under an institutional Department before establishing a curriculum.</span>
+        </div>
+        <p-button
+          label="Open Registry"
+          icon="pi pi-external-link"
+          size="small"
+          severity="warn"
+          (onClick)="navigateToInstitution()">
+        </p-button>
+      </div>
+    }
+
+    <!-- Degree Program Selector -->
+    <div class="form-field-group">
+      <label for="createProgramId" class="form-field-label">Degree Program *</label>
+      <p-select
+        id="createProgramId"
+        [options]="programOptions()"
+        formControlName="programId"
+        placeholder="Select Degree Program"
+        optionLabel="label"
+        optionValue="value"
+        [filter]="true"
+        filterBy="label"
+        styleClass="w-full">
+      </p-select>
+      @if (form.controls.programId.touched && form.controls.programId.invalid) {
+        <span class="field-error-text">Target degree program is mandatory.</span>
+      }
+    </div>
+
+    <!-- Curriculum Code -->
+    <div class="form-field-group">
+      <label for="createCode" class="form-field-label">Curriculum Code *</label>
+      <input
+        id="createCode"
+        pInputText
+        type="text"
+        formControlName="code"
+        placeholder="e.g. BSIT-2026"
+        class="form-input" />
+      @if (form.controls.code.touched && form.controls.code.invalid) {
+        <span class="field-error-text">Curriculum code is required (max 30 characters).</span>
+      }
+    </div>
+
+    <!-- Curriculum Name -->
+    <div class="form-field-group">
+      <label for="createName" class="form-field-label">Curriculum Title / Name *</label>
+      <input
+        id="createName"
+        pInputText
+        type="text"
+        formControlName="name"
+        placeholder="e.g. Bachelor of Science in Information Technology (2026 Revision)"
+        class="form-input" />
+      @if (form.controls.name.touched && form.controls.name.invalid) {
+        <span class="field-error-text">Curriculum name is required (max 150 characters).</span>
+      }
+    </div>
+
+    <!-- Effective Academic Year -->
+    <div class="form-field-group">
+      <label for="createAy" class="form-field-label">Effective Academic Year *</label>
+      <input
+        id="createAy"
+        pInputText
+        type="text"
+        formControlName="effectiveAcademicYear"
+        placeholder="e.g. 2026-2027"
+        class="form-input" />
+      @if (form.controls.effectiveAcademicYear.touched && form.controls.effectiveAcademicYear.invalid) {
+        <span class="field-error-text">Effective academic year is required (max 20 characters).</span>
+      }
+    </div>
+
+    <!-- Footer Actions -->
+    <div class="dialog-footer-row">
+      <p-button
+        label="Cancel"
+        size="small"
+        [outlined]="true"
+        severity="secondary"
+        type="button"
+        (onClick)="onClose()">
+      </p-button>
+      <p-button
+        label="Create Curriculum"
+        icon="pi pi-check"
+        size="small"
+        severity="primary"
+        type="submit"
+        [disabled]="form.invalid || store.isSaving() || programs().length === 0">
+      </p-button>
+    </div>
+  </form>
+</p-dialog>

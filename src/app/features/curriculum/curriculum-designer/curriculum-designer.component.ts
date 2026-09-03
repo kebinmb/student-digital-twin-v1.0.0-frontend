@@ -64,7 +64,7 @@ import { CourseItemDto, TermStats } from '../../../core/models/curriculum-design
     CreateCurriculumDialogComponent
   ],
   templateUrl: './curriculum-designer.component.html',
-  styleUrls: ['./curriculum-designer.component.css']
+  styleUrl: './curriculum-designer.component.css'
 })
 export class CurriculumDesignerComponent implements OnInit {
   protected readonly store = inject(CurriculumDesignerStore);

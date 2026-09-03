@@ -1,0 +1,9 @@
+.hierarchy-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.hierarchy-nav {
+  display: flex;
+  align-items: center;
+}

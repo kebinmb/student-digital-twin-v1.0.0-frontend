@@ -1,0 +1,289 @@
+<div class="institution-sub-card">
+  <div class="card-header-row">
+    <div>
+      <h2 class="card-section-title">Institutional Course Catalog</h2>
+      <p class="card-section-subtitle">
+        Catalog master courses, CHED lecture/lab unit weights, weekly contact hours, learning outcomes (CILOs), and prerequisite chains.
+      </p>
+    </div>
+
+    <div class="header-actions-group">
+      <!-- Search field -->
+      <p-iconfield>
+        <p-inputicon styleClass="pi pi-search"></p-inputicon>
+        <input
+          pInputText
+          type="text"
+          [(ngModel)]="searchKeyword"
+          (input)="onSearchInput()"
+          placeholder="Search code or title..."
+          class="search-box-input" />
+      </p-iconfield>
+
+      @if (canManage()) {
+        <p-button
+          label="New Course"
+          icon="pi pi-plus"
+          size="small"
+          severity="primary"
+          (onClick)="openCreateDialog()">
+        </p-button>
+      }
+    </div>
+  </div>
+
+  <p-table
+    [value]="courses()"
+    [loading]="isLoading()"
+    [lazy]="true"
+    [paginator]="true"
+    [rows]="pageSize"
+    [totalRecords]="totalElements()"
+    (onLazyLoad)="onPageChange($event)"
+    responsiveLayout="scroll"
+    styleClass="p-datatable-sm institutional-table">
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width: 130px;">Course Code</th>
+        <th>Descriptive Title</th>
+        <th style="width: 140px; text-align: center;">Category</th>
+        <th style="width: 90px; text-align: center;">Lec</th>
+        <th style="width: 90px; text-align: center;">Lab</th>
+        <th style="width: 100px; text-align: center;">Units</th>
+        <th style="width: 130px; text-align: center;">Hrs (Lec/Lab)</th>
+        <th style="width: 90px; text-align: center;">Status</th>
+        <th style="width: 220px; text-align: right;">Curricular Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-c>
+      <tr>
+        <td>
+          <span class="code-badge">{{ c.code }}</span>
+        </td>
+        <td>
+          <div class="primary-text">{{ c.title }}</div>
+          @if (c.description) {
+            <div class="secondary-text course-desc-truncate">{{ c.description }}</div>
+          }
+        </td>
+        <td style="text-align: center;">
+          <p-tag [severity]="getCategorySeverity(c.category)" [value]="c.category"></p-tag>
+        </td>
+        <td style="text-align: center;">{{ c.lectureUnits }}</td>
+        <td style="text-align: center;">{{ c.labUnits }}</td>
+        <td style="text-align: center;">
+          <span class="units-pill">{{ c.creditUnits }}</span>
+        </td>
+        <td style="text-align: center;">
+          <span class="hours-text">{{ c.contactHoursLec }}h / {{ c.contactHoursLab }}h</span>
+        </td>
+        <td style="text-align: center;">
+          @if (c.isActive) {
+            <p-tag severity="success" value="ACTIVE"></p-tag>
+          } @else {
+            <p-tag severity="danger" value="INACTIVE"></p-tag>
+          }
+        </td>
+        <td style="text-align: right;">
+          <div class="action-buttons-cell">
+            <!-- Open CILO & Prerequisite Drawer -->
+            <p-button
+              icon="pi pi-sliders-h"
+              label="Rules"
+              size="small"
+              severity="info"
+              [outlined]="true"
+              title="Manage CILOs & Prerequisite Rules"
+              (onClick)="openDetailDialog(c)">
+            </p-button>
+
+            @if (canManage()) {
+              <p-button
+                icon="pi pi-pencil"
+                size="small"
+                [text]="true"
+                severity="secondary"
+                (onClick)="openEditDialog(c)">
+              </p-button>
+              <p-button
+                icon="pi pi-trash"
+                size="small"
+                [text]="true"
+                severity="danger"
+                (onClick)="confirmDelete(c)">
+              </p-button>
+            }
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="9" class="empty-table-cell">
+          <i class="pi pi-book empty-icon"></i>
+          <p>No courses found. Add courses to build curriculums and learning matrices.</p>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <!-- Create / Edit Course Dialog -->
+  <p-dialog
+    [header]="editingId() ? 'Edit Course Details' : 'Register Master Catalog Course'"
+    [(visible)]="isDialogVisible"
+    [modal]="true"
+    [style]="{ width: '560px', maxWidth: '95vw' }">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="dialog-form">
+      <div class="form-row-2col">
+        <div class="form-group">
+          <label for="crCode" class="form-label">Course Code *</label>
+          <input
+            id="crCode"
+            pInputText
+            type="text"
+            formControlName="code"
+            placeholder="e.g. IT 101"
+            class="form-control-input"
+            [readOnly]="!!editingId()" />
+          @if (form.controls.code.touched && form.controls.code.invalid) {
+            <span class="error-hint">Course code is required (max 30 chars).</span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Total Credit Units</label>
+          <div class="computed-unit-card">
+            <span class="computed-value">{{ computedTotalUnits }}</span>
+            <span class="computed-subtext">Sum of Lec + Lab Units</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="crTitle" class="form-label">Descriptive Course Title *</label>
+        <input
+          id="crTitle"
+          pInputText
+          type="text"
+          formControlName="title"
+          placeholder="e.g. Introduction to Computing"
+          class="form-control-input" />
+        @if (form.controls.title.touched && form.controls.title.invalid) {
+          <span class="error-hint">Course title is required (max 150 chars).</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="crCategory" class="form-label">Curricular Category *</label>
+        <p-select
+          id="crCategory"
+          formControlName="category"
+          [options]="categoryOptions"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Select Category"
+          styleClass="w-full">
+        </p-select>
+        @if (form.controls.category.touched && form.controls.category.invalid) {
+          <span class="error-hint">Course category is required.</span>
+        }
+      </div>
+
+      <div class="form-row-2col">
+        <div class="form-group">
+          <label for="crLecUnits" class="form-label">Lecture Units *</label>
+          <p-inputnumber
+            id="crLecUnits"
+            formControlName="lectureUnits"
+            [min]="0"
+            [max]="20"
+            [minFractionDigits]="0"
+            [maxFractionDigits]="2"
+            styleClass="w-full">
+          </p-inputnumber>
+        </div>
+
+        <div class="form-group">
+          <label for="crLabUnits" class="form-label">Laboratory Units *</label>
+          <p-inputnumber
+            id="crLabUnits"
+            formControlName="labUnits"
+            [min]="0"
+            [max]="20"
+            [minFractionDigits]="0"
+            [maxFractionDigits]="2"
+            styleClass="w-full">
+          </p-inputnumber>
+        </div>
+      </div>
+
+      <div class="form-row-2col">
+        <div class="form-group">
+          <label for="crLecHours" class="form-label">Contact Hours / Week (Lec)</label>
+          <p-inputnumber
+            id="crLecHours"
+            formControlName="contactHoursLec"
+            [min]="0"
+            [max]="40"
+            styleClass="w-full">
+          </p-inputnumber>
+          <span class="field-hint">Standard CHED: 1 unit = 1 hr</span>
+        </div>
+
+        <div class="form-group">
+          <label for="crLabHours" class="form-label">Contact Hours / Week (Lab)</label>
+          <p-inputnumber
+            id="crLabHours"
+            formControlName="contactHoursLab"
+            [min]="0"
+            [max]="40"
+            styleClass="w-full">
+          </p-inputnumber>
+          <span class="field-hint">Standard CHED: 1 unit = 3 hrs</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="crDesc" class="form-label">Course Description & Scope</label>
+        <textarea
+          id="crDesc"
+          pTextarea
+          formControlName="description"
+          rows="3"
+          placeholder="Summary of course coverage, prerequisites context, and competencies..."
+          class="w-full">
+        </textarea>
+      </div>
+
+      <div class="dialog-actions-footer">
+        <p-button
+          label="Cancel"
+          size="small"
+          severity="secondary"
+          [outlined]="true"
+          type="button"
+          (onClick)="isDialogVisible.set(false)">
+        </p-button>
+        <p-button
+          [label]="editingId() ? 'Update Course' : 'Register Course'"
+          icon="pi pi-check"
+          size="small"
+          severity="primary"
+          type="submit"
+          [disabled]="form.invalid || isSaving()">
+        </p-button>
+      </div>
+    </form>
+  </p-dialog>
+
+  <!-- Manage Outcomes & Prerequisites Dialog -->
+  <app-course-detail-dialog
+    [(visible)]="isDetailVisible"
+    [course]="selectedCourseForDetail()"
+    [allCourses]="courses()"
+    (courseUpdated)="loadCourses()">
+  </app-course-detail-dialog>
+
+  <!-- Delete Confirmation Dialog -->
+  <p-confirmdialog key="courseDeleteConfirm"></p-confirmdialog>
+</div>
