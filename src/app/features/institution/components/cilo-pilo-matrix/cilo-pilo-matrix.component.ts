@@ -451,6 +451,7 @@ export class CiloPiloMatrixComponent implements OnInit {
   }
 
   onProgramChange(): void {
+    this.matrixData.set(new Map());
     if (!this.selectedProgramId) {
       this.pilos.set([]);
       return;
@@ -466,6 +467,7 @@ export class CiloPiloMatrixComponent implements OnInit {
   }
 
   onCourseChange(): void {
+    this.matrixData.set(new Map());
     if (!this.selectedCourseId) {
       this.cilos.set([]);
       return;
@@ -481,10 +483,12 @@ export class CiloPiloMatrixComponent implements OnInit {
   }
 
   refreshMatrixMappings(): void {
-    if (!this.selectedProgramId || this.cilos().length === 0) return;
+    if (!this.selectedProgramId || !this.selectedCourseId || this.cilos().length === 0 || this.pilos().length === 0) {
+      return;
+    }
 
-    // Load mappings for this program
-    this.mappingService.getByProgramOutcome(this.selectedProgramId).subscribe({
+    // Load mappings for this course and program matrix
+    this.mappingService.getMatrix(this.selectedCourseId, this.selectedProgramId).subscribe({
       next: (mappings) => {
         const nextMap = new Map<string, { id?: number; mappingType: string }>();
         for (const m of mappings) {

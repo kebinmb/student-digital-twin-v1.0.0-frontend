@@ -10,6 +10,7 @@ import { TagModule } from 'primeng/tag';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { ToastModule } from 'primeng/toast';
 import { MessageModule } from 'primeng/message';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 import { AcademicYearService } from '../../core/services/institution.service';
 
@@ -24,11 +25,13 @@ import { AcademicYearService } from '../../core/services/institution.service';
     TagModule,
     SelectButtonModule,
     ToastModule,
-    MessageModule
+    MessageModule,
+    ConfirmDialogModule
   ],
   template: `
     <div class="institution-page-container">
       <p-toast></p-toast>
+      <p-confirmdialog></p-confirmdialog>
 
       <!-- Institutional Header Banner -->
       <div class="institution-header-card">

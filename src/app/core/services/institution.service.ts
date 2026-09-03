@@ -328,6 +328,21 @@ export class CiloPiloMappingService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/v1/cilo-pilo-mappings`;
 
+  getMatrix(courseId?: number, programId?: number): Observable<CiloPiloMapping[]> {
+    let params = new HttpParams();
+    if (courseId) params = params.set('courseId', courseId.toString());
+    if (programId) params = params.set('programId', programId.toString());
+    return this.http.get<CiloPiloMapping[]>(this.baseUrl, { params });
+  }
+
+  getByCourse(courseId: number): Observable<CiloPiloMapping[]> {
+    return this.http.get<CiloPiloMapping[]>(`${this.baseUrl}/course/${courseId}`);
+  }
+
+  getByProgram(programId: number): Observable<CiloPiloMapping[]> {
+    return this.http.get<CiloPiloMapping[]>(`${this.baseUrl}/program/${programId}`);
+  }
+
   getByCourseOutcome(ciloId: number): Observable<CiloPiloMapping[]> {
     return this.http.get<CiloPiloMapping[]>(`${this.baseUrl}/course-outcome/${ciloId}`);
   }

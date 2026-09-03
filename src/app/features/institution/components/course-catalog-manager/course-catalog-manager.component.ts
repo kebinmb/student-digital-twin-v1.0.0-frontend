@@ -315,6 +315,9 @@ interface CourseForm {
         [allCourses]="courses()"
         (courseUpdated)="loadCourses()">
       </app-course-detail-dialog>
+
+      <!-- Delete Confirmation Dialog -->
+      <p-confirmdialog key="courseDeleteConfirm"></p-confirmdialog>
     </div>
   `,
   styles: [`
@@ -651,6 +654,7 @@ export class CourseCatalogManagerComponent implements OnInit {
 
   confirmDelete(c: Course): void {
     this.confirmationService.confirm({
+      key: 'courseDeleteConfirm',
       message: `Permanently delete "${c.code} - ${c.title}"? Deletion is blocked if the course is assigned to any curriculum or referenced as a prerequisite.`,
       header: 'Delete Master Course',
       icon: 'pi pi-trash',
