@@ -29,6 +29,28 @@ export const routes: Routes = [
     canActivate: [guestGuard]
   },
 
+  // Academics Curriculum Designer URL Aliases
+  {
+    path: 'academics/curriculum-designer',
+    redirectTo: 'dashboard/curriculum/designer',
+    pathMatch: 'full'
+  },
+  {
+    path: 'academics/curriculum-designer/:id',
+    redirectTo: 'dashboard/curriculum/designer/:id'
+  },
+
+  // Institutional Management URL Aliases
+  {
+    path: 'institution',
+    redirectTo: 'dashboard/institution/academic-periods',
+    pathMatch: 'full'
+  },
+  {
+    path: 'institution/:tab',
+    redirectTo: 'dashboard/institution/:tab'
+  },
+
   // Protected Dashboard Layout with Child Routes
   {
     path: 'dashboard',
@@ -40,6 +62,16 @@ export const routes: Routes = [
         path: '',
         loadComponent: () =>
           import('./features/dashboard/dashboard-component/dashboard-component').then(m => m.DashboardComponent)
+      },
+      {
+        path: 'curriculum',
+        loadChildren: () =>
+          import('./features/curriculum/curriculum.routes').then(m => m.CURRICULUM_ROUTES)
+      },
+      {
+        path: 'institution',
+        loadChildren: () =>
+          import('./features/institution/institution.routes').then(m => m.INSTITUTION_ROUTES)
       },
       {
         path: '**',

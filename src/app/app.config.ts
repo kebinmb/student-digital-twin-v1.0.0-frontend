@@ -12,7 +12,9 @@ import { catchError, of } from 'rxjs';
 import { routes } from './app.routes';
 import { AuthService } from './core/service/authentication/auth-service';
 import { authInterceptor } from './core/interceptors/authentication/auth-interceptor';
+import { globalErrorInterceptor } from './core/interceptors/error/global-error.interceptor';
 import { CustomTheme } from './theme/custom-theme';
+import { ConfirmationService, MessageService } from 'primeng/api';
 
 function initializeApp(authService: AuthService) {
   return () => {
@@ -31,6 +33,8 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideZonelessChangeDetection(),
     provideRouter(routes),
+    MessageService,
+    ConfirmationService,
     providePrimeNG({
       theme: {
         preset: CustomTheme,
@@ -41,7 +45,7 @@ export const appConfig: ApplicationConfig = {
       },
       ripple: true
     }),
-    provideHttpClient(withInterceptors([authInterceptor])),
+    provideHttpClient(withInterceptors([authInterceptor, globalErrorInterceptor])),
     {
       provide: APP_INITIALIZER,
       useFactory: initializeApp,
@@ -49,4 +53,4 @@ export const appConfig: ApplicationConfig = {
       multi: true
     }
   ]
-};
+};

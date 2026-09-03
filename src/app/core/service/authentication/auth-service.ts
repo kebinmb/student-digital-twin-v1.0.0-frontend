@@ -23,24 +23,40 @@ export class AuthService {
       if (!token) {
         try {
           const saved = localStorage.getItem('chmsu_remembered_user');
-          if (saved) return { username: saved, role: 'Student' };
+          if (saved) return { username: saved, role: 'STUDENT', roles: ['STUDENT'] };
         } catch {
 
         }
-        return { username: 'Student User', role: 'Student' };
+        return { username: 'Student User', role: 'STUDENT', roles: ['STUDENT'] };
       }
       try {
         const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
-        console.log("Payload",payload);
+        const rawRoles: string[] = Array.isArray(payload.roles)
+          ? payload.roles
+          : (payload.realm_access?.roles || []);
+        const normalizedRoles = rawRoles.map((r: string) => r.replace(/^ROLE_/, '').toUpperCase());
+        const primaryRole = normalizedRoles[0] || 'STUDENT';
+
         return {
           username: payload.preferred_username || payload.username || 'Student User',
           email: payload.email || '',
-          role: (payload.roles && payload.roles[0]) ? payload.roles[0].replace('ROLE_', '') : 'Student'
+          role: primaryRole,
+          roles: normalizedRoles
         };
       } catch {
-        return { username: 'Student User', role: 'Student' };
+        return { username: 'Student User', role: 'STUDENT', roles: ['STUDENT'] };
       }
     });
+
+    hasAnyRole(requiredRoles: string[]): boolean {
+      const userRoles = this.currentUser().roles || [this.currentUser().role.toUpperCase()];
+      const normalizedReq = requiredRoles.map(r => r.replace(/^ROLE_/, '').toUpperCase());
+      return userRoles.some(r => normalizedReq.includes(r));
+    }
+
+    hasRole(requiredRole: string): boolean {
+      return this.hasAnyRole([requiredRole]);
+    }
 
     register(data: RegisterRequest): Observable<void> {
     return this.http.post<void>(`${this.baseUrl}/register`, data);

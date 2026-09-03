@@ -81,6 +81,8 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
     {
       title: 'Academics',
       items: [
+        { label: 'Institutional Registry', icon: 'pi pi-building', routerLink: '/dashboard/institution' },
+        { label: 'Curriculum Designer', icon: 'pi pi-sitemap', routerLink: '/dashboard/curriculum/designer/1' },
         { label: 'Courses & Enrolled', icon: 'pi pi-book', routerLink: '/dashboard/courses' },
         { label: 'Class Schedule', icon: 'pi pi-calendar', routerLink: '/dashboard/schedule' },
         { label: 'Grades & Progress', icon: 'pi pi-chart-line', routerLink: '/dashboard/grades' },
