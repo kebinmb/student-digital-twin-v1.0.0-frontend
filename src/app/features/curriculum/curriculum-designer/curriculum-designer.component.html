@@ -432,7 +432,9 @@
       [visible]="isValidationModalOpen()"
       (visibleChange)="isValidationModalOpen.set($event)"
       [modal]="true"
-      [style]="{ width: '650px', maxWidth: '95vw' }">
+      [breakpoints]="{ '960px': '75vw', '640px': '92vw' }"
+      [style]="{ width: '650px', maxWidth: '95vw' }"
+      [contentStyle]="{ 'overflow-x': 'hidden' }">
       
       <div class="dialog-content-body">
         @if (store.isLoading()) {
@@ -518,7 +520,9 @@
       [visible]="isStateTransitionModalOpen()"
       (visibleChange)="isStateTransitionModalOpen.set($event)"
       [modal]="true"
-      [style]="{ width: '480px', maxWidth: '95vw' }">
+      [breakpoints]="{ '960px': '75vw', '640px': '92vw' }"
+      [style]="{ width: '480px', maxWidth: '95vw' }"
+      [contentStyle]="{ 'overflow-x': 'hidden' }">
       <div class="dialog-content-body">
         <p style="font-size: 0.8125rem; color: #4b5563; margin: 0;">
           Current State: <span style="font-weight: 700; color: #111827;">{{ curr.status }}</span>.
@@ -575,7 +579,9 @@
       [visible]="isCloneModalOpen()"
       (visibleChange)="isCloneModalOpen.set($event)"
       [modal]="true"
-      [style]="{ width: '480px', maxWidth: '95vw' }">
+      [breakpoints]="{ '960px': '75vw', '640px': '92vw' }"
+      [style]="{ width: '480px', maxWidth: '95vw' }"
+      [contentStyle]="{ 'overflow-x': 'hidden' }">
       <div class="dialog-content-body">
         <p style="font-size: 0.75rem; color: #6b7280; margin: 0 0 0.5rem;">
           Creates a new draft revision deep-copying all semester term blocks and course allocations.

@@ -94,7 +94,9 @@
     [header]="editingId() ? 'Edit Academic Year' : 'Establish New Academic Year'"
     [(visible)]="isDialogVisible"
     [modal]="true"
-    [style]="{ width: '480px', maxWidth: '95vw' }">
+    [breakpoints]="{ '960px': '75vw', '640px': '92vw' }"
+    [style]="{ width: '480px', maxWidth: '95vw' }"
+    [contentStyle]="{ 'overflow-x': 'hidden' }">
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="dialog-form">
       <div class="form-group">
         <label for="ayCode" class="form-label">Academic Year Code *</label>

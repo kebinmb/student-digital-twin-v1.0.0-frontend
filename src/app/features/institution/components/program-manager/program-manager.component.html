@@ -124,7 +124,9 @@
     [header]="isEditing ? 'Edit Degree Program' : 'Register Degree Program'"
     [(visible)]="displayDialog"
     [modal]="true"
+    [breakpoints]="{ '960px': '75vw', '640px': '92vw' }"
     [style]="{ width: '480px', maxWidth: '95vw' }"
+    [contentStyle]="{ 'overflow-x': 'hidden' }"
     (onHide)="resetForm()">
     
     <form [formGroup]="programForm" (ngSubmit)="saveProgram()" class="dialog-form">
@@ -133,6 +135,7 @@
         <div class="form-group">
           <label class="form-label">Parent Department *</label>
           <p-select
+            appendTo="body"
             [options]="departmentOptions()"
             formControlName="departmentId"
             placeholder="Select Department"
@@ -166,6 +169,7 @@
         <div class="form-group">
           <label class="form-label">Degree Level *</label>
           <p-select
+            appendTo="body"
             [options]="degreeLevelOptions"
             formControlName="degreeLevel"
             placeholder="Select Level"
@@ -217,7 +221,9 @@
     [header]="'Program Educational Outcomes: ' + (activePiloProgram?.code || '')"
     [(visible)]="displayPiloDialog"
     [modal]="true"
-    [style]="{ width: '650px', maxWidth: '95vw' }">
+    [breakpoints]="{ '960px': '75vw', '640px': '92vw' }"
+    [style]="{ width: '650px', maxWidth: '95vw' }"
+    [contentStyle]="{ 'overflow-x': 'hidden' }">
     <div class="pilo-dialog-container">
       <p class="dialog-subtext">
         Outcomes defining the graduate profile and competencies for {{ activePiloProgram?.name }}.

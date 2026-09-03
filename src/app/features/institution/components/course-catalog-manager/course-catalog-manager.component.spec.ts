@@ -62,5 +62,32 @@ describe('CourseCatalogManagerComponent', () => {
     component.openEditDialog(mockCourse);
     expect(component.editingId()).toBe(10);
     expect(component.form.controls.category.value).toBe('CAPSTONE');
+    expect(component.form.controls.code.value).toBe('CAP-401');
+  });
+
+  it('should strictly normalize course codes to include hyphens', () => {
+    expect(component.normalizeCourseCode('IT 101')).toBe('IT-101');
+    expect(component.normalizeCourseCode('it101')).toBe('IT-101');
+    expect(component.normalizeCourseCode('gec 102')).toBe('GEC-102');
+    expect(component.normalizeCourseCode('GEC102')).toBe('GEC-102');
+    expect(component.normalizeCourseCode('pe 1')).toBe('PE-1');
+    expect(component.normalizeCourseCode('PE1')).toBe('PE-1');
+    expect(component.normalizeCourseCode('  cs - 101 ')).toBe('CS-101');
+  });
+
+  it('should auto-normalize course code on blur', () => {
+    component.form.controls.code.setValue('it 101');
+    component.onCodeBlur();
+    expect(component.form.controls.code.value).toBe('IT-101');
+  });
+
+  it('should calculate computedTotalUnits from lecture and lab units', () => {
+    component.form.controls.lectureUnits.setValue(3);
+    component.form.controls.labUnits.setValue(1.5);
+    expect(component.computedTotalUnits).toBe(4.5);
+
+    component.form.controls.lectureUnits.setValue(2);
+    component.form.controls.labUnits.setValue(0);
+    expect(component.computedTotalUnits).toBe(2);
   });
 });

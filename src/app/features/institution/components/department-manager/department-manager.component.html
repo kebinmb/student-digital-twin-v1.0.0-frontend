@@ -144,11 +144,14 @@
     [header]="editingId() ? 'Edit Department' : 'Establish New Academic Department'"
     [(visible)]="isDialogVisible"
     [modal]="true"
-    [style]="{ width: '520px', maxWidth: '95vw' }">
+    [breakpoints]="{ '960px': '75vw', '640px': '92vw' }"
+    [style]="{ width: '520px', maxWidth: '95vw' }"
+    [contentStyle]="{ 'overflow-x': 'hidden' }">
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="dialog-form">
       <div class="form-group">
         <label for="dCampus" class="form-label">Assigned Campus *</label>
         <p-select
+          appendTo="body"
           id="dCampus"
           [options]="campusSelectOptions()"
           formControlName="campusId"
@@ -182,6 +185,7 @@
         <div class="form-group">
           <label for="dType" class="form-label">Department Type *</label>
           <p-select
+            appendTo="body"
             id="dType"
             [options]="typeOptions"
             formControlName="type"
@@ -210,6 +214,7 @@
       <div class="form-group">
         <label for="dParent" class="form-label">Parent Department (Optional Hierarchy)</label>
         <p-select
+          appendTo="body"
           id="dParent"
           [options]="parentSelectOptions()"
           formControlName="parentDepartmentId"

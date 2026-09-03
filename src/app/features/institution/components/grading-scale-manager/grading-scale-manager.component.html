@@ -138,7 +138,9 @@
     [header]="isEditing ? 'Edit Grading Scale Bracket' : 'Add Grading Scale Bracket'"
     [(visible)]="displayDialog"
     [modal]="true"
-    [style]="{ width: '460px', maxWidth: '95vw' }">
+    [breakpoints]="{ '960px': '75vw', '640px': '92vw' }"
+    [style]="{ width: '460px', maxWidth: '95vw' }"
+    [contentStyle]="{ 'overflow-x': 'hidden' }">
     
     <form [formGroup]="form" (ngSubmit)="saveGradingScale()" class="dialog-form">
       <div class="form-group">

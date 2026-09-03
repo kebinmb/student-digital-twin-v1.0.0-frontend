@@ -244,11 +244,17 @@
   }
 
   <!-- Fee Category Dialog -->
-  <p-dialog header="Create Fee Category" [(visible)]="displayCategoryDialog" [modal]="true" [style]="{ width: '400px' }">
+  <p-dialog
+    header="Create Fee Category"
+    [(visible)]="displayCategoryDialog"
+    [modal]="true"
+    [breakpoints]="{ '960px': '75vw', '640px': '92vw' }"
+    [style]="{ width: '400px', maxWidth: '95vw' }"
+    [contentStyle]="{ 'overflow-x': 'hidden' }">
     <div class="dialog-form">
       <div class="form-group">
         <label class="form-label">Category Code (Enum) *</label>
-        <p-select [options]="categoryCodeOptions" [(ngModel)]="newCategoryCode" placeholder="Select Code" styleClass="w-full"></p-select>
+        <p-select appendTo="body" [options]="categoryCodeOptions" [(ngModel)]="newCategoryCode" placeholder="Select Code" styleClass="w-full"></p-select>
       </div>
       <div class="form-group">
         <label class="form-label">Category Name *</label>
@@ -262,11 +268,17 @@
   </p-dialog>
 
   <!-- Fee Item Dialog -->
-  <p-dialog header="Add Fee Catalog Item" [(visible)]="displayFeeDialog" [modal]="true" [style]="{ width: '460px' }">
+  <p-dialog
+    header="Add Fee Catalog Item"
+    [(visible)]="displayFeeDialog"
+    [modal]="true"
+    [breakpoints]="{ '960px': '75vw', '640px': '92vw' }"
+    [style]="{ width: '460px', maxWidth: '95vw' }"
+    [contentStyle]="{ 'overflow-x': 'hidden' }">
     <div class="dialog-form">
       <div class="form-group">
         <label class="form-label">Category *</label>
-        <p-select [options]="feeCategoryOptions()" [(ngModel)]="newFeeCategoryId" placeholder="Select Category" optionLabel="label" optionValue="value" styleClass="w-full"></p-select>
+        <p-select appendTo="body" [options]="feeCategoryOptions()" [(ngModel)]="newFeeCategoryId" placeholder="Select Category" optionLabel="label" optionValue="value" styleClass="w-full"></p-select>
       </div>
       <div class="form-group">
         <label class="form-label">Fee Code *</label>
@@ -293,7 +305,13 @@
   </p-dialog>
 
   <!-- Payment Term Template Dialog -->
-  <p-dialog header="New Installment Schedule Template" [(visible)]="displayTemplateDialog" [modal]="true" [style]="{ width: '460px' }">
+  <p-dialog
+    header="New Installment Schedule Template"
+    [(visible)]="displayTemplateDialog"
+    [modal]="true"
+    [breakpoints]="{ '960px': '75vw', '640px': '92vw' }"
+    [style]="{ width: '460px', maxWidth: '95vw' }"
+    [contentStyle]="{ 'overflow-x': 'hidden' }">
     <div class="dialog-form">
       <div class="form-group">
         <label class="form-label">Template Name *</label>
@@ -339,7 +357,13 @@
   </p-dialog>
 
   <!-- Scholarship Dialog -->
-  <p-dialog header="Register Scholarship Discount" [(visible)]="displayScholarshipDialog" [modal]="true" [style]="{ width: '480px' }">
+  <p-dialog
+    header="Register Scholarship Discount"
+    [(visible)]="displayScholarshipDialog"
+    [modal]="true"
+    [breakpoints]="{ '960px': '75vw', '640px': '92vw' }"
+    [style]="{ width: '480px', maxWidth: '95vw' }"
+    [contentStyle]="{ 'overflow-x': 'hidden' }">
     <div class="dialog-form">
       <div class="form-group">
         <label class="form-label">Code *</label>
@@ -352,11 +376,11 @@
       <div class="form-row-2">
         <div class="form-group">
           <label class="form-label">Category *</label>
-          <p-select [options]="scholarshipCategories" [(ngModel)]="schCategory" styleClass="w-full"></p-select>
+          <p-select appendTo="body" [options]="scholarshipCategories" [(ngModel)]="schCategory" styleClass="w-full"></p-select>
         </div>
         <div class="form-group">
           <label class="form-label">Benefit Type *</label>
-          <p-select [options]="scholarshipTypes" [(ngModel)]="schType" styleClass="w-full"></p-select>
+          <p-select appendTo="body" [options]="scholarshipTypes" [(ngModel)]="schType" styleClass="w-full"></p-select>
         </div>
       </div>
       <div class="form-row-2">

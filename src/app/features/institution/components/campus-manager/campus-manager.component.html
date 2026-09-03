@@ -112,7 +112,9 @@
     [header]="editingId() ? 'Edit Campus' : 'Register New Campus'"
     [(visible)]="isDialogVisible"
     [modal]="true"
-    [style]="{ width: '520px', maxWidth: '95vw' }">
+    [breakpoints]="{ '960px': '75vw', '640px': '92vw' }"
+    [style]="{ width: '520px', maxWidth: '95vw' }"
+    [contentStyle]="{ 'overflow-x': 'hidden' }">
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="dialog-form">
       <div class="form-row-2col">
         <div class="form-group">

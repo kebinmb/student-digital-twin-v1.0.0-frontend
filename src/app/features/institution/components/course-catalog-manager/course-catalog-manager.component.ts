@@ -88,7 +88,18 @@ export class CourseCatalogManagerComponent implements OnInit {
   readonly canManage = () => this.authService.hasAnyRole(['ADMIN', 'DEAN', 'CHAIRPERSON']);
 
   readonly form = new FormGroup<CourseForm>({
-    code: new FormControl<string>('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(30)] }),
+    code: new FormControl<string>('', {
+      nonNullable: true,
+      validators: [
+        Validators.required,
+        Validators.maxLength(30),
+        (control) => {
+          if (!control.value) return null;
+          const val = control.value.trim();
+          return val.includes('-') ? null : { missingHyphen: true };
+        }
+      ]
+    }),
     title: new FormControl<string>('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(150)] }),
     lectureUnits: new FormControl<number>(3, { nonNullable: true, validators: [Validators.required, Validators.min(0)] }),
     labUnits: new FormControl<number>(0, { nonNullable: true, validators: [Validators.required, Validators.min(0)] }),
@@ -98,10 +109,32 @@ export class CourseCatalogManagerComponent implements OnInit {
     description: new FormControl<string>('', { nonNullable: true })
   });
 
+  normalizeCourseCode(code: string): string {
+    if (!code) return '';
+    let clean = code.trim().toUpperCase();
+    clean = clean.replace(/[\s_]+/g, '-').replace(/-+/g, '-');
+    if (!clean.includes('-')) {
+      clean = clean.replace(/^([A-Z]+)(\d.*)$/, '$1-$2');
+    }
+    return clean;
+  }
+  preventWhitespace(event: KeyboardEvent): void {
+  if (event.key === ' ' || event.code === 'Space') {
+    event.preventDefault();
+  }
+}
+  onCodeBlur(): void {
+    const current = this.form.controls.code.value;
+    if (current) {
+      const normalized = this.normalizeCourseCode(current);
+      this.form.controls.code.setValue(normalized);
+    }
+  }
+
   get computedTotalUnits(): number {
-    const lec = this.form.get('lectureUnits')?.value || 0;
-    const lab = this.form.get('labUnits')?.value || 0;
-    return Number((Number(lec) + Number(lab)).toFixed(2));
+    const lec = Number(this.form.get('lectureUnits')?.value) || 0;
+    const lab = Number(this.form.get('labUnits')?.value) || 0;
+    return Number((lec + lab).toFixed(2));
   }
 
   ngOnInit(): void {
@@ -169,7 +202,7 @@ export class CourseCatalogManagerComponent implements OnInit {
   openEditDialog(c: Course): void {
     this.editingId.set(c.id);
     this.form.reset({
-      code: c.code,
+      code: this.normalizeCourseCode(c.code),
       title: c.title,
       lectureUnits: c.lectureUnits,
       labUnits: c.labUnits,
@@ -199,12 +232,15 @@ export class CourseCatalogManagerComponent implements OnInit {
   }
 
   onSubmit(): void {
+    const val = this.form.getRawValue();
+    const normalizedCode = this.normalizeCourseCode(val.code);
+    this.form.controls.code.setValue(normalizedCode);
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
 
-    const val = this.form.getRawValue();
     this.isSaving.set(true);
 
     const editId = this.editingId();
@@ -232,7 +268,7 @@ export class CourseCatalogManagerComponent implements OnInit {
       });
     } else {
       const req: CreateCourseRequest = {
-        code: val.code.trim().toUpperCase(),
+        code: normalizedCode,
         title: val.title.trim(),
         lectureUnits: Number(val.lectureUnits),
         labUnits: Number(val.labUnits),

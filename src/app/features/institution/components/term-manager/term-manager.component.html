@@ -123,13 +123,16 @@
     [header]="isEditing ? 'Update Term Schedule' : 'Schedule Academic Term'"
     [(visible)]="displayDialog"
     [modal]="true"
-    [style]="{ width: '420px', maxWidth: '95vw' }">
+    [breakpoints]="{ '960px': '75vw', '640px': '92vw' }"
+    [style]="{ width: '420px', maxWidth: '95vw' }"
+    [contentStyle]="{ 'overflow-x': 'hidden' }">
     
     <form [formGroup]="termForm" (ngSubmit)="saveTerm()" class="dialog-form">
       @if (!isEditing) {
         <div class="form-group">
           <label class="form-label">Academic Year *</label>
           <p-select
+            appendTo="body"
             [options]="academicYearOptions()"
             formControlName="academicYearId"
             placeholder="Select Academic Year"
@@ -142,6 +145,7 @@
         <div class="form-group">
           <label class="form-label">Term Type *</label>
           <p-select
+            appendTo="body"
             [options]="termTypeOptions"
             formControlName="termType"
             placeholder="Select Term Type"

@@ -143,7 +143,9 @@
     [visible]="isAddModalOpen()"
     (visibleChange)="isAddModalOpen.set($event)"
     [modal]="true"
-    [style]="{ width: '520px', maxWidth: '95vw' }">
+    [breakpoints]="{ '960px': '75vw', '640px': '92vw' }"
+    [style]="{ width: '520px', maxWidth: '95vw' }"
+    [contentStyle]="{ 'overflow-x': 'hidden' }">
     
     @if (allCurriculumCourses().length < 2) {
       <div class="empty-prereq-alert">

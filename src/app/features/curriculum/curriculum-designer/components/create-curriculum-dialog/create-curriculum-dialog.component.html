@@ -3,7 +3,9 @@
   [visible]="visible"
   (visibleChange)="visibleChange.emit($event)"
   [modal]="true"
-  [style]="{ width: '520px', maxWidth: '95vw' }">
+  [breakpoints]="{ '960px': '75vw', '640px': '92vw' }"
+  [style]="{ width: '520px', maxWidth: '95vw' }"
+  [contentStyle]="{ 'overflow-x': 'hidden' }">
   
   <form [formGroup]="form" (ngSubmit)="onSubmit()" class="dialog-content-body">
     <p class="dialog-intro-text">
@@ -43,6 +45,7 @@
     <div class="form-field-group">
       <label for="createProgramId" class="form-field-label">Degree Program *</label>
       <p-select
+        appendTo="body"
         id="createProgramId"
         [options]="programOptions()"
         formControlName="programId"
