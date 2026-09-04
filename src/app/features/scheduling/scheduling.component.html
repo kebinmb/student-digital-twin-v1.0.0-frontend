@@ -1,0 +1,30 @@
+<div class="scheduling-container">
+  <!-- Sub-navigation Tabs -->
+  <div class="sub-nav-tabs">
+    <button 
+      type="button" 
+      class="tab-btn" 
+      [class.active]="activeTab() === 'sections'" 
+      (click)="setTab('sections')">
+      <i class="pi pi-list"></i>
+      <span>Class Sections</span>
+    </button>
+    <button 
+      type="button" 
+      class="tab-btn" 
+      [class.active]="activeTab() === 'timetable'" 
+      (click)="setTab('timetable')">
+      <i class="pi pi-calendar"></i>
+      <span>Weekly Timetable Matrix</span>
+    </button>
+  </div>
+
+  <!-- Tab Views -->
+  <div class="tab-content">
+    @if (activeTab() === 'sections') {
+      <app-section-builder></app-section-builder>
+    } @else {
+      <app-timetable-grid (addSchedule)="setTab('sections')"></app-timetable-grid>
+    }
+  </div>
+</div>

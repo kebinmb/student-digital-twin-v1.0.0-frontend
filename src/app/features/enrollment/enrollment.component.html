@@ -1,0 +1,33 @@
+<div class="enrollment-module-container">
+  <!-- Sub-navigation Tabs -->
+  <div class="sub-nav-tabs">
+    <button 
+      type="button" 
+      class="tab-btn" 
+      [class.active]="activeTab() === 'advising'" 
+      (click)="setTab('advising')">
+      <i class="pi pi-book"></i>
+      <span>Course Advising Checklist</span>
+    </button>
+    <button 
+      type="button" 
+      class="tab-btn" 
+      [class.active]="activeTab() === 'enlistment'" 
+      (click)="setTab('enlistment')">
+      <i class="pi pi-list-check"></i>
+      <span>Enlisted Classes</span>
+      @if (store.enrollment()?.items?.length; as count) {
+        <span class="tab-badge">{{ count }}</span>
+      }
+    </button>
+  </div>
+
+  <!-- Tab Views -->
+  <div class="tab-content">
+    @if (activeTab() === 'advising') {
+      <app-student-advising></app-student-advising>
+    } @else {
+      <app-course-enlistment></app-course-enlistment>
+    }
+  </div>
+</div>

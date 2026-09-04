@@ -51,6 +51,47 @@
         The requested curriculum could not be retrieved from the academic registry or you lack permission to view it.
       </p>
       <div class="empty-state-actions">
+        @if (store.curriculumOptions().length > 0) {
+          <div class="empty-switcher-container">
+            <p-select
+              [options]="store.curriculumOptions()"
+              [ngModel]="selectedCurriculumId()"
+              (ngModelChange)="onCurriculumChange($event)"
+              optionValue="id"
+              optionLabel="name"
+              [filter]="true"
+              filterBy="code,name,programCode"
+              placeholder="Select an existing curriculum..."
+              [loading]="store.isOptionsLoading()"
+              appendTo="body"
+              styleClass="empty-switcher-select">
+              <ng-template pTemplate="selectedItem" let-selected>
+                <div class="switcher-selected-item" *ngIf="selected">
+                  <i class="pi pi-book switcher-selected-icon"></i>
+                  <span class="switcher-selected-code">{{ selected.code }}</span>
+                  <span class="switcher-selected-sep">-</span>
+                  <span class="switcher-selected-name">{{ selected.name }}</span>
+                </div>
+              </ng-template>
+              <ng-template pTemplate="item" let-item>
+                <div class="switcher-option-item">
+                  <div class="switcher-option-header">
+                    <span class="switcher-option-code">{{ item.code }}</span>
+                    <span class="switcher-option-name">{{ item.name }}</span>
+                    <p-tag [value]="item.status" [severity]="getStatusSeverity(item.status)"></p-tag>
+                  </div>
+                  <div class="switcher-option-sub">
+                    <span class="switcher-option-program"><i class="pi pi-graduation-cap"></i> {{ item.programCode }}</span>
+                    <span>&middot;</span>
+                    <span>AY {{ item.effectiveAcademicYear }}</span>
+                    <span>&middot;</span>
+                    <span>v{{ item.versionNumber }}</span>
+                  </div>
+                </div>
+              </ng-template>
+            </p-select>
+          </div>
+        }
         <p-button
           icon="pi pi-arrow-left"
           label="Back to Dashboard"
@@ -103,7 +144,10 @@
                 [value]="curr.status"
                 [severity]="getStatusSeverity(curr.status)">
               </p-tag>
-              <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 500;">AY 2026-2027</span>
+              @if (activeCurriculumOption(); as opt) {
+                <span class="header-ay-badge">AY {{ opt.effectiveAcademicYear }}</span>
+                <span class="header-version-badge">v{{ opt.versionNumber }}</span>
+              }
             </div>
             <p class="header-subtitle">
               Program Academic Backbone &middot; Interactive Drag-and-Drop Term Planning &middot; CHED CMO Compliance
@@ -113,6 +157,47 @@
 
         <!-- Action Toolbar -->
         <div class="header-actions-group">
+          <!-- Curriculum Switcher Selector -->
+          <div class="curriculum-switcher-container">
+            <p-select
+              [options]="store.curriculumOptions()"
+              [ngModel]="selectedCurriculumId()"
+              (ngModelChange)="onCurriculumChange($event)"
+              optionValue="id"
+              optionLabel="name"
+              [filter]="true"
+              filterBy="code,name,programCode"
+              placeholder="Switch Curriculum..."
+              [loading]="store.isOptionsLoading()"
+              appendTo="body"
+              styleClass="curriculum-switcher-select">
+              <ng-template pTemplate="selectedItem" let-selected>
+                <div class="switcher-selected-item" *ngIf="selected">
+                  <i class="pi pi-book switcher-selected-icon"></i>
+                  <span class="switcher-selected-code">{{ selected.code }}</span>
+                  <span class="switcher-selected-sep">-</span>
+                  <span class="switcher-selected-name">{{ selected.name }}</span>
+                </div>
+              </ng-template>
+              <ng-template pTemplate="item" let-item>
+                <div class="switcher-option-item">
+                  <div class="switcher-option-header">
+                    <span class="switcher-option-code">{{ item.code }}</span>
+                    <span class="switcher-option-name">{{ item.name }}</span>
+                    <p-tag [value]="item.status" [severity]="getStatusSeverity(item.status)"></p-tag>
+                  </div>
+                  <div class="switcher-option-sub">
+                    <span class="switcher-option-program"><i class="pi pi-graduation-cap"></i> {{ item.programCode }}</span>
+                    <span>&middot;</span>
+                    <span>AY {{ item.effectiveAcademicYear }}</span>
+                    <span>&middot;</span>
+                    <span>v{{ item.versionNumber }}</span>
+                  </div>
+                </div>
+              </ng-template>
+            </p-select>
+          </div>
+
           <p-button
             icon="pi pi-check-circle"
             label="Validate & Audit"
@@ -158,6 +243,18 @@
               severity="secondary"
               [outlined]="true"
               (onClick)="openCreateModal()">
+            </p-button>
+
+            <p-button
+              icon="pi pi-trash"
+              label="Delete"
+              severity="danger"
+              [outlined]="true"
+              size="small"
+              [disabled]="curr.status === 'ACTIVE' || curr.status === 'APPROVED' || store.isSaving()"
+              [pTooltip]="curr.status === 'ACTIVE' || curr.status === 'APPROVED' ? 'Active or approved curricula cannot be deleted' : 'Permanently delete this curriculum'"
+              tooltipPosition="bottom"
+              (onClick)="confirmDeleteCurriculum()">
             </p-button>
           }
         </div>
@@ -644,5 +741,8 @@
     [visible]="isCreateModalOpen()"
     (visibleChange)="isCreateModalOpen.set($event)">
   </app-create-curriculum-dialog>
+
+  <!-- Delete Confirmation Dialog -->
+  <p-confirmdialog key="curriculumDesignerConfirm"></p-confirmdialog>
 
 </div>

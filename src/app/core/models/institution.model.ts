@@ -33,7 +33,10 @@ export interface Term {
   enrollmentOpen?: boolean;
   gradingOpen?: boolean;
   addDropOpen?: boolean;
+  termName?: string;
 }
+
+export type TermResponse = Term;
 
 export interface CreateTermRequest {
   academicYearId: number;

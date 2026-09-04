@@ -1,0 +1,128 @@
+<div class="enlistment-container">
+  <p-toast></p-toast>
+  <p-confirmdialog key="enrollmentConfirmDialog"></p-confirmdialog>
+
+  <!-- Summary Card -->
+  <div class="summary-card">
+    <div class="summary-header">
+      <div>
+        <h3 class="summary-title">
+          <i class="pi pi-check-square"></i>
+          Official Enlistment & Registration Summary
+        </h3>
+        <span class="summary-subtitle">
+          Official enrollment records for academic term: 
+          <strong>{{ store.enrollment()?.termName || 'Current Term' }}</strong>
+        </span>
+      </div>
+
+      <div class="summary-actions">
+        @if (store.enrollment(); as enr) {
+          <p-tag [value]="enr.status" [severity]="getStatusSeverity(enr.status)"></p-tag>
+          
+          @if (enr.status !== 'ENROLLED' && enr.items && enr.items.length > 0) {
+            <button 
+              pButton 
+              type="button" 
+              label="Finalize Enrollment" 
+              icon="pi pi-check-circle" 
+              class="p-button-success p-button-sm"
+              [loading]="store.isEnlisting()"
+              (click)="confirmFinalizeEnrollment()">
+            </button>
+          }
+        }
+      </div>
+    </div>
+
+    <!-- Units & Metrics Grid -->
+    <div class="metrics-grid">
+      <div class="metric-box">
+        <span class="metric-label">Enlisted Subjects</span>
+        <span class="metric-value">{{ store.enrollment()?.items?.length || 0 }} Courses</span>
+      </div>
+      <div class="metric-box">
+        <span class="metric-label">Total Credit Units</span>
+        <span class="metric-value">{{ store.totalUnits() }} / {{ store.maxUnits() }} Units</span>
+      </div>
+      <div class="metric-box">
+        <span class="metric-label">Registration Status</span>
+        <span class="metric-value font-semibold">{{ store.enrollment()?.status || 'NOT_STARTED' }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Enlisted Classes Table -->
+  <div class="table-card">
+    <div class="table-card-header">
+      <h4 class="table-title">Enlisted Class Sections</h4>
+      <span class="table-subtitle">Review schedule commitments and allocated room assignments</span>
+    </div>
+
+    <p-table 
+      [value]="store.enrollment()?.items || []" 
+      [loading]="store.isLoading()"
+      [rowHover]="true"
+      styleClass="p-datatable-sm"
+      responsiveLayout="scroll">
+      
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Section</th>
+          <th>Course</th>
+          <th>Units</th>
+          <th>Timetable & Room Schedule</th>
+          <th>Status</th>
+          <th style="width: 100px; text-align: center;">Action</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-item>
+        <tr>
+          <td><strong class="text-primary">{{ item.sectionCode }}</strong></td>
+          <td>
+            <div class="course-cell">
+              <span class="course-code">{{ item.courseCode }}</span>
+              <span class="course-title">{{ item.courseTitle }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="font-semibold">{{ item.creditUnits }} units</span>
+          </td>
+          <td>
+            <div class="schedule-text">
+              <i class="pi pi-calendar text-xs"></i>
+              <span>{{ item.scheduleSummary || 'No timetable assigned' }}</span>
+            </div>
+          </td>
+          <td>
+            <p-tag [value]="item.completionStatus" severity="info"></p-tag>
+          </td>
+          <td style="text-align: center;">
+            <button 
+              pButton 
+              type="button" 
+              icon="pi pi-trash" 
+              class="p-button-danger p-button-text p-button-sm"
+              title="Drop Section"
+              [disabled]="store.enrollment()?.status === 'ENROLLED' || store.isEnlisting()"
+              (click)="confirmDropSection(item)">
+            </button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="empty-state-cell">
+            <div class="empty-state-wrapper">
+              <i class="pi pi-info-circle empty-icon"></i>
+              <p class="empty-text">No courses currently enlisted for this academic term.</p>
+              <p class="empty-subtext">Switch to the "Course Advising Checklist" tab to review your eligible courses and select open sections.</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

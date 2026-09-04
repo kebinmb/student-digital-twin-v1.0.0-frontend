@@ -1,0 +1,1012 @@
+<div class="section-builder-wrapper">
+  <!-- Toast & Scoped Confirmation Dialog -->
+  <p-toast></p-toast>
+  <p-confirmdialog key="schedulingConfirmDialog"></p-confirmdialog>
+
+  <!-- Header & Gate 1 Alert -->
+  <div class="section-builder-header">
+    <div class="header-content">
+      <div>
+        <h2 class="title">Class Section & Timetable Management</h2>
+        <p class="subtitle">CHED CMO No. 25, s. 2015 Compliant Section Builder & Weekly Facility Allocator</p>
+      </div>
+      <div class="header-actions">
+        <p-button 
+          label="Faculty Workload" 
+          icon="pi pi-users" 
+          severity="secondary" 
+          [outlined]="true" 
+          size="small"
+          (onClick)="openFacultyLoadModal()">
+        </p-button>
+        <p-button 
+          label="Add Schedule" 
+          icon="pi pi-plus" 
+          severity="success" 
+          size="small"
+          [disabled]="store.isLoading()"
+          (onClick)="openCreateModal()">
+        </p-button>
+      </div>
+    </div>
+
+    <!-- Gate 1 Lock Warning -->
+    @if (!store.isCurriculumActive() && store.curricula().length > 0) {
+      <div class="gate1-alert">
+        <p-message 
+          severity="warn" 
+          text="Gate 1 Lock: Selected curriculum is not in ACTIVE status. Class sections can only be scheduled under ACTIVE curricula.">
+        </p-message>
+      </div>
+    }
+  </div>
+
+  <!-- Filter & Parameter Toolbar Card -->
+  <div class="filter-strip-card">
+    <div class="filter-group">
+      <label class="filter-label">Academic Term</label>
+      <p-select 
+        [options]="store.terms()" 
+        optionLabel="termName" 
+        optionValue="id" 
+        [ngModel]="store.selectedTermId()" 
+        (onChange)="onTermSelect($event.value)"
+        [filter]="true"
+        filterPlaceholder="Search term..."
+        placeholder="Select Academic Term"
+        appendTo="body"
+        styleClass="w-full">
+        <ng-template let-t pTemplate="item">
+          <div class="flex items-center justify-between gap-2 w-full">
+            <span>{{ t.termName }}</span>
+            @if (t.isActive) {
+              <p-tag value="ACTIVE" severity="success" styleClass="text-xs"></p-tag>
+            }
+          </div>
+        </ng-template>
+      </p-select>
+    </div>
+
+    <div class="filter-group">
+      <label class="filter-label">Curriculum</label>
+      <p-select 
+        [options]="store.curricula()" 
+        optionLabel="name" 
+        optionValue="id" 
+        [ngModel]="store.selectedCurriculumId()" 
+        (onChange)="onCurriculumSelect($event.value)"
+        [filter]="true"
+        filterPlaceholder="Search curriculum..."
+        placeholder="Select Curriculum"
+        appendTo="body"
+        styleClass="w-full">
+        <ng-template let-c pTemplate="item">
+          <div class="flex items-center justify-between gap-2 w-full">
+            <span>{{ c.code }} - {{ c.name }}</span>
+            <p-tag [value]="c.status" [severity]="c.status === 'ACTIVE' ? 'success' : 'warn'" styleClass="text-xs"></p-tag>
+          </div>
+        </ng-template>
+      </p-select>
+    </div>
+
+    <div class="filter-metrics-group">
+      <div class="filter-metrics session-cap-metric">
+        <span class="metric-label">Max Session:</span>
+        <span class="metric-value">{{ store.maxHoursPerClass() }} hrs</span>
+        @if (isAdmin()) {
+          <p-button 
+            icon="pi pi-pencil" 
+            [text]="true" 
+            size="small" 
+            pTooltip="Configure Term Max Class Session Duration" 
+            (onClick)="openEditMaxHoursModal()">
+          </p-button>
+        }
+      </div>
+
+      <div class="filter-metrics">
+        <span class="metric-label">Scheduled Sections:</span>
+        <span class="metric-value">{{ store.totalSections() }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sections Data Table -->
+  <div class="table-container">
+    <p-table 
+      [value]="store.sections()" 
+      [loading]="store.isLoading()" 
+      responsiveLayout="scroll"
+      styleClass="p-datatable-striped p-datatable-sm">
+      
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Section Code</th>
+          <th>Course Offering</th>
+          <th>Units</th>
+          <th>Timetable Schedule Slots</th>
+          <th>Enrollment</th>
+          <th>Status</th>
+          <th style="width: 130px; text-align: center;">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-sec>
+        <tr>
+          <td>
+            <span class="section-badge">{{ sec.sectionCode }}</span>
+          </td>
+          <td>
+            <div class="course-cell">
+              <span class="course-code">{{ sec.courseCode }}</span>
+              <span class="course-title">{{ sec.courseTitle }}</span>
+            </div>
+          </td>
+          <td>
+            <div class="units-cell">
+              <span class="credit-units">{{ sec.creditUnits }} units</span>
+              <span class="breakdown">({{ sec.lectureUnits }} lec / {{ sec.labUnits }} lab)</span>
+            </div>
+          </td>
+          <td>
+            <div class="schedules-list">
+              @for (slot of sec.schedules; track slot.id) {
+                <div class="schedule-chip">
+                  <i class="pi pi-clock"></i>
+                  <span>{{ slot.dayOfWeek }} {{ slot.startTime }} - {{ slot.endTime }}</span>
+                  <span class="room-tag">{{ slot.roomCode }}</span>
+                  @if (slot.instructorName && slot.instructorName !== 'Unassigned') {
+                    <span 
+                      class="instructor-tag clickable" 
+                      title="View Faculty Workload"
+                      (click)="openFacultyLoadModal(slot.instructorUserId)">
+                      <i class="pi pi-user text-xs"></i> {{ slot.instructorName }}
+                    </span>
+                  }
+                  <span class="type-tag" [class.lab]="slot.scheduleType === 'LABORATORY'">
+                    {{ slot.scheduleType }}
+                  </span>
+                </div>
+              }
+              @if (sec.schedules.length === 0) {
+                <span class="no-schedule">No schedule slots</span>
+              }
+            </div>
+          </td>
+          <td>
+            <div class="enrollment-meter">
+              <span [class.full]="sec.enrolledCount >= sec.maxCapacity">
+                {{ sec.enrolledCount }} / {{ sec.maxCapacity }}
+              </span>
+            </div>
+          </td>
+          <td>
+            <p-tag 
+              [value]="sec.status" 
+              [severity]="getStatusSeverity(sec.status)">
+            </p-tag>
+          </td>
+          <td style="text-align: center;">
+            <div class="table-actions">
+              <p-button 
+                icon="pi pi-calendar" 
+                severity="info" 
+                [text]="true" 
+                size="small"
+                pTooltip="View Slot Details"
+                tooltipPosition="top"
+                (onClick)="openSlotDetailsModal(sec)">
+              </p-button>
+              @if (sec.schedules.length > 0 && sec.schedules[0].instructorUserId) {
+                <p-button 
+                  icon="pi pi-user" 
+                  severity="secondary" 
+                  [text]="true" 
+                  size="small"
+                  pTooltip="Faculty Workload"
+                  tooltipPosition="top"
+                  (onClick)="openFacultyLoadModal(sec.schedules[0].instructorUserId)">
+                </p-button>
+              }
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="empty-message">
+            <i class="pi pi-calendar-times"></i>
+            <p>No class sections scheduled for this academic term.</p>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- DIALOG 1: Create Section & Timetable Modal Dialog                         -->
+  <!-- ========================================================================= -->
+  <p-dialog 
+    header="Create Class Section & Timetable" 
+    [visible]="isCreateModalVisible()" 
+    (visibleChange)="isCreateModalVisible.set($event)"
+    [modal]="true" 
+    [draggable]="false" 
+    [resizable]="false"
+    [dismissableMask]="true"
+    [closeOnEscape]="true"
+    [focusOnShow]="false"
+    appendTo="body"
+    [style]="{ width: '780px', maxWidth: '95vw' }"
+    [contentStyle]="{ 'max-height': '72vh', 'overflow-y': 'auto' }"
+    styleClass="scheduling-custom-dialog"
+    (onHide)="closeCreateModal()">
+    
+    <ng-template pTemplate="content">
+      <!-- Context Bar -->
+      <div class="modal-context-bar">
+        <div class="context-item">
+          <span class="context-label">Curriculum:</span>
+          <strong class="context-val">{{ store.selectedCurriculum()?.name || 'None' }}</strong>
+          <p-tag 
+            [value]="store.selectedCurriculum()?.status || 'UNKNOWN'" 
+            [severity]="store.isCurriculumActive() ? 'success' : 'danger'"
+            styleClass="ml-2 text-xs">
+          </p-tag>
+        </div>
+        <div class="context-item">
+          <span class="context-label">Term:</span>
+          <strong class="context-val">{{ store.terms()[0]?.termName || 'Current Term' }}</strong>
+        </div>
+      </div>
+
+      <form [formGroup]="sectionForm" (ngSubmit)="submitSection()" class="dialog-form-grid">
+        <!-- Section Core Grid -->
+        <div class="form-row-2col">
+          <div class="form-field full-width">
+            <label class="form-label">Course Offering *</label>
+            <p-select 
+              [options]="availableCourses()" 
+              optionLabel="code" 
+              optionValue="courseId" 
+              formControlName="courseId" 
+              [filter]="true"
+              filterPlaceholder="Search course code or title..."
+              (onChange)="onCourseSelect($event.value)"
+              placeholder="Select Prescribed Course"
+              appendTo="body"
+              styleClass="w-full">
+              <ng-template let-c pTemplate="item">
+                <div class="course-option-row">
+                  <div>
+                    <strong>{{ c.code }}</strong> — {{ c.title }}
+                  </div>
+                  <span class="option-units-pill">{{ c.creditUnits }} units ({{ c.lectureUnits }}L / {{ c.labUnits }}Lab)</span>
+                </div>
+              </ng-template>
+            </p-select>
+            @if (isControlInvalid('courseId')) {
+              <small class="p-error">Please select a prescribed course offering.</small>
+            }
+          </div>
+
+          <div class="form-field">
+            <label class="form-label">Section Code *</label>
+            <input 
+              pInputText 
+              type="text" 
+              formControlName="sectionCode" 
+              placeholder="e.g. BSIT-1A" 
+              class="w-full"
+              [class.ng-invalid]="isControlInvalid('sectionCode')"
+              [class.ng-dirty]="isControlInvalid('sectionCode')" />
+            @if (sectionForm.get('sectionCode')?.errors?.['required'] && isControlTouchedOrDirty('sectionCode')) {
+              <small class="p-error">Section code is required.</small>
+            }
+            @if (sectionForm.get('sectionCode')?.errors?.['whitespace'] && isControlTouchedOrDirty('sectionCode')) {
+              <small class="p-error">Section code cannot be empty whitespace.</small>
+            }
+            @if (sectionForm.get('sectionCode')?.errors?.['maxlength']) {
+              <small class="p-error">Section code cannot exceed 30 characters.</small>
+            }
+          </div>
+
+          <div class="form-field">
+            <label class="form-label">Max Headcount Capacity *</label>
+            <input 
+              pInputText 
+              type="number" 
+              formControlName="maxCapacity" 
+              min="1" 
+              max="100" 
+              class="w-full"
+              [class.ng-invalid]="isControlInvalid('maxCapacity')"
+              [class.ng-dirty]="isControlInvalid('maxCapacity')" />
+            @if (sectionForm.get('maxCapacity')?.errors?.['required'] && isControlTouchedOrDirty('maxCapacity')) {
+              <small class="p-error">Headcount capacity is required.</small>
+            }
+            @if ((sectionForm.get('maxCapacity')?.errors?.['min'] || sectionForm.get('maxCapacity')?.errors?.['max']) && isControlTouchedOrDirty('maxCapacity')) {
+              <small class="p-error">Capacity must be between 1 and 100 students.</small>
+            }
+          </div>
+        </div>
+
+        <!-- CHED Contact Hours Live Indicator & Meter -->
+        @if (selectedCourse()) {
+          <div class="ched-requirement-box">
+            <div class="ched-req-header">
+              <div class="duration-meter" [class.valid]="isDurationValid()" [class.invalid]="!isDurationValid()">
+                <i class="pi" [ngClass]="isDurationValid() ? 'pi-check-circle' : 'pi-exclamation-triangle'"></i>
+                <span>Allocated: {{ currentDurationMinutes() }} mins / Required: {{ requiredMinutes() }} mins</span>
+              </div>
+              <span class="ched-badge">CHED CMO No. 25</span>
+            </div>
+
+            <div class="duration-breakdown-row">
+              <span class="breakdown-tag" [class.matched]="isLecDurationValid()" [class.mismatched]="!isLecDurationValid()">
+                <i class="pi" [ngClass]="isLecDurationValid() ? 'pi-check' : 'pi-times'"></i>
+                Lecture: {{ allocatedLecMinutes() }}m / {{ requiredLecMinutes() }}m ({{ selectedCourse()?.lectureUnits || 0 }} hrs)
+              </span>
+              <span class="breakdown-tag" [class.matched]="isLabDurationValid()" [class.mismatched]="!isLabDurationValid()">
+                <i class="pi" [ngClass]="isLabDurationValid() ? 'pi-check' : 'pi-times'"></i>
+                Laboratory: {{ allocatedLabMinutes() }}m / {{ requiredLabMinutes() }}m ({{ (selectedCourse()?.labUnits || 0) * 3 }} hrs)
+              </span>
+            </div>
+          </div>
+        }
+
+        <!-- Schedule Slots Section -->
+        <div class="slots-section">
+          <div class="slots-header">
+            <label class="section-label">
+              <i class="pi pi-clock mr-1"></i>
+              Timetable Slots & Room Allocations
+            </label>
+            <p-button 
+              type="button" 
+              label="Add Slot" 
+              icon="pi pi-plus" 
+              size="small" 
+              [outlined]="true"
+              (onClick)="addSlot()">
+            </p-button>
+          </div>
+
+          <div formArrayName="scheduleSlots" class="slots-list">
+            @for (slot of scheduleSlotsArray.controls; track $index) {
+              <div [formGroupName]="$index" class="slot-card">
+                <div class="slot-card-header">
+                  <span class="slot-badge">Slot #{{ $index + 1 }}</span>
+                  @if (scheduleSlotsArray.length > 1) {
+                    <p-button 
+                      type="button" 
+                      icon="pi pi-trash" 
+                      severity="danger" 
+                      [text]="true" 
+                      size="small"
+                      pTooltip="Remove Slot"
+                      (onClick)="removeSlot($index)">
+                    </p-button>
+                  }
+                </div>
+
+                <!-- Multi-Day Recurring Selector & Presets -->
+                <div class="day-selection-section">
+                  <div class="day-selection-header">
+                    <span class="day-label"><i class="pi pi-calendar mr-1"></i> Meeting Days *</span>
+                    <div class="preset-buttons">
+                      <span class="preset-title">Presets:</span>
+                      <button type="button" class="preset-pill" [class.active]="getActivePreset($index) === 'MW'" (click)="applyDayPreset($index, 'MW')">MW</button>
+                      <button type="button" class="preset-pill" [class.active]="getActivePreset($index) === 'TTH'" (click)="applyDayPreset($index, 'TTH')">TTH</button>
+                      <button type="button" class="preset-pill" [class.active]="getActivePreset($index) === 'MWF'" (click)="applyDayPreset($index, 'MWF')">MWF</button>
+                      <button type="button" class="preset-pill" [class.active]="getActivePreset($index) === 'SAT'" (click)="applyDayPreset($index, 'SAT')">Sat Only</button>
+                    </div>
+                  </div>
+                  <div class="day-checkboxes-grid">
+                    @for (d of daysOfWeek; track d.value) {
+                      <div class="day-checkbox-item">
+                        <p-checkbox 
+                          [binary]="true"
+                          [inputId]="'slot_' + $index + '_day_' + d.value"
+                          [ngModel]="isDayChecked($index, d.value)"
+                          (ngModelChange)="onDayCheckboxChange($index, d.value, $event)"
+                          [ngModelOptions]="{ standalone: true }">
+                        </p-checkbox>
+                        <label [for]="'slot_' + $index + '_day_' + d.value" class="day-checkbox-label">
+                          {{ d.label }}
+                        </label>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <!-- Slot Form Grid -->
+                <div class="form-row-2col">
+                  <div class="form-field">
+                    <label class="form-label">Schedule Type *</label>
+                    <p-select 
+                      [options]="scheduleTypes" 
+                      optionLabel="label" 
+                      optionValue="value" 
+                      formControlName="scheduleType" 
+                      appendTo="body"
+                      styleClass="w-full">
+                    </p-select>
+                  </div>
+
+                  <div class="form-field">
+                    <label class="form-label">Room / Facility *</label>
+                    <p-select 
+                      [options]="store.rooms()" 
+                      optionLabel="code" 
+                      optionValue="id" 
+                      formControlName="roomId" 
+                      [filter]="true"
+                      filterPlaceholder="Search room code or name..."
+                      placeholder="Select Classroom / Lab"
+                      appendTo="body"
+                      styleClass="w-full">
+                      <ng-template let-r pTemplate="item">
+                        <div class="room-option-item">
+                          <span><strong>{{ r.code }}</strong> - {{ r.name }}</span>
+                          <div class="room-tags">
+                            <span class="cap-tag">Cap: {{ r.capacity }}</span>
+                            <span class="type-mini-tag">{{ r.roomType }}</span>
+                          </div>
+                        </div>
+                      </ng-template>
+                    </p-select>
+                    @if (slot.get('roomId')?.invalid && (slot.get('roomId')?.dirty || slot.get('roomId')?.touched || submitted())) {
+                      <small class="p-error">Room assignment is required.</small>
+                    }
+                  </div>
+
+                  <div class="form-field">
+                    <label class="form-label">Faculty / Instructor</label>
+                    <p-select 
+                      [options]="store.instructors()" 
+                      optionLabel="username" 
+                      optionValue="id" 
+                      formControlName="instructorUserId" 
+                      [filter]="true"
+                      filterPlaceholder="Search instructor..."
+                      [showClear]="true"
+                      placeholder="Assign Faculty (Optional)"
+                      appendTo="body"
+                      styleClass="w-full">
+                      <ng-template let-i pTemplate="item">
+                        <div class="instructor-option-item">
+                          <span>{{ i.username }}</span>
+                          <span class="email-subtext">{{ i.email }}</span>
+                        </div>
+                      </ng-template>
+                    </p-select>
+                  </div>
+
+                  <div class="form-field-time-group">
+                    <div class="time-field">
+                      <label class="form-label">Start Time *</label>
+                      <input 
+                        pInputText 
+                        type="time" 
+                        formControlName="startTime" 
+                        class="w-full"
+                        [class.ng-invalid]="slot.get('startTime')?.invalid && (slot.get('startTime')?.dirty || slot.get('startTime')?.touched || submitted())" />
+                      @if (slot.get('startTime')?.invalid && (slot.get('startTime')?.dirty || slot.get('startTime')?.touched || submitted())) {
+                        <small class="p-error">Required</small>
+                      }
+                    </div>
+
+                    <div class="time-field">
+                      <label class="form-label">End Time *</label>
+                      <input 
+                        pInputText 
+                        type="time" 
+                        formControlName="endTime" 
+                        class="w-full"
+                        [class.ng-invalid]="slot.get('endTime')?.invalid && (slot.get('endTime')?.dirty || slot.get('endTime')?.touched || submitted())" />
+                      @if (slot.get('endTime')?.invalid && (slot.get('endTime')?.dirty || slot.get('endTime')?.touched || submitted())) {
+                        <small class="p-error">Required</small>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Slot Cross-Field Time Order Error Banner -->
+                @if (slot.errors?.['invalidTimeOrder'] && (slot.get('endTime')?.dirty || slot.get('endTime')?.touched || submitted())) {
+                  <div class="slot-error-banner">
+                    <i class="pi pi-exclamation-circle"></i>
+                    <span>End time must be strictly after start time.</span>
+                  </div>
+                }
+
+                <!-- Slot Session Duration Cap Error Banner -->
+                @if (getSlotDurationError($index)) {
+                  <div class="slot-error-banner duration-cap">
+                    <i class="pi pi-hourglass"></i>
+                    <span>{{ getSlotDurationError($index) }}</span>
+                  </div>
+                }
+
+                <!-- Immediate Client-Side Collision Pre-Check Alerts -->
+                @if (getSlotRoomCollision($index)) {
+                  <div class="collision-warning-badge room">
+                    <i class="pi pi-exclamation-triangle"></i>
+                    <span>{{ getSlotRoomCollision($index) }}</span>
+                  </div>
+                }
+
+                @if (getSlotFacultyCollision($index)) {
+                  <div class="collision-warning-badge faculty">
+                    <i class="pi pi-exclamation-triangle"></i>
+                    <span>{{ getSlotFacultyCollision($index) }}</span>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </form>
+    </ng-template>
+
+    <!-- Standard Dedicated Modal Footer -->
+    <ng-template pTemplate="footer">
+      <p-button 
+        label="Cancel" 
+        icon="pi pi-times" 
+        severity="secondary" 
+        [text]="true" 
+        (onClick)="closeCreateModal()">
+      </p-button>
+      <p-button 
+        label="Schedule Section" 
+        icon="pi pi-check" 
+        severity="primary" 
+        type="submit"
+        [loading]="store.isSaving()"
+        [disabled]="sectionForm.invalid || !isDurationValid() || store.isSaving()"
+        (onClick)="submitSection()">
+      </p-button>
+    </ng-template>
+  </p-dialog>
+
+  <!-- ========================================================================= -->
+  <!-- DIALOG 2: Schedule Slot Details Modal Dialog                              -->
+  <!-- ========================================================================= -->
+  <p-dialog 
+    [header]="'Schedule Slot Details — ' + (selectedSectionForDetails()?.sectionCode || '')" 
+    [visible]="isSlotDetailsModalVisible()" 
+    (visibleChange)="isSlotDetailsModalVisible.set($event)"
+    [modal]="true" 
+    [draggable]="false" 
+    [resizable]="false"
+    [dismissableMask]="true"
+    [closeOnEscape]="true"
+    [focusOnShow]="false"
+    appendTo="body"
+    [style]="{ width: '680px', maxWidth: '95vw' }"
+    [contentStyle]="{ 'max-height': '72vh', 'overflow-y': 'auto' }"
+    styleClass="scheduling-custom-dialog"
+    (onHide)="closeSlotDetailsModal()">
+    
+    <ng-template pTemplate="content">
+      @if (selectedSectionForDetails()) {
+        <div class="slot-details-container">
+          <!-- Section Summary Card -->
+          <div class="section-overview-banner">
+            <div class="overview-header">
+              <div>
+                <span class="overview-code">{{ selectedSectionForDetails()?.courseCode }}</span>
+                <h3 class="overview-title">{{ selectedSectionForDetails()?.courseTitle }}</h3>
+              </div>
+              <p-tag 
+                [value]="selectedSectionForDetails()?.status" 
+                [severity]="getStatusSeverity(selectedSectionForDetails()?.status || '')">
+              </p-tag>
+            </div>
+            <div class="overview-meta-row">
+              <span class="meta-item">
+                <i class="pi pi-book"></i>
+                <strong>{{ selectedSectionForDetails()?.creditUnits }} Units</strong>
+                ({{ selectedSectionForDetails()?.lectureUnits }}L / {{ selectedSectionForDetails()?.labUnits }}Lab)
+              </span>
+              <span class="meta-item">
+                <i class="pi pi-users"></i>
+                Capacity: <strong>{{ selectedSectionForDetails()?.enrolledCount }} / {{ selectedSectionForDetails()?.maxCapacity }}</strong>
+              </span>
+              <span class="meta-item">
+                <i class="pi pi-folder"></i>
+                {{ selectedSectionForDetails()?.curriculumCode }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Timetable Slots Table -->
+          <div class="slots-table-wrapper">
+            <h4 class="slots-subtitle">
+              <i class="pi pi-calendar mr-1"></i> Timetable Allocations ({{ selectedSectionForDetails()?.schedules?.length || 0 }} Slots)
+            </h4>
+            <table class="custom-slot-table">
+              <thead>
+                <tr>
+                  <th>Day</th>
+                  <th>Time Window</th>
+                  <th>Facility / Room</th>
+                  <th>Type</th>
+                  <th>Instructor</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (slot of selectedSectionForDetails()?.schedules; track slot.id) {
+                  <tr>
+                    <td><strong>{{ slot.dayOfWeek }}</strong></td>
+                    <td>{{ slot.startTime }} - {{ slot.endTime }}</td>
+                    <td>
+                      <span class="room-pill">{{ slot.roomCode }}</span>
+                    </td>
+                    <td>
+                      <span class="type-tag" [class.lab]="slot.scheduleType === 'LABORATORY'">
+                        {{ slot.scheduleType }}
+                      </span>
+                    </td>
+                    <td>
+                      @if (slot.instructorName && slot.instructorName !== 'Unassigned') {
+                        <span 
+                          class="instructor-link" 
+                          (click)="openFacultyLoadModal(slot.instructorUserId)">
+                          <i class="pi pi-user text-xs"></i> {{ slot.instructorName }}
+                        </span>
+                      } @else {
+                        <span class="text-gray-400">TBA</span>
+                      }
+                    </td>
+                  </tr>
+                }
+                @if ((selectedSectionForDetails()?.schedules?.length || 0) === 0) {
+                  <tr>
+                    <td colspan="5" class="text-center py-4 text-gray-500">No schedule slots found.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      <p-button 
+        label="Close" 
+        icon="pi pi-times" 
+        severity="secondary" 
+        [text]="true" 
+        (onClick)="closeSlotDetailsModal()">
+      </p-button>
+    </ng-template>
+  </p-dialog>
+
+  <!-- ========================================================================= -->
+  <!-- DIALOG 3: Faculty Load & Workload Inspector Dialog                        -->
+  <!-- ========================================================================= -->
+  <p-dialog 
+    header="Faculty Workload & Contact Hours" 
+    [visible]="isFacultyLoadModalVisible()" 
+    (visibleChange)="isFacultyLoadModalVisible.set($event)"
+    [modal]="true" 
+    [draggable]="false" 
+    [resizable]="false" 
+    [dismissableMask]="true" 
+    [closeOnEscape]="true"
+    [focusOnShow]="false"
+    appendTo="body"
+    [style]="{ width: '740px', maxWidth: '95vw' }"
+    [contentStyle]="{ 'max-height': '72vh', 'overflow-y': 'auto' }"
+    styleClass="scheduling-custom-dialog"
+    (onHide)="closeFacultyLoadModal()">
+
+    <ng-template pTemplate="content">
+      <div class="faculty-workload-content">
+        <!-- Faculty Selection Strip -->
+        <div class="faculty-select-strip">
+          <label class="form-label">Select Faculty Member:</label>
+          <p-select 
+            [options]="store.instructors()" 
+            optionLabel="username" 
+            optionValue="id" 
+            [filter]="true"
+            filterPlaceholder="Search faculty name or email..."
+            [ngModel]="selectedFacultyId()" 
+            (onChange)="onFacultyWorkloadSelect($event.value)"
+            placeholder="Select Faculty Member"
+            appendTo="body"
+            styleClass="w-full">
+            <ng-template let-i pTemplate="item">
+              <div class="instructor-option-item">
+                <span><strong>{{ i.username }}</strong></span>
+                <span class="email-subtext">{{ i.email }}</span>
+              </div>
+            </ng-template>
+          </p-select>
+        </div>
+
+        <!-- Workload Summary Dashboard -->
+        @if (store.isWorkloadLoading()) {
+          <div class="workload-loading">
+            <i class="pi pi-spin pi-spinner text-2xl"></i>
+            <span>Loading faculty workload data...</span>
+          </div>
+        } @else if (store.selectedFacultyWorkload()) {
+          @let wl = store.selectedFacultyWorkload()!;
+          <div class="workload-dashboard">
+            <!-- Metrics Cards: Dynamic Preparations, Load, Overload & Total Contact Hours -->
+            <div class="metrics-grid">
+              <div class="metric-card">
+                <span class="metric-subtitle">Course Preparations</span>
+                <span class="metric-num">{{ wl.numberOfPreparations ?? 0 }} <small class="text-xs">courses</small></span>
+                <span class="metric-desc">
+                  {{ (wl.numberOfPreparations ?? 0) <= 2 ? 'Standard cap: 21.00 hrs (<= 2 preps)' : 'Reduced cap: 18.00 hrs (> 2 preps)' }}
+                </span>
+              </div>
+
+              <div class="metric-card">
+                <span class="metric-subtitle">Teaching Load</span>
+                <span class="metric-num">
+                  {{ wl.regularUnits }} 
+                  <small class="text-xs">/ {{ wl.effectiveMaxUnits ?? ((wl.numberOfPreparations ?? 0) <= 2 ? 21.00 : 18.00) }} hrs</small>
+                </span>
+                <span class="metric-desc">
+                  @if (wl.customMaxLoadUnits) {
+                    Custom override active
+                  } @else {
+                    Dynamic preparation limit
+                  }
+                </span>
+              </div>
+
+              <div class="metric-card" [class.highlight]="wl.overloadUnits > 0">
+                <span class="metric-subtitle">Overload Units</span>
+                <span class="metric-num">{{ wl.overloadUnits }} <small class="text-xs">hrs</small></span>
+                <span class="metric-desc">Hours above regular load cap</span>
+              </div>
+
+              <div class="metric-card" [class.cap-alert]="wl.totalContactHours >= 24">
+                <span class="metric-subtitle">Total Contact Hours</span>
+                <span class="metric-num">{{ wl.totalContactHours }} <small class="text-xs">/ 24.00 hrs</small></span>
+                <span class="metric-desc">CHED Maximum allowable limit</span>
+              </div>
+            </div>
+
+            <!-- Active Custom Override Banner -->
+            @if (wl.customMaxLoadUnits) {
+              <div class="override-active-banner">
+                <div class="override-active-header">
+                  <i class="pi pi-shield text-amber-600"></i>
+                  <span><strong>Administrative Cap Override Active:</strong> {{ wl.customMaxLoadUnits }} units</span>
+                </div>
+                <p class="override-active-reason">
+                  Justification: "{{ wl.overrideReason }}" — Authorized by <strong>{{ wl.overriddenByName || 'Administrator' }}</strong>
+                </p>
+              </div>
+            }
+
+            <!-- Administrative Override Panel (Dean / Admin) -->
+            @if (canOverrideWorkload()) {
+              <div class="admin-override-card">
+                <div class="override-toggle-strip" (click)="toggleOverridePanel()">
+                  <div class="flex items-center gap-2">
+                    <i class="pi pi-sliders-h text-indigo-600"></i>
+                    <span class="font-semibold text-sm">Administrative Load Limit Override</span>
+                  </div>
+                  <p-button 
+                    [label]="isOverridePanelOpen() ? 'Hide Controls' : 'Configure Override'" 
+                    [icon]="isOverridePanelOpen() ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" 
+                    [text]="true" 
+                    size="small">
+                  </p-button>
+                </div>
+
+                @if (isOverridePanelOpen()) {
+                  <div class="override-panel-content">
+                    <p class="text-xs text-gray-600 mb-3">
+                      Authorized Deans and Administrators may override the standard dynamic contact hour cap (18.0 / 21.0 hrs) for this faculty member.
+                    </p>
+                    <div class="override-inputs-row">
+                      <div class="override-field">
+                        <label class="form-label">Custom Limit (Units/Hrs) *</label>
+                        <input 
+                          pInputText 
+                          type="number" 
+                          step="0.5" 
+                          min="0" 
+                          max="36" 
+                          [ngModel]="overrideCustomUnits()" 
+                          (ngModelChange)="overrideCustomUnits.set($event)"
+                          placeholder="e.g. 24.0" 
+                          class="w-full" />
+                      </div>
+                      <div class="override-field flex-grow">
+                        <label class="form-label">Justification / Reason *</label>
+                        <input 
+                          pInputText 
+                          type="text" 
+                          [ngModel]="overrideReason()" 
+                          (ngModelChange)="overrideReason.set($event)"
+                          placeholder="e.g. Research Fellowship, Administrative Designation" 
+                          class="w-full" />
+                      </div>
+                      <div class="override-action">
+                        <p-button 
+                          label="Apply Override" 
+                          icon="pi pi-check" 
+                          severity="warn" 
+                          size="small"
+                          [loading]="store.isWorkloadLoading()"
+                          (onClick)="applyWorkloadOverride()">
+                        </p-button>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Progress Bar & Status Tag -->
+            <div class="workload-progress-bar">
+              <div class="progress-labels">
+                <span>Capacity Utilization</span>
+                <span class="font-bold">{{ wl.totalContactHours }} / 24.00 hrs ({{ (wl.totalContactHours / 24 * 100) | number:'1.0-0' }}%)</span>
+              </div>
+              <p-progressbar [value]="(wl.totalContactHours / 24 * 100)" [showValue]="false" [style]="{ height: '10px' }"></p-progressbar>
+            </div>
+
+            <!-- Status Alert & Action Bar -->
+            <div class="overload-status-box" [class.approved]="wl.isOverloadApproved" [class.pending]="wl.overloadUnits > 0 && !wl.isOverloadApproved">
+              <div class="status-left">
+                @if (wl.overloadUnits > 0 && !wl.isOverloadApproved) {
+                  <i class="pi pi-exclamation-triangle text-amber-600 text-xl"></i>
+                  <div>
+                    <strong>Overload Pending Approval:</strong>
+                    <p class="text-xs text-gray-600">Faculty has {{ wl.overloadUnits }} overload contact hours requiring Dean/Admin authorization.</p>
+                  </div>
+                } @else if (wl.overloadUnits > 0 && wl.isOverloadApproved) {
+                  <i class="pi pi-check-circle text-green-600 text-xl"></i>
+                  <div>
+                    <strong>Overload Approved:</strong>
+                    <p class="text-xs text-gray-600">Authorized by {{ wl.approvedByName || 'Institutional Administrator' }}.</p>
+                  </div>
+                } @else {
+                  <i class="pi pi-info-circle text-blue-600 text-xl"></i>
+                  <div>
+                    <strong>Normal Teaching Workload:</strong>
+                    <p class="text-xs text-gray-600">Faculty is currently within regular contact hour limits.</p>
+                  </div>
+                }
+              </div>
+
+              @if (wl.overloadUnits > 0 && !wl.isOverloadApproved) {
+                <p-button 
+                  label="Approve Overload" 
+                  icon="pi pi-check" 
+                  severity="success" 
+                  size="small"
+                  [loading]="store.isApprovingOverload()"
+                  (onClick)="approveOverload()">
+                </p-button>
+              }
+            </div>
+
+            <!-- Assigned Sections Table -->
+            <div class="assigned-sections-table">
+              <h4 class="slots-subtitle">
+                <i class="pi pi-list mr-1"></i> Assigned Class Sections ({{ wl.assignedSections.length }})
+              </h4>
+              <table class="custom-slot-table">
+                <thead>
+                  <tr>
+                    <th>Section Code</th>
+                    <th>Course</th>
+                    <th>Units</th>
+                    <th>Contact Hrs</th>
+                    <th>Schedule Timetable</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (sec of wl.assignedSections; track sec.sectionId) {
+                    <tr>
+                      <td><span class="section-badge">{{ sec.sectionCode }}</span></td>
+                      <td>
+                        <strong>{{ sec.courseCode }}</strong> — {{ sec.courseTitle }}
+                      </td>
+                      <td>{{ sec.creditUnits }}</td>
+                      <td>{{ sec.contactHours }} hrs</td>
+                      <td><small class="text-gray-600">{{ sec.scheduleSummary }}</small></td>
+                    </tr>
+                  }
+                  @if (wl.assignedSections.length === 0) {
+                    <tr>
+                      <td colspan="5" class="text-center py-4 text-gray-500">No active sections assigned for this faculty.</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        } @else {
+          <div class="empty-faculty-state">
+            <i class="pi pi-user text-3xl text-gray-400"></i>
+            <p>Select a faculty member above to inspect their workload and assigned sections.</p>
+          </div>
+        }
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      <p-button 
+        label="Close" 
+        icon="pi pi-times" 
+        severity="secondary" 
+        [text]="true" 
+        (onClick)="closeFacultyLoadModal()">
+      </p-button>
+    </ng-template>
+  </p-dialog>
+
+  <!-- ========================================================================= -->
+  <!-- DIALOG 4: Configure Max Class Session Duration Dialog                     -->
+  <!-- ========================================================================= -->
+  <p-dialog 
+    header="Configure Max Class Session Duration" 
+    [visible]="isEditMaxHoursModalVisible()" 
+    (visibleChange)="isEditMaxHoursModalVisible.set($event)"
+    [modal]="true" 
+    [draggable]="false" 
+    [resizable]="false" 
+    [dismissableMask]="true" 
+    [closeOnEscape]="true"
+    [focusOnShow]="false"
+    appendTo="body"
+    [style]="{ width: '460px', maxWidth: '95vw' }"
+    [contentStyle]="{ 'padding': '1.25rem' }"
+    styleClass="scheduling-custom-dialog"
+    (onHide)="closeEditMaxHoursModal()">
+
+    <ng-template pTemplate="content">
+      <div class="p-2">
+        <p class="text-xs text-gray-600 mb-4">
+          Specify the maximum allowable continuous session duration for <strong>{{ store.selectedTerm()?.termName }}</strong>. Schedule slots exceeding this limit will be blocked.
+        </p>
+        <div class="form-field">
+          <label class="form-label">Max Hours Per Session (Hours) *</label>
+          <input 
+            pInputText 
+            type="number" 
+            step="0.5" 
+            min="0.5" 
+            max="12.0" 
+            [ngModel]="editMaxHoursValue()" 
+            (ngModelChange)="editMaxHoursValue.set($event)"
+            class="w-full" />
+          <small class="text-gray-500">Default: 3.0 hrs (180 mins). Allowed: 0.5 to 12.0 hrs.</small>
+        </div>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      <p-button 
+        label="Cancel" 
+        icon="pi pi-times" 
+        severity="secondary" 
+        [text]="true" 
+        (onClick)="closeEditMaxHoursModal()">
+      </p-button>
+      <p-button 
+        label="Save Duration Limit" 
+        icon="pi pi-check" 
+        severity="primary" 
+        [loading]="store.isSaving()"
+        (onClick)="saveMaxHoursPerClass()">
+      </p-button>
+    </ng-template>
+  </p-dialog>
+</div>

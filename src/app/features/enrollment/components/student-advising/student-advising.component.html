@@ -1,0 +1,261 @@
+<div class="advising-container">
+  <p-toast></p-toast>
+
+  <!-- Advising Banner & Student Profile Header -->
+  <div class="header-card">
+    <div class="header-main">
+      <div class="header-title-area">
+        <h2 class="module-title">
+          <i class="pi pi-user-edit"></i>
+          Academic Advising & Subject Enlistment
+        </h2>
+        <p class="module-subtitle">
+          CHED CMO No. 25, s. 2015 Three-Tier Compliance: Automated Prerequisite Verification & Unit Cap Gatekeeper
+        </p>
+      </div>
+
+      <!-- Term Selector -->
+      <div class="term-selector-box">
+        <label for="term-select" class="selector-label">Academic Term:</label>
+        <p-select 
+          id="term-select"
+          [options]="store.terms()" 
+          [ngModel]="store.selectedTermId()" 
+          (ngModelChange)="onTermSelect($event)"
+          optionLabel="termName" 
+          optionValue="id" 
+          placeholder="Select Term"
+          styleClass="w-full">
+        </p-select>
+      </div>
+    </div>
+
+    @if (store.advising(); as adv) {
+      <div class="student-meta-grid">
+        <div class="meta-item">
+          <span class="meta-label">Student Name</span>
+          <span class="meta-val font-bold">{{ adv.studentName }}</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Student ID</span>
+          <span class="meta-val">{{ adv.studentNumber }}</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Program & Year</span>
+          <span class="meta-val">{{ adv.programCode }} — Year {{ adv.yearLevel }}</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Curriculum</span>
+          <span class="meta-val">{{ adv.curriculumCode }}</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Academic Standing</span>
+          <div class="flex-center gap-1">
+            <p-tag [value]="adv.enrollmentStatus" severity="info"></p-tag>
+            @if (adv.isGraduating) {
+              <p-tag value="GRADUATING SENIOR" severity="warn"></p-tag>
+            }
+          </div>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Cumulative GPA</span>
+          <span class="meta-val">{{ adv.cumulativeGpa ? (adv.cumulativeGpa | number:'1.2-2') : 'N/A' }}</span>
+        </div>
+      </div>
+
+      <!-- Unit Cap Progress Bar -->
+      <div class="unit-cap-container">
+        <div class="unit-cap-header">
+          <span class="unit-text">
+            <strong>Credit Units Loaded:</strong> {{ store.totalUnits() }} / {{ store.maxUnits() }} Units
+            @if (adv.isGraduating) {
+              <span class="text-xs text-muted">(Graduating Overload Allowed up to 27)</span>
+            }
+          </span>
+          <span class="unit-percentage font-semibold" [class.cap-danger]="store.isUnitCapReached()">
+            {{ store.unitPercentage() }}% of Term Maximum
+          </span>
+        </div>
+        <p-progressbar 
+          [value]="store.unitPercentage()" 
+          [showValue]="false"
+          [styleClass]="store.isUnitCapReached() ? 'unit-bar-full' : 'unit-bar-normal'">
+        </p-progressbar>
+      </div>
+    }
+  </div>
+
+  @if (store.errorMessage()) {
+    <p-message severity="error" [text]="store.errorMessage()!" styleClass="w-full mb-3"></p-message>
+  }
+
+  <!-- Course Checklist Table -->
+  <div class="checklist-card">
+    <div class="card-header">
+      <h3 class="card-title">Curriculum Course Checklist & Eligibility</h3>
+      <span class="card-caption">Courses mapped to your program with live CHED prerequisite checks</span>
+    </div>
+
+    <p-table 
+      [value]="store.advising()?.courses || []" 
+      [loading]="store.isLoading()"
+      [rowHover]="true"
+      styleClass="p-datatable-sm"
+      responsiveLayout="scroll">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Course</th>
+          <th>Units (Lec/Lab)</th>
+          <th>Year & Sem</th>
+          <th>Prerequisite Status</th>
+          <th>Prerequisite Details</th>
+          <th>Available Sections</th>
+          <th style="width: 140px; text-align: center;">Action</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-course>
+        <tr>
+          <td>
+            <div class="course-identity">
+              <span class="course-code">{{ course.code }}</span>
+              <span class="course-title">{{ course.title }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="units-badge">{{ course.creditUnits }} units</span>
+            <small class="text-muted block">({{ course.lectureUnits }}L / {{ course.labUnits }}Lab)</small>
+          </td>
+          <td>Year {{ course.yearLevel }} - {{ course.semester }}</td>
+          <td>
+            <p-tag 
+              [value]="course.eligibilityStatus" 
+              [severity]="getStatusSeverity(course.eligibilityStatus)">
+            </p-tag>
+          </td>
+          <td>
+            @if (course.prerequisites && course.prerequisites.length > 0) {
+              <div class="prereq-list">
+                @for (p of course.prerequisites; track p.prerequisiteCourseId) {
+                  <div class="prereq-chip" [class.satisfied]="p.isSatisfied" [class.unsatisfied]="!p.isSatisfied">
+                    <i [class]="p.isSatisfied ? 'pi pi-check' : 'pi pi-times'"></i>
+                    <span>{{ p.prerequisiteCode }}</span>
+                    @if (p.isSatisfied) {
+                      <small>Grade: {{ p.studentGrade | number:'1.2-2' }}</small>
+                    } @else {
+                      <small class="text-danger">Unmet (Req &le; {{ p.minGradeRequired }})</small>
+                    }
+                  </div>
+                }
+              </div>
+            } @else {
+              <span class="text-muted text-xs">None (Open)</span>
+            }
+          </td>
+          <td>
+            @if (course.availableSections && course.availableSections.length > 0) {
+              <span class="section-count-tag">{{ course.availableSections.length }} sections open</span>
+            } @else {
+              <span class="text-muted text-xs">No sections scheduled</span>
+            }
+          </td>
+          <td style="text-align: center;">
+            <button 
+              pButton 
+              type="button" 
+              label="Choose Section" 
+              icon="pi pi-plus" 
+              class="p-button-sm p-button-outlined"
+              [disabled]="course.eligibilityStatus !== 'ELIGIBLE' || store.isUnitCapReached() || !course.availableSections || course.availableSections.length === 0"
+              (click)="openSectionChooser(course)">
+            </button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="text-center py-4 text-muted">
+            No courses found for this curriculum or academic term.
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- Available Sections Selection Modal -->
+  <p-dialog 
+    [(visible)]="isSectionModalVisible" 
+    [header]="'Available Sections for ' + (selectedCourse()?.code || '') + ' - ' + (selectedCourse()?.title || '')" 
+    [modal]="true" 
+    [style]="{ width: '56rem' }" 
+    [closable]="true"
+    (onHide)="closeSectionChooser()">
+    
+    <div class="section-modal-content">
+      <div class="modal-info-bar">
+        <span><strong>Course Units:</strong> {{ selectedCourse()?.creditUnits }} Units</span>
+        <span><strong>Remaining Allowable:</strong> {{ store.maxUnits() - store.totalUnits() }} Units</span>
+      </div>
+
+      <p-table [value]="selectedCourse()?.availableSections || []" [rowHover]="true" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Section Code</th>
+            <th>Schedule Timetable & Room</th>
+            <th>Capacity</th>
+            <th>Status</th>
+            <th style="width: 120px; text-align: center;">Action</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-sec>
+          <tr>
+            <td><strong class="text-primary">{{ sec.sectionCode }}</strong></td>
+            <td>
+              <div class="schedule-summary-text">
+                <i class="pi pi-clock text-xs"></i>
+                <span>{{ sec.scheduleSummary || 'Schedule TBA' }}</span>
+              </div>
+            </td>
+            <td>
+              <span [class.cap-danger]="sec.enrolledCount >= sec.maxCapacity">
+                {{ sec.enrolledCount }} / {{ sec.maxCapacity }}
+              </span>
+            </td>
+            <td>
+              <p-tag 
+                [value]="sec.status" 
+                [severity]="sec.status === 'OPEN' ? 'success' : 'danger'">
+              </p-tag>
+            </td>
+            <td style="text-align: center;">
+              <button 
+                pButton 
+                type="button" 
+                label="Enlist" 
+                icon="pi pi-check" 
+                class="p-button-sm p-button-success"
+                [loading]="store.isEnlisting()"
+                [disabled]="sec.status !== 'OPEN' || sec.enrolledCount >= sec.maxCapacity || store.isUnitCapReached()"
+                (click)="enlistInSection(sec)">
+              </button>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="5" class="text-center py-3 text-muted">
+              No sections currently open for this course.
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <button pButton label="Close" icon="pi pi-times" class="p-button-text p-button-secondary" (click)="closeSectionChooser()"></button>
+    </ng-template>
+  </p-dialog>
+</div>

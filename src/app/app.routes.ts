@@ -40,6 +40,18 @@ export const routes: Routes = [
     redirectTo: 'dashboard/curriculum/designer/:id'
   },
 
+  // Scheduling & Enrollment URL Aliases
+  {
+    path: 'scheduling',
+    redirectTo: 'dashboard/scheduling',
+    pathMatch: 'full'
+  },
+  {
+    path: 'enrollment',
+    redirectTo: 'dashboard/enrollment',
+    pathMatch: 'full'
+  },
+
   // Institutional Management URL Aliases
   {
     path: 'institution',
@@ -72,6 +84,16 @@ export const routes: Routes = [
         path: 'institution',
         loadChildren: () =>
           import('./features/institution/institution.routes').then(m => m.INSTITUTION_ROUTES)
+      },
+      {
+        path: 'scheduling',
+        loadChildren: () =>
+          import('./features/scheduling/scheduling.routes').then(m => m.SCHEDULING_ROUTES)
+      },
+      {
+        path: 'enrollment',
+        loadChildren: () =>
+          import('./features/enrollment/enrollment.routes').then(m => m.ENROLLMENT_ROUTES)
       },
       {
         path: '**',

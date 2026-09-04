@@ -87,6 +87,50 @@
   flex-wrap: wrap;
 }
 
+.header-ay-badge {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 600;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+}
+
+.header-version-badge {
+  font-size: 0.6875rem;
+  color: #0f766e;
+  background: #ccfbf1;
+  border: 1px solid #99f6e4;
+  padding: 0.2rem 0.45rem;
+  border-radius: 6px;
+  font-weight: 700;
+}
+
+/* Curriculum Switcher Dropdown in Toolbar */
+.curriculum-switcher-container { min-width: 260px; max-width: 380px; flex: 1 1 260px; }
+:host ::ng-deep .curriculum-switcher-select { width: 100%; border-radius: 8px; font-size: 0.8125rem; background: #f8fafc; border: 1px solid #cbd5e1; transition: all 0.2s ease; }
+:host ::ng-deep .curriculum-switcher-select:hover { border-color: #116834; background: #ffffff; }
+:host ::ng-deep .curriculum-switcher-select:focus-within { border-color: #116834; box-shadow: 0 0 0 2px rgba(17, 104, 52, 0.15); background: #ffffff; }
+
+.switcher-selected-item { display: flex; align-items: center; gap: 0.45rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.switcher-selected-icon { font-size: 0.8125rem; color: #116834; flex-shrink: 0; }
+.switcher-selected-code { font-family: ui-monospace, monospace; font-weight: 700; font-size: 0.75rem; color: #0f172a; background: #e2e8f0; padding: 0.1rem 0.35rem; border-radius: 4px; flex-shrink: 0; }
+.switcher-selected-sep { color: #94a3b8; font-size: 0.75rem; flex-shrink: 0; }
+.switcher-selected-name { font-size: 0.8125rem; font-weight: 600; color: #334155; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Switcher Option Item in Panel Overlay */
+.switcher-option-item { display: flex; flex-direction: column; gap: 0.25rem; width: 100%; padding: 0.25rem 0; }
+.switcher-option-header { display: flex; align-items: center; gap: 0.5rem; }
+.switcher-option-code { font-family: ui-monospace, monospace; font-weight: 700; font-size: 0.6875rem; color: #1e293b; background: #f1f5f9; border: 1px solid #e2e8f0; padding: 0.1rem 0.4rem; border-radius: 4px; flex-shrink: 0; }
+.switcher-option-name { font-weight: 600; font-size: 0.8125rem; color: #1e293b; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.switcher-option-sub { display: flex; align-items: center; gap: 0.4rem; font-size: 0.6875rem; color: #64748b; }
+.switcher-option-program { font-weight: 600; color: #116834; display: flex; align-items: center; gap: 0.25rem; }
+
+/* Empty State Switcher */
+.empty-switcher-container { min-width: 280px; max-width: 420px; width: 100%; }
+:host ::ng-deep .empty-switcher-select { width: 100%; border-radius: 8px; font-size: 0.875rem; text-align: left; }
+
 /* Real-Time Metrics Strip */
 .metrics-strip {
   display: grid;

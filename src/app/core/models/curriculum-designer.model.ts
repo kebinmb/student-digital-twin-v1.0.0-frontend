@@ -80,6 +80,16 @@ export interface CurriculumSummaryResponse {
   versionNumber: number;
 }
 
+export interface CurriculumLookupOption {
+  id: number;
+  code: string;
+  name: string;
+  programCode: string;
+  effectiveAcademicYear: string;
+  status: string;
+  versionNumber: number;
+}
+
 export interface AvailableCourseDto {
   courseId: number;
   code: string;

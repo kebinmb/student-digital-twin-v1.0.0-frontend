@@ -8,6 +8,7 @@ import {
   AvailableCourseDto,
   CloneCurriculumRequest,
   CreateCurriculumRequest,
+  CurriculumLookupOption,
   CurriculumSummaryResponse,
   DesignerViewResponse,
   RelocateCourseRequest,
@@ -88,5 +89,13 @@ export class CurriculumApiService {
 
   getCurriculumCourses(id: number): Observable<any[]> {
     return this.http.get<any[]>(`${this.baseUrl}/${id}/courses`);
+  }
+
+  getCurriculumLookupOptions(): Observable<CurriculumLookupOption[]> {
+    return this.http.get<CurriculumLookupOption[]>(`${this.baseUrl}/lookup`);
+  }
+
+  deleteCurriculum(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
 }

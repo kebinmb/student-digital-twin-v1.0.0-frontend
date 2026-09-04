@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { Tag } from 'primeng/tag';
@@ -26,6 +26,16 @@ export class ObeMatrixComponent {
 
   // Local interactive mapping state (key: courseCode_piloCode -> level)
   private readonly matrixState = signal<Map<string, 'I' | 'E' | 'D' | ''>>(new Map());
+
+  constructor() {
+    effect(() => {
+      const curr = this.store.curriculum();
+      // Whenever curriculum switches or resets, clear stale OBE cell mapping state
+      untracked(() => {
+        this.matrixState.set(new Map());
+      });
+    }, { allowSignalWrites: true });
+  }
 
   readonly allCourses = computed<CourseItemDto[]>(() => {
     const curr = this.store.curriculum();

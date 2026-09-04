@@ -1,0 +1,54 @@
+.enrollment-module-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.sub-nav-tabs {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 2px solid var(--p-surface-200, #e5e7eb);
+  padding: 0 1.5rem;
+  background: var(--p-surface-0, #ffffff);
+}
+
+.tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.25rem;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--p-surface-600, #6b7280);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: -2px;
+}
+
+.tab-btn:hover {
+  color: var(--p-primary-color, #116834);
+  background: var(--p-surface-50, #f9fafb);
+}
+
+.tab-btn.active {
+  color: var(--p-primary-color, #116834);
+  border-bottom-color: var(--p-primary-color, #116834);
+  background: transparent;
+}
+
+.tab-badge {
+  background: var(--p-primary-color, #116834);
+  color: #ffffff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 0.125rem 0.45rem;
+  border-radius: 9999px;
+  line-height: 1;
+}
+
+.tab-content {
+  padding: 0;
+}

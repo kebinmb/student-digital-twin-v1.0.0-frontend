@@ -7,7 +7,8 @@ import {
   computed,
   effect,
   inject,
-  signal
+  signal,
+  untracked
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -79,9 +80,11 @@ export class PrerequisiteDagComponent implements AfterViewInit, OnDestroy {
     effect(() => {
       const curr = this.store.curriculum();
       if (curr && this.cy) {
-        this.renderGraph();
+        untracked(() => {
+          this.renderGraph();
+        });
       }
-    });
+    }, { allowSignalWrites: true });
   }
 
   ngAfterViewInit(): void {
@@ -262,7 +265,8 @@ export class PrerequisiteDagComponent implements AfterViewInit, OnDestroy {
       }
     }
 
-    // 3. Run Dagre Hierarchical Layout with strict options typing
+    // 3. Ensure container is measured and run Dagre Hierarchical Layout with strict options typing
+    this.cy.resize();
     const layout = this.cy.layout({
       name: 'dagre',
       rankDir: 'TB',

@@ -9,6 +9,7 @@ import {
   AvailableCourseDto,
   CourseItemDto,
   CreateCurriculumRequest,
+  CurriculumLookupOption,
   DesignerViewResponse,
   RelocateCourseRequest,
   TermStats,
@@ -34,6 +35,8 @@ export class CurriculumDesignerStore {
   readonly isSearching = signal<boolean>(false);
   readonly searchQuery = signal<string>('');
   readonly selectedCourse = signal<CourseItemDto | null>(null);
+  readonly curriculumOptions = signal<CurriculumLookupOption[]>([]);
+  readonly isOptionsLoading = signal<boolean>(false);
 
   // Computed Signals
   readonly isEditableStatus = computed(() => {
@@ -163,8 +166,26 @@ export class CurriculumDesignerStore {
   }
 
   // Action Methods
+  loadCurriculumOptions(): void {
+    this.isOptionsLoading.set(true);
+    this.api.getCurriculumLookupOptions()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (options) => {
+          this.curriculumOptions.set(options || []);
+          this.isOptionsLoading.set(false);
+        },
+        error: () => {
+          this.isOptionsLoading.set(false);
+        }
+      });
+  }
+
   loadCurriculum(id: number): void {
     this.isLoading.set(true);
+    this.curriculum.set(null);
+    this.validationReport.set(null);
+    this.selectedCourse.set(null);
     this.api.getDesignerView(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -175,6 +196,7 @@ export class CurriculumDesignerStore {
         },
         error: (err) => {
           this.isLoading.set(false);
+          this.curriculum.set(null);
           this.messageService.add({
             severity: 'error',
             summary: 'Load Failed',
@@ -479,6 +501,7 @@ export class CurriculumDesignerStore {
       .subscribe({
         next: (res) => {
           this.isSaving.set(false);
+          this.loadCurriculumOptions();
           this.messageService.add({
             severity: 'success',
             summary: 'Curriculum Cloned',
@@ -504,6 +527,7 @@ export class CurriculumDesignerStore {
       .subscribe({
         next: (res) => {
           this.isSaving.set(false);
+          this.loadCurriculumOptions();
           this.messageService.add({
             severity: 'success',
             summary: 'Curriculum Created',
@@ -521,6 +545,37 @@ export class CurriculumDesignerStore {
             severity: 'error',
             summary: 'Creation Failed',
             detail: err.error?.detail || err.error?.message || 'Could not create new curriculum.'
+          });
+        }
+      });
+  }
+
+  deleteCurriculum(id: number, onSuccess?: () => void): void {
+    this.isSaving.set(true);
+    this.api.deleteCurriculum(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.isSaving.set(false);
+          this.curriculum.set(null);
+          this.loadCurriculumOptions();
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Curriculum Deleted',
+            detail: 'Curriculum and associated course mappings were successfully deleted.'
+          });
+          if (onSuccess) {
+            onSuccess();
+          } else {
+            this.router.navigate(['/dashboard/curriculum/designer']);
+          }
+        },
+        error: (err) => {
+          this.isSaving.set(false);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Delete Failed',
+            detail: err.error?.detail || err.error?.message || 'Could not delete curriculum.'
           });
         }
       });

@@ -1,0 +1,252 @@
+.advising-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.header-card {
+  background: var(--p-surface-0, #ffffff);
+  border: 1px solid var(--p-surface-200, #e5e7eb);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.header-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.header-title-area {
+  flex: 1;
+}
+
+.module-title {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--p-surface-900, #111827);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.module-title i {
+  color: var(--p-primary-color, #116834);
+}
+
+.module-subtitle {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--p-surface-500, #6b7280);
+}
+
+.term-selector-box {
+  min-width: 240px;
+}
+
+.selector-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--p-surface-600, #4b5563);
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.student-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--p-surface-50, #f9fafb);
+  border-radius: 8px;
+  border: 1px solid var(--p-surface-200, #e5e7eb);
+  margin-bottom: 1.25rem;
+}
+
+.meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.meta-label {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--p-surface-500, #6b7280);
+  font-weight: 600;
+}
+
+.meta-val {
+  font-size: 0.875rem;
+  color: var(--p-surface-900, #111827);
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+}
+
+.gap-1 {
+  gap: 0.25rem;
+}
+
+.unit-cap-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+}
+
+.unit-cap-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+}
+
+.unit-text {
+  color: var(--p-surface-700, #374151);
+}
+
+.text-xs {
+  font-size: 0.75rem;
+}
+
+.text-muted {
+  color: var(--p-surface-500, #6b7280);
+}
+
+.text-danger {
+  color: #dc2626;
+}
+
+.text-primary {
+  color: var(--p-primary-color, #116834);
+}
+
+.cap-danger {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+:host ::ng-deep .unit-bar-normal .p-progressbar-value {
+  background: var(--p-primary-color, #116834);
+}
+
+:host ::ng-deep .unit-bar-full .p-progressbar-value {
+  background: #dc2626;
+}
+
+.checklist-card {
+  background: var(--p-surface-0, #ffffff);
+  border: 1px solid var(--p-surface-200, #e5e7eb);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.card-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--p-surface-200, #e5e7eb);
+}
+
+.card-title {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--p-surface-900, #111827);
+}
+
+.card-caption {
+  font-size: 0.8125rem;
+  color: var(--p-surface-500, #6b7280);
+}
+
+.course-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.course-code {
+  font-weight: 700;
+  color: var(--p-primary-color, #116834);
+  font-size: 0.875rem;
+}
+
+.course-title {
+  font-size: 0.8125rem;
+  color: var(--p-surface-800, #1f2937);
+}
+
+.units-badge {
+  font-weight: 600;
+  font-size: 0.8125rem;
+}
+
+.prereq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.prereq-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  padding: 0.1875rem 0.5rem;
+  border-radius: 4px;
+}
+
+.prereq-chip.satisfied {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.prereq-chip.unsatisfied {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.section-count-tag {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--p-surface-700, #374151);
+  background: var(--p-surface-100, #f3f4f6);
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+}
+
+.section-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.modal-info-bar {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: var(--p-surface-50, #f9fafb);
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  border: 1px solid var(--p-surface-200, #e5e7eb);
+}
+
+.schedule-summary-text {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+}

@@ -1,0 +1,90 @@
+<div class="timetable-wrapper">
+  <!-- Toolbar / Filter Bar -->
+  <div class="timetable-toolbar">
+    <div class="filter-item">
+      <label>Filter by Classroom / Laboratory:</label>
+      <p-select 
+        [options]="store.rooms()" 
+        optionLabel="code" 
+        optionValue="id" 
+        [ngModel]="selectedRoomId()" 
+        (onChange)="onRoomChange($event.value)"
+        [filter]="true"
+        filterPlaceholder="Search room..."
+        [showClear]="true"
+        placeholder="All Rooms / Campus Facilities"
+        appendTo="body"
+        styleClass="w-64">
+        <ng-template let-r pTemplate="item">
+          <div class="flex items-center justify-between gap-2 w-full">
+            <span><strong>{{ r.code }}</strong> - {{ r.name }}</span>
+            <span class="text-xs text-gray-500">({{ r.roomType }}, Cap: {{ r.capacity }})</span>
+          </div>
+        </ng-template>
+      </p-select>
+    </div>
+
+    @if (selectedRoomId()) {
+      <p-button 
+        label="Clear Filter" 
+        icon="pi pi-filter-slash" 
+        size="small" 
+        severity="secondary" 
+        (onClick)="resetFilter()">
+      </p-button>
+    }
+
+    <div class="legend">
+      <span class="legend-chip lecture"><i class="pi pi-circle-fill"></i> Lecture</span>
+      <span class="legend-chip lab"><i class="pi pi-circle-fill"></i> Laboratory</span>
+    </div>
+
+    <div class="toolbar-actions">
+      <p-button 
+        label="Add Schedule" 
+        icon="pi pi-plus" 
+        size="small" 
+        severity="success" 
+        [disabled]="!store.isCurriculumActive() || store.isLoading()"
+        (onClick)="onAddSchedule()">
+      </p-button>
+    </div>
+  </div>
+
+  <!-- Weekly Timetable Matrix -->
+  <div class="grid-container">
+    <div class="days-columns">
+      @for (day of days; track day) {
+        <div class="day-column">
+          <div class="day-header">
+            <h4>{{ day }}</h4>
+          </div>
+          <div class="slots-container">
+            @for (item of getSlotsForDay(day); track item.sectionCode + item.startTime) {
+              <div 
+                class="timetable-card"
+                [class.lab-card]="item.scheduleType === 'LABORATORY'">
+                <div class="card-time">
+                  <i class="pi pi-clock"></i> {{ item.startTime }} - {{ item.endTime }}
+                </div>
+                <div class="card-title">
+                  <span class="sec-code">{{ item.sectionCode }}</span>
+                  <span class="crs-code">{{ item.courseCode }}</span>
+                </div>
+                <div class="card-meta">
+                  <span class="room"><i class="pi pi-map-marker"></i> {{ item.roomCode }}</span>
+                  <span class="instructor"><i class="pi pi-user"></i> {{ item.instructorName }}</span>
+                </div>
+              </div>
+            }
+            @if (getSlotsForDay(day).length === 0) {
+              <div class="empty-day">
+                <span>No classes scheduled</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>

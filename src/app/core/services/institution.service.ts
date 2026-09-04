@@ -87,6 +87,10 @@ export class TermService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/v1/terms`;
 
+  getAll(): Observable<Term[]> {
+    return this.http.get<Term[]>(this.baseUrl);
+  }
+
   getByAcademicYear(academicYearId: number): Observable<Term[]> {
     return this.http.get<Term[]>(`${this.baseUrl}/academic-year/${academicYearId}`);
   }
