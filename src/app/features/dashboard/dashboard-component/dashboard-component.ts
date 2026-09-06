@@ -1,9 +1,14 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 
 // PrimeNG Standalone Components
 import { Button } from 'primeng/button';
+import { Card } from 'primeng/card';
+import { Skeleton } from 'primeng/skeleton';
+import { ProgressBar } from 'primeng/progressbar';
+import { Tag } from 'primeng/tag';
+import { Drawer } from 'primeng/drawer';
 
 import { AuthService } from '../../../core/service/authentication/auth-service';
 
@@ -45,13 +50,23 @@ export interface NoticeItem {
   imports: [
     CommonModule,
     RouterLink,
-    Button
+    Button,
+    Card,
+    Skeleton,
+    ProgressBar,
+    Tag,
+    Drawer
   ],
   templateUrl: './dashboard-component.html',
-  styleUrls: ['./dashboard-component.css']
+  styleUrls: ['./dashboard-component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DashboardComponent {
   private readonly authService = inject(AuthService);
+
+  readonly isLoading = signal(false);
+  readonly selectedNotice = signal<NoticeItem | null>(null);
+  readonly isNoticeDrawerOpen = signal(false);
 
   readonly studentName = computed(() => this.authService.currentUser().username || 'Student User');
   readonly currentTime = signal(new Date().toLocaleDateString('en-US', {
@@ -157,4 +172,9 @@ export class DashboardComponent {
       unread: false
     }
   ];
+
+  openNoticeDetail(notice: NoticeItem): void {
+    this.selectedNotice.set(notice);
+    this.isNoticeDrawerOpen.set(true);
+  }
 }

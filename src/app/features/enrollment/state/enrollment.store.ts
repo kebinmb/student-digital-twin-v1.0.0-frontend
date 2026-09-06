@@ -5,7 +5,8 @@ import {
   AdvisingEligibilityResponse,
   CourseEligibilityItemDto,
   EnrollmentConfirmationDto,
-  StudentEnrollmentResponse
+  StudentEnrollmentResponse,
+  StudentSearchResultDto
 } from '../../../core/models/enrollment.model';
 import { TermResponse } from '../../../core/models/institution.model';
 import { catchError, finalize, of, tap } from 'rxjs';
@@ -19,6 +20,7 @@ export class EnrollmentStore {
 
   // State Signals
   readonly studentId = signal<number>(1);
+  readonly searchedStudents = signal<StudentSearchResultDto[]>([]);
   readonly selectedTermId = signal<number | null>(null);
   readonly terms = signal<TermResponse[]>([]);
 
@@ -58,20 +60,69 @@ export class EnrollmentStore {
     return this.advising()?.courses.filter(c => c.eligibilityStatus === 'ALREADY_PASSED') || [];
   });
 
+  formatTermType(type: string): string {
+    if (!type) return '';
+    if (type === '1ST_SEM' || type === 'FIRST_SEM') return '1st Semester';
+    if (type === '2ND_SEM' || type === 'SECOND_SEM') return '2nd Semester';
+    if (type === 'SUMMER') return 'Summer Term';
+    return type;
+  }
+
+  setSelectedTermId(termId: number): void {
+    this.selectedTermId.set(termId);
+    this.loadStudentAdvising(this.studentId(), termId);
+    this.loadTermEnrollments(termId);
+  }
+
+  setStudentId(studentId: number): void {
+    this.studentId.set(studentId);
+    const termId = this.selectedTermId();
+    if (termId) {
+      this.loadStudentAdvising(studentId, termId);
+      this.loadTermEnrollments(termId);
+    }
+  }
+
+  searchStudents(query: string = ''): void {
+    this.enrollmentApi.searchStudents(query).pipe(
+      tap(students => {
+        if (students && students.length > 0) {
+          this.searchedStudents.set(students);
+        } else {
+          this.useFallbackStudents();
+        }
+      }),
+      catchError(() => {
+        this.useFallbackStudents();
+        return of([]);
+      })
+    ).subscribe();
+  }
+
+  private useFallbackStudents(): void {
+    const fallback: StudentSearchResultDto[] = [
+      { id: 1, studentIdNumber: '2024-0001', fullName: 'Juan Dela Cruz', programCode: 'BSIT', yearLevel: 1, academicStatus: 'REGULAR' },
+      { id: 2, studentIdNumber: '2024-0002', fullName: 'Maria Santos', programCode: 'BSCS', yearLevel: 2, academicStatus: 'REGULAR' },
+      { id: 3, studentIdNumber: '2024-0003', fullName: 'Pedro Penduko', programCode: 'BSIS', yearLevel: 3, academicStatus: 'PROBATION' }
+    ];
+    this.searchedStudents.set(fallback);
+  }
+
   // Actions
   loadInitialData(): void {
+    this.searchStudents('');
+    if (this.terms().length > 0) return;
     this.isLoading.set(true);
     this.termService.getAll().pipe(
       tap((terms: TermResponse[]) => {
         const formattedTerms = terms.map(t => ({
           ...t,
-          termName: t.academicYearCode ? `${t.academicYearCode} - ${t.termType}` : `Term ${t.id}`
+          termName: t.academicYearCode ? `${t.academicYearCode} - ${this.formatTermType(t.termType)}` : `Term ${t.id}`
         }));
         this.terms.set(formattedTerms);
         if (formattedTerms.length > 0 && !this.selectedTermId()) {
           const activeTerm = formattedTerms.find(t => t.isActive) || formattedTerms[0];
-          this.selectedTermId.set(activeTerm.id);
-          this.loadStudentAdvising(this.studentId(), activeTerm.id);
+          this.setSelectedTermId(activeTerm.id);
         }
       }),
       catchError(() => {
@@ -153,6 +204,8 @@ export class EnrollmentStore {
     ).subscribe();
   }
 
+  readonly termEnrollments = signal<StudentEnrollmentResponse[]>([]);
+
   confirmEnrollment(onSuccess?: (conf: EnrollmentConfirmationDto) => void, onError?: (msg: string) => void): void {
     const termId = this.selectedTermId();
     if (!termId) return;
@@ -173,4 +226,36 @@ export class EnrollmentStore {
       finalize(() => this.isEnlisting.set(false))
     ).subscribe();
   }
+
+  loadTermEnrollments(termId: number): void {
+    this.isLoading.set(true);
+    this.enrollmentApi.getEnrollmentsByTerm(termId).pipe(
+      tap(list => this.termEnrollments.set(list)),
+      catchError(() => {
+        this.termEnrollments.set([]);
+        return of([]);
+      }),
+      finalize(() => this.isLoading.set(false))
+    ).subscribe();
+  }
+
+  updateEnrollmentStatus(enrollmentId: number, status: string, isOverloadApproved?: boolean, onSuccess?: () => void, onError?: (msg: string) => void): void {
+    this.isEnlisting.set(true);
+    this.enrollmentApi.updateEnrollmentStatus(enrollmentId, { status, isOverloadApproved }).pipe(
+      tap(updated => {
+        this.termEnrollments.update(list => list.map(item => item.enrollmentId === enrollmentId ? updated : item));
+        if (this.enrollment()?.enrollmentId === enrollmentId) {
+          this.enrollment.set(updated);
+        }
+        if (onSuccess) onSuccess();
+      }),
+      catchError(err => {
+        const msg = err.error?.detail || 'Failed to update enrollment status.';
+        if (onError) onError(msg);
+        return of(null);
+      }),
+      finalize(() => this.isEnlisting.set(false))
+    ).subscribe();
+  }
 }
+

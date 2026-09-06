@@ -40,7 +40,8 @@ export const CustomTheme = definePreset(Lara, {
         },
         formField: {
           hoverBorderColor: '{primary.500}',
-          focusBorderColor: '{primary.600}'
+          focusBorderColor: '{primary.600}',
+          invalidBorderColor: '#dc2626'
         },
         focusRing: {
           shadow: '0 0 0 0.2rem color-mix(in srgb, {primary.500} 20%, transparent)'
@@ -59,6 +60,9 @@ export const CustomTheme = definePreset(Lara, {
       root: {
         borderRadius: '16px',
         background: '{surface.0}'
+      },
+      body: {
+        padding: '1.5rem'
       }
     },
     button: {
@@ -69,6 +73,60 @@ export const CustomTheme = definePreset(Lara, {
     inputtext: {
       root: {
         borderRadius: '8px'
+      }
+    },
+    // Master-Detail Drawer configuration
+    drawer: {
+      root: {
+        background: '{surface.0}',
+        borderColor: '{surface.200}'
+      },
+      header: {
+        padding: '1.25rem 1.5rem'
+      },
+      content: {
+        padding: '1.5rem'
+      }
+    },
+
+    datatable: {
+      root: {
+        borderColor: '{surface.200}'
+      },
+      header: {
+        background: '{surface.0}',
+        borderColor: '{surface.200}',
+        padding: '0.875rem 1rem'
+      },
+      headerCell: {
+        background: '{surface.50}',
+        borderColor: '{surface.200}',
+        color: '{surface.700}'
+      },
+      row: {
+        background: '{surface.0}',
+        hoverBackground: '{surface.50}',
+        selectedBackground: '{primary.50}',
+        selectedColor: '{primary.700}'
+      }
+    },
+    // Institutional toasts & alerts
+    toast: {
+      root: {
+        borderRadius: '10px'
+      }
+    },
+    // Loading skeleton states for Bento layouts
+    skeleton: {
+      root: {
+        borderRadius: '8px',
+        background: '{surface.200}'
+      }
+    },
+    // Status tags (enrollment status, payment clearances)
+    tag: {
+      root: {
+        borderRadius: '6px'
       }
     }
   }

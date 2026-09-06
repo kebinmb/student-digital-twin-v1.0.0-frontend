@@ -1,6 +1,6 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
 // PrimeNG Components
 import { TableModule } from 'primeng/table';
@@ -23,6 +23,9 @@ interface AcademicYearForm {
   isCurrent: FormControl<boolean>;
 }
 
+import { Drawer } from 'primeng/drawer';
+import { Skeleton } from 'primeng/skeleton';
+
 @Component({
   selector: 'app-academic-year-manager',
   standalone: true,
@@ -35,10 +38,13 @@ interface AcademicYearForm {
     TagModule,
     InputTextModule,
     ToggleSwitchModule,
-    ConfirmDialogModule
+    ConfirmDialogModule,
+    Drawer,
+    Skeleton
   ],
   templateUrl: './academic-year-manager.component.html',
-  styleUrl: './academic-year-manager.component.css'
+  styleUrl: './academic-year-manager.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AcademicYearManagerComponent implements OnInit {
   private readonly ayService = inject(AcademicYearService);
@@ -51,6 +57,14 @@ export class AcademicYearManagerComponent implements OnInit {
   readonly isSaving = signal<boolean>(false);
   readonly isDialogVisible = signal<boolean>(false);
   readonly editingId = signal<number | null>(null);
+
+  readonly selectedAyForDetail = signal<AcademicYear | null>(null);
+  readonly isDetailDrawerOpen = signal<boolean>(false);
+
+  openDetailDrawer(ay: AcademicYear): void {
+    this.selectedAyForDetail.set(ay);
+    this.isDetailDrawerOpen.set(true);
+  }
 
   readonly canManage = () => this.authService.hasAnyRole(['ADMIN', 'REGISTRAR']);
 
@@ -195,7 +209,7 @@ export class AcademicYearManagerComponent implements OnInit {
     });
   }
 
-  private dateOrderValidator(group: any) {
+  private dateOrderValidator(group: AbstractControl) {
     const start = group.get('startDate')?.value;
     const end = group.get('endDate')?.value;
     if (start && end && new Date(end) <= new Date(start)) {

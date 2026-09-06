@@ -36,7 +36,7 @@ export function roleGuard(route: ActivatedRouteSnapshot, state: RouterStateSnaps
 export function roleGuard(
   rolesOrRoute: string[] | ActivatedRouteSnapshot,
   state?: RouterStateSnapshot
-): any {
+): CanActivateFn | ReturnType<CanActivateFn> {
   if (Array.isArray(rolesOrRoute)) {
     const roles = rolesOrRoute;
     return (route: ActivatedRouteSnapshot, st: RouterStateSnapshot) => {

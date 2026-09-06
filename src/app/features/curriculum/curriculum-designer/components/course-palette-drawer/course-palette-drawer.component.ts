@@ -1,4 +1,4 @@
-import { Component, effect, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, effect, inject, OnDestroy, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Drawer, DrawerModule } from 'primeng/drawer';
@@ -29,7 +29,8 @@ import { CurriculumDesignerStore } from '../../state/curriculum-designer.store';
     InputIconModule
   ],
   templateUrl: './course-palette-drawer.component.html',
-  styleUrl: './course-palette-drawer.component.css'
+  styleUrl: './course-palette-drawer.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CoursePaletteDrawerComponent implements OnInit, OnDestroy {
   readonly store = inject(CurriculumDesignerStore);

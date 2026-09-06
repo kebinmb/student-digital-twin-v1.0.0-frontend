@@ -2,7 +2,7 @@
   <!-- Toolbar / Filter Bar -->
   <div class="timetable-toolbar">
     <div class="filter-item">
-      <label>Filter by Classroom / Laboratory:</label>
+      <label class="filter-label">Filter by Classroom / Facility:</label>
       <p-select 
         [options]="store.rooms()" 
         optionLabel="code" 
@@ -10,11 +10,11 @@
         [ngModel]="selectedRoomId()" 
         (onChange)="onRoomChange($event.value)"
         [filter]="true"
-        filterPlaceholder="Search room..."
+        filterPlaceholder="Search room code or name..."
         [showClear]="true"
-        placeholder="All Rooms / Campus Facilities"
+        placeholder="All Facilities / Classrooms"
         appendTo="body"
-        styleClass="w-64">
+        styleClass="w-72">
         <ng-template let-r pTemplate="item">
           <div class="flex items-center justify-between gap-2 w-full">
             <span><strong>{{ r.code }}</strong> - {{ r.name }}</span>
@@ -41,7 +41,7 @@
 
     <div class="toolbar-actions">
       <p-button 
-        label="Add Schedule" 
+        label="Add Schedule Slot" 
         icon="pi pi-plus" 
         size="small" 
         severity="success" 
@@ -51,7 +51,7 @@
     </div>
   </div>
 
-  <!-- Weekly Timetable Matrix -->
+  <!-- Weekly Timetable Matrix Grid -->
   <div class="grid-container">
     <div class="days-columns">
       @for (day of days; track day) {
@@ -60,27 +60,38 @@
             <h4>{{ day }}</h4>
           </div>
           <div class="slots-container">
-            @for (item of getSlotsForDay(day); track item.sectionCode + item.startTime) {
-              <div 
-                class="timetable-card"
-                [class.lab-card]="item.scheduleType === 'LABORATORY'">
-                <div class="card-time">
-                  <i class="pi pi-clock"></i> {{ item.startTime }} - {{ item.endTime }}
+            @if (store.isLoading()) {
+              @for (s of [1, 2]; track s) {
+                <div class="timetable-card p-2">
+                  <p-skeleton width="70%" height="0.875rem" styleClass="mb-2"></p-skeleton>
+                  <p-skeleton width="100%" height="1.25rem" styleClass="mb-2"></p-skeleton>
+                  <p-skeleton width="50%" height="0.75rem"></p-skeleton>
                 </div>
-                <div class="card-title">
-                  <span class="sec-code">{{ item.sectionCode }}</span>
-                  <span class="crs-code">{{ item.courseCode }}</span>
+              }
+            } @else {
+              @for (item of getSlotsForDay(day); track item.sectionCode + item.startTime) {
+                <div 
+                  class="timetable-card"
+                  [class.lab-card]="item.scheduleType === 'LABORATORY'">
+                  <div class="card-time">
+                    <i class="pi pi-clock"></i> {{ item.startTime }} - {{ item.endTime }}
+                  </div>
+                  <div class="card-title">
+                    <span class="sec-code">{{ item.sectionCode }}</span>
+                    <span class="crs-code">{{ item.courseCode }}</span>
+                  </div>
+                  <div class="card-meta">
+                    <span class="room"><i class="pi pi-map-marker text-xs"></i> {{ item.roomCode }}</span>
+                    <span class="instructor"><i class="pi pi-user text-xs"></i> {{ item.instructorName }}</span>
+                  </div>
                 </div>
-                <div class="card-meta">
-                  <span class="room"><i class="pi pi-map-marker"></i> {{ item.roomCode }}</span>
-                  <span class="instructor"><i class="pi pi-user"></i> {{ item.instructorName }}</span>
+              }
+              @if (getSlotsForDay(day).length === 0) {
+                <div class="empty-day">
+                  <i class="pi pi-calendar-minus text-slate-300 text-xl mb-1"></i>
+                  <span>No classes scheduled</span>
                 </div>
-              </div>
-            }
-            @if (getSlotsForDay(day).length === 0) {
-              <div class="empty-day">
-                <span>No classes scheduled</span>
-              </div>
+              }
             }
           </div>
         </div>
@@ -88,3 +99,4 @@
     </div>
   </div>
 </div>
+

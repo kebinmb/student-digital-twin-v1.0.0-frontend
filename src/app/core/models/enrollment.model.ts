@@ -84,3 +84,19 @@ export interface EnrollmentConfirmationDto {
   totalCreditUnits: number;
   message: string;
 }
+
+export interface UpdateEnrollmentStatusRequest {
+  status: string;
+  isOverloadApproved?: boolean;
+}
+
+export interface StudentSearchResultDto {
+  id: number;
+  studentIdNumber: string;
+  fullName: string;
+  programCode: string;
+  yearLevel: number;
+  academicStatus: string;
+}
+
+

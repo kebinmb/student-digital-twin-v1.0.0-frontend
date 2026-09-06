@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AcademicYearManagerComponent } from '../../components/academic-year-manager/academic-year-manager.component';
 import { TermManagerComponent } from '../../components/term-manager/term-manager.component';
@@ -12,6 +12,7 @@ import { TermManagerComponent } from '../../components/term-manager/term-manager
     TermManagerComponent
   ],
   templateUrl: './academic-periods.component.html',
-  styleUrl: './academic-periods.component.css'
+  styleUrl: './academic-periods.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AcademicPeriodsComponent {}

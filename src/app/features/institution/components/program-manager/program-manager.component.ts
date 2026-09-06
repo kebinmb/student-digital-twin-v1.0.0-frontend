@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -18,6 +18,9 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { DepartmentService, ProgramService } from '../../../../core/services/institution.service';
 import { Department, Program, ProgramOutcome } from '../../../../core/models/institution.model';
 import { AuthService } from '../../../../core/service/authentication/auth-service';
+
+import { Drawer } from 'primeng/drawer';
+import { Skeleton } from 'primeng/skeleton';
 
 interface ProgramForm {
   departmentId: FormControl<number | null>;
@@ -44,10 +47,13 @@ interface ProgramForm {
     TagModule,
     ToastModule,
     ConfirmDialogModule,
-    MessageModule
+    MessageModule,
+    Drawer,
+    Skeleton
   ],
   templateUrl: './program-manager.component.html',
-  styleUrl: './program-manager.component.css'
+  styleUrl: './program-manager.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ProgramManagerComponent implements OnInit {
   private readonly programService = inject(ProgramService);
@@ -57,6 +63,14 @@ export class ProgramManagerComponent implements OnInit {
   private readonly authService = inject(AuthService);
 
   readonly canManage = () => this.authService.hasAnyRole(['ADMIN', 'DEAN', 'CHAIRPERSON']);
+
+  readonly selectedProgForDetail = signal<Program | null>(null);
+  readonly isDetailDrawerOpen = signal<boolean>(false);
+
+  openDetailDrawer(prog: Program): void {
+    this.selectedProgForDetail.set(prog);
+    this.isDetailDrawerOpen.set(true);
+  }
 
   readonly programs = signal<Program[]>([]);
   readonly departments = signal<Department[]>([]);

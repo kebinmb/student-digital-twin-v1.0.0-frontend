@@ -1,9 +1,9 @@
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject, signal } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 
 // PrimeNG Components
-import { DialogModule } from 'primeng/dialog';
+import { Drawer } from 'primeng/drawer';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
@@ -37,7 +37,7 @@ interface PrereqForm {
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    DialogModule,
+    Drawer,
     TableModule,
     ButtonModule,
     TagModule,
@@ -48,7 +48,8 @@ interface PrereqForm {
     ConfirmDialogModule
   ],
   templateUrl: './course-detail-dialog.component.html',
-  styleUrl: './course-detail-dialog.component.css'
+  styleUrl: './course-detail-dialog.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CourseDetailDialogComponent implements OnChanges {
   @Input() course: Course | null = null;

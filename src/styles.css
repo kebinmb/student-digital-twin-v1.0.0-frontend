@@ -1,20 +1,403 @@
 @import "primeicons/primeicons.css";
 
-/* src/styles.css */
+/* ==========================================================================
+   CHMSU INSTITUTIONAL DESIGN SYSTEM & GLOBAL TOKENS
+   Carlos Hilado Memorial State University - Student Digital Twin Platform
+   ========================================================================== */
+
 :root {
-  /* CHMSU Brand Tokens */
-  --chmsu-green-main: #116834;
-  --chmsu-green-dark: #1b4332;
-  --chmsu-green-light: #15803d;
-  --chmsu-gold: #f59e0b;       /* Sun rays & gear */
-  --chmsu-yellow: #facc15;     /* Outer sun tips */
-  --chmsu-orange: #ea580c;     /* Torch flame & anvil */
-  --chmsu-blue: #1d4ed8;       /* Torch torchbearer icon */
+  /* Global Typography Font Stack Architecture */
+  --font-family-heading: 'Epic Hero', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family-body: Arial, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-family-base: var(--font-family-body);
+  --p-font-family: var(--font-family-body);
+
+  /* Institutional Brand Neutrals (CHMSU Slate & Navy) */
+  --chmsu-navy-950: #020617;
+  --chmsu-navy-900: #0f172a;
+  --chmsu-navy-800: #1e293b;
+  --chmsu-navy-700: #334155;
+  --chmsu-slate-600: #475569;
+  --chmsu-slate-500: #64748b;
+  --chmsu-slate-400: #94a3b8;
+  --chmsu-slate-300: #cbd5e1;
+  --chmsu-slate-200: #e2e8f0;
+  --chmsu-slate-100: #f1f5f9;
+  --chmsu-slate-50:  #f8fafc;
+  --chmsu-white:     #ffffff;
+
+  /* CHMSU University Greens */
+  --chmsu-green-deep:   #0c5027;
+  --chmsu-green-main:   #116834;
+  --chmsu-green-light:  #15803d;
+  --chmsu-green-accent: #22c55e;
+  --chmsu-green-soft:   #f0fdf4;
+
+  /* CHMSU Academic Warm Gold / Ochre Accents */
+  --chmsu-gold-deep:   #b45309;
+  --chmsu-gold-main:   #d97706;
+  --chmsu-gold-light:  #f59e0b;
+  --chmsu-gold-soft:   #fffbeb;
+
+  /* PrimeNG Theme Token Overrides */
+  --p-primary-color: #116834;
+  --p-primary-hover-color: #0c5027;
+  --p-primary-active-color: #093c1d;
+
+  /* Semantic Status Accents */
+  --status-emerald-bg:  #ecfdf5;
+  --status-emerald-border: #a7f3d0;
+  --status-emerald-text: #047857;
+
+  --status-amber-bg:    #fffbeb;
+  --status-amber-border: #fde68a;
+  --status-amber-text:  #b45309;
+
+  --status-rose-bg:     #fef2f2;
+  --status-rose-border:  #fecaca;
+  --status-rose-text:   #b91c1c;
+
+  --status-blue-bg:     #f0f9ff;
+  --status-blue-border: #bae6fd;
+  --status-blue-text:   #0369a1;
+
+  /* Baseline Scales & Layout Tokens (4px / 8px Scale) */
+  --chmsu-border-radius-sm: 6px;
+  --chmsu-border-radius-md: 8px;
+  --chmsu-border-radius-lg: 12px;
+  --chmsu-border-radius-xl: 16px;
+  --chmsu-border-color: #e2e8f0;
+  --chmsu-shadow-subtle: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+  --chmsu-shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
 }
 
-/* src/styles.css */
-body {
-  font-family: var(--p-font-family, 'Inter', system-ui, sans-serif);
+/* Global Reset & Typography Baseline */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
   margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: var(--font-family-body);
+  font-size: 14px;
+  line-height: 1.5;
+  background-color: var(--chmsu-slate-50);
+  color: var(--chmsu-navy-900);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Display & Heading Typography Architecture (Epic Hero Font Stack) */
+h1, h2, h3, h4, h5, h6,
+.display-title,
+.portal-title,
+.module-title,
+.card-title,
+.bento-card-title,
+.summary-title,
+.table-title,
+.drawer-header-name {
+  font-family: var(--font-family-heading);
+  letter-spacing: -0.015em;
+}
+
+/* Body & UI Control Typography Architecture (Arial Font Stack) */
+body,
+p:not(.pi),
+span:not(.pi):not([class*=" pi-"]):not([class^="pi-"]),
+label:not(.pi),
+button:not(.pi),
+input,
+select,
+textarea,
+td, th,
+.p-component:not(.pi),
+.p-button:not(.pi),
+.p-inputtext,
+.p-select:not(.pi),
+.p-tag:not(.pi),
+.p-datatable,
+.p-drawer,
+.p-dialog,
+.p-toast,
+.p-message,
+.p-progressbar {
+  font-family: var(--font-family-body);
+}
+
+/* Strictly Protect PrimeIcons Font Family from Wildcard Typography Overrides */
+.pi,
+i.pi,
+span.pi,
+[class*=" pi-"],
+[class^="pi-"],
+.p-icon,
+.p-button-icon,
+.p-select-dropdown-icon,
+.p-toast-message-icon,
+.p-dialog-header-close-icon,
+.p-drawer-close-icon {
+  font-family: 'primeicons' !important;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  display: inline-block;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Enterprise Form Field & Inline Validation Feedback */
+small.p-error,
+.p-error,
+.form-field-error {
+  color: #dc2626;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+.ng-invalid.ng-touched:not(form) {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.15) !important;
+}
+
+/* Standard Input & Form Field Global Styling */
+.p-inputtext,
+input[type="text"],
+input[type="search"],
+input[type="number"],
+input[type="password"],
+select,
+textarea {
+  font-family: var(--font-family-base) !important;
+  font-size: 0.8125rem;
+  color: var(--chmsu-navy-900);
+  background-color: #ffffff;
+  border: 1px solid var(--chmsu-slate-300);
+  border-radius: var(--chmsu-border-radius-md);
+  padding: 0.5rem 0.75rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  outline: none;
+}
+
+.p-inputtext:focus,
+input[type="text"]:focus,
+input[type="search"]:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--chmsu-green-main);
+  box-shadow: 0 0 0 3px rgba(17, 104, 52, 0.15);
+}
+
+.p-inputtext::placeholder,
+input::placeholder {
+  color: var(--chmsu-slate-400);
+  font-size: 0.8125rem;
+}
+
+/* Modern Clean Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--chmsu-slate-100);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--chmsu-slate-300);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--chmsu-slate-400);
+}
+
+/* ==========================================================================
+   BENTO GRID LAYOUT ENGINE UTILITIES
+   ========================================================================== */
+
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 1rem;
+  width: 100%;
+}
+
+.bento-col-12 { grid-column: span 12 / span 12; }
+.bento-col-8  { grid-column: span 8 / span 8; }
+.bento-col-6  { grid-column: span 6 / span 6; }
+.bento-col-4  { grid-column: span 4 / span 4; }
+.bento-col-3  { grid-column: span 3 / span 3; }
+
+@media (max-width: 1024px) {
+  .bento-col-8, .bento-col-6, .bento-col-4, .bento-col-3 {
+    grid-column: span 12 / span 12;
+  }
+}
+
+.bento-card {
+  background: var(--chmsu-white);
+  border: 1px solid var(--chmsu-border-color);
+  border-radius: var(--chmsu-border-radius-lg);
+  padding: 1.25rem;
+  box-shadow: var(--chmsu-shadow-card);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.bento-card:hover {
+  border-color: var(--chmsu-slate-300);
+}
+
+.bento-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.bento-card-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900);
+  letter-spacing: -0.01em;
+}
+
+.bento-card-subtitle {
+  margin: 0.15rem 0 0;
+  font-size: 0.75rem;
+  color: var(--chmsu-slate-500);
+}
+
+/* ==========================================================================
+   MASTER-DETAIL DRAWER & HIGH-DENSITY TABLES
+   ========================================================================== */
+
+.institutional-table {
+  border-radius: var(--chmsu-border-radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--chmsu-border-color);
+}
+
+.institutional-table .p-datatable-thead > tr > th {
+  background-color: var(--chmsu-slate-100);
+  color: var(--chmsu-navy-800);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--chmsu-border-color);
+}
+
+.institutional-table .p-datatable-tbody > tr {
+  transition: background-color 0.15s ease;
+  cursor: pointer;
+}
+
+.institutional-table .p-datatable-tbody > tr:hover {
+  background-color: #f1f5f9 !important;
+}
+
+.institutional-table .p-datatable-tbody > tr > td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--chmsu-slate-200);
+  font-size: 0.8125rem;
+  color: var(--chmsu-navy-800);
+}
+
+.institutional-drawer .p-drawer-content {
+  padding: 1.5rem;
+  background-color: var(--chmsu-slate-50);
+}
+
+.institutional-drawer .p-drawer-header {
+  border-bottom: 1px solid var(--chmsu-border-color);
+  padding: 1.25rem 1.5rem;
+  background-color: var(--chmsu-white);
+}
+
+.drawer-profile-card {
+  background: var(--chmsu-white);
+  border: 1px solid var(--chmsu-border-color);
+  border-radius: var(--chmsu-border-radius-lg);
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  box-shadow: var(--chmsu-shadow-subtle);
+}
+
+.drawer-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.drawer-stat-box {
+  background: var(--chmsu-slate-50);
+  border: 1px solid var(--chmsu-slate-200);
+  border-radius: var(--chmsu-border-radius-md);
+  padding: 0.75rem;
+}
+
+.drawer-stat-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--chmsu-slate-500);
+}
+
+.drawer-stat-val {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900);
+  margin-top: 0.15rem;
+}
+
+/* Common Badge Helper Classes */
+.code-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.5rem;
+  background: var(--chmsu-slate-100);
+  border: 1px solid var(--chmsu-slate-300);
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-800);
+}
+
+/* Semantic Toast Overrides */
+.p-toast {
+  max-width: 420px;
+  z-index: 11000 !important;
+}
+
+.p-toast .p-toast-message {
+  border-radius: var(--chmsu-border-radius-md);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+  border: 1px solid var(--chmsu-border-color);
+}
+
+/* Accessibility (a11y) Screen Reader Only Helper */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }

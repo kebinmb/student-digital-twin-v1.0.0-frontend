@@ -111,6 +111,18 @@ export class TermService {
     return this.http.put<Term>(`${this.baseUrl}/${id}/activate`, {});
   }
 
+  toggleEnrollmentWindow(id: number, open: boolean): Observable<Term> {
+    return this.http.put<Term>(`${this.baseUrl}/${id}/enrollment-window?open=${open}`, {});
+  }
+
+  toggleGradingWindow(id: number, open: boolean): Observable<Term> {
+    return this.http.put<Term>(`${this.baseUrl}/${id}/grading-window?open=${open}`, {});
+  }
+
+  toggleAddDropWindow(id: number, open: boolean): Observable<Term> {
+    return this.http.put<Term>(`${this.baseUrl}/${id}/add-drop-window?open=${open}`, {});
+  }
+
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
@@ -293,7 +305,7 @@ export class CourseOutcomeService {
     return this.http.post<CourseOutcome>(`${this.baseUrl}/${courseId}/outcomes`, request);
   }
 
-  update(courseIdOrId: number, idOrReq: any, maybeReq?: any): Observable<CourseOutcome> {
+  update(courseIdOrId: number, idOrReq: number | CreateCourseOutcomeRequest | UpdateCourseOutcomeRequest, maybeReq?: CreateCourseOutcomeRequest | UpdateCourseOutcomeRequest): Observable<CourseOutcome> {
     const id = maybeReq !== undefined ? idOrReq : courseIdOrId;
     const request = maybeReq !== undefined ? maybeReq : idOrReq;
     return this.http.put<CourseOutcome>(`${environment.apiUrl}/v1/course-outcomes/${id}`, request);

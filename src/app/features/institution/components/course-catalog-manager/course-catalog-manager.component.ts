@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -32,6 +32,8 @@ interface CourseForm {
   description: FormControl<string>;
 }
 
+import { Skeleton } from 'primeng/skeleton';
+
 @Component({
   selector: 'app-course-catalog-manager',
   standalone: true,
@@ -50,10 +52,12 @@ interface CourseForm {
     InputIcon,
     SelectModule,
     ConfirmDialogModule,
+    Skeleton,
     CourseDetailDialogComponent
   ],
   templateUrl: './course-catalog-manager.component.html',
-  styleUrl: './course-catalog-manager.component.css'
+  styleUrl: './course-catalog-manager.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CourseCatalogManagerComponent implements OnInit {
   private readonly courseService = inject(CourseService);
@@ -83,7 +87,7 @@ export class CourseCatalogManagerComponent implements OnInit {
   searchKeyword: string = '';
   currentPage: number = 0;
   pageSize: number = 15;
-  private searchTimeout: any;
+  private searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
   readonly canManage = () => this.authService.hasAnyRole(['ADMIN', 'DEAN', 'CHAIRPERSON']);
 
@@ -178,9 +182,11 @@ export class CourseCatalogManagerComponent implements OnInit {
     }, 350);
   }
 
-  onPageChange(event: any): void {
-    this.currentPage = Math.floor(event.first / event.rows);
-    this.pageSize = event.rows;
+  onPageChange(event: { first?: number | null; rows?: number | null }): void {
+    const first = event.first ?? 0;
+    const rows = event.rows ?? 15;
+    this.currentPage = Math.floor(first / rows);
+    this.pageSize = rows;
     this.loadCourses();
   }
 

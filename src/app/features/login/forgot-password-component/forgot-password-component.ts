@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { ProblemDetail } from '../../../core/models/auth.model';
@@ -20,6 +20,7 @@ import { InputText } from 'primeng/inputtext';
   selector: 'app-forgot-password-component',
   styleUrl: './forgot-password-component.css',
   templateUrl: './forgot-password-component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ForgotPasswordComponent {
   private readonly fb = inject(FormBuilder);

@@ -19,7 +19,7 @@ export interface UpdateAcademicYearRequest {
   endDate: string;
 }
 
-export type TermType = '1ST_SEM' | '2ND_SEM' | 'SUMMER';
+export type TermType = '1ST_SEM' | '2ND_SEM' | 'SUMMER' | 'FIRST_SEM' | 'SECOND_SEM';
 
 export interface Term {
   id: number;

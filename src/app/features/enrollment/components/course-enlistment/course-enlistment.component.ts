@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, signal } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
@@ -9,6 +9,9 @@ import { MessageModule } from 'primeng/message';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { EnrollmentStore } from '../../state/enrollment.store';
 import { EnrollmentItemResponse } from '../../../../core/models/enrollment.model';
+
+import { Drawer } from 'primeng/drawer';
+import { Skeleton } from 'primeng/skeleton';
 
 @Component({
   selector: 'app-course-enlistment',
@@ -20,7 +23,9 @@ import { EnrollmentItemResponse } from '../../../../core/models/enrollment.model
     TagModule,
     ConfirmDialogModule,
     ToastModule,
-    MessageModule
+    MessageModule,
+    Drawer,
+    Skeleton
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './course-enlistment.component.html',
@@ -31,6 +36,14 @@ export class CourseEnlistmentComponent {
   readonly store = inject(EnrollmentStore);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly messageService = inject(MessageService);
+
+  readonly selectedEnlistedItem = signal<EnrollmentItemResponse | null>(null);
+  readonly isItemDrawerOpen = signal<boolean>(false);
+
+  openItemDrawer(item: EnrollmentItemResponse): void {
+    this.selectedEnlistedItem.set(item);
+    this.isItemDrawerOpen.set(true);
+  }
 
   confirmDropSection(item: EnrollmentItemResponse): void {
     this.confirmationService.confirm({
@@ -98,6 +111,38 @@ export class CourseEnlistmentComponent {
         );
       }
     });
+  }
+
+  formatScheduleSlots(summary: string | undefined): { day: string; timeRoom: string }[] {
+    if (!summary || summary === 'Schedule TBA' || summary === 'No timetable assigned') {
+      return [{ day: 'Schedule', timeRoom: 'To Be Announced (TBA)' }];
+    }
+
+    const parts = summary.split(/;|\n/);
+    const slots: { day: string; timeRoom: string }[] = [];
+
+    for (const part of parts) {
+      const trimmed = part.trim();
+      if (!trimmed) continue;
+
+      const match = trimmed.match(/^([A-Za-z,\s]+?)\s+(\d{1,2}:\d{2}.*)$/);
+      if (match) {
+        const daysRaw = match[1].trim();
+        const timeRoom = match[2].trim();
+        const days = daysRaw.split(',').map(d => d.trim());
+        if (days.length > 1) {
+          for (const d of days) {
+            slots.push({ day: d, timeRoom });
+          }
+        } else {
+          slots.push({ day: daysRaw, timeRoom });
+        }
+      } else {
+        slots.push({ day: 'Slot', timeRoom: trimmed });
+      }
+    }
+
+    return slots.length > 0 ? slots : [{ day: 'Schedule', timeRoom: summary }];
   }
 
   getStatusSeverity(status: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {

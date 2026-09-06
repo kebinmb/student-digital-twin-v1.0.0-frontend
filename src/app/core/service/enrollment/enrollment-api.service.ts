@@ -6,7 +6,9 @@ import {
   AdvisingEligibilityResponse,
   EnlistSectionRequest,
   EnrollmentConfirmationDto,
-  StudentEnrollmentResponse
+  StudentEnrollmentResponse,
+  UpdateEnrollmentStatusRequest,
+  StudentSearchResultDto
 } from '../../models/enrollment.model';
 
 @Injectable({
@@ -35,4 +37,19 @@ export class EnrollmentApiService {
   getEnrollment(studentId: number, termId: number): Observable<StudentEnrollmentResponse> {
     return this.http.get<StudentEnrollmentResponse>(`${this.baseUrl}/student/${studentId}/term/${termId}`);
   }
+
+  getEnrollmentsByTerm(termId: number): Observable<StudentEnrollmentResponse[]> {
+    return this.http.get<StudentEnrollmentResponse[]>(`${this.baseUrl}/term/${termId}`);
+  }
+
+  updateEnrollmentStatus(enrollmentId: number, request: UpdateEnrollmentStatusRequest): Observable<StudentEnrollmentResponse> {
+    return this.http.put<StudentEnrollmentResponse>(`${this.baseUrl}/${enrollmentId}/status`, request);
+  }
+
+  searchStudents(query: string): Observable<StudentSearchResultDto[]> {
+    return this.http.get<StudentSearchResultDto[]>(`${environment.apiUrl}/v1/students/search`, {
+      params: { query }
+    });
+  }
 }
+

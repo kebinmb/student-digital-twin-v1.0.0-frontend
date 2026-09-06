@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <circle cx="50" cy="50" r="48" fill="#116834" stroke="#d97706" stroke-width="4" />
+  <circle cx="50" cy="50" r="38" fill="#ffffff" stroke="#116834" stroke-width="2" />
+  <path d="M50 18 L60 38 L82 38 L64 50 L70 72 L50 58 L30 72 L36 50 L18 38 L40 38 Z" fill="#d97706" />
+  <text x="50" y="54" font-family="sans-serif" font-size="10" font-weight="bold" fill="#0c5027" text-anchor="middle">CHMSU</text>
+  <text x="50" y="64" font-family="sans-serif" font-size="6" font-weight="bold" fill="#0f172a" text-anchor="middle">EST. 1954</text>
+</svg>

@@ -50,7 +50,7 @@
     </ng-template>
 
     <ng-template #body let-t>
-      <tr>
+      <tr (click)="openDetailDrawer(t)" class="hover:bg-slate-100 cursor-pointer">
         <td class="font-bold text-primary">
           {{ formatTermType(t.termType) }}
         </td>
@@ -63,17 +63,41 @@
             <p-tag value="INACTIVE" severity="secondary"></p-tag>
           }
         </td>
-        <td style="text-align: center">
-          <div class="window-badges">
-            <span class="window-chip" [class.active-chip]="t.enrollmentOpen">
+        <td style="text-align: center" (click)="$event.stopPropagation()">
+          <div class="window-badges flex items-center justify-center gap-1.5">
+            <button
+              type="button"
+              class="window-chip cursor-pointer transition-all border-0 rounded px-2.5 py-1 text-xs font-semibold shadow-xs flex items-center"
+              [class.bg-emerald-100]="t.enrollmentOpen"
+              [class.text-emerald-800]="t.enrollmentOpen"
+              [class.hover:bg-emerald-200]="t.enrollmentOpen && canManage() && t.isActive"
+              [class.bg-slate-100]="!t.enrollmentOpen"
+              [class.text-slate-600]="!t.enrollmentOpen"
+              [class.hover:bg-slate-200]="!t.enrollmentOpen && canManage() && t.isActive"
+              [disabled]="!canManage() || !t.isActive"
+              [title]="t.isActive ? (t.enrollmentOpen ? 'Click to Close Enrollment' : 'Click to Open Enrollment') : 'Windows can only be toggled on active terms'"
+              (click)="toggleEnrollmentWindow(t)">
+              <i [class]="t.enrollmentOpen ? 'pi pi-lock-open mr-1 text-[10px]' : 'pi pi-lock mr-1 text-[10px]'"></i>
               Enrollment: {{ t.enrollmentOpen ? 'OPEN' : 'CLOSED' }}
-            </span>
-            <span class="window-chip" [class.active-chip]="t.gradingOpen">
+            </button>
+            <button
+              type="button"
+              class="window-chip cursor-pointer transition-all border-0 rounded px-2.5 py-1 text-xs font-semibold shadow-xs flex items-center"
+              [class.bg-emerald-100]="t.gradingOpen"
+              [class.text-emerald-800]="t.gradingOpen"
+              [class.hover:bg-emerald-200]="t.gradingOpen && canManage() && t.isActive"
+              [class.bg-slate-100]="!t.gradingOpen"
+              [class.text-slate-600]="!t.gradingOpen"
+              [class.hover:bg-slate-200]="!t.gradingOpen && canManage() && t.isActive"
+              [disabled]="!canManage() || !t.isActive"
+              [title]="t.isActive ? (t.gradingOpen ? 'Click to Close Grading' : 'Click to Open Grading') : 'Windows can only be toggled on active terms'"
+              (click)="toggleGradingWindow(t)">
+              <i [class]="t.gradingOpen ? 'pi pi-lock-open mr-1 text-[10px]' : 'pi pi-lock mr-1 text-[10px]'"></i>
               Grading: {{ t.gradingOpen ? 'OPEN' : 'CLOSED' }}
-            </span>
+            </button>
           </div>
         </td>
-        <td style="text-align: right">
+        <td style="text-align: right" (click)="$event.stopPropagation()">
           <div class="action-buttons-cell">
             @if (!t.isActive) {
               <p-button
@@ -109,6 +133,19 @@
       </tr>
     </ng-template>
 
+    <ng-template #loadingbody>
+      @for (i of [1, 2, 3]; track i) {
+        <tr>
+          <td><p-skeleton width="120px"></p-skeleton></td>
+          <td><p-skeleton width="90px"></p-skeleton></td>
+          <td><p-skeleton width="90px"></p-skeleton></td>
+          <td><p-skeleton width="80px"></p-skeleton></td>
+          <td><p-skeleton width="140px"></p-skeleton></td>
+          <td><p-skeleton width="100px"></p-skeleton></td>
+        </tr>
+      }
+    </ng-template>
+
     <ng-template #emptymessage>
       <tr>
         <td colspan="6" class="empty-message-cell">
@@ -118,19 +155,90 @@
     </ng-template>
   </p-table>
 
+  <!-- Master-Detail Drawer for Term Profile -->
+  <p-drawer [(visible)]="isDetailDrawerOpen" position="right" styleClass="institutional-drawer w-full md:w-28rem">
+    <ng-template pTemplate="header">
+      <div class="drawer-header-title">
+        <span class="text-xs font-bold text-emerald-800 uppercase tracking-wider">Academic Term Details</span>
+        <h3 class="text-base font-bold text-slate-900 m-0 mt-1">{{ formatTermType(selectedTermForDetail()?.termType || '') }}</h3>
+      </div>
+    </ng-template>
+
+    @if (selectedTermForDetail()) {
+      <div class="drawer-content-body">
+        <div class="drawer-profile-card mb-4">
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <span class="code-badge">{{ formatTermType(selectedTermForDetail()!.termType) }}</span>
+            <p-tag [severity]="selectedTermForDetail()!.isActive ? 'success' : 'secondary'" [value]="selectedTermForDetail()!.isActive ? 'ACTIVE OPERATIONAL' : 'INACTIVE'"></p-tag>
+          </div>
+          <p class="text-xs text-slate-600 m-0">
+            Term Period: <strong class="text-slate-800">{{ selectedTermForDetail()!.startDate }}</strong> to <strong class="text-slate-800">{{ selectedTermForDetail()!.endDate }}</strong>
+          </p>
+        </div>
+
+        <div class="drawer-stat-grid grid grid-cols-2 gap-3 mb-4">
+          <div class="drawer-stat-box p-3 bg-slate-50 border border-slate-200 rounded-lg flex flex-col justify-between">
+            <span class="drawer-stat-label text-xs font-semibold text-slate-500">Enrollment Window</span>
+            <div class="flex items-center justify-between mt-1">
+              <span class="drawer-stat-val text-xs font-bold" [class.text-emerald-700]="selectedTermForDetail()!.enrollmentOpen" [class.text-slate-600]="!selectedTermForDetail()!.enrollmentOpen">
+                {{ selectedTermForDetail()!.enrollmentOpen ? 'OPEN' : 'CLOSED' }}
+              </span>
+              @if (canManage() && selectedTermForDetail()!.isActive) {
+                <p-button
+                  [label]="selectedTermForDetail()!.enrollmentOpen ? 'Close' : 'Open'"
+                  size="small"
+                  [outlined]="true"
+                  [severity]="selectedTermForDetail()!.enrollmentOpen ? 'warn' : 'success'"
+                  (onClick)="toggleEnrollmentWindow(selectedTermForDetail()!)">
+                </p-button>
+              }
+            </div>
+          </div>
+          <div class="drawer-stat-box p-3 bg-slate-50 border border-slate-200 rounded-lg flex flex-col justify-between">
+            <span class="drawer-stat-label text-xs font-semibold text-slate-500">Grading Window</span>
+            <div class="flex items-center justify-between mt-1">
+              <span class="drawer-stat-val text-xs font-bold" [class.text-emerald-700]="selectedTermForDetail()!.gradingOpen" [class.text-slate-600]="!selectedTermForDetail()!.gradingOpen">
+                {{ selectedTermForDetail()!.gradingOpen ? 'OPEN' : 'CLOSED' }}
+              </span>
+              @if (canManage() && selectedTermForDetail()!.isActive) {
+                <p-button
+                  [label]="selectedTermForDetail()!.gradingOpen ? 'Close' : 'Open'"
+                  size="small"
+                  [outlined]="true"
+                  [severity]="selectedTermForDetail()!.gradingOpen ? 'warn' : 'success'"
+                  (onClick)="toggleGradingWindow(selectedTermForDetail()!)">
+                </p-button>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 flex flex-col gap-2">
+          @if (canManage() && !selectedTermForDetail()!.isActive) {
+            <p-button label="Activate Term" icon="pi pi-play" severity="success" styleClass="w-full" (onClick)="confirmActivate(selectedTermForDetail()!); isDetailDrawerOpen.set(false)"></p-button>
+          }
+          @if (canManage()) {
+            <p-button label="Update Schedule Dates" icon="pi pi-pencil" severity="primary" styleClass="w-full" (onClick)="openEditDialog(selectedTermForDetail()!); isDetailDrawerOpen.set(false)"></p-button>
+          }
+          <p-button label="Close Details" icon="pi pi-times" severity="secondary" [outlined]="true" styleClass="w-full" (onClick)="isDetailDrawerOpen.set(false)"></p-button>
+        </div>
+      </div>
+    }
+  </p-drawer>
+
   <!-- Create / Edit Dialog -->
   <p-dialog
     [header]="isEditing ? 'Update Term Schedule' : 'Schedule Academic Term'"
     [(visible)]="displayDialog"
     [modal]="true"
     [breakpoints]="{ '960px': '75vw', '640px': '92vw' }"
-    [style]="{ width: '420px', maxWidth: '95vw' }"
+    [style]="{ width: '440px', maxWidth: '95vw' }"
     [contentStyle]="{ 'overflow-x': 'hidden' }">
     
     <form [formGroup]="termForm" (ngSubmit)="saveTerm()" class="dialog-form">
       @if (!isEditing) {
-        <div class="form-group">
-          <label class="form-label">Academic Year *</label>
+        <div class="form-group mb-3">
+          <label class="form-label block text-xs font-semibold text-slate-700 mb-1">Academic Year *</label>
           <p-select
             appendTo="body"
             [options]="academicYearOptions()"
@@ -142,38 +250,50 @@
           </p-select>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Term Type *</label>
+        <div class="form-group mb-3">
+          <label class="form-label block text-xs font-semibold text-slate-700 mb-1">Term Type *</label>
           <p-select
             appendTo="body"
             [options]="termTypeOptions"
             formControlName="termType"
             placeholder="Select Term Type"
+            optionLabel="label"
+            optionValue="value"
             styleClass="w-full">
           </p-select>
         </div>
       }
 
-      <div class="form-group">
-        <label class="form-label">Start Date *</label>
+      <div class="form-group mb-3">
+        <label class="form-label block text-xs font-semibold text-slate-700 mb-1">Start Date *</label>
         <input
           type="date"
           formControlName="startDate"
-          class="form-date-input" />
+          class="form-date-input w-full p-2 border border-slate-300 rounded text-sm" />
       </div>
 
-      <div class="form-group">
-        <label class="form-label">End Date *</label>
+      <div class="form-group mb-3">
+        <label class="form-label block text-xs font-semibold text-slate-700 mb-1">End Date *</label>
         <input
           type="date"
           formControlName="endDate"
-          class="form-date-input" />
+          class="form-date-input w-full p-2 border border-slate-300 rounded text-sm" />
+        
         @if (termForm.hasError('dateOrderInvalid')) {
-          <span class="field-error-text">End date must be strictly after start date.</span>
+          <span class="field-error-text text-xs text-rose-600 mt-1 block font-medium">End date must be strictly after start date.</span>
+        }
+        @if (termForm.hasError('ayStartOutOfBounds')) {
+          <span class="field-error-text text-xs text-rose-600 mt-1 block font-medium">Start date precedes Academic Year start ({{ termForm.getError('ayStartOutOfBounds')?.ayStartDate }}).</span>
+        }
+        @if (termForm.hasError('ayEndOutOfBounds')) {
+          <span class="field-error-text text-xs text-rose-600 mt-1 block font-medium">End date exceeds Academic Year end ({{ termForm.getError('ayEndOutOfBounds')?.ayEndDate }}).</span>
+        }
+        @if (termForm.hasError('termOverlap')) {
+          <span class="field-error-text text-xs text-rose-600 mt-1 block font-medium">Dates overlap with existing {{ termForm.getError('termOverlap')?.overlappingTerm }}.</span>
         }
       </div>
 
-      <div class="dialog-actions">
+      <div class="dialog-actions flex justify-end gap-2 mt-4">
         <p-button
           label="Cancel"
           size="small"
@@ -193,3 +313,4 @@
     </form>
   </p-dialog>
 </div>
+

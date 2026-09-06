@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, ChangeDetectionStrategy, signal } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -9,9 +9,15 @@ import { ProgressBarModule } from 'primeng/progressbar';
 import { MessageModule } from 'primeng/message';
 import { ToastModule } from 'primeng/toast';
 import { SelectModule } from 'primeng/select';
+import { InputText } from 'primeng/inputtext';
+import { IconField } from 'primeng/iconfield';
+import { InputIcon } from 'primeng/inputicon';
 import { MessageService } from 'primeng/api';
 import { EnrollmentStore } from '../../state/enrollment.store';
 import { CourseEligibilityItemDto, AvailableSectionOptionDto } from '../../../../core/models/enrollment.model';
+
+import { Drawer } from 'primeng/drawer';
+import { Skeleton } from 'primeng/skeleton';
 
 @Component({
   selector: 'app-student-advising',
@@ -23,10 +29,15 @@ import { CourseEligibilityItemDto, AvailableSectionOptionDto } from '../../../..
     ButtonModule,
     TagModule,
     DialogModule,
+    Drawer,
+    Skeleton,
     ProgressBarModule,
     MessageModule,
     ToastModule,
-    SelectModule
+    SelectModule,
+    InputText,
+    IconField,
+    InputIcon
   ],
   providers: [MessageService],
   templateUrl: './student-advising.component.html',
@@ -39,15 +50,73 @@ export class StudentAdvisingComponent implements OnInit {
 
   readonly isSectionModalVisible = signal<boolean>(false);
   readonly selectedCourse = signal<CourseEligibilityItemDto | null>(null);
+  readonly searchFilter = signal<string>('');
+  readonly statusFilter = signal<string>('ALL');
+  readonly yearFilter = signal<string>('ALL');
+  readonly semesterFilter = signal<string>('ALL');
+
+  readonly filteredCourses = computed(() => {
+    const courses = this.store.advising()?.courses || [];
+    const search = this.searchFilter().toLowerCase().trim();
+    const status = this.statusFilter();
+    const year = this.yearFilter();
+    const sem = this.semesterFilter();
+
+    return courses.filter((c) => {
+      const matchesSearch = !search || c.code.toLowerCase().includes(search) || c.title.toLowerCase().includes(search);
+      const matchesStatus = status === 'ALL' || c.eligibilityStatus === status;
+      const matchesYear = year === 'ALL' || String(c.yearLevel) === year;
+      
+      let matchesSem = true;
+      if (sem !== 'ALL') {
+        const courseSem = (c.semester || '').toUpperCase();
+        if (sem === '1ST_SEM') matchesSem = courseSem.includes('1') || courseSem.includes('FIRST');
+        else if (sem === '2ND_SEM') matchesSem = courseSem.includes('2') || courseSem.includes('SECOND');
+        else if (sem === 'SUMMER') matchesSem = courseSem.includes('SUMMER');
+      }
+
+      return matchesSearch && matchesStatus && matchesYear && matchesSem;
+    });
+  });
+
+  readonly statusOptions = [
+    { label: 'All Courses', value: 'ALL' },
+    { label: 'Eligible Only', value: 'ELIGIBLE' },
+    { label: 'Locked (Prerequisite)', value: 'LOCKED_PREREQUISITE' },
+    { label: 'Already Passed', value: 'ALREADY_PASSED' }
+  ];
+
+  readonly yearOptions = [
+    { label: 'All Years', value: 'ALL' },
+    { label: '1st Year', value: '1' },
+    { label: '2nd Year', value: '2' },
+    { label: '3rd Year', value: '3' },
+    { label: '4th Year', value: '4' }
+  ];
+
+  readonly semesterOptions = [
+    { label: 'All Semesters', value: 'ALL' },
+    { label: '1st Semester', value: '1ST_SEM' },
+    { label: '2nd Semester', value: '2ND_SEM' },
+    { label: 'Summer Term', value: 'SUMMER' }
+  ];
 
   ngOnInit(): void {
     this.store.loadInitialData();
   }
 
-  onTermSelect(termId: any): void {
+  onStudentSelect(studentId: number | { value: number } | string | null): void {
+    const id = typeof studentId === 'object' ? studentId?.value : Number(studentId);
+    if (id) {
+      this.store.setStudentId(id);
+    }
+  }
+
+  onTermSelect(termId: number | { value: number } | string | null): void {
     const id = typeof termId === 'object' ? termId?.value : Number(termId);
-    this.store.selectedTermId.set(id);
-    this.store.loadStudentAdvising(this.store.studentId(), id);
+    if (id) {
+      this.store.setSelectedTermId(id);
+    }
   }
 
   openSectionChooser(course: CourseEligibilityItemDto): void {
@@ -81,6 +150,38 @@ export class StudentAdvisingComponent implements OnInit {
     );
   }
 
+  formatScheduleSlots(summary: string | undefined): { day: string; timeRoom: string }[] {
+    if (!summary || summary === 'Schedule TBA' || summary === 'No timetable assigned') {
+      return [{ day: 'Schedule', timeRoom: 'To Be Announced (TBA)' }];
+    }
+
+    const parts = summary.split(/;|\n/);
+    const slots: { day: string; timeRoom: string }[] = [];
+
+    for (const part of parts) {
+      const trimmed = part.trim();
+      if (!trimmed) continue;
+
+      const match = trimmed.match(/^([A-Za-z,\s]+?)\s+(\d{1,2}:\d{2}.*)$/);
+      if (match) {
+        const daysRaw = match[1].trim();
+        const timeRoom = match[2].trim();
+        const days = daysRaw.split(',').map(d => d.trim());
+        if (days.length > 1) {
+          for (const d of days) {
+            slots.push({ day: d, timeRoom });
+          }
+        } else {
+          slots.push({ day: daysRaw, timeRoom });
+        }
+      } else {
+        slots.push({ day: 'Slot', timeRoom: trimmed });
+      }
+    }
+
+    return slots.length > 0 ? slots : [{ day: 'Schedule', timeRoom: summary }];
+  }
+
   getStatusSeverity(status: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
     switch (status) {
       case 'ELIGIBLE': return 'success';
@@ -88,6 +189,16 @@ export class StudentAdvisingComponent implements OnInit {
       case 'LOCKED_PREREQUISITE': return 'danger';
       case 'ALREADY_PASSED': return 'secondary';
       default: return 'info';
+    }
+  }
+
+  getOptionIcon(value: string): string {
+    switch (value) {
+      case 'ALL': return 'pi pi-list text-slate-600';
+      case 'ELIGIBLE': return 'pi pi-check-circle text-emerald-600';
+      case 'LOCKED_PREREQUISITE': return 'pi pi-lock text-rose-600';
+      case 'ALREADY_PASSED': return 'pi pi-verified text-blue-600';
+      default: return 'pi pi-filter';
     }
   }
 }

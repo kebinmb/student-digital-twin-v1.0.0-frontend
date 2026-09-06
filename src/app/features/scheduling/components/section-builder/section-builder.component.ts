@@ -19,10 +19,13 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { MessageModule } from 'primeng/message';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ToastModule } from 'primeng/toast';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { TooltipModule } from 'primeng/tooltip';
+import { Drawer } from 'primeng/drawer';
+import { Skeleton } from 'primeng/skeleton';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { SchedulingStore } from '../../state/scheduling.store';
 import { CreateSectionRequest, ScheduleSlotDto, SectionDetailResponse } from '../../../../core/models/scheduling.model';
@@ -65,10 +68,13 @@ function nonWhitespaceValidator(): ValidatorFn {
     MessageModule,
     InputTextModule,
     SelectModule,
+    SelectButtonModule,
     CheckboxModule,
     ToastModule,
     ProgressBarModule,
-    TooltipModule
+    TooltipModule,
+    Drawer,
+    Skeleton
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './section-builder.component.html',
@@ -112,6 +118,24 @@ export class SectionBuilderComponent implements OnInit {
 
   sectionForm!: FormGroup;
 
+  readonly yearLevelOptions = [
+    { label: '1st Year', value: 1 },
+    { label: '2nd Year', value: 2 },
+    { label: '3rd Year', value: 3 },
+    { label: '4th Year', value: 4 }
+  ];
+
+  readonly sectionLetterOptions = [
+    { label: 'A', value: 'A' },
+    { label: 'B', value: 'B' },
+    { label: 'C', value: 'C' },
+    { label: 'D', value: 'D' },
+    { label: 'E', value: 'E' },
+    { label: 'F', value: 'F' },
+    { label: 'G', value: 'G' },
+    { label: 'H', value: 'H' }
+  ];
+
   readonly daysOfWeek = [
     { label: 'Mon', value: 'MONDAY' },
     { label: 'Tue', value: 'TUESDAY' },
@@ -133,6 +157,22 @@ export class SectionBuilderComponent implements OnInit {
         this.openCreateModal();
       }
     });
+  }
+
+  getDefaultProgramCode(): string {
+    const selectedCurr = this.store.selectedCurriculum();
+    if (selectedCurr && selectedCurr.code) {
+      const parts = selectedCurr.code.split('-');
+      if (parts.length > 0 && parts[0]) {
+        const match = this.store.programs().find(p => p.code.toUpperCase() === parts[0].toUpperCase());
+        if (match) return match.code;
+      }
+    }
+    const programs = this.store.programs();
+    if (programs.length > 0) {
+      return programs[0].code;
+    }
+    return 'BSIT';
   }
 
   // --- CHED CMO No. 25 Live Duration Computations ---
@@ -213,17 +253,36 @@ export class SectionBuilderComponent implements OnInit {
 
   initForm(): void {
     this.submitted.set(false);
+    const defaultProgramCode = this.getDefaultProgramCode();
+
     this.sectionForm = this.fb.group({
       termId: [this.store.selectedTermId(), Validators.required],
       curriculumId: [this.store.selectedCurriculumId(), Validators.required],
       courseId: [null, Validators.required],
-      sectionCode: ['', [Validators.required, Validators.maxLength(30), nonWhitespaceValidator()]],
+      programCode: [defaultProgramCode, Validators.required],
+      yearLevel: [1, Validators.required],
+      sectionLetter: ['A', Validators.required],
+      sectionCode: [`${defaultProgramCode}-1A`, [Validators.required, Validators.maxLength(30), nonWhitespaceValidator()]],
       maxCapacity: [40, [Validators.required, Validators.min(1), Validators.max(100)]],
       scheduleSlots: this.fb.array([])
     });
 
     this.selectedCourseId.set(null);
     this.addSlot(['MONDAY', 'WEDNESDAY']);
+
+    const updateSectionCode = () => {
+      const pCode = this.sectionForm.get('programCode')?.value || '';
+      const yLevel = this.sectionForm.get('yearLevel')?.value || '';
+      const sLetter = this.sectionForm.get('sectionLetter')?.value || '';
+      if (pCode && yLevel && sLetter) {
+        const derivedCode = `${pCode}-${yLevel}${sLetter}`;
+        this.sectionForm.get('sectionCode')?.setValue(derivedCode, { emitEvent: false });
+      }
+    };
+
+    this.sectionForm.get('programCode')?.valueChanges.subscribe(updateSectionCode);
+    this.sectionForm.get('yearLevel')?.valueChanges.subscribe(updateSectionCode);
+    this.sectionForm.get('sectionLetter')?.valueChanges.subscribe(updateSectionCode);
 
     this.sectionForm.valueChanges.subscribe(val => {
       this.formSlots.set(val?.scheduleSlots || []);
@@ -275,43 +334,43 @@ export class SectionBuilderComponent implements OnInit {
     return this.isDaySelected(slotIndex, day);
   }
 
-  onDayCheckboxChange(slotIndex: number, day: string, checked: boolean): void {
+  onDayCheckboxChange(slotIndex: number, day?: string): void {
     const slot = this.scheduleSlotsArray.at(slotIndex);
     if (!slot) return;
-    const currentDays: string[] = [...(slot.get('daysOfWeek')?.value || [])];
-    const idx = currentDays.indexOf(day);
+    let days: string[] = [...(slot.get('daysOfWeek')?.value || [])];
 
-    if (checked) {
-      if (idx === -1) {
-        currentDays.push(day);
-      }
-    } else {
-      if (idx > -1) {
-        if (currentDays.length > 1) {
-          currentDays.splice(idx, 1);
-        } else {
-          this.messageService.add({
-            severity: 'warn',
-            summary: 'Meeting Day Required',
-            detail: 'At least one meeting day must be selected for the schedule slot.'
-          });
-          this.cdr.markForCheck();
-          return;
-        }
-      }
+    if (days.length === 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Meeting Day Required',
+        detail: 'At least one meeting day must be selected for the schedule slot.'
+      });
+      const fallbackDay = day || 'MONDAY';
+      days = [fallbackDay];
+      slot.get('daysOfWeek')?.setValue([...days]);
     }
 
-    slot.get('daysOfWeek')?.setValue(currentDays);
-    slot.get('dayOfWeek')?.setValue(currentDays[0] || 'MONDAY');
+    slot.get('dayOfWeek')?.setValue(days[0] || 'MONDAY');
     slot.get('daysOfWeek')?.markAsDirty();
     slot.get('daysOfWeek')?.markAsTouched();
+
     this.formSlots.set(this.sectionForm?.value?.scheduleSlots || []);
     this.cdr.markForCheck();
   }
 
   toggleSlotDay(slotIndex: number, day: string): void {
     const currentlySelected = this.isDaySelected(slotIndex, day);
-    this.onDayCheckboxChange(slotIndex, day, !currentlySelected);
+    const slot = this.scheduleSlotsArray.at(slotIndex);
+    if (!slot) return;
+    const days: string[] = [...(slot.get('daysOfWeek')?.value || [])];
+    const idx = days.indexOf(day);
+    if (currentlySelected && idx > -1) {
+      days.splice(idx, 1);
+    } else if (!currentlySelected && idx === -1) {
+      days.push(day);
+    }
+    slot.get('daysOfWeek')?.setValue([...days]);
+    this.onDayCheckboxChange(slotIndex, day);
   }
 
   applyDayPreset(slotIndex: number, preset: 'MW' | 'TTH' | 'MWF' | 'SAT'): void {
@@ -323,26 +382,29 @@ export class SectionBuilderComponent implements OnInit {
     else if (preset === 'MWF') days = ['MONDAY', 'WEDNESDAY', 'FRIDAY'];
     else if (preset === 'SAT') days = ['SATURDAY'];
 
-    slot.get('daysOfWeek')?.setValue(days);
-    slot.get('dayOfWeek')?.setValue(days[0]);
+    slot.get('daysOfWeek')?.setValue([...days]);
+    slot.get('dayOfWeek')?.setValue(days[0] || 'MONDAY');
     slot.get('daysOfWeek')?.markAsDirty();
     slot.get('daysOfWeek')?.markAsTouched();
+
     this.formSlots.set(this.sectionForm?.value?.scheduleSlots || []);
     this.cdr.markForCheck();
   }
 
   getActivePreset(slotIndex: number): string {
     const slot = this.scheduleSlotsArray.at(slotIndex);
-    const days: string[] = (slot?.get('daysOfWeek')?.value || []).slice().sort();
-    const mw = ['MONDAY', 'WEDNESDAY'].slice().sort();
-    const tth = ['THURSDAY', 'TUESDAY'].slice().sort();
-    const mwf = ['FRIDAY', 'MONDAY', 'WEDNESDAY'].slice().sort();
+    const rawDays: string[] = slot?.get('daysOfWeek')?.value || [];
+    const days: string[] = [...rawDays].sort();
+
+    const mw = ['MONDAY', 'WEDNESDAY'].sort();
+    const tth = ['THURSDAY', 'TUESDAY'].sort();
+    const mwf = ['FRIDAY', 'MONDAY', 'WEDNESDAY'].sort();
     const sat = ['SATURDAY'];
 
-    if (JSON.stringify(days) === JSON.stringify(mw)) return 'MW';
-    if (JSON.stringify(days) === JSON.stringify(tth)) return 'TTH';
-    if (JSON.stringify(days) === JSON.stringify(mwf)) return 'MWF';
-    if (JSON.stringify(days) === JSON.stringify(sat)) return 'SAT';
+    if (days.length === mw.length && days.every((val, index) => val === mw[index])) return 'MW';
+    if (days.length === tth.length && days.every((val, index) => val === tth[index])) return 'TTH';
+    if (days.length === mwf.length && days.every((val, index) => val === mwf[index])) return 'MWF';
+    if (days.length === sat.length && days.every((val, index) => val === sat[index])) return 'SAT';
     return 'CUSTOM';
   }
 
@@ -358,7 +420,7 @@ export class SectionBuilderComponent implements OnInit {
     return null;
   }
 
-  onCourseSelect(courseId: any): void {
+  onCourseSelect(courseId: number | { value: number } | string | null): void {
     const id = (courseId && typeof courseId === 'object' && 'value' in courseId)
       ? courseId.value
       : (courseId !== null && courseId !== undefined ? Number(courseId) : null);
@@ -370,7 +432,7 @@ export class SectionBuilderComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  onCourseChange(courseId: any): void {
+  onCourseChange(courseId: number | { value: number } | string | null): void {
     this.onCourseSelect(courseId);
   }
 
@@ -428,7 +490,7 @@ export class SectionBuilderComponent implements OnInit {
     }
   }
 
-  onTermSelect(termId: any): void {
+  onTermSelect(termId: number | { value: number } | string | null): void {
     const id = (termId && typeof termId === 'object' && 'value' in termId)
       ? termId.value
       : (termId !== null && termId !== undefined ? Number(termId) : null);
@@ -439,7 +501,7 @@ export class SectionBuilderComponent implements OnInit {
     }
   }
 
-  onCurriculumSelect(currId: any): void {
+  onCurriculumSelect(currId: number | { value: number } | string | null): void {
     const id = (currId && typeof currId === 'object' && 'value' in currId)
       ? currId.value
       : (currId !== null && currId !== undefined ? Number(currId) : null);
@@ -528,7 +590,7 @@ export class SectionBuilderComponent implements OnInit {
     return mins2 > mins1 ? mins2 - mins1 : 0;
   }
 
-  private formatTimeValue(val: any): string {
+  private formatTimeValue(val: string | Date | null | undefined): string {
     if (!val) return '08:00:00';
     if (val instanceof Date) {
       const hours = String(val.getHours()).padStart(2, '0');
@@ -583,7 +645,7 @@ export class SectionBuilderComponent implements OnInit {
       courseId: Number(formValue.courseId),
       sectionCode: String(formValue.sectionCode).trim(),
       maxCapacity: Number(formValue.maxCapacity),
-      scheduleSlots: formValue.scheduleSlots.map((s: any) => {
+      scheduleSlots: (formValue.scheduleSlots || []).map((s: { roomId?: number; instructorUserId?: number; dayOfWeek?: string; daysOfWeek?: string[]; startTime?: string | Date; endTime?: string | Date; scheduleType?: string }) => {
         const days: string[] = (s.daysOfWeek && s.daysOfWeek.length > 0) ? s.daysOfWeek : [s.dayOfWeek || 'MONDAY'];
         return {
           roomId: Number(s.roomId),
@@ -592,7 +654,7 @@ export class SectionBuilderComponent implements OnInit {
           daysOfWeek: days.map((d: string) => d.toUpperCase()),
           startTime: this.formatTimeValue(s.startTime),
           endTime: this.formatTimeValue(s.endTime),
-          scheduleType: String(s.scheduleType).toUpperCase()
+          scheduleType: String(s.scheduleType || 'LECTURE').toUpperCase()
         };
       })
     };
@@ -652,7 +714,7 @@ export class SectionBuilderComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  onFacultyWorkloadSelect(facultyId: any): void {
+  onFacultyWorkloadSelect(facultyId: number | { value: number } | string | null): void {
     const id = (facultyId && typeof facultyId === 'object' && 'value' in facultyId)
       ? facultyId.value
       : (facultyId !== null && facultyId !== undefined ? Number(facultyId) : null);

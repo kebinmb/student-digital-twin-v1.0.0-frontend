@@ -1,33 +1,61 @@
 <div class="enrollment-module-container">
-  <!-- Sub-navigation Tabs -->
-  <div class="sub-nav-tabs">
-    <button 
-      type="button" 
-      class="tab-btn" 
-      [class.active]="activeTab() === 'advising'" 
-      (click)="setTab('advising')">
-      <i class="pi pi-book"></i>
-      <span>Course Advising Checklist</span>
-    </button>
-    <button 
-      type="button" 
-      class="tab-btn" 
-      [class.active]="activeTab() === 'enlistment'" 
-      (click)="setTab('enlistment')">
-      <i class="pi pi-list-check"></i>
-      <span>Enlisted Classes</span>
-      @if (store.enrollment()?.items?.length; as count) {
-        <span class="tab-badge">{{ count }}</span>
-      }
-    </button>
-  </div>
+  <!-- Institutional Header & Navigation -->
+  <header class="enrollment-header">
+    <div class="header-branding">
+      <div class="institutional-badge">
+        <i class="pi pi-briefcase"></i>
+        <span>ACADEMIC AFFAIRS & REGISTRAR</span>
+      </div>
+      <h1 class="portal-title">Enrollment & Course Advising Portal</h1>
+      <p class="portal-description">
+        Manage curriculum progress, course enlistments, prerequisite compliance, and administrative enrollment status verification.
+      </p>
+    </div>
 
-  <!-- Tab Views -->
-  <div class="tab-content">
+    <div class="header-controls">
+      <div class="global-term-box">
+        <span class="term-box-label">Academic Term</span>
+        <p-select 
+          [options]="store.terms()" 
+          [ngModel]="store.selectedTermId()" 
+          (ngModelChange)="store.setSelectedTermId($event)"
+          optionLabel="termName" 
+          optionValue="id" 
+          placeholder="Select Term"
+          styleClass="term-select-dropdown">
+        </p-select>
+      </div>
+
+      <p-selectbutton 
+        [options]="viewOptions()" 
+        [ngModel]="activeTab()" 
+        (ngModelChange)="setTab($event)" 
+        optionLabel="label" 
+        optionValue="value"
+        aria-label="Enrollment Module Navigation">
+        <ng-template #item let-item>
+          <div class="switcher-item">
+            <i [class]="item.icon"></i>
+            <span class="switcher-label">{{ item.label }}</span>
+            @if (item.value === 'enlistment' && store.enrollment()?.items?.length) {
+              <span class="enlistment-badge">
+                {{ store.enrollment()?.items?.length }}
+              </span>
+            }
+          </div>
+        </ng-template>
+      </p-selectbutton>
+    </div>
+  </header>
+
+  <!-- View Content Areas -->
+  <main class="enrollment-content">
     @if (activeTab() === 'advising') {
       <app-student-advising></app-student-advising>
-    } @else {
+    } @else if (activeTab() === 'enlistment') {
       <app-course-enlistment></app-course-enlistment>
+    } @else if (activeTab() === 'audit' && isStaff()) {
+      <app-enrollment-audit></app-enrollment-audit>
     }
-  </div>
+  </main>
 </div>

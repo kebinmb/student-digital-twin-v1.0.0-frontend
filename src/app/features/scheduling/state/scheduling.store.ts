@@ -1,6 +1,7 @@
 import { inject, Injectable, signal, computed } from '@angular/core';
 import { SchedulingApiService } from '../../../core/service/scheduling/scheduling-api.service';
-import { TermService } from '../../../core/services/institution.service';
+import { ProgramService, TermService } from '../../../core/services/institution.service';
+import { Program } from '../../../core/models/institution.model';
 import { CurriculumApiService } from '../../../core/service/curriculum/curriculum-api.service';
 import {
   CreateSectionRequest,
@@ -11,7 +12,7 @@ import {
   SectionDetailResponse
 } from '../../../core/models/scheduling.model';
 import { CurriculumLookupOption } from '../../../core/models/curriculum-designer.model';
-import { catchError, finalize, of, tap } from 'rxjs';
+import { catchError, finalize, map, of, tap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -20,12 +21,14 @@ export class SchedulingStore {
   private readonly schedulingApi = inject(SchedulingApiService);
   private readonly termService = inject(TermService);
   private readonly curriculumApi = inject(CurriculumApiService);
+  private readonly programService = inject(ProgramService);
 
   // Signals
   readonly terms = signal<SchedulingTermDto[]>([]);
   readonly curricula = signal<CurriculumLookupOption[]>([]);
   readonly rooms = signal<RoomResponse[]>([]);
   readonly instructors = signal<InstructorOptionDto[]>([]);
+  readonly programs = signal<Program[]>([]);
   readonly sections = signal<SectionDetailResponse[]>([]);
 
   readonly selectedTermId = signal<number | null>(null);
@@ -70,7 +73,7 @@ export class SchedulingStore {
       catchError(() => {
         // Fallback to TermService if necessary
         return this.termService.getAll().pipe(
-          tap((rawTerms: any[]) => {
+          map((rawTerms: Array<{ id: number; academicYearId?: number; academicYearCode?: string; termType: string; isCurrent?: boolean; isActive?: boolean; enrollmentOpen?: boolean }>): SchedulingTermDto[] => {
             return rawTerms.map(t => ({
               id: t.id,
               academicYearId: t.academicYearId || 0,
@@ -127,6 +130,12 @@ export class SchedulingStore {
     // 4. Load instructors
     this.schedulingApi.getAvailableInstructors().pipe(
       tap(instructors => this.instructors.set(instructors)),
+      catchError(() => of([]))
+    ).subscribe();
+
+    // 5. Load programs (GET /api/v1/programs)
+    this.programService.getAll().pipe(
+      tap(programs => this.programs.set(programs)),
       catchError(() => of([])),
       finalize(() => this.isLoading.set(false))
     ).subscribe();

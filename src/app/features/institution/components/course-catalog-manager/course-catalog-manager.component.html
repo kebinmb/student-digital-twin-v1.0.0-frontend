@@ -56,7 +56,7 @@
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-c>
-      <tr>
+      <tr (click)="openDetailDialog(c)" class="hover:bg-slate-100 cursor-pointer">
         <td>
           <span class="code-badge">{{ normalizeCourseCode(c.code) }}</span>
         </td>
@@ -84,7 +84,7 @@
             <p-tag severity="danger" value="INACTIVE"></p-tag>
           }
         </td>
-        <td style="text-align: right;">
+        <td style="text-align: right;" (click)="$event.stopPropagation()">
           <div class="action-buttons-cell">
             <!-- Open CILO & Prerequisite Drawer -->
             <p-button
@@ -116,6 +116,21 @@
           </div>
         </td>
       </tr>
+    </ng-template>
+    <ng-template pTemplate="loadingbody">
+      @for (i of [1, 2, 3, 4, 5]; track i) {
+        <tr>
+          <td><p-skeleton width="80px"></p-skeleton></td>
+          <td><p-skeleton width="200px"></p-skeleton></td>
+          <td><p-skeleton width="100px"></p-skeleton></td>
+          <td><p-skeleton width="40px"></p-skeleton></td>
+          <td><p-skeleton width="40px"></p-skeleton></td>
+          <td><p-skeleton width="60px"></p-skeleton></td>
+          <td><p-skeleton width="80px"></p-skeleton></td>
+          <td><p-skeleton width="60px"></p-skeleton></td>
+          <td><p-skeleton width="120px"></p-skeleton></td>
+        </tr>
+      }
     </ng-template>
     <ng-template pTemplate="emptymessage">
       <tr>

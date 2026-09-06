@@ -1,10 +1,10 @@
-<div class="advising-container">
+<main class="advising-container" aria-label="Academic Advising Module">
   <p-toast></p-toast>
 
   <!-- Advising Banner & Student Profile Header -->
-  <div class="header-card">
-    <div class="header-main">
-      <div class="header-title-area">
+  <header class="header-card">
+    <div class="header-main flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="header-title-area flex-1">
         <h2 class="module-title">
           <i class="pi pi-user-edit"></i>
           Academic Advising & Subject Enlistment
@@ -14,43 +14,95 @@
         </p>
       </div>
 
-      <!-- Term Selector -->
-      <div class="term-selector-box">
-        <label for="term-select" class="selector-label">Academic Term:</label>
-        <p-select 
-          id="term-select"
-          [options]="store.terms()" 
-          [ngModel]="store.selectedTermId()" 
-          (ngModelChange)="onTermSelect($event)"
-          optionLabel="termName" 
-          optionValue="id" 
-          placeholder="Select Term"
-          styleClass="w-full">
-        </p-select>
+      <!-- Student Switcher & Term Selector -->
+      <div class="flex flex-wrap items-center gap-3">
+        <div class="student-switcher-box flex flex-col gap-1 w-full sm:w-72">
+          <label for="student-select" class="selector-label">Select Student:</label>
+          <p-select 
+            id="student-select"
+            [options]="store.searchedStudents()" 
+            [ngModel]="store.studentId()" 
+            (ngModelChange)="onStudentSelect($event)"
+            [filter]="true"
+            filterBy="studentIdNumber,fullName,programCode"
+            [panelStyle]="{ 'min-width': '26rem', 'max-width': '95vw' }"
+            optionLabel="fullName" 
+            optionValue="id" 
+            placeholder="Search Student..."
+            styleClass="w-full">
+            <ng-template #selectedItem let-selectedOption>
+              @if (selectedOption) {
+                <div class="flex items-center gap-2 truncate">
+                  <i class="pi pi-user text-emerald-700 text-xs"></i>
+                  <span class="text-xs font-semibold text-slate-800 truncate">{{ selectedOption.fullName }} ({{ selectedOption.studentIdNumber }})</span>
+                </div>
+              }
+            </ng-template>
+            <ng-template #item let-option>
+              <div class="flex flex-col gap-1 py-1.5 px-1 border-b border-slate-100 last:border-0">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-xs font-bold text-slate-900">{{ option.fullName }}</span>
+                  <span class="text-xs font-mono font-bold text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">
+                    {{ option.studentIdNumber }}
+                  </span>
+                </div>
+                <div class="flex items-center gap-2 text-xs text-slate-600">
+                  <span class="font-semibold text-slate-800">{{ option.programCode }}</span>
+                  <span class="text-slate-400">&bull;</span>
+                  <span>Year {{ option.yearLevel }}</span>
+                  <span class="text-slate-400">&bull;</span>
+                  <span class="px-1.5 py-0.5 text-[10px] font-bold rounded"
+                        [ngClass]="{
+                          'bg-emerald-50 text-emerald-700 border border-emerald-200': option.academicStatus === 'REGULAR',
+                          'bg-amber-50 text-amber-700 border border-amber-200': option.academicStatus === 'PROBATION' || option.academicStatus === 'IRREGULAR',
+                          'bg-blue-50 text-blue-700 border border-blue-200': option.academicStatus === 'GRADUATED'
+                        }">
+                    {{ option.academicStatus }}
+                  </span>
+                </div>
+              </div>
+            </ng-template>
+          </p-select>
+        </div>
+
+        <div class="term-selector-box flex flex-col gap-1 w-full sm:w-64">
+          <label for="term-select" class="selector-label">Academic Term:</label>
+          <p-select 
+            id="term-select"
+            [options]="store.terms()" 
+            [ngModel]="store.selectedTermId()" 
+            (ngModelChange)="onTermSelect($event)"
+            [panelStyle]="{ 'min-width': '18rem' }"
+            optionLabel="termName" 
+            optionValue="id" 
+            placeholder="Select Term"
+            styleClass="w-full">
+          </p-select>
+        </div>
       </div>
     </div>
 
     @if (store.advising(); as adv) {
-      <div class="student-meta-grid">
+      <div class="student-meta-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mt-4">
         <div class="meta-item">
           <span class="meta-label">Student Name</span>
-          <span class="meta-val font-bold">{{ adv.studentName }}</span>
+          <span class="meta-val font-semibold text-slate-900 truncate">{{ adv.studentName }}</span>
         </div>
         <div class="meta-item">
           <span class="meta-label">Student ID</span>
-          <span class="meta-val">{{ adv.studentNumber }}</span>
+          <span class="meta-val font-mono font-medium text-slate-800">{{ adv.studentNumber }}</span>
         </div>
         <div class="meta-item">
           <span class="meta-label">Program & Year</span>
-          <span class="meta-val">{{ adv.programCode }} — Year {{ adv.yearLevel }}</span>
+          <span class="meta-val font-medium text-slate-800">{{ adv.programCode }} — Year {{ adv.yearLevel }}</span>
         </div>
         <div class="meta-item">
           <span class="meta-label">Curriculum</span>
-          <span class="meta-val">{{ adv.curriculumCode }}</span>
+          <span class="meta-val font-medium text-slate-800">{{ adv.curriculumCode }}</span>
         </div>
         <div class="meta-item">
           <span class="meta-label">Academic Standing</span>
-          <div class="flex-center gap-1">
+          <div class="flex items-center gap-1.5">
             <p-tag [value]="adv.enrollmentStatus" severity="info"></p-tag>
             @if (adv.isGraduating) {
               <p-tag value="GRADUATING SENIOR" severity="warn"></p-tag>
@@ -59,20 +111,20 @@
         </div>
         <div class="meta-item">
           <span class="meta-label">Cumulative GPA</span>
-          <span class="meta-val">{{ adv.cumulativeGpa ? (adv.cumulativeGpa | number:'1.2-2') : 'N/A' }}</span>
+          <span class="meta-val font-bold text-slate-900">{{ adv.cumulativeGpa ? (adv.cumulativeGpa | number:'1.2-2') : 'N/A' }}</span>
         </div>
       </div>
 
       <!-- Unit Cap Progress Bar -->
-      <div class="unit-cap-container">
-        <div class="unit-cap-header">
-          <span class="unit-text">
+      <div class="unit-cap-container mt-4">
+        <div class="unit-cap-header flex justify-between items-center mb-2">
+          <span class="unit-text text-xs sm:text-sm text-slate-700">
             <strong>Credit Units Loaded:</strong> {{ store.totalUnits() }} / {{ store.maxUnits() }} Units
             @if (adv.isGraduating) {
-              <span class="text-xs text-muted">(Graduating Overload Allowed up to 27)</span>
+              <span class="text-xs text-muted ms-1">(Graduating Overload Allowed up to 27)</span>
             }
           </span>
-          <span class="unit-percentage font-semibold" [class.cap-danger]="store.isUnitCapReached()">
+          <span class="unit-percentage text-xs sm:text-sm font-semibold text-emerald-800" [class.cap-danger]="store.isUnitCapReached()">
             {{ store.unitPercentage() }}% of Term Maximum
           </span>
         </div>
@@ -83,24 +135,106 @@
         </p-progressbar>
       </div>
     }
-  </div>
+  </header>
 
   @if (store.errorMessage()) {
-    <p-message severity="error" [text]="store.errorMessage()!" styleClass="w-full mb-3"></p-message>
+    <div class="mb-4">
+      <p-message severity="warn" styleClass="w-full shadow-none border border-amber-200 bg-amber-50/60 rounded-lg">
+        <ng-template #icon>
+          <i class="pi pi-exclamation-triangle text-amber-600 text-lg"></i>
+        </ng-template>
+        <div class="flex flex-col gap-0.5 ml-2">
+          <span class="text-xs font-bold uppercase tracking-wider text-amber-900">
+            Advising Record Notice
+          </span>
+          <span class="text-sm font-medium text-amber-800">
+            {{ store.errorMessage() }}
+          </span>
+          <span class="text-xs text-amber-700/80">
+            Please choose an active student from the selector above to load curriculum compliance records.
+          </span>
+        </div>
+      </p-message>
+    </div>
   }
 
   <!-- Course Checklist Table -->
-  <div class="checklist-card">
-    <div class="card-header">
-      <h3 class="card-title">Curriculum Course Checklist & Eligibility</h3>
-      <span class="card-caption">Courses mapped to your program with live CHED prerequisite checks</span>
+  <section class="checklist-card" aria-labelledby="checklist-title">
+    <div class="card-header flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div>
+        <h3 id="checklist-title" class="card-title">Curriculum Course Checklist & Eligibility</h3>
+        <span class="card-caption">Courses mapped to your program with live CHED prerequisite checks</span>
+      </div>
+
+      <div class="search-filter-container flex flex-wrap items-center gap-3">
+        <p-iconfield styleClass="flex-1 min-w-[220px]">
+          <p-inputicon class="pi pi-search"></p-inputicon>
+          <input 
+            pInputText
+            type="text" 
+            [ngModel]="searchFilter()" 
+            (ngModelChange)="searchFilter.set($event)"
+            placeholder="Filter by course code or title..." 
+            class="w-full search-filter-input" />
+        </p-iconfield>
+
+        <p-select 
+          [options]="statusOptions" 
+          [ngModel]="statusFilter()" 
+          (ngModelChange)="statusFilter.set($event)"
+          [panelStyle]="{ 'min-width': '14rem' }"
+          optionLabel="label" 
+          optionValue="value"
+          placeholder="Filter by Status"
+          styleClass="status-filter-select w-44">
+          <ng-template #selectedItem let-selectedOption>
+            @if (selectedOption) {
+              <div class="flex items-center gap-2">
+                <i [class]="getOptionIcon(selectedOption.value)" class="text-xs"></i>
+                <span class="text-xs font-semibold text-slate-800 truncate">{{ selectedOption.label }}</span>
+              </div>
+            }
+          </ng-template>
+          <ng-template #item let-option>
+            <div class="flex items-center gap-2 py-1">
+              <i [class]="getOptionIcon(option.value)" class="text-xs"></i>
+              <span class="text-xs font-medium text-slate-800">{{ option.label }}</span>
+            </div>
+          </ng-template>
+        </p-select>
+
+        <p-select 
+          [options]="yearOptions" 
+          [ngModel]="yearFilter()" 
+          (ngModelChange)="yearFilter.set($event)"
+          [panelStyle]="{ 'min-width': '10rem' }"
+          optionLabel="label" 
+          optionValue="value"
+          placeholder="Filter Year"
+          styleClass="status-filter-select w-36">
+        </p-select>
+
+        <p-select 
+          [options]="semesterOptions" 
+          [ngModel]="semesterFilter()" 
+          (ngModelChange)="semesterFilter.set($event)"
+          [panelStyle]="{ 'min-width': '12rem' }"
+          optionLabel="label" 
+          optionValue="value"
+          placeholder="Filter Semester"
+          styleClass="status-filter-select w-40">
+        </p-select>
+      </div>
     </div>
 
     <p-table 
-      [value]="store.advising()?.courses || []" 
+      [value]="filteredCourses()" 
       [loading]="store.isLoading()"
       [rowHover]="true"
-      styleClass="p-datatable-sm"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[5, 10, 20, 50]"
+      styleClass="p-datatable-sm institutional-table"
       responsiveLayout="scroll">
       <ng-template pTemplate="header">
         <tr>
@@ -115,7 +249,7 @@
       </ng-template>
 
       <ng-template pTemplate="body" let-course>
-        <tr>
+        <tr (click)="openSectionChooser(course)" class="hover:bg-slate-100 cursor-pointer">
           <td>
             <div class="course-identity">
               <span class="course-code">{{ course.code }}</span>
@@ -159,7 +293,7 @@
               <span class="text-muted text-xs">No sections scheduled</span>
             }
           </td>
-          <td style="text-align: center;">
+          <td style="text-align: center;" (click)="$event.stopPropagation()">
             <button 
               pButton 
               type="button" 
@@ -173,6 +307,20 @@
         </tr>
       </ng-template>
 
+      <ng-template pTemplate="loadingbody">
+        @for (i of [1, 2, 3, 4]; track i) {
+          <tr>
+            <td><p-skeleton width="180px"></p-skeleton></td>
+            <td><p-skeleton width="80px"></p-skeleton></td>
+            <td><p-skeleton width="100px"></p-skeleton></td>
+            <td><p-skeleton width="90px"></p-skeleton></td>
+            <td><p-skeleton width="140px"></p-skeleton></td>
+            <td><p-skeleton width="100px"></p-skeleton></td>
+            <td><p-skeleton width="100px"></p-skeleton></td>
+          </tr>
+        }
+      </ng-template>
+
       <ng-template pTemplate="emptymessage">
         <tr>
           <td colspan="7" class="text-center py-4 text-muted">
@@ -181,81 +329,110 @@
         </tr>
       </ng-template>
     </p-table>
-  </div>
+  </section>
 
-  <!-- Available Sections Selection Modal -->
-  <p-dialog 
+  <!-- Master-Detail Right-Anchored Drawer for Section Enlistment -->
+  <p-drawer 
     [(visible)]="isSectionModalVisible" 
-    [header]="'Available Sections for ' + (selectedCourse()?.code || '') + ' - ' + (selectedCourse()?.title || '')" 
-    [modal]="true" 
-    [style]="{ width: '56rem' }" 
-    [closable]="true"
+    position="right"
+    [style]="{ width: '34rem', maxWidth: '100vw' }"
+    styleClass="institutional-drawer"
     (onHide)="closeSectionChooser()">
     
-    <div class="section-modal-content">
-      <div class="modal-info-bar">
-        <span><strong>Course Units:</strong> {{ selectedCourse()?.creditUnits }} Units</span>
-        <span><strong>Remaining Allowable:</strong> {{ store.maxUnits() - store.totalUnits() }} Units</span>
+    <ng-template pTemplate="header">
+      <div class="drawer-header-title">
+        <span class="text-xs font-bold text-emerald-800 uppercase tracking-wider">Section Enlistment Drawer</span>
+        <h3 class="text-base font-bold text-slate-900 m-0 mt-1">{{ selectedCourse()?.code }} — {{ selectedCourse()?.title }}</h3>
       </div>
-
-      <p-table [value]="selectedCourse()?.availableSections || []" [rowHover]="true" responsiveLayout="scroll">
-        <ng-template pTemplate="header">
-          <tr>
-            <th>Section Code</th>
-            <th>Schedule Timetable & Room</th>
-            <th>Capacity</th>
-            <th>Status</th>
-            <th style="width: 120px; text-align: center;">Action</th>
-          </tr>
-        </ng-template>
-
-        <ng-template pTemplate="body" let-sec>
-          <tr>
-            <td><strong class="text-primary">{{ sec.sectionCode }}</strong></td>
-            <td>
-              <div class="schedule-summary-text">
-                <i class="pi pi-clock text-xs"></i>
-                <span>{{ sec.scheduleSummary || 'Schedule TBA' }}</span>
-              </div>
-            </td>
-            <td>
-              <span [class.cap-danger]="sec.enrolledCount >= sec.maxCapacity">
-                {{ sec.enrolledCount }} / {{ sec.maxCapacity }}
-              </span>
-            </td>
-            <td>
-              <p-tag 
-                [value]="sec.status" 
-                [severity]="sec.status === 'OPEN' ? 'success' : 'danger'">
-              </p-tag>
-            </td>
-            <td style="text-align: center;">
-              <button 
-                pButton 
-                type="button" 
-                label="Enlist" 
-                icon="pi pi-check" 
-                class="p-button-sm p-button-success"
-                [loading]="store.isEnlisting()"
-                [disabled]="sec.status !== 'OPEN' || sec.enrolledCount >= sec.maxCapacity || store.isUnitCapReached()"
-                (click)="enlistInSection(sec)">
-              </button>
-            </td>
-          </tr>
-        </ng-template>
-
-        <ng-template pTemplate="emptymessage">
-          <tr>
-            <td colspan="5" class="text-center py-3 text-muted">
-              No sections currently open for this course.
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
-    </div>
-
-    <ng-template pTemplate="footer">
-      <button pButton label="Close" icon="pi pi-times" class="p-button-text p-button-secondary" (click)="closeSectionChooser()"></button>
     </ng-template>
-  </p-dialog>
-</div>
+
+    @if (selectedCourse()) {
+      <div class="drawer-content-body">
+        <div class="drawer-profile-card mb-4">
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <span class="code-badge font-mono text-xs font-bold text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">
+              {{ selectedCourse()!.code }}
+            </span>
+            <span class="text-xs font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded border border-emerald-200">
+              {{ selectedCourse()!.creditUnits }} Credit Units
+            </span>
+          </div>
+          <div class="drawer-stat-grid mt-2">
+            <div class="drawer-stat-box">
+              <span class="drawer-stat-label">Term Units Loaded</span>
+              <span class="drawer-stat-val text-sm font-bold text-slate-900">{{ store.totalUnits() }} / {{ store.maxUnits() }}</span>
+            </div>
+            <div class="drawer-stat-box">
+              <span class="drawer-stat-label">Remaining Allowable</span>
+              <span class="drawer-stat-val text-sm font-bold text-emerald-700">{{ store.maxUnits() - store.totalUnits() }} Units</span>
+            </div>
+          </div>
+        </div>
+
+        <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">Available Class Sections</h4>
+
+        <p-table [value]="selectedCourse()?.availableSections || []" [rowHover]="true" styleClass="p-datatable-sm institutional-table">
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 100px;">Section Code</th>
+              <th>Timetable & Meeting Slots</th>
+              <th style="width: 70px;">Cap</th>
+              <th style="width: 80px; text-align: center;">Action</th>
+            </tr>
+          </ng-template>
+
+              <ng-template pTemplate="body" let-sec>
+                <tr>
+                  <td><strong class="text-emerald-900 font-mono text-xs">{{ sec.sectionCode }}</strong></td>
+                  <td class="text-xs font-medium text-slate-700 whitespace-normal break-words py-2">
+                    <div class="flex flex-col gap-1">
+                      @for (slot of formatScheduleSlots(sec.scheduleSummary); track slot.day + '-' + slot.timeRoom + '-' + $index) {
+                        <div class="flex items-center gap-1.5">
+                          <span class="px-1.5 py-0.5 text-[10px] font-bold bg-slate-100 text-slate-700 rounded border border-slate-200">
+                            {{ slot.day }}
+                          </span>
+                          <span class="text-xs text-slate-800 font-medium">
+                            {{ slot.timeRoom }}
+                          </span>
+                        </div>
+                      }
+                    </div>
+                  </td>
+                  <td class="text-xs">
+                    <span [class.text-red-600]="sec.enrolledCount >= sec.maxCapacity" class="font-semibold">
+                      {{ sec.enrolledCount }}/{{ sec.maxCapacity }}
+                    </span>
+                  </td>
+                  <td style="text-align: center;">
+                    <button 
+                      pButton 
+                      type="button" 
+                      label="Enlist" 
+                      icon="pi pi-check" 
+                      class="p-button-xs p-button-success"
+                      [loading]="store.isEnlisting()"
+                      [disabled]="sec.status !== 'OPEN' || sec.enrolledCount >= sec.maxCapacity || store.isUnitCapReached()"
+                      (click)="enlistInSection(sec)">
+                    </button>
+                  </td>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="emptymessage">
+                <tr>
+                  <td colspan="4" class="text-center py-3 text-slate-500 text-xs">
+                    No open sections currently scheduled for this course.
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+        }
+
+        <ng-template pTemplate="footer">
+          <div class="p-3 flex flex-col gap-2 border-t border-slate-200 bg-white">
+            <p-button label="Close Section Drawer" icon="pi pi-times" severity="secondary" [outlined]="true" styleClass="w-full" (onClick)="closeSectionChooser()"></p-button>
+          </div>
+        </ng-template>
+      </p-drawer>
+</main>

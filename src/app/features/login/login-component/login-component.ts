@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -27,7 +27,8 @@ import { AuthService } from '../../../core/service/authentication/auth-service';
     Checkbox
   ],
   templateUrl: './login-component.html',
-  styleUrls: ['./login-component.css']
+  styleUrls: ['./login-component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LoginComponent implements OnInit, OnDestroy {
   private readonly fb = inject(FormBuilder);

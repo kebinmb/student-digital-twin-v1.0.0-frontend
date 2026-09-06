@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
@@ -13,6 +13,7 @@ import { MessageModule } from 'primeng/message';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 import { AcademicYearService } from '../../core/services/institution.service';
+import { AcademicYear } from '../../core/models/institution.model';
 
 @Component({
   selector: 'app-institution-management',
@@ -29,13 +30,14 @@ import { AcademicYearService } from '../../core/services/institution.service';
     ConfirmDialogModule
   ],
   templateUrl: './institution-management.component.html',
-  styleUrl: './institution-management.component.css'
+  styleUrl: './institution-management.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class InstitutionManagementComponent implements OnInit {
   private readonly ayService = inject(AcademicYearService);
   private readonly router = inject(Router);
 
-  readonly currentAcademicYear = signal<any | null>(null);
+  readonly currentAcademicYear = signal<AcademicYear | null>(null);
   readonly isLoadingAy = signal<boolean>(false);
 
   activeTab: string = 'academic-periods';

@@ -66,12 +66,14 @@
               appendTo="body"
               styleClass="empty-switcher-select">
               <ng-template pTemplate="selectedItem" let-selected>
-                <div class="switcher-selected-item" *ngIf="selected">
-                  <i class="pi pi-book switcher-selected-icon"></i>
-                  <span class="switcher-selected-code">{{ selected.code }}</span>
-                  <span class="switcher-selected-sep">-</span>
-                  <span class="switcher-selected-name">{{ selected.name }}</span>
-                </div>
+                @if (selected) {
+                  <div class="switcher-selected-item">
+                    <i class="pi pi-book switcher-selected-icon"></i>
+                    <span class="switcher-selected-code">{{ selected.code }}</span>
+                    <span class="switcher-selected-sep">-</span>
+                    <span class="switcher-selected-name">{{ selected.name }}</span>
+                  </div>
+                }
               </ng-template>
               <ng-template pTemplate="item" let-item>
                 <div class="switcher-option-item">
@@ -172,12 +174,14 @@
               appendTo="body"
               styleClass="curriculum-switcher-select">
               <ng-template pTemplate="selectedItem" let-selected>
-                <div class="switcher-selected-item" *ngIf="selected">
-                  <i class="pi pi-book switcher-selected-icon"></i>
-                  <span class="switcher-selected-code">{{ selected.code }}</span>
-                  <span class="switcher-selected-sep">-</span>
-                  <span class="switcher-selected-name">{{ selected.name }}</span>
-                </div>
+                @if (selected) {
+                  <div class="switcher-selected-item">
+                    <i class="pi pi-book switcher-selected-icon"></i>
+                    <span class="switcher-selected-code">{{ selected.code }}</span>
+                    <span class="switcher-selected-sep">-</span>
+                    <span class="switcher-selected-name">{{ selected.name }}</span>
+                  </div>
+                }
               </ng-template>
               <ng-template pTemplate="item" let-item>
                 <div class="switcher-option-item">

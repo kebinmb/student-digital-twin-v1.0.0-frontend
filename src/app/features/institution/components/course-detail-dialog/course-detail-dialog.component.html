@@ -1,43 +1,46 @@
-<p-dialog
+<p-drawer
+  position="right"
   [header]="dialogTitle"
   [(visible)]="visible"
   (visibleChange)="onVisibilityChange($event)"
-  [modal]="true"
-  [breakpoints]="{ '960px': '75vw', '640px': '92vw' }"
-  [style]="{ width: '800px', maxWidth: '95vw' }"
-  [contentStyle]="{ 'overflow-x': 'hidden' }">
+  styleClass="institutional-drawer w-full md:w-30rem">
   
   @if (course) {
-    <div class="course-summary-banner">
-      <div class="summary-left">
-        <span class="course-code-pill">{{ course.code }}</span>
-        <span class="course-name">{{ course.title }}</span>
+    <!-- Course Profile Summary Card -->
+    <div class="drawer-profile-card">
+      <div class="flex items-center justify-between gap-2 mb-2">
+        <span class="code-badge">{{ course.code }}</span>
+        <span class="text-xs font-semibold text-emerald-800 bg-emerald-50 px-2 py-1 rounded border border-emerald-200">
+          {{ course.creditUnits }} Credit Units
+        </span>
       </div>
-      <div class="summary-right">
-        <span class="units-badge">{{ course.creditUnits }} Credit Units ({{ course.lectureUnits }} Lec / {{ course.labUnits }} Lab)</span>
-      </div>
+      <h3 class="text-sm font-bold text-slate-900 m-0 mb-1">{{ course.title }}</h3>
+      <p class="text-xs text-slate-600 m-0">
+        {{ course.lectureUnits }} Lec Units • {{ course.labUnits }} Lab Units • {{ course.contactHoursLec }}h Lec / {{ course.contactHoursLab }}h Lab
+      </p>
     </div>
 
-    <div class="dialog-tabs-header">
+    <!-- Master-Detail Navigation Tabs -->
+    <div class="mb-4">
       <p-selectbutton
         [options]="tabs"
         [(ngModel)]="activeTab"
         optionLabel="label"
         optionValue="value"
-        styleClass="dialog-tab-switch">
+        styleClass="w-full">
       </p-selectbutton>
     </div>
 
     <!-- TAB 1: Course Learning Outcomes (CILOs) -->
     @if (activeTab === 'outcomes') {
       <div class="tab-panel-content">
-        <div class="panel-action-bar">
-          <span class="section-instruction">
-            Defined Course Intended Learning Outcomes (CILOs) and aligned Bloom's taxonomy levels.
+        <div class="flex items-center justify-between gap-2 mb-3">
+          <span class="text-xs text-slate-500 font-medium">
+            Course Intended Learning Outcomes (CILOs) & Bloom's Levels.
           </span>
           @if (canManage() && !isAddingCilo()) {
             <p-button
-              label="Add Outcome (CILO)"
+              label="New CILO"
               icon="pi pi-plus"
               size="small"
               severity="primary"
@@ -48,33 +51,33 @@
 
         <!-- Inline CILO Creation / Edit Form -->
         @if (isAddingCilo() && canManage()) {
-          <div class="inline-form-card">
-            <div class="inline-form-header">
-              <span class="inline-title">{{ editingCiloId() ? 'Edit Outcome' : 'Define New Course Outcome' }}</span>
+          <div class="drawer-profile-card border-emerald-300 bg-emerald-50/50 mb-4">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold text-emerald-900">{{ editingCiloId() ? 'Edit Outcome' : 'Define New Course Outcome' }}</span>
               <p-button icon="pi pi-times" [text]="true" size="small" severity="secondary" (onClick)="cancelCiloForm()"></p-button>
             </div>
             <form [formGroup]="ciloForm" (ngSubmit)="submitCiloForm()">
-              <div class="form-row-2col">
-                <div class="form-group">
-                  <label class="form-label">CILO Code *</label>
-                  <input pInputText type="text" formControlName="code" placeholder="e.g. CILO 1" class="form-control-input" [readOnly]="!!editingCiloId()" />
+              <div class="flex flex-col gap-2">
+                <div>
+                  <label class="text-xs font-semibold text-slate-700 block mb-1">CILO Code *</label>
+                  <input pInputText type="text" formControlName="code" placeholder="e.g. CILO 1" class="w-full text-xs p-2" [readOnly]="!!editingCiloId()" />
                   @if (ciloForm.controls.code.touched && ciloForm.controls.code.invalid) {
-                    <span class="error-hint">Code is required (max 30 chars).</span>
+                    <span class="text-xs text-red-600 block mt-1">Code is required (max 30 chars).</span>
                   }
                 </div>
-                <div class="form-group">
-                  <label class="form-label">Bloom's Taxonomy Level *</label>
-                  <p-select appendTo="body" [options]="bloomsOptions" formControlName="bloomsLevel" placeholder="Select Bloom's Level" optionLabel="label" optionValue="value" styleClass="w-full"></p-select>
+                <div>
+                  <label class="text-xs font-semibold text-slate-700 block mb-1">Bloom's Taxonomy Level *</label>
+                  <p-select appendTo="body" [options]="bloomsOptions" formControlName="bloomsLevel" placeholder="Select Bloom's Level" optionLabel="label" optionValue="value" styleClass="w-full text-xs"></p-select>
+                </div>
+                <div>
+                  <label class="text-xs font-semibold text-slate-700 block mb-1">Outcome Statement *</label>
+                  <textarea pTextarea formControlName="description" rows="2" placeholder="State measurable performance criteria..." class="w-full text-xs p-2"></textarea>
+                  @if (ciloForm.controls.description.touched && ciloForm.controls.description.invalid) {
+                    <span class="text-xs text-red-600 block mt-1">Description statement is required.</span>
+                  }
                 </div>
               </div>
-              <div class="form-group mt-2">
-                <label class="form-label">Outcome Statement / Description *</label>
-                <textarea pTextarea formControlName="description" rows="2" placeholder="State measurable performance criteria (e.g. Design normalized relational database schemas...)" class="w-full"></textarea>
-                @if (ciloForm.controls.description.touched && ciloForm.controls.description.invalid) {
-                  <span class="error-hint">Description statement is required.</span>
-                }
-              </div>
-              <div class="inline-form-actions mt-2">
+              <div class="flex justify-end gap-2 mt-3">
                 <p-button label="Cancel" size="small" severity="secondary" [outlined]="true" type="button" (onClick)="cancelCiloForm()"></p-button>
                 <p-button [label]="editingCiloId() ? 'Update CILO' : 'Save CILO'" icon="pi pi-check" size="small" severity="primary" type="submit" [disabled]="ciloForm.invalid || isSavingCilo()"></p-button>
               </div>
@@ -82,21 +85,21 @@
           </div>
         }
 
-        <p-table [value]="outcomes()" [loading]="isLoadingOutcomes()" responsiveLayout="scroll" styleClass="p-datatable-sm nested-table">
+        <p-table [value]="outcomes()" [loading]="isLoadingOutcomes()" responsiveLayout="scroll" styleClass="p-datatable-sm institutional-table">
           <ng-template pTemplate="header">
             <tr>
-              <th style="width: 110px;">CILO Code</th>
-              <th>Outcome Description</th>
-              <th style="width: 140px;">Bloom's Level</th>
+              <th style="width: 90px;">CILO Code</th>
+              <th>Description</th>
+              <th style="width: 110px;">Bloom's</th>
               @if (canManage()) {
-                <th style="width: 100px; text-align: right;">Actions</th>
+                <th style="width: 80px; text-align: right;">Actions</th>
               }
             </tr>
           </ng-template>
           <ng-template pTemplate="body" let-outcome>
             <tr>
               <td><span class="code-badge">{{ outcome.code }}</span></td>
-              <td>{{ outcome.description }}</td>
+              <td class="text-xs">{{ outcome.description }}</td>
               <td>
                 <p-tag [severity]="getBloomsSeverity(outcome.bloomsLevel)" [value]="outcome.bloomsLevel"></p-tag>
               </td>
@@ -110,8 +113,8 @@
           </ng-template>
           <ng-template pTemplate="emptymessage">
             <tr>
-              <td [attr.colspan]="canManage() ? 4 : 3" class="empty-table-cell">
-                <p>No learning outcomes defined for this course yet.</p>
+              <td [attr.colspan]="canManage() ? 4 : 3" class="text-center text-xs text-slate-500 py-4">
+                No learning outcomes defined for this course yet.
               </td>
             </tr>
           </ng-template>
@@ -122,13 +125,13 @@
     <!-- TAB 2: Course Prerequisites -->
     @if (activeTab === 'prerequisites') {
       <div class="tab-panel-content">
-        <div class="panel-action-bar">
-          <span class="section-instruction">
-            Prerequisites, co-requisites, and academic standing rules governing enrollment eligibility.
+        <div class="flex items-center justify-between gap-2 mb-3">
+          <span class="text-xs text-slate-500 font-medium">
+            Prerequisites & co-requisite rules.
           </span>
           @if (canManage() && !isAddingPrereq()) {
             <p-button
-              label="Add Prerequisite Rule"
+              label="New Rule"
               icon="pi pi-plus"
               size="small"
               severity="primary"
@@ -139,41 +142,42 @@
 
         <!-- Inline Prerequisite Creation Form -->
         @if (isAddingPrereq() && canManage()) {
-          <div class="inline-form-card">
-            <div class="inline-form-header">
-              <span class="inline-title">Define Prerequisite Constraint</span>
+          <div class="drawer-profile-card border-emerald-300 bg-emerald-50/50 mb-4">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold text-emerald-900">Define Prerequisite Constraint</span>
               <p-button icon="pi pi-times" [text]="true" size="small" severity="secondary" (onClick)="cancelPrereqForm()"></p-button>
             </div>
             <form [formGroup]="prereqForm" (ngSubmit)="submitPrereqForm()">
-              <div class="form-group">
-                <label class="form-label">Required Prerequisite Course *</label>
-                <p-select
-                  appendTo="body"
-                  [options]="filteredAvailableCourses"
-                  formControlName="prerequisiteCourseId"
-                  placeholder="Select Prerequisite Course"
-                  optionLabel="label"
-                  optionValue="value"
-                  [filter]="true"
-                  filterBy="label"
-                  styleClass="w-full">
-                </p-select>
-                <span class="field-hint">The current course itself ({{ course.code }}) is strictly excluded to prevent self-prerequisite references.</span>
-              </div>
-
-              <div class="form-row-2col mt-2">
-                <div class="form-group">
-                  <label class="form-label">Rule Type *</label>
-                  <p-select appendTo="body" [options]="ruleTypeOptions" formControlName="ruleType" optionLabel="label" optionValue="value" styleClass="w-full"></p-select>
+              <div class="flex flex-col gap-2">
+                <div>
+                  <label class="text-xs font-semibold text-slate-700 block mb-1">Prerequisite Course *</label>
+                  <p-select
+                    appendTo="body"
+                    [options]="filteredAvailableCourses"
+                    formControlName="prerequisiteCourseId"
+                    placeholder="Select Course"
+                    optionLabel="label"
+                    optionValue="value"
+                    [filter]="true"
+                    filterBy="label"
+                    styleClass="w-full text-xs">
+                  </p-select>
                 </div>
 
-                <div class="form-group">
-                  <label class="form-label">Minimum Required Grade</label>
-                  <input pInputText type="text" formControlName="minGradeRequired" placeholder="e.g. 3.00" class="form-control-input" />
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="text-xs font-semibold text-slate-700 block mb-1">Rule Type *</label>
+                    <p-select appendTo="body" [options]="ruleTypeOptions" formControlName="ruleType" optionLabel="label" optionValue="value" styleClass="w-full text-xs"></p-select>
+                  </div>
+
+                  <div>
+                    <label class="text-xs font-semibold text-slate-700 block mb-1">Min Grade</label>
+                    <input pInputText type="text" formControlName="minGradeRequired" placeholder="e.g. 3.00" class="w-full text-xs p-2" />
+                  </div>
                 </div>
               </div>
 
-              <div class="inline-form-actions mt-2">
+              <div class="flex justify-end gap-2 mt-3">
                 <p-button label="Cancel" size="small" severity="secondary" [outlined]="true" type="button" (onClick)="cancelPrereqForm()"></p-button>
                 <p-button label="Add Prerequisite" icon="pi pi-check" size="small" severity="primary" type="submit" [disabled]="prereqForm.invalid || isSavingPrereq()"></p-button>
               </div>
@@ -181,22 +185,20 @@
           </div>
         }
 
-        <p-table [value]="prerequisites()" [loading]="isLoadingPrereqs()" responsiveLayout="scroll" styleClass="p-datatable-sm nested-table">
+        <p-table [value]="prerequisites()" [loading]="isLoadingPrereqs()" responsiveLayout="scroll" styleClass="p-datatable-sm institutional-table">
           <ng-template pTemplate="header">
             <tr>
-              <th style="width: 140px;">Prerequisite Code</th>
-              <th>Prerequisite Course Title</th>
-              <th style="width: 140px;">Rule Type</th>
-              <th style="width: 120px;">Min Grade</th>
+              <th style="width: 100px;">Prereq Code</th>
+              <th>Rule Type</th>
+              <th style="width: 80px;">Min Grade</th>
               @if (canManage()) {
-                <th style="width: 80px; text-align: right;">Action</th>
+                <th style="width: 60px; text-align: right;">Action</th>
               }
             </tr>
           </ng-template>
           <ng-template pTemplate="body" let-prereq>
             <tr>
               <td><span class="code-badge">{{ prereq.prerequisiteCourseCode }}</span></td>
-              <td>{{ prereq.prerequisiteCourseTitle || '—' }}</td>
               <td>
                 @switch (prereq.ruleType) {
                   @case ('HARD') { <p-tag severity="danger" value="HARD PREREQ"></p-tag> }
@@ -204,7 +206,7 @@
                   @default { <p-tag severity="warn" [value]="prereq.ruleType"></p-tag> }
                 }
               </td>
-              <td><span class="grade-pill">{{ prereq.minGradeRequired || '3.00' }}</span></td>
+              <td class="text-xs font-semibold text-slate-700">{{ prereq.minGradeRequired || '3.00' }}</td>
               @if (canManage()) {
                 <td style="text-align: right;">
                   <p-button icon="pi pi-trash" size="small" [text]="true" severity="danger" (onClick)="confirmDeletePrereq(prereq)"></p-button>
@@ -214,8 +216,8 @@
           </ng-template>
           <ng-template pTemplate="emptymessage">
             <tr>
-              <td [attr.colspan]="canManage() ? 5 : 4" class="empty-table-cell">
-                <p>No prerequisite rules assigned. This course has no prior course requirements.</p>
+              <td [attr.colspan]="canManage() ? 4 : 3" class="text-center text-xs text-slate-500 py-4">
+                No prerequisite rules assigned.
               </td>
             </tr>
           </ng-template>
@@ -223,4 +225,4 @@
       </div>
     }
   }
-</p-dialog>
+</p-drawer>

@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Button } from 'primeng/button';
@@ -22,6 +22,7 @@ export const passwordMatchValidator: ValidatorFn = (control: AbstractControl): V
   selector: 'app-reset-password-component',
   styleUrl: './reset-password-component.css',
   templateUrl: './reset-password-component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ResetPasswordComponent {
   private readonly fb = inject(FormBuilder);

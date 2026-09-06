@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SelectButtonModule } from 'primeng/selectbutton';
@@ -19,7 +19,8 @@ import { ProgramManagerComponent } from '../../components/program-manager/progra
     ProgramManagerComponent
   ],
   templateUrl: './organizational-hierarchy.component.html',
-  styleUrl: './organizational-hierarchy.component.css'
+  styleUrl: './organizational-hierarchy.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OrganizationalHierarchyComponent {
   activeSubTab = 'campuses';

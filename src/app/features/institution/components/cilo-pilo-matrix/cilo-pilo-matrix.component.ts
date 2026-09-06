@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -11,7 +11,7 @@ import { MessageModule } from 'primeng/message';
 import { MessageService } from 'primeng/api';
 
 import { CiloPiloMappingService, CourseOutcomeService, CourseService, ProgramService } from '../../../../core/services/institution.service';
-import { CiloPiloMapping, Course, CourseOutcome, CreateCiloPiloMappingRequest, ProgramOutcome } from '../../../../core/models/institution.model';
+import { CiloPiloMapping, Course, CourseOutcome, CreateCiloPiloMappingRequest, Program, ProgramOutcome } from '../../../../core/models/institution.model';
 import { AuthService } from '../../../../core/service/authentication/auth-service';
 
 @Component({
@@ -27,7 +27,8 @@ import { AuthService } from '../../../../core/service/authentication/auth-servic
     MessageModule
   ],
   templateUrl: './cilo-pilo-matrix.component.html',
-  styleUrl: './cilo-pilo-matrix.component.css'
+  styleUrl: './cilo-pilo-matrix.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CiloPiloMatrixComponent implements OnInit {
   private readonly mappingService = inject(CiloPiloMappingService);
@@ -39,7 +40,7 @@ export class CiloPiloMatrixComponent implements OnInit {
 
   readonly canManage = () => this.authService.hasAnyRole(['ADMIN', 'DEAN', 'CHAIRPERSON']);
 
-  readonly programs = signal<any[]>([]);
+  readonly programs = signal<Program[]>([]);
   readonly courses = signal<Course[]>([]);
   readonly pilos = signal<ProgramOutcome[]>([]);
   readonly cilos = signal<CourseOutcome[]>([]);

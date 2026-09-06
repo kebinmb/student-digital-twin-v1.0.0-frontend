@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, Input, OnChanges, OnInit, Output, SimpleChanges, computed, signal } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnChanges, OnInit, Output, SimpleChanges, computed, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -13,6 +13,7 @@ import { Message } from 'primeng/message';
 import { CurriculumDesignerStore } from '../../state/curriculum-designer.store';
 import { CreateCurriculumRequest } from '../../../../../core/models/curriculum-designer.model';
 import { AcademicYearService, ProgramService } from '../../../../../core/services/institution.service';
+import { AcademicYear, Program } from '../../../../../core/models/institution.model';
 
 interface CreateCurriculumForm {
   programId: FormControl<number | null>;
@@ -34,7 +35,8 @@ interface CreateCurriculumForm {
     Message
   ],
   templateUrl: './create-curriculum-dialog.component.html',
-  styleUrl: './create-curriculum-dialog.component.css'
+  styleUrl: './create-curriculum-dialog.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CreateCurriculumDialogComponent implements OnInit, OnChanges {
   readonly store = inject(CurriculumDesignerStore);
@@ -45,8 +47,8 @@ export class CreateCurriculumDialogComponent implements OnInit, OnChanges {
   @Input() visible = false;
   @Output() visibleChange = new EventEmitter<boolean>();
 
-  readonly programs = signal<any[]>([]);
-  readonly currentAcademicYear = signal<any | null>(null);
+  readonly programs = signal<Program[]>([]);
+  readonly currentAcademicYear = signal<AcademicYear | null>(null);
   readonly isLoadingPrereqs = signal<boolean>(false);
 
   readonly programOptions = computed(() =>

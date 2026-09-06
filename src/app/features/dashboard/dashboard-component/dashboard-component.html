@@ -1,14 +1,14 @@
 <div class="dashboard-page">
-  <!-- Top Welcome & Status Banner -->
+  <!-- Top Welcome & Institutional Status Banner -->
   <section class="welcome-banner" aria-label="Student Digital Twin Overview">
     <div class="welcome-info">
       <div class="welcome-badge">
         <span class="pulse-dot"></span>
-        <span>Student Digital Twin • Live Model Telemetry</span>
+        <span>CHMSU Student Digital Twin • Real-time Academic Telemetry</span>
       </div>
       <h1 class="welcome-title">Welcome back, {{ studentName() }}</h1>
       <p class="welcome-subtitle">
-        Bachelor of Science in Information Technology • 3rd Year • Academic Year 2026-2027
+        Carlos Hilado Memorial State University • BS Information Technology • 3rd Year • AY 2026-2027
       </p>
     </div>
 
@@ -17,165 +17,238 @@
         <i class="pi pi-calendar"></i>
         <span>{{ currentTime() }}</span>
       </div>
-      <p-button type="button" icon="pi pi-sync" label="Sync Data" severity="secondary" [outlined]="true"
+      <p-button type="button" icon="pi pi-sync" label="Sync Telemetry" severity="secondary" [outlined]="true"
         [rounded]="true">
       </p-button>
     </div>
   </section>
 
-  <!-- Metric KPI Cards Grid -->
-  <section class="metrics-grid" aria-label="Key Performance Indicators">
-    @for (card of metrics; track card.title) {
-    <div class="metric-card">
-      <div class="metric-header">
-        <span class="metric-title">{{ card.title }}</span>
-        <div class="metric-icon-box">
-          <i [class]="card.icon"></i>
+  <!-- Bento Grid Container -->
+  @if (isLoading()) {
+    <!-- Skeleton Loaders -->
+    <div class="bento-grid">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="bento-col-3">
+          <div class="bento-card">
+            <p-skeleton width="60%" height="1.2rem" styleClass="mb-2"></p-skeleton>
+            <p-skeleton width="40%" height="2.5rem" styleClass="mb-2"></p-skeleton>
+            <p-skeleton width="80%" height="1rem"></p-skeleton>
+          </div>
+        </div>
+      }
+      <div class="bento-col-8">
+        <div class="bento-card">
+          <p-skeleton width="100%" height="200px"></p-skeleton>
         </div>
       </div>
-      <div class="metric-body">
-        <span class="metric-value">{{ card.value }}</span>
-        <div class="metric-footer">
-          <span class="metric-subtext">{{ card.subtext }}</span>
-          @if (card.trend) {
-          <span class="metric-trend" [class.trend-positive]="card.trendUp">
-            {{ card.trend }}
-          </span>
-          }
+      <div class="bento-col-4">
+        <div class="bento-card">
+          <p-skeleton width="100%" height="200px"></p-skeleton>
         </div>
       </div>
     </div>
+  } @else {
+    <div class="bento-grid">
+
+      <!-- Bento Item 1-4: Metric KPI Cards (1x1 Aspect Ratio) -->
+      @for (card of metrics; track card.title) {
+        <div class="bento-col-3">
+          <p-card styleClass="h-full metric-bento-card">
+            <div class="metric-header">
+              <span class="metric-title">{{ card.title }}</span>
+              <div class="metric-icon-box">
+                <i [class]="card.icon"></i>
+              </div>
+            </div>
+            <div class="metric-body">
+              <span class="metric-value">{{ card.value }}</span>
+              <div class="metric-footer">
+                <span class="metric-subtext">{{ card.subtext }}</span>
+                @if (card.trend) {
+                  <span class="metric-trend" [class.trend-positive]="card.trendUp">
+                    {{ card.trend }}
+                  </span>
+                }
+              </div>
+            </div>
+          </p-card>
+        </div>
+      }
+
+      <!-- Bento Item 5: Today's Schedule Card (Col Span 8, Row Span 2) -->
+      <div class="bento-col-8">
+        <p-card styleClass="h-full schedule-bento-card">
+          <ng-template pTemplate="header">
+            <div class="card-header-flex">
+              <div>
+                <h2 class="card-title">Today's Class Schedule</h2>
+                <p class="card-subtitle">3 enrolled course sessions scheduled today</p>
+              </div>
+              <a routerLink="/dashboard/schedule" class="action-link">View Calendar</a>
+            </div>
+          </ng-template>
+
+          <div class="schedule-list">
+            @for (session of todayClasses; track session.courseCode) {
+              <div class="schedule-item" [class.current-session]="session.status === 'In Progress'">
+                <div class="session-time-col">
+                  <span class="session-time">{{ session.time }}</span>
+                  <p-tag
+                    [value]="session.status"
+                    [severity]="session.status === 'In Progress' ? 'success' : (session.status === 'Completed' ? 'secondary' : 'info')">
+                  </p-tag>
+                </div>
+
+                <div class="session-detail-col">
+                  <div class="session-code-row">
+                    <span class="session-code">{{ session.courseCode }}</span>
+                    <span class="session-room">
+                      <i class="pi pi-map-marker"></i>
+                      {{ session.room }}
+                    </span>
+                  </div>
+                  <h3 class="session-title">{{ session.courseTitle }}</h3>
+                  <span class="session-instructor">
+                    <i class="pi pi-user"></i>
+                    {{ session.instructor }}
+                  </span>
+                </div>
+              </div>
+            }
+          </div>
+        </p-card>
+      </div>
+
+      <!-- Bento Item 6: Quick Actions Grid (Col Span 4) -->
+      <div class="bento-col-4">
+        <p-card styleClass="h-full actions-bento-card">
+          <ng-template pTemplate="header">
+            <div class="card-header-flex">
+              <div>
+                <h2 class="card-title">Quick Actions</h2>
+                <p class="card-subtitle">Fast-access university services</p>
+              </div>
+            </div>
+          </ng-template>
+
+          <div class="quick-actions-grid">
+            <button type="button" class="action-tile">
+              <i class="pi pi-file-pdf action-tile-icon"></i>
+              <span class="action-tile-label">Download COR</span>
+            </button>
+            <button type="button" class="action-tile">
+              <i class="pi pi-id-card action-tile-icon"></i>
+              <span class="action-tile-label">Digital Student ID</span>
+            </button>
+            <button type="button" class="action-tile">
+              <i class="pi pi-check-square action-tile-icon"></i>
+              <span class="action-tile-label">Clearance Status</span>
+            </button>
+            <button type="button" class="action-tile">
+              <i class="pi pi-headphones action-tile-icon"></i>
+              <span class="action-tile-label">ICT Support</span>
+            </button>
+          </div>
+        </p-card>
+      </div>
+
+      <!-- Bento Item 7: Digital Twin Competency Profiling (Col Span 8) -->
+      <div class="bento-col-8">
+        <p-card styleClass="h-full competency-bento-card">
+          <ng-template pTemplate="header">
+            <div class="card-header-flex">
+              <div>
+                <h2 class="card-title">Digital Twin Competency Profiling</h2>
+                <p class="card-subtitle">AI-synthesized academic performance & skill indices</p>
+              </div>
+              <p-tag severity="success" value="Overall Index: 90%"></p-tag>
+            </div>
+          </ng-template>
+
+          <div class="competency-list">
+            @for (item of competencies; track item.skill) {
+              <div class="competency-item">
+                <div class="competency-label-row">
+                  <div class="competency-info">
+                    <span class="skill-name">{{ item.skill }}</span>
+                    <span class="skill-category">{{ item.category }}</span>
+                  </div>
+                  <span class="skill-score">{{ item.score }}%</span>
+                </div>
+                <p-progressbar [value]="item.score" [showValue]="false" styleClass="h-2 rounded-full"></p-progressbar>
+              </div>
+            }
+          </div>
+        </p-card>
+      </div>
+
+      <!-- Bento Item 8: Academic Notices & Updates (Col Span 4) -->
+      <div class="bento-col-4">
+        <p-card styleClass="h-full notices-bento-card">
+          <ng-template pTemplate="header">
+            <div class="card-header-flex">
+              <div>
+                <h2 class="card-title">Academic Notices</h2>
+                <p class="card-subtitle">Official announcements & advisories</p>
+              </div>
+              <p-tag severity="danger" value="3 New"></p-tag>
+            </div>
+          </ng-template>
+
+          <div class="notices-list">
+            @for (notice of notices; track notice.id) {
+              <div class="notice-item" [class.unread]="notice.unread" (click)="openNoticeDetail(notice)" (keydown.enter)="openNoticeDetail(notice)" (keydown.space)="openNoticeDetail(notice); $event.preventDefault()" tabindex="0" role="button" [attr.aria-label]="'View notice: ' + notice.title">
+                <div class="notice-meta">
+                  <span class="notice-category">{{ notice.category }}</span>
+                  <span class="notice-date">{{ notice.date }}</span>
+                </div>
+                <h3 class="notice-title">{{ notice.title }}</h3>
+              </div>
+            }
+          </div>
+        </p-card>
+      </div>
+
+    </div>
+  }
+
+  <!-- Master-Detail Drawer for Notice Details -->
+  <p-drawer [(visible)]="isNoticeDrawerOpen" position="right" styleClass="institutional-drawer w-full md:w-25rem">
+    <ng-template pTemplate="header">
+      <div class="drawer-header-title">
+        <span class="text-xs font-bold text-emerald-800 uppercase tracking-wider">CHMSU Official Advisory</span>
+        <h3 class="text-base font-bold text-slate-900 m-0 mt-1">{{ selectedNotice()?.title }}</h3>
+      </div>
+    </ng-template>
+
+    @if (selectedNotice()) {
+      <div class="drawer-content-body">
+        <div class="drawer-profile-card mb-4">
+          <div class="flex items-center gap-2 mb-2">
+            <p-tag severity="info" [value]="selectedNotice()!.category"></p-tag>
+            <span class="text-xs text-slate-500">{{ selectedNotice()!.date }}</span>
+          </div>
+          <p class="text-sm text-slate-700 leading-relaxed">
+            This official notice was issued by the {{ selectedNotice()!.category }} for student records and academic schedule adherence. Please verify any prerequisites or clearances required before the end of the term.
+          </p>
+        </div>
+
+        <div class="drawer-stat-grid">
+          <div class="drawer-stat-box">
+            <span class="drawer-stat-label">Issuing Office</span>
+            <span class="drawer-stat-val text-sm">{{ selectedNotice()!.category }}</span>
+          </div>
+          <div class="drawer-stat-box">
+            <span class="drawer-stat-label">Priority Level</span>
+            <span class="drawer-stat-val text-sm text-amber-600">High Advisory</span>
+          </div>
+        </div>
+
+        <div class="mt-6 flex flex-col gap-2">
+          <p-button label="Acknowledge Notice" icon="pi pi-check" severity="primary" styleClass="w-full" (onClick)="isNoticeDrawerOpen.set(false)"></p-button>
+          <p-button label="Close Details" icon="pi pi-times" severity="secondary" [outlined]="true" styleClass="w-full" (onClick)="isNoticeDrawerOpen.set(false)"></p-button>
+        </div>
+      </div>
     }
-  </section>
-
-  <!-- Main 2-Column Responsive Dashboard Content -->
-  <div class="dashboard-columns">
-    <!-- Left Column (Primary Focus: Schedule & Competency Twin) -->
-    <div class="column-primary">
-      <!-- Today's Classes Schedule Widget -->
-      <div class="widget-card">
-        <div class="widget-header">
-          <div class="widget-title-group">
-            <h2 class="widget-title">Today's Class Schedule</h2>
-            <span class="widget-subtitle">3 enrolled course sessions scheduled today</span>
-          </div>
-          <a routerLink="/dashboard/schedule" class="widget-action-link">View Full Calendar</a>
-        </div>
-
-        <div class="schedule-list">
-          @for (session of todayClasses; track session.courseCode) {
-          <div class="schedule-item" [class.current-session]="session.status === 'In Progress'">
-            <div class="session-time-col">
-              <span class="session-time">{{ session.time }}</span>
-              <span class="session-badge" [class.badge-active]="session.status === 'In Progress'"
-                [class.badge-completed]="session.status === 'Completed'"
-                [class.badge-upcoming]="session.status === 'Upcoming'">
-                {{ session.status }}
-              </span>
-            </div>
-
-            <div class="session-detail-col">
-              <div class="session-code-row">
-                <span class="session-code">{{ session.courseCode }}</span>
-                <span class="session-room">
-                  <i class="pi pi-map-marker"></i>
-                  {{ session.room }}
-                </span>
-              </div>
-              <h3 class="session-title">{{ session.courseTitle }}</h3>
-              <span class="session-instructor">
-                <i class="pi pi-user"></i>
-                {{ session.instructor }}
-              </span>
-            </div>
-          </div>
-          }
-        </div>
-      </div>
-
-      <!-- Digital Twin Competency Profiling Widget -->
-      <div class="widget-card">
-        <div class="widget-header">
-          <div class="widget-title-group">
-            <h2 class="widget-title">Digital Twin Competency Profiling</h2>
-            <span class="widget-subtitle">AI-synthesized academic performance & skill indices</span>
-          </div>
-          <span class="competency-index-badge">Overall Score: 90%</span>
-        </div>
-
-        <div class="competency-list">
-          @for (item of competencies; track item.skill) {
-          <div class="competency-item">
-            <div class="competency-label-row">
-              <div class="competency-info">
-                <span class="skill-name">{{ item.skill }}</span>
-                <span class="skill-category">{{ item.category }}</span>
-              </div>
-              <span class="skill-score">{{ item.score }}%</span>
-            </div>
-            <div class="progress-track" role="progressbar" [attr.aria-valuenow]="item.score" aria-valuemin="0"
-              aria-valuemax="100">
-              <div class="progress-fill" [style.width.%]="item.score"></div>
-            </div>
-          </div>
-          }
-        </div>
-      </div>
-    </div>
-
-    <!-- Right Column (Notices, Announcements & Quick Actions) -->
-    <div class="column-secondary">
-      <!-- Quick Actions Grid -->
-      <div class="widget-card">
-        <div class="widget-header">
-          <div class="widget-title-group">
-            <h2 class="widget-title">Quick Actions</h2>
-            <span class="widget-subtitle">Fast-access university services</span>
-          </div>
-        </div>
-
-        <div class="quick-actions-grid">
-          <button type="button" class="action-tile">
-            <i class="pi pi-file-pdf action-tile-icon"></i>
-            <span class="action-tile-label">Download COR</span>
-          </button>
-          <button type="button" class="action-tile">
-            <i class="pi pi-id-card action-tile-icon"></i>
-            <span class="action-tile-label">Digital ID Card</span>
-          </button>
-          <button type="button" class="action-tile">
-            <i class="pi pi-check-square action-tile-icon"></i>
-            <span class="action-tile-label">Clearance Status</span>
-          </button>
-          <button type="button" class="action-tile">
-            <i class="pi pi-headphones action-tile-icon"></i>
-            <span class="action-tile-label">ICT Support</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- University Notices & Updates -->
-      <div class="widget-card">
-        <div class="widget-header">
-          <div class="widget-title-group">
-            <h2 class="widget-title">Academic Notices</h2>
-            <span class="widget-subtitle">Official announcements & advisories</span>
-          </div>
-          <span class="notice-count-badge">3 New</span>
-        </div>
-
-        <div class="notices-list">
-          @for (notice of notices; track notice.id) {
-          <div class="notice-item" [class.unread]="notice.unread">
-            <div class="notice-meta">
-              <span class="notice-category">{{ notice.category }}</span>
-              <span class="notice-date">{{ notice.date }}</span>
-            </div>
-            <h3 class="notice-title">{{ notice.title }}</h3>
-          </div>
-          }
-        </div>
-      </div>
-    </div>
-  </div>
+  </p-drawer>
 </div>

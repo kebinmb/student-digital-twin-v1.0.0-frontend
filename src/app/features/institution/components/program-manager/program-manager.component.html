@@ -62,7 +62,7 @@
     </ng-template>
 
     <ng-template #body let-p>
-      <tr>
+      <tr (click)="openDetailDrawer(p)" class="hover:bg-slate-100 cursor-pointer">
         <td class="font-mono font-bold text-primary">{{ p.code }}</td>
         <td>
           <div class="prog-title">{{ p.name }}</div>
@@ -76,7 +76,7 @@
         <td style="text-align: center">
           <p-tag [value]="p.isActive ? 'Active' : 'Inactive'" [severity]="p.isActive ? 'success' : 'secondary'"></p-tag>
         </td>
-        <td style="text-align: right">
+        <td style="text-align: right" (click)="$event.stopPropagation()">
           <div class="action-buttons-cell">
             <p-button
               icon="pi pi-flag"
@@ -110,6 +110,20 @@
       </tr>
     </ng-template>
 
+    <ng-template #loadingbody>
+      @for (i of [1, 2, 3, 4]; track i) {
+        <tr>
+          <td><p-skeleton width="70px"></p-skeleton></td>
+          <td><p-skeleton width="220px"></p-skeleton></td>
+          <td><p-skeleton width="90px"></p-skeleton></td>
+          <td><p-skeleton width="100px"></p-skeleton></td>
+          <td><p-skeleton width="50px"></p-skeleton></td>
+          <td><p-skeleton width="60px"></p-skeleton></td>
+          <td><p-skeleton width="120px"></p-skeleton></td>
+        </tr>
+      }
+    </ng-template>
+
     <ng-template #emptymessage>
       <tr>
         <td colspan="7" class="empty-message-cell">
@@ -118,6 +132,54 @@
       </tr>
     </ng-template>
   </p-table>
+
+  <!-- Master-Detail Drawer for Program Profile -->
+  <p-drawer [(visible)]="isDetailDrawerOpen" position="right" styleClass="institutional-drawer w-full md:w-28rem">
+    <ng-template pTemplate="header">
+      <div class="drawer-header-title">
+        <span class="text-xs font-bold text-emerald-800 uppercase tracking-wider">Degree Program Profile</span>
+        <h3 class="text-base font-bold text-slate-900 m-0 mt-1">{{ selectedProgForDetail()?.name }}</h3>
+      </div>
+    </ng-template>
+
+    @if (selectedProgForDetail()) {
+      <div class="drawer-content-body">
+        <div class="drawer-profile-card mb-4">
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <span class="code-badge">{{ selectedProgForDetail()!.code }}</span>
+            <p-tag severity="info" [value]="selectedProgForDetail()!.degreeLevel"></p-tag>
+          </div>
+          @if (selectedProgForDetail()!.major) {
+            <p class="text-xs font-semibold text-slate-700 m-0 mb-1">
+              Major: {{ selectedProgForDetail()!.major }}
+            </p>
+          }
+          <p class="text-xs text-slate-600 m-0">
+            Department: <strong class="text-slate-800">{{ selectedProgForDetail()!.departmentCode || getDeptCode(selectedProgForDetail()!.departmentId) }}</strong>
+          </p>
+        </div>
+
+        <div class="drawer-stat-grid">
+          <div class="drawer-stat-box">
+            <span class="drawer-stat-label">Total Credit Units</span>
+            <span class="drawer-stat-val text-sm font-bold text-emerald-800">{{ selectedProgForDetail()!.totalUnitsRequired || 146 }} Units</span>
+          </div>
+          <div class="drawer-stat-box">
+            <span class="drawer-stat-label">Status</span>
+            <span class="drawer-stat-val text-xs text-emerald-700">ACTIVE</span>
+          </div>
+        </div>
+
+        <div class="mt-6 flex flex-col gap-2">
+          <p-button label="Manage Outcomes (PILOs)" icon="pi pi-flag" severity="help" styleClass="w-full" (onClick)="openPiloDialog(selectedProgForDetail()!); isDetailDrawerOpen.set(false)"></p-button>
+          @if (canManage()) {
+            <p-button label="Edit Program Specifications" icon="pi pi-pencil" severity="primary" styleClass="w-full" (onClick)="openEditDialog(selectedProgForDetail()!); isDetailDrawerOpen.set(false)"></p-button>
+          }
+          <p-button label="Close Profile Drawer" icon="pi pi-times" severity="secondary" [outlined]="true" styleClass="w-full" (onClick)="isDetailDrawerOpen.set(false)"></p-button>
+        </div>
+      </div>
+    }
+  </p-drawer>
 
   <!-- Program Create/Edit Modal -->
   <p-dialog

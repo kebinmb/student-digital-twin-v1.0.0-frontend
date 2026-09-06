@@ -1,0 +1,228 @@
+<div class="audit-wrapper">
+  <p-toast></p-toast>
+
+  <!-- Filter & Term Selector Toolbar -->
+  <div class="audit-toolbar">
+    <div class="filter-item">
+      <label class="filter-label">Academic Term:</label>
+      <p-select 
+        [options]="store.terms()" 
+        optionLabel="termName" 
+        optionValue="id" 
+        [ngModel]="store.selectedTermId()" 
+        (onChange)="onTermSelect($event.value)"
+        placeholder="Select Academic Term"
+        appendTo="body"
+        styleClass="w-72">
+      </p-select>
+    </div>
+
+    <div class="audit-metrics">
+      <span class="metric-label">Total Student Enrollments:</span>
+      <span class="metric-val">{{ store.termEnrollments().length }}</span>
+    </div>
+  </div>
+
+  <!-- High-Density Enrollments Audit Table -->
+  <div class="table-container">
+    <p-table 
+      [value]="store.termEnrollments()" 
+      [loading]="store.isLoading()" 
+      responsiveLayout="scroll"
+      styleClass="p-datatable-striped p-datatable-sm">
+      
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Enrollment ID</th>
+          <th>Student Number</th>
+          <th>Term</th>
+          <th>Enlisted Subjects</th>
+          <th>Total Units</th>
+          <th>Overload Approved</th>
+          <th>Status</th>
+          <th style="width: 140px; text-align: center;">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        @for (i of [1,2,3,4]; track i) {
+          <tr>
+            <td><p-skeleton width="60px" height="1.5rem"></p-skeleton></td>
+            <td><p-skeleton width="110px" height="1.5rem"></p-skeleton></td>
+            <td><p-skeleton width="100px" height="1.5rem"></p-skeleton></td>
+            <td><p-skeleton width="140px" height="1.5rem"></p-skeleton></td>
+            <td><p-skeleton width="70px" height="1.5rem"></p-skeleton></td>
+            <td><p-skeleton width="80px" height="1.5rem"></p-skeleton></td>
+            <td><p-skeleton width="80px" height="1.5rem"></p-skeleton></td>
+            <td><p-skeleton width="100px" height="1.5rem"></p-skeleton></td>
+          </tr>
+        }
+      </ng-template>
+
+      <ng-template pTemplate="body" let-e>
+        <tr class="cursor-pointer hover:bg-slate-50 transition-colors" (click)="openDetailsDrawer(e)">
+          <td>
+            <span class="id-badge">#{{ e.enrollmentId }}</span>
+          </td>
+          <td>
+            <strong>{{ e.studentNumber }}</strong>
+          </td>
+          <td>
+            <span class="text-xs text-slate-600">{{ e.termName }}</span>
+          </td>
+          <td>
+            <span class="subjects-count">{{ e.items?.length || 0 }} Courses</span>
+          </td>
+          <td>
+            <span class="units-badge">{{ e.totalCreditUnits }} units</span>
+          </td>
+          <td>
+            <p-tag 
+              [value]="e.isOverloadApproved ? 'APPROVED' : 'NONE'" 
+              [severity]="e.isOverloadApproved ? 'success' : 'secondary'"
+              styleClass="text-xs">
+            </p-tag>
+          </td>
+          <td>
+            <p-tag 
+              [value]="e.status" 
+              [severity]="getStatusSeverity(e.status)">
+            </p-tag>
+          </td>
+          <td style="text-align: center;" (click)="$event.stopPropagation()">
+            <p-button 
+              icon="pi pi-search" 
+              severity="info" 
+              [text]="true" 
+              size="small"
+              pTooltip="Inspect Details"
+              (onClick)="openDetailsDrawer(e)">
+            </p-button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8">
+            <div class="empty-state-card">
+              <i class="pi pi-folder-open text-3xl text-slate-400 mb-2"></i>
+              <h4 class="font-bold text-slate-800 m-0">No Student Enrollment Records Found</h4>
+              <p class="text-xs text-slate-500 mt-1">There are no student enrollment submissions for the selected academic term.</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- Master-Detail Inspection Drawer -->
+  <p-drawer 
+    [header]="'Enrollment Audit & Verification — #' + (selectedEnrollment()?.enrollmentId || '')" 
+    [(visible)]="isDrawerOpen"
+    position="right"
+    styleClass="institutional-drawer !w-full sm:!w-[500px] md:!w-[640px] max-w-[100vw]"
+    appendTo="body"
+    (onHide)="closeDetailsDrawer()">
+    
+    <ng-template pTemplate="content">
+      @if (selectedEnrollment(); as e) {
+        <div class="drawer-content-grid">
+          <!-- Overview Summary Banner -->
+          <div class="summary-banner">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-xs font-semibold text-emerald-800">Student No: {{ e.studentNumber }}</span>
+                <h3 class="text-base font-bold text-slate-900 m-0 mt-0.5">Enrollment Record #{{ e.enrollmentId }}</h3>
+              </div>
+              <p-tag [value]="e.status" [severity]="getStatusSeverity(e.status)"></p-tag>
+            </div>
+
+            <div class="meta-row">
+              <span>Term: <strong>{{ e.termName }}</strong></span>
+              <span>Total Units: <strong>{{ e.totalCreditUnits }} units</strong></span>
+              <span>Date: <strong>{{ e.enrollmentDate | date:'shortDate' }}</strong></span>
+            </div>
+          </div>
+
+          <!-- Administrative Action Bar -->
+          <div class="action-strip">
+            <span class="text-xs font-bold text-slate-700 uppercase">Administrative Workflow:</span>
+            <div class="flex items-center gap-2 mt-2">
+              @if (e.status !== 'ENROLLED') {
+                <p-button 
+                  label="Approve & Enroll" 
+                  icon="pi pi-check" 
+                  severity="success" 
+                  size="small"
+                  (onClick)="updateStatus(e.enrollmentId, 'ENROLLED')">
+                </p-button>
+              }
+              @if (e.status !== 'ASSESSED') {
+                <p-button 
+                  label="Mark Assessed" 
+                  icon="pi pi-calculator" 
+                  severity="warn" 
+                  size="small"
+                  (onClick)="updateStatus(e.enrollmentId, 'ASSESSED')">
+                </p-button>
+              }
+              @if (!e.isOverloadApproved) {
+                <p-button 
+                  label="Approve Overload" 
+                  icon="pi pi-shield" 
+                  severity="info" 
+                  [outlined]="true"
+                  size="small"
+                  (onClick)="updateStatus(e.enrollmentId, e.status, true)">
+                </p-button>
+              }
+            </div>
+          </div>
+
+          <!-- Enlisted Subjects Table -->
+          <div class="items-table-section">
+            <h4 class="section-title">Enlisted Course Offerings ({{ e.items.length }})</h4>
+            <table class="custom-items-table">
+              <thead>
+                <tr>
+                  <th>Course</th>
+                  <th>Section</th>
+                  <th>Units</th>
+                  <th>Schedule Summary</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of e.items; track item.itemId) {
+                  <tr>
+                    <td>
+                      <strong>{{ item.courseCode }}</strong>
+                      <div class="text-xs text-slate-500">{{ item.courseTitle }}</div>
+                    </td>
+                    <td>
+                      <span class="section-badge">{{ item.sectionCode }}</span>
+                    </td>
+                    <td class="whitespace-normal break-words text-xs text-slate-700 font-medium">
+                      <i class="pi pi-calendar text-[10px] text-emerald-700 mr-1"></i>
+                      <span>{{ item.scheduleSummary || 'No schedule assigned' }}</span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      <p-button 
+        label="Close Audit View" 
+        icon="pi pi-times" 
+        severity="secondary" 
+        [text]="true" 
+        (onClick)="closeDetailsDrawer()">
+      </p-button>
+    </ng-template>
+  </p-drawer>
+</div>

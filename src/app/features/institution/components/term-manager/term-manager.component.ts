@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -23,6 +23,9 @@ interface TermForm {
   endDate: FormControl<string>;
 }
 
+import { Drawer } from 'primeng/drawer';
+import { Skeleton } from 'primeng/skeleton';
+
 @Component({
   selector: 'app-term-manager',
   standalone: true,
@@ -36,10 +39,13 @@ interface TermForm {
     SelectModule,
     TagModule,
     ConfirmDialogModule,
-    MessageModule
+    MessageModule,
+    Drawer,
+    Skeleton
   ],
   templateUrl: './term-manager.component.html',
-  styleUrl: './term-manager.component.css'
+  styleUrl: './term-manager.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TermManagerComponent implements OnInit {
   private readonly termService = inject(TermService);
@@ -49,6 +55,14 @@ export class TermManagerComponent implements OnInit {
   private readonly authService = inject(AuthService);
 
   readonly canManage = () => this.authService.hasAnyRole(['ADMIN', 'DEAN', 'REGISTRAR', 'CHAIRPERSON']);
+
+  readonly selectedTermForDetail = signal<Term | null>(null);
+  readonly isDetailDrawerOpen = signal<boolean>(false);
+
+  openDetailDrawer(t: Term): void {
+    this.selectedTermForDetail.set(t);
+    this.isDetailDrawerOpen.set(true);
+  }
 
   readonly academicYears = signal<AcademicYear[]>([]);
   readonly terms = signal<Term[]>([]);
@@ -61,9 +75,9 @@ export class TermManagerComponent implements OnInit {
   selectedTerm: Term | null = null;
 
   readonly termTypeOptions: { label: string; value: TermType }[] = [
-    { label: 'First Semester (1ST_SEM)', value: '1ST_SEM' },
-    { label: 'Second Semester (2ND_SEM)', value: '2ND_SEM' },
-    { label: 'Summer Term (SUMMER)', value: 'SUMMER' }
+    { label: '1st Semester', value: 'FIRST_SEM' },
+    { label: '2nd Semester', value: 'SECOND_SEM' },
+    { label: 'Summer Term', value: 'SUMMER' }
   ];
 
   readonly academicYearOptions = computed(() =>
@@ -76,16 +90,44 @@ export class TermManagerComponent implements OnInit {
   readonly termForm = new FormGroup<TermForm>(
     {
       academicYearId: new FormControl<number | null>(null, [Validators.required]),
-      termType: new FormControl<TermType>('1ST_SEM', { nonNullable: true, validators: [Validators.required] }),
+      termType: new FormControl<TermType>('FIRST_SEM', { nonNullable: true, validators: [Validators.required] }),
       startDate: new FormControl<string>('', { nonNullable: true, validators: [Validators.required] }),
       endDate: new FormControl<string>('', { nonNullable: true, validators: [Validators.required] })
     },
     {
       validators: (group) => {
+        const ayId = group.get('academicYearId')?.value;
         const start = group.get('startDate')?.value;
         const end = group.get('endDate')?.value;
+
         if (start && end && end <= start) {
           return { dateOrderInvalid: true };
+        }
+
+        if (start && end && ayId) {
+          const ay = this.academicYears().find((a) => a.id === ayId);
+          if (ay && ay.startDate && start < ay.startDate) {
+            return { ayStartOutOfBounds: true, ayStartDate: ay.startDate };
+          }
+          if (ay && ay.endDate && end > ay.endDate) {
+            return { ayEndOutOfBounds: true, ayEndDate: ay.endDate };
+          }
+
+          const existingTerms = this.terms();
+          for (const existing of existingTerms) {
+            if (this.isEditing && this.selectedTerm && existing.id === this.selectedTerm.id) {
+              continue;
+            }
+            if (existing.startDate && existing.endDate) {
+              const overlaps =
+                (start < existing.endDate && end > existing.startDate) ||
+                start === existing.startDate ||
+                end === existing.endDate;
+              if (overlaps) {
+                return { termOverlap: true, overlappingTerm: this.formatTermType(existing.termType) };
+              }
+            }
+          }
         }
         return null;
       }
@@ -100,9 +142,13 @@ export class TermManagerComponent implements OnInit {
     this.ayService.getAll().subscribe({
       next: (ays) => {
         this.academicYears.set(ays);
-        const current = ays.find((ay) => ay.isCurrent) || ays[0];
-        if (current) {
-          this.selectedAyId = current.id;
+        if (!this.selectedAyId) {
+          const current = ays.find((ay) => ay.isCurrent) || ays[0];
+          if (current) {
+            this.selectedAyId = current.id;
+          }
+        }
+        if (this.selectedAyId) {
           this.loadTermsForSelectedAy();
         }
       }
@@ -125,8 +171,9 @@ export class TermManagerComponent implements OnInit {
   }
 
   formatTermType(type: string): string {
-    if (type === '1ST_SEM') return '1st Semester';
-    if (type === '2ND_SEM') return '2nd Semester';
+    if (!type) return '';
+    if (type === '1ST_SEM' || type === 'FIRST_SEM') return '1st Semester';
+    if (type === '2ND_SEM' || type === 'SECOND_SEM') return '2nd Semester';
     if (type === 'SUMMER') return 'Summer Term';
     return type;
   }
@@ -136,7 +183,7 @@ export class TermManagerComponent implements OnInit {
     this.selectedTerm = null;
     this.termForm.reset({
       academicYearId: this.selectedAyId,
-      termType: '1ST_SEM',
+      termType: 'FIRST_SEM',
       startDate: '',
       endDate: ''
     });
@@ -165,37 +212,43 @@ export class TermManagerComponent implements OnInit {
     const val = this.termForm.getRawValue();
 
     if (this.isEditing && this.selectedTerm) {
-      this.termService.updateSchedule(this.selectedTerm.id, {
-        startDate: val.startDate,
-        endDate: val.endDate
-      }).subscribe({
-        next: () => {
-          this.messageService.add({ severity: 'success', summary: 'Schedule Updated', detail: 'Term schedule adjusted.' });
-          this.displayDialog = false;
-          this.loadTermsForSelectedAy();
-        },
-        error: (err) => {
-          this.isSubmitting = false;
-          this.messageService.add({ severity: 'error', summary: 'Update Failed', detail: err.error?.detail || 'Failed to update schedule.' });
-        }
-      });
+      this.termService
+        .updateSchedule(this.selectedTerm.id, {
+          startDate: val.startDate,
+          endDate: val.endDate
+        })
+        .subscribe({
+          next: () => {
+            this.isSubmitting = false;
+            this.messageService.add({ severity: 'success', summary: 'Schedule Updated', detail: 'Term schedule adjusted.' });
+            this.displayDialog = false;
+            this.loadTermsForSelectedAy();
+          },
+          error: (err) => {
+            this.isSubmitting = false;
+            this.messageService.add({ severity: 'error', summary: 'Update Failed', detail: err.error?.detail || 'Failed to update schedule.' });
+          }
+        });
     } else {
-      this.termService.create({
-        academicYearId: val.academicYearId!,
-        termType: val.termType,
-        startDate: val.startDate,
-        endDate: val.endDate
-      }).subscribe({
-        next: () => {
-          this.messageService.add({ severity: 'success', summary: 'Term Created', detail: 'Academic term scheduled.' });
-          this.displayDialog = false;
-          this.loadTermsForSelectedAy();
-        },
-        error: (err) => {
-          this.isSubmitting = false;
-          this.messageService.add({ severity: 'error', summary: 'Creation Failed', detail: err.error?.detail || 'Failed to schedule term.' });
-        }
-      });
+      this.termService
+        .create({
+          academicYearId: val.academicYearId!,
+          termType: val.termType,
+          startDate: val.startDate,
+          endDate: val.endDate
+        })
+        .subscribe({
+          next: () => {
+            this.isSubmitting = false;
+            this.messageService.add({ severity: 'success', summary: 'Term Created', detail: 'Academic term scheduled.' });
+            this.displayDialog = false;
+            this.loadTermsForSelectedAy();
+          },
+          error: (err) => {
+            this.isSubmitting = false;
+            this.messageService.add({ severity: 'error', summary: 'Creation Failed', detail: err.error?.detail || 'Failed to schedule term.' });
+          }
+        });
     }
   }
 
@@ -208,12 +261,60 @@ export class TermManagerComponent implements OnInit {
         this.termService.activate(t.id).subscribe({
           next: () => {
             this.messageService.add({ severity: 'success', summary: 'Term Activated', detail: `${this.formatTermType(t.termType)} is now active.` });
-            this.loadTermsForSelectedAy();
+            this.loadAcademicYears();
           },
           error: (err) => {
             this.messageService.add({ severity: 'error', summary: 'Activation Failed', detail: err.error?.detail || 'Failed to activate term.' });
           }
         });
+      }
+    });
+  }
+
+  toggleEnrollmentWindow(t: Term): void {
+    if (!t.isActive) {
+      this.messageService.add({ severity: 'warn', summary: 'Action Blocked', detail: 'Operational windows can only be altered on an active term.' });
+      return;
+    }
+    const targetState = !t.enrollmentOpen;
+    this.termService.toggleEnrollmentWindow(t.id, targetState).subscribe({
+      next: (updated) => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Enrollment Window Updated',
+          detail: `Enrollment window is now ${updated.enrollmentOpen ? 'OPEN' : 'CLOSED'}.`
+        });
+        this.loadTermsForSelectedAy();
+        if (this.selectedTermForDetail()?.id === t.id) {
+          this.selectedTermForDetail.set(updated);
+        }
+      },
+      error: (err) => {
+        this.messageService.add({ severity: 'error', summary: 'Toggle Failed', detail: err.error?.detail || 'Failed to toggle enrollment window.' });
+      }
+    });
+  }
+
+  toggleGradingWindow(t: Term): void {
+    if (!t.isActive) {
+      this.messageService.add({ severity: 'warn', summary: 'Action Blocked', detail: 'Operational windows can only be altered on an active term.' });
+      return;
+    }
+    const targetState = !t.gradingOpen;
+    this.termService.toggleGradingWindow(t.id, targetState).subscribe({
+      next: (updated) => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Grading Window Updated',
+          detail: `Grading window is now ${updated.gradingOpen ? 'OPEN' : 'CLOSED'}.`
+        });
+        this.loadTermsForSelectedAy();
+        if (this.selectedTermForDetail()?.id === t.id) {
+          this.selectedTermForDetail.set(updated);
+        }
+      },
+      error: (err) => {
+        this.messageService.add({ severity: 'error', summary: 'Toggle Failed', detail: err.error?.detail || 'Failed to toggle grading window.' });
       }
     });
   }

@@ -8,7 +8,8 @@ import {
   effect,
   inject,
   signal,
-  untracked
+  untracked,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -33,7 +34,8 @@ interface SelectedEdgeInfo {
   standalone: true,
   imports: [CommonModule, FormsModule, Button, ButtonModule, Dialog, DialogModule, Tag, TagModule, TooltipModule],
   templateUrl: './prerequisite-dag.component.html',
-  styleUrl: './prerequisite-dag.component.css'
+  styleUrl: './prerequisite-dag.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PrerequisiteDagComponent implements AfterViewInit, OnDestroy {
   readonly store = inject(CurriculumDesignerStore);

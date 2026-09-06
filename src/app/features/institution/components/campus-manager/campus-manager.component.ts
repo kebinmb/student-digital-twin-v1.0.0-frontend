@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -15,6 +15,9 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { CampusService } from '../../../../core/services/institution.service';
 import { Campus, CreateCampusRequest, UpdateCampusRequest } from '../../../../core/models/institution.model';
 import { AuthService } from '../../../../core/service/authentication/auth-service';
+
+import { Drawer } from 'primeng/drawer';
+import { Skeleton } from 'primeng/skeleton';
 
 interface CampusForm {
   code: FormControl<string>;
@@ -39,10 +42,13 @@ interface CampusForm {
     TagModule,
     InputTextModule,
     ToggleSwitchModule,
-    ConfirmDialogModule
+    ConfirmDialogModule,
+    Drawer,
+    Skeleton
   ],
   templateUrl: './campus-manager.component.html',
-  styleUrl: './campus-manager.component.css'
+  styleUrl: './campus-manager.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CampusManagerComponent implements OnInit {
   private readonly campusService = inject(CampusService);
@@ -55,6 +61,14 @@ export class CampusManagerComponent implements OnInit {
   readonly isSaving = signal<boolean>(false);
   readonly isDialogVisible = signal<boolean>(false);
   readonly editingId = signal<number | null>(null);
+
+  readonly selectedCampusForDetail = signal<Campus | null>(null);
+  readonly isDetailDrawerOpen = signal<boolean>(false);
+
+  openDetailDrawer(campus: Campus): void {
+    this.selectedCampusForDetail.set(campus);
+    this.isDetailDrawerOpen.set(true);
+  }
 
   readonly canManage = () => this.authService.hasAnyRole(['ADMIN']);
 

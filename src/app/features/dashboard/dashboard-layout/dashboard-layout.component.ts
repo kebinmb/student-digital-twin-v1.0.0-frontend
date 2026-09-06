@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, computed, inject, signal, OnInit, OnDestroy, HostListener, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -43,7 +43,8 @@ export interface NavSection {
     ButtonModule
   ],
   templateUrl: './dashboard-layout.component.html',
-  styleUrls: ['./dashboard-layout.component.css']
+  styleUrls: ['./dashboard-layout.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DashboardLayoutComponent implements OnInit, OnDestroy {
   protected readonly authService = inject(AuthService);

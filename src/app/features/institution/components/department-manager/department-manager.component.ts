@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -16,6 +16,9 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { CampusService, DepartmentService } from '../../../../core/services/institution.service';
 import { Campus, CreateDepartmentRequest, Department, DepartmentType, UpdateDepartmentRequest } from '../../../../core/models/institution.model';
 import { AuthService } from '../../../../core/service/authentication/auth-service';
+
+import { Drawer } from 'primeng/drawer';
+import { Skeleton } from 'primeng/skeleton';
 
 interface DepartmentForm {
   campusId: FormControl<number | null>;
@@ -40,10 +43,13 @@ interface DepartmentForm {
     InputTextModule,
     SelectModule,
     MessageModule,
-    ConfirmDialogModule
+    ConfirmDialogModule,
+    Drawer,
+    Skeleton
   ],
   templateUrl: './department-manager.component.html',
-  styleUrl: './department-manager.component.css'
+  styleUrl: './department-manager.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DepartmentManagerComponent implements OnInit {
   private readonly departmentService = inject(DepartmentService);
@@ -59,6 +65,14 @@ export class DepartmentManagerComponent implements OnInit {
   readonly isSaving = signal<boolean>(false);
   readonly isDialogVisible = signal<boolean>(false);
   readonly editingId = signal<number | null>(null);
+
+  readonly selectedDeptForDetail = signal<Department | null>(null);
+  readonly isDetailDrawerOpen = signal<boolean>(false);
+
+  openDetailDrawer(dept: Department): void {
+    this.selectedDeptForDetail.set(dept);
+    this.isDetailDrawerOpen.set(true);
+  }
 
   selectedCampusFilter: number | null = null;
 

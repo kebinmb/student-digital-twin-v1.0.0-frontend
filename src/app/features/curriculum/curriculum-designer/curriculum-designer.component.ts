@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnInit, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, effect, inject, input, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -69,7 +69,8 @@ import { CourseItemDto, TermStats } from '../../../core/models/curriculum-design
     CreateCurriculumDialogComponent
   ],
   templateUrl: './curriculum-designer.component.html',
-  styleUrl: './curriculum-designer.component.css'
+  styleUrl: './curriculum-designer.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CurriculumDesignerComponent implements OnInit {
   // Optional route-bound input for :id parameter (requires withComponentInputBinding())

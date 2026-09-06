@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -44,7 +44,8 @@ interface GradingScaleForm {
     ConfirmDialogModule
   ],
   templateUrl: './grading-scale-manager.component.html',
-  styleUrl: './grading-scale-manager.component.css'
+  styleUrl: './grading-scale-manager.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class GradingScaleManagerComponent implements OnInit {
   private readonly gradingService = inject(GradingScaleService);

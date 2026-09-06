@@ -131,8 +131,22 @@
         </tr>
       </ng-template>
 
+      <ng-template pTemplate="loadingbody">
+        @for (i of [1,2,3,4,5]; track i) {
+          <tr>
+            <td><p-skeleton width="80px" height="1.5rem"></p-skeleton></td>
+            <td><p-skeleton width="140px" height="1.5rem"></p-skeleton></td>
+            <td><p-skeleton width="60px" height="1.5rem"></p-skeleton></td>
+            <td><p-skeleton width="200px" height="1.5rem"></p-skeleton></td>
+            <td><p-skeleton width="80px" height="1.5rem"></p-skeleton></td>
+            <td><p-skeleton width="70px" height="1.5rem"></p-skeleton></td>
+            <td><p-skeleton width="80px" height="1.5rem"></p-skeleton></td>
+          </tr>
+        }
+      </ng-template>
+
       <ng-template pTemplate="body" let-sec>
-        <tr>
+        <tr class="cursor-pointer hover:bg-slate-50 transition-colors" (click)="openSlotDetailsModal(sec)">
           <td>
             <span class="section-badge">{{ sec.sectionCode }}</span>
           </td>
@@ -159,7 +173,7 @@
                     <span 
                       class="instructor-tag clickable" 
                       title="View Faculty Workload"
-                      (click)="openFacultyLoadModal(slot.instructorUserId)">
+                      (click)="openFacultyLoadModal(slot.instructorUserId); $event.stopPropagation()">
                       <i class="pi pi-user text-xs"></i> {{ slot.instructorName }}
                     </span>
                   }
@@ -195,7 +209,7 @@
                 size="small"
                 pTooltip="View Slot Details"
                 tooltipPosition="top"
-                (onClick)="openSlotDetailsModal(sec)">
+                (onClick)="openSlotDetailsModal(sec); $event.stopPropagation()">
               </p-button>
               @if (sec.schedules.length > 0 && sec.schedules[0].instructorUserId) {
                 <p-button 
@@ -205,7 +219,7 @@
                   size="small"
                   pTooltip="Faculty Workload"
                   tooltipPosition="top"
-                  (onClick)="openFacultyLoadModal(sec.schedules[0].instructorUserId)">
+                  (onClick)="openFacultyLoadModal(sec.schedules[0].instructorUserId); $event.stopPropagation()">
                 </p-button>
               }
             </div>
@@ -215,9 +229,25 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="7" class="empty-message">
-            <i class="pi pi-calendar-times"></i>
-            <p>No class sections scheduled for this academic term.</p>
+          <td colspan="7">
+            <div class="empty-state-card">
+              <div class="empty-state-icon">
+                <i class="pi pi-calendar-times"></i>
+              </div>
+              <h3 class="empty-state-title">No Class Sections Scheduled</h3>
+              <p class="empty-state-subtext">
+                There are no active class section schedule allocations created for this term and curriculum yet.
+              </p>
+              @if (store.isCurriculumActive()) {
+                <p-button 
+                  label="Create First Class Section" 
+                  icon="pi pi-plus" 
+                  severity="success" 
+                  size="small"
+                  (onClick)="openCreateModal()">
+                </p-button>
+              }
+            </div>
           </td>
         </tr>
       </ng-template>
@@ -292,23 +322,26 @@
           </div>
 
           <div class="form-field">
-            <label class="form-label">Section Code *</label>
-            <input 
-              pInputText 
-              type="text" 
-              formControlName="sectionCode" 
-              placeholder="e.g. BSIT-1A" 
-              class="w-full"
-              [class.ng-invalid]="isControlInvalid('sectionCode')"
-              [class.ng-dirty]="isControlInvalid('sectionCode')" />
-            @if (sectionForm.get('sectionCode')?.errors?.['required'] && isControlTouchedOrDirty('sectionCode')) {
-              <small class="p-error">Section code is required.</small>
-            }
-            @if (sectionForm.get('sectionCode')?.errors?.['whitespace'] && isControlTouchedOrDirty('sectionCode')) {
-              <small class="p-error">Section code cannot be empty whitespace.</small>
-            }
-            @if (sectionForm.get('sectionCode')?.errors?.['maxlength']) {
-              <small class="p-error">Section code cannot exceed 30 characters.</small>
+            <label class="form-label">Academic Program *</label>
+            <p-select 
+              [options]="store.programs()" 
+              optionLabel="code" 
+              optionValue="code" 
+              formControlName="programCode" 
+              [filter]="true"
+              filterPlaceholder="Search academic program..."
+              placeholder="Select Academic Program"
+              appendTo="body"
+              styleClass="w-full">
+              <ng-template let-p pTemplate="item">
+                <div class="flex items-center justify-between gap-2 w-full">
+                  <strong>{{ p.code }}</strong>
+                  <span class="text-xs text-slate-500 truncate max-w-[200px]">{{ p.name }}</span>
+                </div>
+              </ng-template>
+            </p-select>
+            @if (isControlInvalid('programCode')) {
+              <small class="p-error">Academic program is required.</small>
             }
           </div>
 
@@ -328,6 +361,60 @@
             }
             @if ((sectionForm.get('maxCapacity')?.errors?.['min'] || sectionForm.get('maxCapacity')?.errors?.['max']) && isControlTouchedOrDirty('maxCapacity')) {
               <small class="p-error">Capacity must be between 1 and 100 students.</small>
+            }
+          </div>
+
+          <div class="form-field full-width">
+            <label class="form-label">Year Level *</label>
+            <p-selectbutton 
+              [options]="yearLevelOptions" 
+              optionLabel="label" 
+              optionValue="value" 
+              formControlName="yearLevel"
+              styleClass="w-full selectbutton-equal">
+            </p-selectbutton>
+            @if (isControlInvalid('yearLevel')) {
+              <small class="p-error">Year level selection is required.</small>
+            }
+          </div>
+
+          <div class="form-field full-width">
+            <label class="form-label">Section Letter *</label>
+            <p-selectbutton 
+              [options]="sectionLetterOptions" 
+              optionLabel="label" 
+              optionValue="value" 
+              formControlName="sectionLetter"
+              styleClass="w-full selectbutton-equal">
+            </p-selectbutton>
+            @if (isControlInvalid('sectionLetter')) {
+              <small class="p-error">Section letter selection is required.</small>
+            }
+          </div>
+
+          <div class="form-field full-width">
+            <div class="flex items-center justify-between mb-1">
+              <label class="form-label font-bold text-slate-800">Generated Section Code *</label>
+              <span class="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+                Format: &lt;PROGRAM&gt;-&lt;YEAR&gt;&lt;LETTER&gt; (e.g., {{ sectionForm.get('sectionCode')?.value || 'BSIT-1A' }})
+              </span>
+            </div>
+            <input 
+              pInputText 
+              type="text" 
+              formControlName="sectionCode" 
+              placeholder="e.g. BSIT-1A" 
+              class="w-full font-mono font-bold text-slate-800 bg-slate-50"
+              [class.ng-invalid]="isControlInvalid('sectionCode')"
+              [class.ng-dirty]="isControlInvalid('sectionCode')" />
+            @if (sectionForm.get('sectionCode')?.errors?.['required'] && isControlTouchedOrDirty('sectionCode')) {
+              <small class="p-error">Section code is required.</small>
+            }
+            @if (sectionForm.get('sectionCode')?.errors?.['whitespace'] && isControlTouchedOrDirty('sectionCode')) {
+              <small class="p-error">Section code cannot be empty whitespace.</small>
+            }
+            @if (sectionForm.get('sectionCode')?.errors?.['maxlength']) {
+              <small class="p-error">Section code cannot exceed 30 characters.</small>
             }
           </div>
         </div>
@@ -359,9 +446,9 @@
         <!-- Schedule Slots Section -->
         <div class="slots-section">
           <div class="slots-header">
-            <label class="section-label">
-              <i class="pi pi-clock mr-1"></i>
-              Timetable Slots & Room Allocations
+            <label class="section-label flex items-center">
+              <i class="pi pi-clock mr-2.5 text-emerald-700"></i>
+              <span>Timetable Slots & Room Allocations</span>
             </label>
             <p-button 
               type="button" 
@@ -374,7 +461,7 @@
           </div>
 
           <div formArrayName="scheduleSlots" class="slots-list">
-            @for (slot of scheduleSlotsArray.controls; track $index) {
+            @for (slot of scheduleSlotsArray.controls; track slot.value?.dayOfWeek + '-' + slot.value?.startTime + '-' + $index) {
               <div [formGroupName]="$index" class="slot-card">
                 <div class="slot-card-header">
                   <span class="slot-badge">Slot #{{ $index + 1 }}</span>
@@ -394,7 +481,7 @@
                 <!-- Multi-Day Recurring Selector & Presets -->
                 <div class="day-selection-section">
                   <div class="day-selection-header">
-                    <span class="day-label"><i class="pi pi-calendar mr-1"></i> Meeting Days *</span>
+                    <span class="day-label flex items-center"><i class="pi pi-calendar mr-1.5"></i> Meeting Days *</span>
                     <div class="preset-buttons">
                       <span class="preset-title">Presets:</span>
                       <button type="button" class="preset-pill" [class.active]="getActivePreset($index) === 'MW'" (click)="applyDayPreset($index, 'MW')">MW</button>
@@ -407,11 +494,10 @@
                     @for (d of daysOfWeek; track d.value) {
                       <div class="day-checkbox-item">
                         <p-checkbox 
-                          [binary]="true"
+                          [value]="d.value"
                           [inputId]="'slot_' + $index + '_day_' + d.value"
-                          [ngModel]="isDayChecked($index, d.value)"
-                          (ngModelChange)="onDayCheckboxChange($index, d.value, $event)"
-                          [ngModelOptions]="{ standalone: true }">
+                          [formControl]="$any(slot.get('daysOfWeek'))"
+                          (onChange)="onDayCheckboxChange($index, d.value)">
                         </p-checkbox>
                         <label [for]="'slot_' + $index + '_day_' + d.value" class="day-checkbox-label">
                           {{ d.label }}
@@ -572,22 +658,15 @@
   </p-dialog>
 
   <!-- ========================================================================= -->
-  <!-- DIALOG 2: Schedule Slot Details Modal Dialog                              -->
+  <!-- DRAWER 2: Schedule Slot Details Master-Detail Drawer                      -->
   <!-- ========================================================================= -->
-  <p-dialog 
-    [header]="'Schedule Slot Details — ' + (selectedSectionForDetails()?.sectionCode || '')" 
+  <p-drawer 
+    [header]="'Section & Schedule Details — ' + (selectedSectionForDetails()?.sectionCode || '')" 
     [visible]="isSlotDetailsModalVisible()" 
     (visibleChange)="isSlotDetailsModalVisible.set($event)"
-    [modal]="true" 
-    [draggable]="false" 
-    [resizable]="false"
-    [dismissableMask]="true"
-    [closeOnEscape]="true"
-    [focusOnShow]="false"
+    position="right"
+    styleClass="institutional-drawer !w-full sm:!w-[500px] md:!w-[650px] max-w-[100vw]"
     appendTo="body"
-    [style]="{ width: '680px', maxWidth: '95vw' }"
-    [contentStyle]="{ 'max-height': '72vh', 'overflow-y': 'auto' }"
-    styleClass="scheduling-custom-dialog"
     (onHide)="closeSlotDetailsModal()">
     
     <ng-template pTemplate="content">
@@ -684,7 +763,7 @@
         (onClick)="closeSlotDetailsModal()">
       </p-button>
     </ng-template>
-  </p-dialog>
+  </p-drawer>
 
   <!-- ========================================================================= -->
   <!-- DIALOG 3: Faculty Load & Workload Inspector Dialog                        -->

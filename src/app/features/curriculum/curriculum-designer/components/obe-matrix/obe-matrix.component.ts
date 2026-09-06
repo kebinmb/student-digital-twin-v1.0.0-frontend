@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { Tag } from 'primeng/tag';
@@ -10,7 +10,8 @@ import { CourseItemDto } from '../../../../../core/models/curriculum-designer.mo
   standalone: true,
   imports: [CommonModule, ButtonModule, Tag],
   templateUrl: './obe-matrix.component.html',
-  styleUrl: './obe-matrix.component.css'
+  styleUrl: './obe-matrix.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ObeMatrixComponent {
   readonly store = inject(CurriculumDesignerStore);

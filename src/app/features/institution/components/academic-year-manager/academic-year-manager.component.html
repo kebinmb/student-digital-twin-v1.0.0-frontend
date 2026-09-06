@@ -34,7 +34,7 @@
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-ay>
-      <tr>
+      <tr (click)="openDetailDrawer(ay)" class="hover:bg-slate-100 cursor-pointer">
         <td>
           <span class="code-badge">{{ ay.code }}</span>
         </td>
@@ -48,7 +48,7 @@
           }
         </td>
         @if (canManage()) {
-          <td style="text-align: right;">
+          <td style="text-align: right;" (click)="$event.stopPropagation()">
             <div class="action-buttons-cell">
               @if (!ay.isCurrent) {
                 <p-button
@@ -79,6 +79,17 @@
         }
       </tr>
     </ng-template>
+    <ng-template pTemplate="loadingbody">
+      @for (i of [1, 2, 3]; track i) {
+        <tr>
+          <td><p-skeleton width="100px"></p-skeleton></td>
+          <td><p-skeleton width="90px"></p-skeleton></td>
+          <td><p-skeleton width="90px"></p-skeleton></td>
+          <td><p-skeleton width="80px"></p-skeleton></td>
+          <td><p-skeleton width="140px"></p-skeleton></td>
+        </tr>
+      }
+    </ng-template>
     <ng-template pTemplate="emptymessage">
       <tr>
         <td [attr.colspan]="canManage() ? 5 : 4" class="empty-table-cell">
@@ -88,6 +99,51 @@
       </tr>
     </ng-template>
   </p-table>
+
+  <!-- Master-Detail Drawer for Academic Period -->
+  <p-drawer [(visible)]="isDetailDrawerOpen" position="right" styleClass="institutional-drawer w-full md:w-28rem">
+    <ng-template pTemplate="header">
+      <div class="drawer-header-title">
+        <span class="text-xs font-bold text-emerald-800 uppercase tracking-wider">Academic Year Profile</span>
+        <h3 class="text-base font-bold text-slate-900 m-0 mt-1">{{ selectedAyForDetail()?.code }}</h3>
+      </div>
+    </ng-template>
+
+    @if (selectedAyForDetail()) {
+      <div class="drawer-content-body">
+        <div class="drawer-profile-card mb-4">
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <span class="code-badge">{{ selectedAyForDetail()!.code }}</span>
+            <p-tag [severity]="selectedAyForDetail()!.isCurrent ? 'success' : 'secondary'" [value]="selectedAyForDetail()!.isCurrent ? 'OPERATIONAL CURRENT' : 'INACTIVE'"></p-tag>
+          </div>
+          <p class="text-xs text-slate-600 m-0">
+            Duration: <strong class="text-slate-800">{{ selectedAyForDetail()!.startDate }}</strong> to <strong class="text-slate-800">{{ selectedAyForDetail()!.endDate }}</strong>
+          </p>
+        </div>
+
+        <div class="drawer-stat-grid">
+          <div class="drawer-stat-box">
+            <span class="drawer-stat-label">Start Date</span>
+            <span class="drawer-stat-val text-xs">{{ selectedAyForDetail()!.startDate }}</span>
+          </div>
+          <div class="drawer-stat-box">
+            <span class="drawer-stat-label">End Date</span>
+            <span class="drawer-stat-val text-xs">{{ selectedAyForDetail()!.endDate }}</span>
+          </div>
+        </div>
+
+        <div class="mt-6 flex flex-col gap-2">
+          @if (canManage() && !selectedAyForDetail()!.isCurrent) {
+            <p-button label="Designate as Operational Current" icon="pi pi-bolt" severity="warn" styleClass="w-full" (onClick)="confirmSetCurrent(selectedAyForDetail()!); isDetailDrawerOpen.set(false)"></p-button>
+          }
+          @if (canManage()) {
+            <p-button label="Edit Academic Year Dates" icon="pi pi-pencil" severity="primary" styleClass="w-full" (onClick)="openEditDialog(selectedAyForDetail()!); isDetailDrawerOpen.set(false)"></p-button>
+          }
+          <p-button label="Close Profile Drawer" icon="pi pi-times" severity="secondary" [outlined]="true" styleClass="w-full" (onClick)="isDetailDrawerOpen.set(false)"></p-button>
+        </div>
+      </div>
+    }
+  </p-drawer>
 
   <!-- Create / Edit Dialog -->
   <p-dialog

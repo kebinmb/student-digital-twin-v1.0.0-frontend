@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -43,7 +43,8 @@ import { AuthService } from '../../../../core/service/authentication/auth-servic
     ConfirmDialogModule
   ],
   templateUrl: './financial-foundations.component.html',
-  styleUrl: './financial-foundations.component.css'
+  styleUrl: './financial-foundations.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FinancialFoundationsComponent implements OnInit {
   private readonly financialService = inject(FinancialService);

@@ -7,12 +7,12 @@
     <div class="summary-header">
       <div>
         <h3 class="summary-title">
-          <i class="pi pi-check-square"></i>
+          <i class="pi pi-check-square summary-icon"></i>
           Official Enlistment & Registration Summary
         </h3>
         <span class="summary-subtitle">
           Official enrollment records for academic term: 
-          <strong>{{ store.enrollment()?.termName || 'Current Term' }}</strong>
+          <strong>{{ store.enrollment()?.termName || 'Current Academic Term' }}</strong>
         </span>
       </div>
 
@@ -35,35 +35,58 @@
       </div>
     </div>
 
-    <!-- Units & Metrics Grid -->
-    <div class="metrics-grid">
-      <div class="metric-box">
-        <span class="metric-label">Enlisted Subjects</span>
-        <span class="metric-value">{{ store.enrollment()?.items?.length || 0 }} Courses</span>
+    <!-- Units & Metrics Grid (Bento Style) -->
+    @if (store.isLoading()) {
+      <div class="metrics-grid">
+        <div class="metric-box">
+          <p-skeleton width="60%" height="0.875rem" styleClass="mb-2"></p-skeleton>
+          <p-skeleton width="80%" height="1.5rem"></p-skeleton>
+        </div>
+        <div class="metric-box">
+          <p-skeleton width="60%" height="0.875rem" styleClass="mb-2"></p-skeleton>
+          <p-skeleton width="80%" height="1.5rem"></p-skeleton>
+        </div>
+        <div class="metric-box">
+          <p-skeleton width="60%" height="0.875rem" styleClass="mb-2"></p-skeleton>
+          <p-skeleton width="80%" height="1.5rem"></p-skeleton>
+        </div>
       </div>
-      <div class="metric-box">
-        <span class="metric-label">Total Credit Units</span>
-        <span class="metric-value">{{ store.totalUnits() }} / {{ store.maxUnits() }} Units</span>
+    } @else {
+      <div class="metrics-grid">
+        <div class="metric-box">
+          <span class="metric-label">Enlisted Subjects</span>
+          <span class="metric-value">
+            {{ (store.enrollment()?.items?.length || 0) === 1 ? '1 Course' : ((store.enrollment()?.items?.length || 0) + ' Courses') }}
+          </span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">Total Credit Units</span>
+          <span class="metric-value">{{ store.totalUnits() }} / {{ store.maxUnits() }} Units</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">Registration Status</span>
+          <div class="metric-status-tag">
+            <p-tag [value]="store.enrollment()?.status || 'NOT_STARTED'" [severity]="getStatusSeverity(store.enrollment()?.status || 'DRAFT')"></p-tag>
+          </div>
+        </div>
       </div>
-      <div class="metric-box">
-        <span class="metric-label">Registration Status</span>
-        <span class="metric-value font-semibold">{{ store.enrollment()?.status || 'NOT_STARTED' }}</span>
-      </div>
-    </div>
+    }
   </div>
 
   <!-- Enlisted Classes Table -->
   <div class="table-card">
     <div class="table-card-header">
-      <h4 class="table-title">Enlisted Class Sections</h4>
-      <span class="table-subtitle">Review schedule commitments and allocated room assignments</span>
+      <div>
+        <h4 class="table-title">Enlisted Class Sections</h4>
+        <span class="table-subtitle">Review schedule commitments and allocated room assignments</span>
+      </div>
     </div>
 
     <p-table 
       [value]="store.enrollment()?.items || []" 
       [loading]="store.isLoading()"
       [rowHover]="true"
-      styleClass="p-datatable-sm"
+      styleClass="p-datatable-sm institutional-table"
       responsiveLayout="scroll">
       
       <ng-template pTemplate="header">
@@ -78,8 +101,8 @@
       </ng-template>
 
       <ng-template pTemplate="body" let-item>
-        <tr>
-          <td><strong class="text-primary">{{ item.sectionCode }}</strong></td>
+        <tr (click)="openItemDrawer(item)" class="table-row-hover">
+          <td><strong class="section-code-badge">{{ item.sectionCode }}</strong></td>
           <td>
             <div class="course-cell">
               <span class="course-code">{{ item.courseCode }}</span>
@@ -87,18 +110,22 @@
             </div>
           </td>
           <td>
-            <span class="font-semibold">{{ item.creditUnits }} units</span>
+            <span class="units-text">{{ item.creditUnits }} units</span>
           </td>
           <td>
-            <div class="schedule-text">
-              <i class="pi pi-calendar text-xs"></i>
-              <span>{{ item.scheduleSummary || 'No timetable assigned' }}</span>
+            <div class="table-schedule-list">
+              @for (slot of formatScheduleSlots(item.scheduleSummary); track slot.day + '-' + slot.timeRoom + '-' + $index) {
+                <div class="table-schedule-pill">
+                  <span class="table-schedule-day">{{ slot.day }}</span>
+                  <span class="table-schedule-time">{{ slot.timeRoom }}</span>
+                </div>
+              }
             </div>
           </td>
           <td>
-            <p-tag [value]="item.completionStatus" severity="info"></p-tag>
+            <p-tag [value]="item.completionStatus" [severity]="getStatusSeverity(item.completionStatus)"></p-tag>
           </td>
-          <td style="text-align: center;">
+          <td style="text-align: center;" (click)="$event.stopPropagation()">
             <button 
               pButton 
               type="button" 
@@ -112,17 +139,147 @@
         </tr>
       </ng-template>
 
+      <ng-template pTemplate="loadingbody">
+        @for (i of [1, 2, 3]; track i) {
+          <tr>
+            <td><p-skeleton width="80px"></p-skeleton></td>
+            <td><p-skeleton width="200px"></p-skeleton></td>
+            <td><p-skeleton width="60px"></p-skeleton></td>
+            <td><p-skeleton width="160px"></p-skeleton></td>
+            <td><p-skeleton width="80px"></p-skeleton></td>
+            <td><p-skeleton width="60px"></p-skeleton></td>
+          </tr>
+        }
+      </ng-template>
+
       <ng-template pTemplate="emptymessage">
         <tr>
           <td colspan="6" class="empty-state-cell">
             <div class="empty-state-wrapper">
-              <i class="pi pi-info-circle empty-icon"></i>
+              <i class="pi pi-folder-open empty-icon"></i>
               <p class="empty-text">No courses currently enlisted for this academic term.</p>
-              <p class="empty-subtext">Switch to the "Course Advising Checklist" tab to review your eligible courses and select open sections.</p>
+              <p class="empty-subtext">Switch to the "Course Advising Checklist" tab to review eligible courses and enlist open sections.</p>
             </div>
           </td>
         </tr>
       </ng-template>
     </p-table>
   </div>
+
+  <!-- Master-Detail Drawer for Enlisted Item Profile -->
+  <p-drawer 
+    [(visible)]="isItemDrawerOpen" 
+    position="right" 
+    [style]="{ width: '32rem', maxWidth: '100vw' }" 
+    styleClass="institutional-drawer">
+    
+    <ng-template pTemplate="header">
+      <div class="drawer-header-title">
+        <span class="drawer-header-category">Enlisted Section Profile</span>
+        <h3 class="drawer-header-name">{{ selectedEnlistedItem()?.courseCode }} — {{ selectedEnlistedItem()?.courseTitle }}</h3>
+      </div>
+    </ng-template>
+
+    @if (selectedEnlistedItem()) {
+      <div class="drawer-content-body">
+        <!-- Header Badge Row: Section Tag + Status Tag + Credit Units -->
+        <div class="drawer-badge-row">
+          <div class="drawer-badge-group">
+            <span class="drawer-section-badge">
+              Section {{ selectedEnlistedItem()!.sectionCode }}
+            </span>
+            <p-tag [severity]="getStatusSeverity(selectedEnlistedItem()!.completionStatus)" [value]="selectedEnlistedItem()!.completionStatus"></p-tag>
+          </div>
+          <span class="drawer-units-badge">
+            {{ selectedEnlistedItem()!.creditUnits }} Credit Units
+          </span>
+        </div>
+
+        <!-- Subject Info Block (Dedicated Component Card) -->
+        <div class="subject-info-card">
+          <div class="subject-info-header">
+            <span class="subject-info-badge">
+              <i class="pi pi-book"></i>
+              Subject Information
+            </span>
+            <span class="subject-units-pill">
+              {{ selectedEnlistedItem()!.creditUnits }} Credit Units
+            </span>
+          </div>
+
+          <div class="subject-info-body">
+            <div class="subject-code-row">
+              <span class="subject-code-chip">{{ selectedEnlistedItem()!.courseCode }}</span>
+              <h4 class="subject-title">{{ selectedEnlistedItem()!.courseTitle }}</h4>
+            </div>
+
+            <div class="subject-details-grid">
+              <div class="subject-detail-item">
+                <span class="detail-label">Section Code</span>
+                <span class="detail-value font-mono">{{ selectedEnlistedItem()!.sectionCode }}</span>
+              </div>
+              <div class="subject-detail-item">
+                <span class="detail-label">Completion Status</span>
+                <span class="detail-value">
+                  <p-tag [value]="selectedEnlistedItem()!.completionStatus" [severity]="getStatusSeverity(selectedEnlistedItem()!.completionStatus)"></p-tag>
+                </span>
+              </div>
+              @if (selectedEnlistedItem()!.finalNumericalGrade) {
+                <div class="subject-detail-item">
+                  <span class="detail-label">Final Grade</span>
+                  <span class="detail-value font-bold text-emerald-800">{{ selectedEnlistedItem()!.finalNumericalGrade | number:'1.2-2' }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Timetable Slots Block (Dedicated Card) -->
+        <div class="timetable-card">
+          <div class="timetable-card-header">
+            <span class="timetable-header-title">
+              <i class="pi pi-calendar timetable-icon"></i>
+              Timetable & Room Schedule
+            </span>
+            <span class="timetable-header-sub">Class Commitments</span>
+          </div>
+
+          <div class="timetable-slots-list">
+            @for (slot of formatScheduleSlots(selectedEnlistedItem()?.scheduleSummary); track slot.day + '-' + slot.timeRoom + '-' + $index) {
+              <div class="timetable-slot-row">
+                <span class="timetable-day-pill">
+                  {{ slot.day }}
+                </span>
+                <span class="timetable-time-room">
+                  {{ slot.timeRoom }}
+                </span>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <ng-template pTemplate="footer">
+      <div class="drawer-footer-content">
+        @if (store.enrollment()?.status !== 'ENROLLED' && selectedEnlistedItem()) {
+          <p-button 
+            label="Drop Enlisted Section" 
+            icon="pi pi-trash" 
+            severity="danger" 
+            styleClass="w-full" 
+            (onClick)="confirmDropSection(selectedEnlistedItem()!); isItemDrawerOpen.set(false)">
+          </p-button>
+        }
+        <p-button 
+          label="Close Details" 
+          icon="pi pi-times" 
+          severity="secondary" 
+          [outlined]="true" 
+          styleClass="w-full" 
+          (onClick)="isItemDrawerOpen.set(false)">
+        </p-button>
+      </div>
+    </ng-template>
+  </p-drawer>
 </div>

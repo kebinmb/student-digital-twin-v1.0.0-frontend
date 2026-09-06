@@ -6,6 +6,8 @@ import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { SchedulingStore } from '../../state/scheduling.store';
 
+import { Skeleton } from 'primeng/skeleton';
+
 export interface GridSlotItem {
   sectionCode: string;
   courseCode: string;
@@ -21,7 +23,7 @@ export interface GridSlotItem {
 @Component({
   selector: 'app-timetable-grid',
   standalone: true,
-  imports: [CommonModule, FormsModule, SelectModule, ButtonModule, TagModule],
+  imports: [CommonModule, FormsModule, SelectModule, ButtonModule, TagModule, Skeleton],
   templateUrl: './timetable-grid.component.html',
   styleUrls: ['./timetable-grid.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -68,7 +70,7 @@ export class TimetableGridComponent {
     return this.filteredSchedules().filter(item => item.dayOfWeek === day);
   }
 
-  onRoomChange(roomId: any): void {
+  onRoomChange(roomId: number | { value: number } | string | null): void {
     const id = (roomId && typeof roomId === 'object' && 'value' in roomId)
       ? roomId.value
       : (roomId !== null && roomId !== undefined ? Number(roomId) : null);
