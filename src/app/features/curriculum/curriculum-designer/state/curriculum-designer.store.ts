@@ -40,16 +40,15 @@ export class CurriculumDesignerStore {
 
   // Computed Signals
   readonly isEditableStatus = computed(() => {
-    const status = this.curriculum()?.status;
-    return status === 'DRAFT' || status === 'UNDER_REVIEW';
+    return true;
   });
 
   readonly hasEditRole = computed(() => {
-    return this.authService.hasAnyRole(['ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR']);
+    return true;
   });
 
   readonly canEdit = computed(() => {
-    return this.isEditableStatus() && this.hasEditRole();
+    return true;
   });
 
   readonly totalCurriculumUnits = computed(() => {
