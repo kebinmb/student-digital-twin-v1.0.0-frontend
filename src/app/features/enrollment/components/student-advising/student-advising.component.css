@@ -232,6 +232,79 @@
   flex-wrap: wrap;
 }
 
+/* Prerequisite Status Quick Tab Pill Selector */
+.status-tab-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background-color: var(--p-surface-100, #f1f5f9);
+  padding: 0.25rem;
+  border-radius: 8px;
+  border: 1px solid var(--p-surface-300, #cbd5e1);
+  height: 2.5rem;
+}
+
+.status-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.3125rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--p-surface-600, #475569);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  font-family: inherit;
+}
+
+.status-tab-btn:hover {
+  color: var(--p-surface-900, #0f172a);
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.status-tab-btn.active {
+  background-color: #ffffff;
+  color: var(--p-primary-color, #116834);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-weight: 700;
+}
+
+.status-tab-btn.active:has(.count-badge.passed) {
+  color: #1d4ed8;
+}
+
+.count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 0.0625rem 0.375rem;
+  border-radius: 9999px;
+  line-height: 1;
+}
+
+.count-badge.eligible {
+  background-color: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.count-badge.passed {
+  background-color: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+.count-badge.all {
+  background-color: var(--p-surface-200, #e2e8f0);
+  color: var(--p-surface-700, #334155);
+}
+
 :host ::ng-deep .search-filter-input,
 :host ::ng-deep .status-filter-select,
 :host ::ng-deep .student-switcher-box .p-select,

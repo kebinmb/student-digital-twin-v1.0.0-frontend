@@ -334,12 +334,27 @@ export class SectionBuilderComponent implements OnInit {
     return this.isDaySelected(slotIndex, day);
   }
 
-  onDayCheckboxChange(slotIndex: number, day?: string): void {
+  onDayCheckboxChange(slotIndex: number, day?: string, isChecked?: boolean): void {
     const slot = this.scheduleSlotsArray.at(slotIndex);
     if (!slot) return;
     let days: string[] = [...(slot.get('daysOfWeek')?.value || [])];
 
-    if (days.length === 0) {
+    if (day && isChecked !== undefined) {
+      if (isChecked && !days.includes(day)) {
+        days.push(day);
+      } else if (!isChecked && days.includes(day)) {
+        if (days.length <= 1) {
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Meeting Day Required',
+            detail: 'At least one meeting day must be selected for the schedule slot.'
+          });
+          return;
+        }
+        days = days.filter(d => d !== day);
+      }
+      slot.get('daysOfWeek')?.setValue([...days]);
+    } else if (days.length === 0) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Meeting Day Required',

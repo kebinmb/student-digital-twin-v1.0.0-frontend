@@ -167,7 +167,44 @@
       </div>
 
       <div class="search-filter-container flex flex-wrap items-center gap-3">
-        <p-iconfield styleClass="flex-1 min-w-[220px]">
+        <!-- Quick Status Filter Toggle (Eligible Only by default, with Already Passed toggle) -->
+        <div class="status-tab-group" role="tablist" aria-label="Prerequisite Status Filter">
+          <button 
+            type="button" 
+            role="tab"
+            [attr.aria-selected]="statusFilter() === 'ELIGIBLE'"
+            class="status-tab-btn"
+            [class.active]="statusFilter() === 'ELIGIBLE'"
+            (click)="statusFilter.set('ELIGIBLE')">
+            <i class="pi pi-check-circle text-xs"></i>
+            <span>Eligible</span>
+            <span class="count-badge eligible">{{ eligibleCount() }}</span>
+          </button>
+          <button 
+            type="button" 
+            role="tab"
+            [attr.aria-selected]="statusFilter() === 'ALREADY_PASSED'"
+            class="status-tab-btn"
+            [class.active]="statusFilter() === 'ALREADY_PASSED'"
+            (click)="statusFilter.set('ALREADY_PASSED')">
+            <i class="pi pi-verified text-xs"></i>
+            <span>Already Passed</span>
+            <span class="count-badge passed">{{ passedCount() }}</span>
+          </button>
+          <button 
+            type="button" 
+            role="tab"
+            [attr.aria-selected]="statusFilter() === 'ALL'"
+            class="status-tab-btn"
+            [class.active]="statusFilter() === 'ALL'"
+            (click)="statusFilter.set('ALL')">
+            <i class="pi pi-list text-xs"></i>
+            <span>All</span>
+            <span class="count-badge all">{{ allCount() }}</span>
+          </button>
+        </div>
+
+        <p-iconfield styleClass="flex-1 min-w-[200px]">
           <p-inputicon class="pi pi-search"></p-inputicon>
           <input 
             pInputText
@@ -249,7 +286,9 @@
       </ng-template>
 
       <ng-template pTemplate="body" let-course>
-        <tr (click)="openSectionChooser(course)" class="hover:bg-slate-100 cursor-pointer">
+        <tr (click)="course.eligibilityStatus === 'ELIGIBLE' ? openSectionChooser(course) : null" 
+            [class.cursor-pointer]="course.eligibilityStatus === 'ELIGIBLE'"
+            class="hover:bg-slate-100">
           <td>
             <div class="course-identity">
               <span class="course-code">{{ course.code }}</span>
@@ -263,7 +302,7 @@
           <td>Year {{ course.yearLevel }} - {{ course.semester }}</td>
           <td>
             <p-tag 
-              [value]="course.eligibilityStatus" 
+              [value]="course.eligibilityStatus === 'ALREADY_PASSED' ? 'ALREADY PASSED' : course.eligibilityStatus" 
               [severity]="getStatusSeverity(course.eligibilityStatus)">
             </p-tag>
           </td>
@@ -287,22 +326,34 @@
             }
           </td>
           <td>
-            @if (course.availableSections && course.availableSections.length > 0) {
+            @if (course.eligibilityStatus === 'ALREADY_PASSED') {
+              <span class="text-xs text-blue-700 font-medium inline-flex items-center gap-1">
+                <i class="pi pi-check-circle text-xs"></i>
+                Passed & Credited
+              </span>
+            } @else if (course.availableSections && course.availableSections.length > 0) {
               <span class="section-count-tag">{{ course.availableSections.length }} sections open</span>
             } @else {
               <span class="text-muted text-xs">No sections scheduled</span>
             }
           </td>
           <td style="text-align: center;" (click)="$event.stopPropagation()">
-            <button 
-              pButton 
-              type="button" 
-              label="Choose Section" 
-              icon="pi pi-plus" 
-              class="p-button-sm p-button-outlined"
-              [disabled]="course.eligibilityStatus !== 'ELIGIBLE' || store.isUnitCapReached() || !course.availableSections || course.availableSections.length === 0"
-              (click)="openSectionChooser(course)">
-            </button>
+            @if (course.eligibilityStatus === 'ALREADY_PASSED') {
+              <span class="px-2.5 py-1 text-xs font-semibold text-blue-700 bg-blue-50 rounded border border-blue-200 inline-flex items-center gap-1">
+                <i class="pi pi-check text-[10px]"></i>
+                Completed
+              </span>
+            } @else {
+              <button 
+                pButton 
+                type="button" 
+                label="Choose Section" 
+                icon="pi pi-plus" 
+                class="p-button-sm p-button-outlined"
+                [disabled]="course.eligibilityStatus !== 'ELIGIBLE' || store.isUnitCapReached() || !course.availableSections || course.availableSections.length === 0"
+                (click)="openSectionChooser(course)">
+              </button>
+            }
           </td>
         </tr>
       </ng-template>
@@ -323,8 +374,28 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="7" class="text-center py-4 text-muted">
-            No courses found for this curriculum or academic term.
+          <td colspan="7" class="text-center py-6 text-slate-500">
+            <div class="flex flex-col items-center gap-1.5">
+              <i class="pi pi-inbox text-slate-400 text-2xl"></i>
+              <span class="text-sm font-medium">
+                @if (statusFilter() === 'ELIGIBLE') {
+                  No eligible courses found for this upcoming semester.
+                } @else if (statusFilter() === 'ALREADY_PASSED') {
+                  No completed or credited courses recorded for this student.
+                } @else {
+                  No courses found for this curriculum or academic term.
+                }
+              </span>
+              @if (statusFilter() === 'ELIGIBLE' && passedCount() > 0) {
+                <button 
+                  type="button" 
+                  class="mt-1 text-xs font-semibold text-blue-600 hover:text-blue-800 underline inline-flex items-center gap-1 cursor-pointer"
+                  (click)="statusFilter.set('ALREADY_PASSED')">
+                  <i class="pi pi-history text-[11px]"></i>
+                  View {{ passedCount() }} already passed courses
+                </button>
+              }
+            </div>
           </td>
         </tr>
       </ng-template>

@@ -51,9 +51,21 @@ export class StudentAdvisingComponent implements OnInit {
   readonly isSectionModalVisible = signal<boolean>(false);
   readonly selectedCourse = signal<CourseEligibilityItemDto | null>(null);
   readonly searchFilter = signal<string>('');
-  readonly statusFilter = signal<string>('ALL');
+  readonly statusFilter = signal<string>('ELIGIBLE');
   readonly yearFilter = signal<string>('ALL');
   readonly semesterFilter = signal<string>('ALL');
+
+  readonly eligibleCount = computed(() => {
+    return (this.store.advising()?.courses || []).filter(c => c.eligibilityStatus === 'ELIGIBLE').length;
+  });
+
+  readonly passedCount = computed(() => {
+    return (this.store.advising()?.courses || []).filter(c => c.eligibilityStatus === 'ALREADY_PASSED').length;
+  });
+
+  readonly allCount = computed(() => {
+    return (this.store.advising()?.courses || []).length;
+  });
 
   readonly filteredCourses = computed(() => {
     const courses = this.store.advising()?.courses || [];
@@ -80,10 +92,9 @@ export class StudentAdvisingComponent implements OnInit {
   });
 
   readonly statusOptions = [
-    { label: 'All Courses', value: 'ALL' },
     { label: 'Eligible Only', value: 'ELIGIBLE' },
-    { label: 'Locked (Prerequisite)', value: 'LOCKED_PREREQUISITE' },
-    { label: 'Already Passed', value: 'ALREADY_PASSED' }
+    { label: 'Already Passed', value: 'ALREADY_PASSED' },
+    { label: 'All Courses', value: 'ALL' }
   ];
 
   readonly yearOptions = [
