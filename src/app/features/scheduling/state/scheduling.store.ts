@@ -12,6 +12,7 @@ import {
   SectionDetailResponse
 } from '../../../core/models/scheduling.model';
 import { CurriculumLookupOption } from '../../../core/models/curriculum-designer.model';
+import { EnrollmentStore } from '../../enrollment/state/enrollment.store';
 import { catchError, finalize, map, of, tap } from 'rxjs';
 
 @Injectable({
@@ -22,6 +23,7 @@ export class SchedulingStore {
   private readonly termService = inject(TermService);
   private readonly curriculumApi = inject(CurriculumApiService);
   private readonly programService = inject(ProgramService);
+  private readonly enrollmentStore = inject(EnrollmentStore);
 
   // Signals
   readonly terms = signal<SchedulingTermDto[]>([]);
@@ -162,6 +164,7 @@ export class SchedulingStore {
     this.schedulingApi.createSection(request).pipe(
       tap(newSection => {
         this.sections.update(list => [...list, newSection]);
+        this.enrollmentStore.refreshAdvising();
         if (onSuccess) onSuccess();
       }),
       catchError(err => {

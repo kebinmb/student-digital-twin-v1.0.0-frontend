@@ -686,5 +686,312 @@
   }
 }
 
+/* ==========================================================================
+   INSTITUTIONAL MODAL DIALOG STYLES (00 AI Index Standards)
+   ========================================================================== */
 
+:host ::ng-deep .institutional-dialog .p-dialog {
+  border-radius: 12px !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0) !important;
+  overflow: hidden;
+}
 
+:host ::ng-deep .institutional-dialog .p-dialog-header {
+  padding: 1.25rem 1.5rem !important;
+  border-bottom: 1px solid var(--chmsu-slate-200, #e2e8f0) !important;
+  background-color: #ffffff !important;
+}
+
+:host ::ng-deep .institutional-dialog .p-dialog-content {
+  padding: 1.25rem 1.5rem !important;
+  background-color: #ffffff !important;
+  overflow-y: auto !important;
+}
+
+:host ::ng-deep .institutional-dialog .p-dialog-footer {
+  padding: 1rem 1.5rem !important;
+  border-top: 1px solid var(--chmsu-slate-200, #e2e8f0) !important;
+  background-color: var(--p-surface-50, #f8fafc) !important;
+}
+
+/* Modal Custom Header Layout */
+.dialog-header-layout {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  width: 100%;
+}
+
+.dialog-header-icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dialog-header-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.dialog-header-subtitle {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  color: var(--chmsu-slate-500, #64748b);
+}
+
+.dialog-header-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+  font-family: var(--font-family-heading, inherit);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.section-badge-code {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.125rem 0.5rem;
+  border-radius: 6px;
+  background-color: var(--chmsu-green-soft, #f0fdf4);
+  color: var(--chmsu-green-main, #116834);
+  border: 1px solid #bbf7d0;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.25;
+}
+
+/* Course Context Grid (Section Chooser) */
+.course-context-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+
+.context-tile {
+  padding: 0.75rem 1rem;
+  background-color: var(--p-surface-50, #f8fafc);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.context-tile-label {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  color: var(--chmsu-slate-500, #64748b);
+}
+
+.context-tile-label i {
+  color: var(--chmsu-green-main, #116834);
+  font-size: 0.75rem;
+}
+
+.context-tile-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+}
+
+.context-tile-sub {
+  font-size: 0.75rem;
+  color: var(--chmsu-slate-500, #64748b);
+  font-weight: 500;
+}
+
+/* Table Container in Modal */
+.dialog-table-container {
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #ffffff;
+}
+
+:host ::ng-deep .section-table .p-datatable-header,
+:host ::ng-deep .section-table th {
+  background-color: var(--p-surface-50, #f8fafc) !important;
+  font-size: 0.75rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.03em !important;
+  font-weight: 700 !important;
+  color: var(--chmsu-navy-800, #1e293b) !important;
+  border-bottom: 1px solid var(--chmsu-slate-200, #e2e8f0) !important;
+}
+
+:host ::ng-deep .section-table td {
+  border-bottom: 1px solid var(--chmsu-slate-100, #f1f5f9) !important;
+}
+
+/* Section Status & Code Badges */
+.section-code-pill {
+  display: inline-block;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--chmsu-green-deep, #0c5027);
+  background-color: var(--chmsu-green-soft, #f0fdf4);
+  border: 1px solid #bbf7d0;
+  padding: 0.1875rem 0.5rem;
+  border-radius: 6px;
+  width: fit-content;
+}
+
+.section-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.section-status-badge.open {
+  color: #047857;
+}
+
+.section-status-badge.closed {
+  color: #dc2626;
+}
+
+.status-indicator-dot {
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-indicator-dot.open {
+  background-color: #16a34a;
+  box-shadow: 0 0 0 2px #dcfce7;
+}
+
+.status-indicator-dot.closed {
+  background-color: #dc2626;
+  box-shadow: 0 0 0 2px #fee2e2;
+}
+
+/* Timetable Meeting Slot Rows */
+.timetable-slot-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.timetable-day-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.25rem;
+  padding: 0.125rem 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  background-color: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.timetable-time-room {
+  font-size: 0.75rem;
+  color: var(--chmsu-navy-900, #0f172a);
+}
+
+/* Capacity Progress Meter Box */
+.capacity-meter-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 140px;
+}
+
+.capacity-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+}
+
+.capacity-ratio {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+}
+
+.badge-open-seats {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #047857;
+  background-color: #ecfdf5;
+  padding: 0.0625rem 0.375rem;
+  border-radius: 4px;
+  border: 1px solid #a7f3d0;
+}
+
+.badge-full-seats {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #dc2626;
+  background-color: #fef2f2;
+  padding: 0.0625rem 0.375rem;
+  border-radius: 4px;
+  border: 1px solid #fecaca;
+}
+
+.capacity-progress-track {
+  height: 6px;
+  width: 100%;
+  background-color: #e2e8f0;
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.capacity-progress-fill {
+  height: 100%;
+  border-radius: 9999px;
+  background-color: var(--chmsu-green-main, #116834);
+  transition: width 0.3s ease;
+}
+
+.capacity-progress-fill.capacity-fill-warning {
+  background-color: var(--status-amber-text, #d97706);
+}
+
+.capacity-progress-fill.capacity-fill-full {
+  background-color: #dc2626;
+}
+
+/* Equivalency Live Flow Arrow & Prerequisite Impact Box */
+.flow-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.125rem;
+}
+
+.prerequisite-impact-box {
+  background-color: var(--chmsu-green-soft, #f0fdf4);
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}

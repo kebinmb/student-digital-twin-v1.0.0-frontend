@@ -114,11 +114,13 @@ export class CourseEnlistmentComponent {
   }
 
   formatScheduleSlots(summary: string | undefined): { day: string; timeRoom: string }[] {
-    if (!summary || summary === 'Schedule TBA' || summary === 'No timetable assigned') {
+    if (!summary || summary === 'Schedule TBA' || summary === 'No timetable assigned' || summary === 'No schedule') {
       return [{ day: 'Schedule', timeRoom: 'To Be Announced (TBA)' }];
     }
 
-    const parts = summary.split(/;|\n/);
+    const parts = summary.includes(';') || summary.includes('\n')
+      ? summary.split(/;|\n/)
+      : summary.split(/,\s*(?=[A-Za-z]{3,}\s+\d{1,2}:\d{2})/);
     const slots: { day: string; timeRoom: string }[] = [];
 
     for (const part of parts) {

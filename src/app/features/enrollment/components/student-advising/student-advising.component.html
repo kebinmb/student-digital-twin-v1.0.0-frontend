@@ -17,6 +17,14 @@
       <!-- Primary Actions Grouped on Top-Right -->
       <div class="header-actions flex-row gap-sm flex-wrap items-center">
         <p-button 
+          label="Refresh" 
+          icon="pi pi-refresh" 
+          severity="secondary" 
+          size="small"
+          [loading]="store.isLoading()"
+          (onClick)="store.refreshAdvising()">
+        </p-button>
+        <p-button 
           label="Admit Student" 
           icon="pi pi-user-plus" 
           severity="success" 
@@ -397,7 +405,7 @@
                 label="Choose Section" 
                 icon="pi pi-plus" 
                 class="p-button-sm p-button-outlined"
-                [disabled]="course.eligibilityStatus !== 'ELIGIBLE' || store.isUnitCapReached() || !course.availableSections || course.availableSections.length === 0"
+                [disabled]="course.eligibilityStatus !== 'ELIGIBLE' || store.isUnitCapReached()"
                 (click)="openSectionChooser(course)">
               </button>
             }
@@ -460,113 +468,188 @@
     </p-table>
   </section>
 
-  <!-- Master-Detail Right-Anchored Drawer for Section Enlistment -->
-  <p-drawer 
-    [(visible)]="isSectionModalVisible" 
-    position="right"
-    [style]="{ width: '34rem', maxWidth: '100vw' }"
-    styleClass="institutional-drawer"
-    (onHide)="closeSectionChooser()">
+  <!-- Modal Dialog for Section Enlistment -->
+  <p-dialog 
+    [visible]="isSectionModalVisible()" 
+    (visibleChange)="isSectionModalVisible.set($event)"
+    (onHide)="closeSectionChooser()"
+    [modal]="true"
+    [dismissableMask]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [style]="{ width: '58rem', maxWidth: '96vw' }"
+    styleClass="institutional-dialog section-chooser-dialog">
     
-    <ng-template pTemplate="header">
-      <div class="drawer-header-title">
-        <span class="text-xs font-bold text-emerald-800 uppercase tracking-wider">Section Enlistment Drawer</span>
-        <h3 class="text-base font-bold font-bold-navy m-0 mt-1">
-          <span class="font-mono">{{ selectedCourse()?.code }}</span> — {{ selectedCourse()?.title }}
-        </h3>
+    <ng-template #header>
+      <div class="dialog-header-layout">
+        <div class="dialog-header-icon flex-center bg-emerald-50 text-emerald-800 border border-emerald-200">
+          <i class="pi pi-calendar-plus text-lg"></i>
+        </div>
+        <div class="dialog-header-title-group flex-col">
+          <div class="flex-row items-center gap-xs">
+            <span class="section-badge-code font-mono">{{ selectedCourse()?.code }}</span>
+            <span class="dialog-header-subtitle">Section Enlistment & Timetable Selection</span>
+          </div>
+          <h3 class="dialog-header-title font-bold-navy m-0">
+            {{ selectedCourse()?.title }}
+          </h3>
+        </div>
       </div>
     </ng-template>
 
-    @if (selectedCourse()) {
-      <div class="drawer-content-body flex-col gap-md">
-        <!-- Context Bar in Drawer -->
-        <div class="modal-context-bar flex-between surface-slate">
-          <div class="context-item">
-            <i class="pi pi-book context-icon"></i>
-            <span class="context-label">Course:</span>
-            <span class="context-val font-mono font-bold-navy">{{ selectedCourse()!.code }}</span>
+    @if (selectedCourse(); as course) {
+      <div class="dialog-content-body flex-col gap-md">
+        <!-- Institutional Course Context Tiles -->
+        <div class="course-context-grid">
+          <div class="context-tile">
+            <span class="context-tile-label"><i class="pi pi-book"></i> Course Units</span>
+            <div class="flex-row items-baseline gap-xs">
+              <span class="context-tile-value font-mono">{{ course.creditUnits }}</span>
+              <span class="context-tile-sub">Units ({{ course.lectureUnits || 0 }} Lec / {{ course.labUnits || 0 }} Lab)</span>
+            </div>
           </div>
-          <div class="context-item">
-            <i class="pi pi-chart-pie context-icon"></i>
-            <span class="context-label">Units:</span>
-            <span class="badge-green font-mono font-bold">{{ selectedCourse()!.creditUnits }} Units</span>
+          <div class="context-tile">
+            <span class="context-tile-label"><i class="pi pi-calendar"></i> Curriculum Placement</span>
+            <div class="flex-row items-baseline gap-xs">
+              <span class="context-tile-value">Year {{ course.yearLevel }}</span>
+              <span class="context-tile-sub">{{ course.semester ? (course.semester.replace('_', ' ') | titlecase) : 'First Sem' }}</span>
+            </div>
           </div>
-          <div class="context-item">
-            <i class="pi pi-gauge context-icon"></i>
-            <span class="context-label">Loaded:</span>
-            <span class="context-val font-mono font-bold-navy">{{ store.totalUnits() }} / {{ store.maxUnits() }}</span>
+          <div class="context-tile">
+            <span class="context-tile-label"><i class="pi pi-chart-pie"></i> Student Unit Allowance</span>
+            <div class="flex-row items-baseline gap-xs">
+              <span class="context-tile-value font-mono" [class.text-red-600]="store.isUnitCapReached()">
+                {{ store.totalUnits() }} / {{ store.maxUnits() }}
+              </span>
+              <span class="context-tile-sub">
+                ({{ store.maxUnits() - store.totalUnits() }} units free)
+              </span>
+            </div>
           </div>
         </div>
 
-        <h4 class="text-xs font-bold font-bold-navy uppercase tracking-wider mb-1">Available Class Sections</h4>
+        <!-- Section Table Header Strip -->
+        <div class="flex-between items-center px-1 pt-1">
+          <div class="flex-row items-center gap-xs">
+            <span class="text-xs font-bold font-bold-navy uppercase tracking-wider">Available Class Sections</span>
+            <span class="section-count-tag font-mono text-xs">
+              {{ (course.availableSections || []).length }} {{ (course.availableSections || []).length === 1 ? 'Section' : 'Sections' }}
+            </span>
+          </div>
+          <span class="text-xs text-slate-500 font-medium">
+            Click <strong class="text-emerald-800">Enlist</strong> to enroll student into the desired section
+          </span>
+        </div>
 
-        <p-table [value]="selectedCourse()?.availableSections || []" [rowHover]="true" styleClass="p-datatable-sm institutional-table">
-          <ng-template pTemplate="header">
-            <tr>
-              <th style="width: 100px;">Section Code</th>
-              <th>Timetable & Meeting Slots</th>
-              <th style="width: 70px;">Cap</th>
-              <th style="width: 80px; text-align: center;">Action</th>
-            </tr>
-          </ng-template>
+        <!-- Table of Sections -->
+        <div class="dialog-table-container">
+          <p-table 
+            [value]="course.availableSections || []" 
+            [rowHover]="true" 
+            styleClass="p-datatable-sm institutional-table section-table">
+            <ng-template pTemplate="header">
+              <tr>
+                <th style="width: 140px;">Section</th>
+                <th>Timetable & Meeting Slots</th>
+                <th style="width: 170px;">Capacity & Status</th>
+                <th style="width: 110px; text-align: center;">Action</th>
+              </tr>
+            </ng-template>
 
-          <ng-template pTemplate="body" let-sec>
-            <tr>
-              <td><strong class="text-emerald-900 font-mono text-xs">{{ sec.sectionCode }}</strong></td>
-              <td class="text-xs font-medium text-slate-700 whitespace-normal break-words py-2">
-                <div class="flex-col gap-xs">
-                  @for (slot of formatScheduleSlots(sec.scheduleSummary); track slot.day + '-' + slot.timeRoom + '-' + $index) {
-                    <div class="flex-row gap-xs">
-                      <span class="px-1.5 py-0.5 text-[10px] font-bold bg-slate-100 text-slate-700 rounded border border-slate-200">
-                        {{ slot.day }}
+            <ng-template pTemplate="body" let-sec>
+              <tr>
+                <!-- Section Code & Status Badge -->
+                <td class="align-top py-3">
+                  <div class="flex-col gap-xs">
+                    <span class="section-code-pill font-mono font-bold">{{ sec.sectionCode }}</span>
+                    @if (sec.status === 'OPEN' && sec.enrolledCount < sec.maxCapacity) {
+                      <span class="section-status-badge open">
+                        <span class="status-indicator-dot open"></span> Open
                       </span>
-                      <span class="text-xs text-slate-800 font-medium">
-                        {{ slot.timeRoom }}
+                    } @else {
+                      <span class="section-status-badge closed">
+                        <span class="status-indicator-dot closed"></span> Full / Closed
                       </span>
-                    </div>
-                  }
-                </div>
-              </td>
-              <td class="text-xs font-mono">
-                <span [class.text-red-600]="sec.enrolledCount >= sec.maxCapacity" class="font-semibold">
-                  {{ sec.enrolledCount }}/{{ sec.maxCapacity }}
-                </span>
-              </td>
-              <td style="text-align: center;">
-                <button 
-                  pButton 
-                  type="button" 
-                  label="Enlist" 
-                  icon="pi pi-check" 
-                  class="p-button-xs p-button-success"
-                  [loading]="store.isEnlisting()"
-                  [disabled]="sec.status !== 'OPEN' || sec.enrolledCount >= sec.maxCapacity || store.isUnitCapReached()"
-                  (click)="enlistInSection(sec)">
-                </button>
-              </td>
-            </tr>
-          </ng-template>
-
-          <ng-template pTemplate="emptymessage">
-            <tr>
-              <td colspan="4" class="empty-state-cell py-4">
-                <div class="empty-state-card flex-col flex-center">
-                  <div class="empty-state-icon flex-center" style="width: 3rem; height: 3rem; font-size: 1.25rem;">
-                    <i class="pi pi-calendar-times"></i>
+                    }
                   </div>
-                  <h5 class="empty-state-title font-bold-navy text-sm">No Sections Open</h5>
-                  <p class="empty-state-subtext text-xs">
-                    No active class sections are currently scheduled for this course in the selected academic term.
-                  </p>
-                </div>
-              </td>
-            </tr>
-          </ng-template>
-        </p-table>
+                </td>
+
+                <!-- Timetable & Meeting Slots -->
+                <td class="align-top py-3">
+                  <div class="flex-col gap-xs">
+                    @for (slot of formatScheduleSlots(sec.scheduleSummary); track slot.day + '-' + slot.timeRoom + '-' + $index) {
+                      <div class="timetable-slot-row flex-row items-center gap-xs">
+                        <span class="timetable-day-pill font-mono">
+                          {{ slot.day }}
+                        </span>
+                        <span class="timetable-time-room text-xs font-medium text-slate-800">
+                          {{ slot.timeRoom }}
+                        </span>
+                      </div>
+                    }
+                  </div>
+                </td>
+
+                <!-- Capacity Meter & Progress Bar -->
+                <td class="align-top py-3">
+                  <div class="capacity-meter-box flex-col gap-xs">
+                    <div class="capacity-meta-row flex-between text-xs">
+                      <span class="capacity-ratio font-mono font-semibold" [class.text-red-600]="sec.enrolledCount >= sec.maxCapacity">
+                        {{ sec.enrolledCount }} / {{ sec.maxCapacity }}
+                      </span>
+                      @if (sec.enrolledCount >= sec.maxCapacity) {
+                        <span class="badge-full-seats font-bold">FULL</span>
+                      } @else {
+                        <span class="badge-open-seats font-medium">{{ sec.maxCapacity - sec.enrolledCount }} seats left</span>
+                      }
+                    </div>
+                    <div class="capacity-progress-track">
+                      <div 
+                        class="capacity-progress-fill"
+                        [style.width.%]="(sec.enrolledCount / (sec.maxCapacity || 1)) * 100"
+                        [class.capacity-fill-full]="sec.enrolledCount >= sec.maxCapacity"
+                        [class.capacity-fill-warning]="sec.enrolledCount >= sec.maxCapacity * 0.8 && sec.enrolledCount < sec.maxCapacity">
+                      </div>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Enlist Action Button -->
+                <td class="align-middle text-center py-3">
+                  <p-button 
+                    label="Enlist" 
+                    icon="pi pi-check" 
+                    severity="success" 
+                    size="small"
+                    [loading]="store.isEnlisting()"
+                    [disabled]="sec.status !== 'OPEN' || sec.enrolledCount >= sec.maxCapacity || store.isUnitCapReached()"
+                    (onClick)="enlistInSection(sec)">
+                  </p-button>
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="4" class="empty-state-cell py-6">
+                  <div class="empty-state-card flex-col flex-center">
+                    <div class="empty-state-icon flex-center">
+                      <i class="pi pi-calendar-times"></i>
+                    </div>
+                    <h5 class="empty-state-title font-bold-navy text-sm">No Class Sections Scheduled</h5>
+                    <p class="empty-state-subtext text-xs">
+                      There are currently no active class sections scheduled for this course in the selected term. Please consult the department chair or scheduler to open a class section.
+                    </p>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
       </div>
     }
 
-    <ng-template pTemplate="footer">
+    <ng-template #footer>
       <div class="dialog-footer-content flex-between">
         <div class="footer-validation-feedback">
           <span class="footer-status-badge" [ngClass]="store.isUnitCapReached() ? 'warning' : 'success'">
@@ -575,22 +658,40 @@
           </span>
         </div>
         <div class="dialog-footer-actions">
-          <p-button label="Close Section Drawer" icon="pi pi-times" severity="secondary" [outlined]="true" size="small" (onClick)="closeSectionChooser()"></p-button>
+          <p-button label="Close" icon="pi pi-times" severity="secondary" [outlined]="true" size="small" (onClick)="closeSectionChooser()"></p-button>
         </div>
       </div>
     </ng-template>
-      </p-drawer>
+  </p-dialog>
 
   <!-- Student Admissions Intake Dialog -->
   <p-dialog 
-    header="Student Intake & Classification Gatekeeper" 
     [visible]="isAdmissionsDialogVisible()" 
     (visibleChange)="isAdmissionsDialogVisible.set($event)"
+    (onHide)="closeAdmissionsDialog()"
     [modal]="true" 
+    [dismissableMask]="true"
     [style]="{ width: '48rem', maxWidth: '96vw' }"
     [draggable]="false"
     [resizable]="false"
     styleClass="institutional-dialog">
+    
+    <ng-template #header>
+      <div class="dialog-header-layout">
+        <div class="dialog-header-icon flex-center bg-emerald-50 text-emerald-800 border border-emerald-200">
+          <i class="pi pi-user-plus text-lg"></i>
+        </div>
+        <div class="dialog-header-title-group flex-col">
+          <div class="flex-row items-center gap-xs">
+            <span class="section-badge-code font-mono">INTAKE</span>
+            <span class="dialog-header-subtitle">CHED CMO No. 25 Institutional Admission Protocol</span>
+          </div>
+          <h3 class="dialog-header-title font-bold-navy m-0">
+            Student Intake & Classification Gatekeeper
+          </h3>
+        </div>
+      </div>
+    </ng-template>
     
     <!-- Modal Context Bar -->
     <div class="modal-context-bar flex-between surface-slate">
@@ -800,14 +901,32 @@
 
   <!-- Transferee Course Crediting Dialog -->
   <p-dialog 
-    header="Accredit Transferee Course (CHED CMO No. 25)" 
     [visible]="isCreditingDialogVisible()" 
     (visibleChange)="isCreditingDialogVisible.set($event)"
+    (onHide)="closeCreditingDialog()"
     [modal]="true" 
-    [style]="{ width: '50rem', maxWidth: '96vw' }"
+    [dismissableMask]="true"
+    [style]="{ width: '52rem', maxWidth: '96vw' }"
     [draggable]="false"
     [resizable]="false"
     styleClass="institutional-dialog">
+
+    <ng-template #header>
+      <div class="dialog-header-layout">
+        <div class="dialog-header-icon flex-center bg-amber-50 text-amber-800 border border-amber-200">
+          <i class="pi pi-verified text-lg"></i>
+        </div>
+        <div class="dialog-header-title-group flex-col">
+          <div class="flex-row items-center gap-xs">
+            <span class="section-badge-code font-mono bg-amber-100 text-amber-900 border-amber-300">CMO 25</span>
+            <span class="dialog-header-subtitle">Curriculum Articulation & Prerequisite Equivalency</span>
+          </div>
+          <h3 class="dialog-header-title font-bold-navy m-0">
+            Accredit Transferee Course
+          </h3>
+        </div>
+      </div>
+    </ng-template>
 
     <!-- Modal Context Bar -->
     <div class="modal-context-bar flex-between surface-slate">

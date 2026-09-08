@@ -18,8 +18,22 @@ export class EnrollmentApiService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/v1/enrollment`;
 
-  getAdvisingEligibility(studentId: number, termId: number): Observable<AdvisingEligibilityResponse> {
-    return this.http.get<AdvisingEligibilityResponse>(`${this.baseUrl}/advising/student/${studentId}/term/${termId}`);
+  getAdvisingEligibility(
+    studentId: number,
+    termId: number,
+    targetYearLevel?: number | null,
+    targetSemester?: string | null,
+    allCourses: boolean = true
+  ): Observable<AdvisingEligibilityResponse> {
+    const params: Record<string, string> = {};
+    if (allCourses) params['allCourses'] = 'true';
+    if (targetYearLevel) params['targetYearLevel'] = String(targetYearLevel);
+    if (targetSemester) params['targetSemester'] = targetSemester;
+
+    return this.http.get<AdvisingEligibilityResponse>(
+      `${this.baseUrl}/advising/student/${studentId}/term/${termId}`,
+      { params }
+    );
   }
 
   enlistSection(studentId: number, request: EnlistSectionRequest): Observable<StudentEnrollmentResponse> {

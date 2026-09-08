@@ -148,10 +148,23 @@ export class EnrollmentStore {
     ).subscribe();
   }
 
+  refreshAdvising(): void {
+    const studentId = this.studentId();
+    const termId = this.selectedTermId();
+    if (studentId && termId) {
+      this.loadStudentAdvising(studentId, termId);
+    }
+  }
+
   // Actions
   loadInitialData(): void {
     this.searchStudents('');
-    if (this.terms().length > 0) return;
+    if (this.terms().length > 0) {
+      if (this.studentId() && this.selectedTermId()) {
+        this.refreshAdvising();
+      }
+      return;
+    }
     this.isLoading.set(true);
     this.termService.getAll().pipe(
       tap((terms: TermResponse[]) => {

@@ -16,7 +16,6 @@ import { MessageService } from 'primeng/api';
 import { EnrollmentStore } from '../../state/enrollment.store';
 import { CourseEligibilityItemDto, AvailableSectionOptionDto } from '../../../../core/models/enrollment.model';
 
-import { Drawer } from 'primeng/drawer';
 import { Skeleton } from 'primeng/skeleton';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { ProgramService } from '../../../../core/services/institution.service';
@@ -33,7 +32,6 @@ import { CurriculumApiService } from '../../../../core/service/curriculum/curric
     ButtonModule,
     TagModule,
     DialogModule,
-    Drawer,
     Skeleton,
     ProgressBarModule,
     MessageModule,
@@ -257,6 +255,9 @@ export class StudentAdvisingComponent implements OnInit {
 
   ngOnInit(): void {
     this.store.loadInitialData();
+    if (this.store.studentId() && this.store.selectedTermId()) {
+      this.store.refreshAdvising();
+    }
   }
 
   onStudentSelect(studentId: number | { value: number } | string | null): void {
@@ -274,7 +275,8 @@ export class StudentAdvisingComponent implements OnInit {
   }
 
   openSectionChooser(course: CourseEligibilityItemDto): void {
-    this.selectedCourse.set(course);
+    const latest = this.store.advising()?.courses.find(c => c.courseId === course.courseId) || course;
+    this.selectedCourse.set(latest);
     this.isSectionModalVisible.set(true);
   }
 
@@ -305,11 +307,13 @@ export class StudentAdvisingComponent implements OnInit {
   }
 
   formatScheduleSlots(summary: string | undefined): { day: string; timeRoom: string }[] {
-    if (!summary || summary === 'Schedule TBA' || summary === 'No timetable assigned') {
+    if (!summary || summary === 'Schedule TBA' || summary === 'No timetable assigned' || summary === 'No schedule') {
       return [{ day: 'Schedule', timeRoom: 'To Be Announced (TBA)' }];
     }
 
-    const parts = summary.split(/;|\n/);
+    const parts = summary.includes(';') || summary.includes('\n')
+      ? summary.split(/;|\n/)
+      : summary.split(/,\s*(?=[A-Za-z]{3,}\s+\d{1,2}:\d{2})/);
     const slots: { day: string; timeRoom: string }[] = [];
 
     for (const part of parts) {

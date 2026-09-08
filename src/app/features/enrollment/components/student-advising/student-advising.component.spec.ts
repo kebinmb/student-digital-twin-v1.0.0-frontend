@@ -99,4 +99,22 @@ describe('StudentAdvisingComponent', () => {
     component.closeCreditingDialog();
     expect(component.isCreditingDialogVisible()).toBe(false);
   });
+
+  it('should parse schedule slots with semicolon, comma, and TBA values', () => {
+    // TBA / No schedule
+    expect(component.formatScheduleSlots('No schedule')).toEqual([{ day: 'Schedule', timeRoom: 'To Be Announced (TBA)' }]);
+    expect(component.formatScheduleSlots('Schedule TBA')).toEqual([{ day: 'Schedule', timeRoom: 'To Be Announced (TBA)' }]);
+
+    // Semicolon separated
+    const semiSlots = component.formatScheduleSlots('MON 08:00 - 10:00 (Room 101); WED 08:00 - 10:00 (Room 101)');
+    expect(semiSlots).toHaveLength(2);
+    expect(semiSlots[0].day).toBe('MON');
+    expect(semiSlots[1].day).toBe('WED');
+
+    // Comma separated
+    const commaSlots = component.formatScheduleSlots('MON 08:00:00-10:00:00 (CL1), WED 08:00:00-10:00:00 (CL1)');
+    expect(commaSlots).toHaveLength(2);
+    expect(commaSlots[0].day).toBe('MON');
+    expect(commaSlots[1].day).toBe('WED');
+  });
 });
