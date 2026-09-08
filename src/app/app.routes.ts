@@ -51,6 +51,11 @@ export const routes: Routes = [
     redirectTo: 'dashboard/enrollment',
     pathMatch: 'full'
   },
+  {
+    path: 'grades',
+    redirectTo: 'dashboard/grades',
+    pathMatch: 'full'
+  },
 
   // Institutional Management URL Aliases
   {
@@ -94,6 +99,11 @@ export const routes: Routes = [
         path: 'enrollment',
         loadChildren: () =>
           import('./features/enrollment/enrollment.routes').then(m => m.ENROLLMENT_ROUTES)
+      },
+      {
+        path: 'grades',
+        loadComponent: () =>
+          import('./features/gradebook/faculty-gradebook.component').then(m => m.FacultyGradebookComponent)
       },
       {
         path: '**',

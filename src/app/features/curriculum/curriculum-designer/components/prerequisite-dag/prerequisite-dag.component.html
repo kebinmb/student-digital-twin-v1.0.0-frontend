@@ -138,79 +138,98 @@
   }
 
   <!-- Add Prerequisite Dependency Dialog -->
+  <!-- Add Prerequisite Dependency Dialog -->
   <p-dialog
     header="Create Prerequisite Edge"
     [visible]="isAddModalOpen()"
     (visibleChange)="isAddModalOpen.set($event)"
     [modal]="true"
-    [breakpoints]="{ '960px': '75vw', '640px': '92vw' }"
-    [style]="{ width: '520px', maxWidth: '95vw' }"
-    [contentStyle]="{ 'overflow-x': 'hidden' }">
+    [dismissableMask]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [breakpoints]="{ '960px': '75vw', '640px': '95vw' }"
+    [style]="{ width: '560px', maxWidth: '96vw' }"
+    [contentStyle]="{ 'overflow-x': 'hidden' }"
+    styleClass="institutional-dialog">
     
     @if (allCurriculumCourses().length < 2) {
-      <div class="empty-prereq-alert">
-        <div class="alert-icon-box">
+      <div class="empty-prereq-alert flex-row gap-md p-4 surface-slate border border-amber-300 rounded-lg">
+        <div class="alert-icon-box flex-center text-amber-600 text-xl">
           <i class="pi pi-info-circle"></i>
         </div>
-        <div class="alert-content">
-          <h4 class="alert-title">Insufficient Subjects in Curriculum</h4>
-          <p class="alert-text">
+        <div class="alert-content flex-col gap-xs">
+          <h4 class="alert-title text-sm font-bold text-amber-900 m-0">Insufficient Subjects in Curriculum</h4>
+          <p class="alert-text text-xs text-amber-800 m-0 leading-relaxed">
             At least <strong>two subjects</strong> must be placed on the Year / Semester Board before creating prerequisite dependencies.
             Currently, this curriculum has <strong>{{ allCurriculumCourses().length }}</strong> subject(s) allocated.
           </p>
-          <div>
+          <div class="mt-2">
             <p-button
               label="Go to Year / Semester Board"
               icon="pi pi-table"
               size="small"
               severity="primary"
+              styleClass="action-btn-primary"
               (onClick)="goToBoard()">
             </p-button>
           </div>
         </div>
       </div>
     } @else {
-      <div style="display: flex; flex-direction: column; gap: 1rem; padding: 0.5rem 0;">
-        <div class="dialog-field-group">
-          <label for="targetSelect" style="font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem;">Target Subject (requires prerequisite)</label>
+      <div class="flex-col gap-md py-1">
+        <!-- Context Bar -->
+        <div class="modal-context-bar flex-between surface-slate">
+          <div class="context-item flex-row gap-xs">
+            <i class="pi pi-sitemap context-icon"></i>
+            <span class="context-label">DAG Engine:</span>
+            <strong class="context-val">CMO 25 Curriculum Graph</strong>
+          </div>
+          <div class="context-item flex-row gap-xs">
+            <span class="context-label">Rule:</span>
+            <span class="badge-green font-mono">{{ ruleType() }}</span>
+          </div>
+        </div>
+
+        <div class="form-field flex-col gap-xs">
+          <label for="targetSelect" class="form-label">Target Subject (requires prerequisite) <span class="required-star">*</span></label>
           <select
             id="targetSelect"
-            class="dialog-select-control"
+            class="dialog-select-control w-full font-mono text-xs p-2 rounded border border-slate-300 bg-white"
             [ngModel]="targetCourseId()"
             (ngModelChange)="targetCourseId.set($event ? +$event : null)">
             <option [ngValue]="null" disabled selected>-- Select target subject --</option>
             @for (course of allCurriculumCourses(); track course.courseId) {
-              <option [value]="course.courseId">{{ course.code }} - {{ course.title }}</option>
+              <option [value]="course.courseId">{{ course.code }} — {{ course.title }}</option>
             }
           </select>
         </div>
 
-        <div class="dialog-field-group">
-          <label for="prereqSelect" style="font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem;">Prerequisite Subject (must be passed first)</label>
+        <div class="form-field flex-col gap-xs">
+          <label for="prereqSelect" class="form-label">Prerequisite Subject (must be passed first) <span class="required-star">*</span></label>
           <select
             id="prereqSelect"
-            class="dialog-select-control"
+            class="dialog-select-control w-full font-mono text-xs p-2 rounded border border-slate-300 bg-white"
             [ngModel]="prereqCourseId()"
             (ngModelChange)="prereqCourseId.set($event ? +$event : null)">
             <option [ngValue]="null" disabled selected>-- Select prerequisite subject --</option>
             @for (course of allCurriculumCourses(); track course.courseId) {
-              <option [value]="course.courseId">{{ course.code }} - {{ course.title }}</option>
+              <option [value]="course.courseId">{{ course.code }} — {{ course.title }}</option>
             }
           </select>
         </div>
 
         @if (isSelfReferential()) {
-          <div class="self-ref-warning">
-            <i class="pi pi-exclamation-triangle" style="margin-right: 0.35rem;"></i>
+          <div class="self-ref-warning p-2.5 rounded bg-rose-50 border border-rose-200 text-rose-800 text-xs flex-row gap-xs font-semibold">
+            <i class="pi pi-exclamation-triangle text-rose-600"></i>
             A subject cannot be a prerequisite of itself.
           </div>
         }
 
-        <div class="dialog-field-group">
-          <label for="ruleSelect" style="font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem;">Rule Type</label>
+        <div class="form-field flex-col gap-xs">
+          <label for="ruleSelect" class="form-label">Rule Type <span class="required-star">*</span></label>
           <select
             id="ruleSelect"
-            class="dialog-select-control"
+            class="dialog-select-control w-full text-xs p-2 rounded border border-slate-300 bg-white"
             [ngModel]="ruleType()"
             (ngModelChange)="ruleType.set($event)">
             <option value="HARD">HARD (Mandatory passing grade)</option>
@@ -219,22 +238,47 @@
           </select>
         </div>
 
-        <div style="display: flex; justify-content: flex-end; gap: 0.5rem; padding-top: 0.75rem; border-top: 1px solid #f1f5f9;">
-          <p-button
-            label="Cancel"
-            size="small"
-            [outlined]="true"
-            severity="secondary"
-            (onClick)="isAddModalOpen.set(false)">
-          </p-button>
-          <p-button
-            label="Save Dependency"
-            icon="pi pi-check"
-            size="small"
-            severity="primary"
-            [disabled]="!canSavePrerequisite()"
-            (onClick)="onSavePrerequisite()">
-          </p-button>
+        <!-- Two-Sided Dedicated Dialog Footer -->
+        <div class="dialog-footer-content flex-between w-full">
+          <div class="footer-validation-feedback flex-row">
+            @if (isSelfReferential()) {
+              <span class="footer-status-badge warning flex-row gap-xs">
+                <i class="pi pi-exclamation-triangle"></i>
+                <span>Self-reference prohibited</span>
+              </span>
+            } @else if (!canSavePrerequisite()) {
+              <span class="footer-status-badge warning flex-row gap-xs">
+                <i class="pi pi-info-circle"></i>
+                <span>Select distinct subjects</span>
+              </span>
+            } @else {
+              <span class="footer-status-badge success flex-row gap-xs">
+                <i class="pi pi-check-circle"></i>
+                <span>Valid DAG edge</span>
+              </span>
+            }
+          </div>
+
+          <div class="dialog-footer-actions flex-row gap-sm">
+            <p-button
+              label="Cancel"
+              icon="pi pi-times"
+              size="small"
+              [outlined]="true"
+              severity="secondary"
+              styleClass="action-btn-secondary"
+              (onClick)="isAddModalOpen.set(false)">
+            </p-button>
+            <p-button
+              label="Save Dependency"
+              icon="pi pi-check"
+              size="small"
+              severity="primary"
+              styleClass="action-btn-primary"
+              [disabled]="!canSavePrerequisite()"
+              (onClick)="onSavePrerequisite()">
+            </p-button>
+          </div>
         </div>
       </div>
     }

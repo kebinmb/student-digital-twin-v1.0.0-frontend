@@ -3,10 +3,10 @@
 
   <!-- Advising Banner & Student Profile Header -->
   <header class="header-card">
-    <div class="header-main flex flex-col md:flex-row md:items-center justify-between gap-4">
-      <div class="header-title-area flex-1">
-        <h2 class="module-title">
-          <i class="pi pi-user-edit"></i>
+    <div class="header-main flex-between flex-wrap gap-md">
+      <div class="header-title-area flex-1 min-w-[280px]">
+        <h2 class="module-title font-bold-navy">
+          <i class="pi pi-user-edit text-emerald-700"></i>
           Academic Advising & Subject Enlistment
         </h2>
         <p class="module-subtitle">
@@ -14,71 +14,23 @@
         </p>
       </div>
 
-      <!-- Student Switcher & Term Selector -->
-      <div class="flex flex-wrap items-center gap-3">
-        <div class="student-switcher-box flex flex-col gap-1 w-full sm:w-72">
-          <label for="student-select" class="selector-label">Select Student:</label>
-          <p-select 
-            id="student-select"
-            [options]="store.searchedStudents()" 
-            [ngModel]="store.studentId()" 
-            (ngModelChange)="onStudentSelect($event)"
-            [filter]="true"
-            filterBy="studentIdNumber,fullName,programCode"
-            [panelStyle]="{ 'min-width': '26rem', 'max-width': '95vw' }"
-            optionLabel="fullName" 
-            optionValue="id" 
-            placeholder="Search Student..."
-            styleClass="w-full">
-            <ng-template #selectedItem let-selectedOption>
-              @if (selectedOption) {
-                <div class="flex items-center gap-2 truncate">
-                  <i class="pi pi-user text-emerald-700 text-xs"></i>
-                  <span class="text-xs font-semibold text-slate-800 truncate">{{ selectedOption.fullName }} ({{ selectedOption.studentIdNumber }})</span>
-                </div>
-              }
-            </ng-template>
-            <ng-template #item let-option>
-              <div class="flex flex-col gap-1 py-1.5 px-1 border-b border-slate-100 last:border-0">
-                <div class="flex items-center justify-between gap-2">
-                  <span class="text-xs font-bold text-slate-900">{{ option.fullName }}</span>
-                  <span class="text-xs font-mono font-bold text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">
-                    {{ option.studentIdNumber }}
-                  </span>
-                </div>
-                <div class="flex items-center gap-2 text-xs text-slate-600">
-                  <span class="font-semibold text-slate-800">{{ option.programCode }}</span>
-                  <span class="text-slate-400">&bull;</span>
-                  <span>Year {{ option.yearLevel }}</span>
-                  <span class="text-slate-400">&bull;</span>
-                  <span class="px-1.5 py-0.5 text-[10px] font-bold rounded"
-                        [ngClass]="{
-                          'bg-emerald-50 text-emerald-700 border border-emerald-200': option.academicStatus === 'REGULAR',
-                          'bg-amber-50 text-amber-700 border border-amber-200': option.academicStatus === 'PROBATION' || option.academicStatus === 'IRREGULAR',
-                          'bg-blue-50 text-blue-700 border border-blue-200': option.academicStatus === 'GRADUATED'
-                        }">
-                    {{ option.academicStatus }}
-                  </span>
-                </div>
-              </div>
-            </ng-template>
-          </p-select>
-        </div>
-
-        <div class="term-selector-box flex flex-col gap-1 w-full sm:w-64">
-          <label for="term-select" class="selector-label">Academic Term:</label>
-          <p-select 
-            id="term-select"
-            [options]="store.terms()" 
-            [ngModel]="store.selectedTermId()" 
-            (ngModelChange)="onTermSelect($event)"
-            [panelStyle]="{ 'min-width': '18rem' }"
-            optionLabel="termName" 
-            optionValue="id" 
-            placeholder="Select Term"
-            styleClass="w-full">
-          </p-select>
-        </div>
+      <!-- Primary Actions Grouped on Top-Right -->
+      <div class="header-actions flex-row gap-sm flex-wrap items-center">
+        <p-button 
+          label="Admit Student" 
+          icon="pi pi-user-plus" 
+          severity="success" 
+          size="small"
+          (onClick)="openAdmissionsDialog()">
+        </p-button>
+        <p-button 
+          label="Credit Transferee" 
+          icon="pi pi-file-edit" 
+          severity="warn" 
+          size="small"
+          [disabled]="!store.studentId()"
+          (onClick)="openCreditingDialog()">
+        </p-button>
       </div>
     </div>
 
@@ -86,11 +38,11 @@
       <div class="student-meta-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mt-4">
         <div class="meta-item">
           <span class="meta-label">Student Name</span>
-          <span class="meta-val font-semibold text-slate-900 truncate">{{ adv.studentName }}</span>
+          <span class="meta-val font-bold-navy truncate">{{ adv.studentName }}</span>
         </div>
         <div class="meta-item">
           <span class="meta-label">Student ID</span>
-          <span class="meta-val font-mono font-medium text-slate-800">{{ adv.studentNumber }}</span>
+          <span class="meta-val font-mono font-bold-navy">{{ adv.studentNumber }}</span>
         </div>
         <div class="meta-item">
           <span class="meta-label">Program & Year</span>
@@ -98,11 +50,11 @@
         </div>
         <div class="meta-item">
           <span class="meta-label">Curriculum</span>
-          <span class="meta-val font-medium text-slate-800">{{ adv.curriculumCode }}</span>
+          <span class="meta-val font-mono font-medium text-slate-800">{{ adv.curriculumCode }}</span>
         </div>
         <div class="meta-item">
           <span class="meta-label">Academic Standing</span>
-          <div class="flex items-center gap-1.5">
+          <div class="flex-row gap-xs">
             <p-tag [value]="adv.enrollmentStatus" severity="info"></p-tag>
             @if (adv.isGraduating) {
               <p-tag value="GRADUATING SENIOR" severity="warn"></p-tag>
@@ -111,20 +63,20 @@
         </div>
         <div class="meta-item">
           <span class="meta-label">Cumulative GPA</span>
-          <span class="meta-val font-bold text-slate-900">{{ adv.cumulativeGpa ? (adv.cumulativeGpa | number:'1.2-2') : 'N/A' }}</span>
+          <span class="meta-val font-mono font-bold-navy">{{ adv.cumulativeGpa ? (adv.cumulativeGpa | number:'1.2-2') : 'N/A' }}</span>
         </div>
       </div>
 
       <!-- Unit Cap Progress Bar -->
       <div class="unit-cap-container mt-4">
-        <div class="unit-cap-header flex justify-between items-center mb-2">
+        <div class="unit-cap-header flex-between mb-2">
           <span class="unit-text text-xs sm:text-sm text-slate-700">
-            <strong>Credit Units Loaded:</strong> {{ store.totalUnits() }} / {{ store.maxUnits() }} Units
+            <strong>Credit Units Loaded:</strong> <span class="font-mono font-bold">{{ store.totalUnits() }}</span> / <span class="font-mono">{{ store.maxUnits() }}</span> Units
             @if (adv.isGraduating) {
               <span class="text-xs text-muted ms-1">(Graduating Overload Allowed up to 27)</span>
             }
           </span>
-          <span class="unit-percentage text-xs sm:text-sm font-semibold text-emerald-800" [class.cap-danger]="store.isUnitCapReached()">
+          <span class="unit-percentage text-xs sm:text-sm font-semibold font-mono text-emerald-800" [class.cap-danger]="store.isUnitCapReached()">
             {{ store.unitPercentage() }}% of Term Maximum
           </span>
         </div>
@@ -137,13 +89,108 @@
     }
   </header>
 
+  <!-- Dedicated Filter Strip Toolbar Card -->
+  <section class="filter-strip-card flex-between flex-wrap gap-md surface-slate" aria-label="Student Profile and Term Filter Strip">
+    <div class="filter-controls-group flex-row flex-wrap gap-md items-center flex-1">
+      <!-- Student Selector -->
+      <div class="student-switcher-box flex-col gap-xs w-full sm:w-80">
+        <label for="student-select" class="form-label flex-row gap-xs items-center">
+          <i class="pi pi-user text-emerald-700 text-xs"></i>
+          <span>Select Student Profile:</span>
+        </label>
+        <p-select 
+          id="student-select"
+          [options]="store.searchedStudents()" 
+          [ngModel]="store.studentId()" 
+          (ngModelChange)="onStudentSelect($event)"
+          [filter]="true"
+          filterBy="studentIdNumber,fullName,programCode"
+          [panelStyle]="{ 'min-width': '26rem', 'max-width': '95vw' }"
+          optionLabel="fullName" 
+          optionValue="id" 
+          placeholder="Search Student by ID, Name, or Program..."
+          styleClass="w-full">
+          <ng-template #selectedItem let-selectedOption>
+            @if (selectedOption) {
+              <div class="student-selected-item flex-row gap-sm items-center truncate">
+                <i class="pi pi-user student-item-icon text-emerald-700"></i>
+                <span class="student-item-name font-bold font-bold-navy text-xs truncate">{{ selectedOption.fullName }}</span>
+                <span class="student-item-id font-mono text-xs text-slate-500 font-semibold">({{ selectedOption.studentIdNumber }})</span>
+              </div>
+            }
+          </ng-template>
+          <ng-template #item let-option>
+            <div class="student-option-item flex-col gap-xs py-1.5 px-1 border-b border-slate-100 last:border-0">
+              <div class="flex-between gap-sm">
+                <span class="text-xs font-bold font-bold-navy">{{ option.fullName }}</span>
+                <span class="text-xs font-mono font-bold text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">
+                  {{ option.studentIdNumber }}
+                </span>
+              </div>
+              <div class="flex-row gap-sm text-xs text-slate-600">
+                <span class="font-semibold text-slate-800">{{ option.programCode }}</span>
+                <span class="text-slate-400">&bull;</span>
+                <span>Year {{ option.yearLevel }}</span>
+                <span class="text-slate-400">&bull;</span>
+                <span class="px-1.5 py-0.5 text-[10px] font-bold rounded"
+                      [ngClass]="{
+                        'bg-emerald-50 text-emerald-700 border border-emerald-200': option.academicStatus === 'REGULAR',
+                        'bg-amber-50 text-amber-700 border border-amber-200': option.academicStatus === 'PROBATION' || option.academicStatus === 'IRREGULAR' || option.academicStatus === 'TRANSFEREE',
+                        'bg-blue-50 text-blue-700 border border-blue-200': option.academicStatus === 'GRADUATED'
+                      }">
+                  {{ option.academicStatus }}
+                </span>
+              </div>
+            </div>
+          </ng-template>
+        </p-select>
+      </div>
+
+      <!-- Academic Term Selector -->
+      <div class="term-selector-box flex-col gap-xs w-full sm:w-64">
+        <label for="term-select" class="form-label flex-row gap-xs items-center">
+          <i class="pi pi-calendar text-emerald-700 text-xs"></i>
+          <span>Academic Term:</span>
+        </label>
+        <p-select 
+          id="term-select"
+          [options]="store.terms()" 
+          [ngModel]="store.selectedTermId()" 
+          (ngModelChange)="onTermSelect($event)"
+          [panelStyle]="{ 'min-width': '18rem' }"
+          optionLabel="termName" 
+          optionValue="id" 
+          placeholder="Select Term"
+          styleClass="w-full">
+        </p-select>
+      </div>
+    </div>
+
+    <!-- Active Student Quick Indicator Badge -->
+    <div class="filter-strip-status flex-row gap-sm items-center">
+      @if (selectedStudent(); as student) {
+        <div class="selected-student-badge flex-row gap-xs items-center bg-white px-3 py-1.5 rounded-lg border border-slate-200">
+          <span class="status-dot"></span>
+          <span class="text-xs text-slate-500 font-medium">Active:</span>
+          <span class="text-xs font-bold font-bold-navy truncate max-w-[150px]">{{ student.fullName }}</span>
+          <span class="badge-green font-mono text-[10px]">{{ student.programCode }}</span>
+        </div>
+      } @else {
+        <div class="empty-selection-hint flex-row gap-xs items-center text-xs text-slate-500 bg-white px-3 py-1.5 rounded-lg border border-slate-200">
+          <i class="pi pi-info-circle text-amber-600"></i>
+          <span>No student currently active</span>
+        </div>
+      }
+    </div>
+  </section>
+
   @if (store.errorMessage()) {
     <div class="mb-4">
       <p-message severity="warn" styleClass="w-full shadow-none border border-amber-200 bg-amber-50/60 rounded-lg">
         <ng-template #icon>
           <i class="pi pi-exclamation-triangle text-amber-600 text-lg"></i>
         </ng-template>
-        <div class="flex flex-col gap-0.5 ml-2">
+        <div class="flex-col gap-xs ml-2">
           <span class="text-xs font-bold uppercase tracking-wider text-amber-900">
             Advising Record Notice
           </span>
@@ -160,13 +207,13 @@
 
   <!-- Course Checklist Table -->
   <section class="checklist-card" aria-labelledby="checklist-title">
-    <div class="card-header flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+    <div class="card-header flex-between flex-wrap gap-lg">
       <div>
-        <h3 id="checklist-title" class="card-title">Curriculum Course Checklist & Eligibility</h3>
+        <h3 id="checklist-title" class="card-title font-bold-navy">Curriculum Course Checklist & Eligibility</h3>
         <span class="card-caption">Courses mapped to your program with live CHED prerequisite checks</span>
       </div>
 
-      <div class="search-filter-container flex flex-wrap items-center gap-3">
+      <div class="search-filter-container flex-row flex-wrap gap-md">
         <!-- Quick Status Filter Toggle (Eligible Only by default, with Already Passed toggle) -->
         <div class="status-tab-group" role="tablist" aria-label="Prerequisite Status Filter">
           <button 
@@ -226,14 +273,14 @@
           styleClass="status-filter-select w-44">
           <ng-template #selectedItem let-selectedOption>
             @if (selectedOption) {
-              <div class="flex items-center gap-2">
+              <div class="flex-row gap-sm">
                 <i [class]="getOptionIcon(selectedOption.value)" class="text-xs"></i>
-                <span class="text-xs font-semibold text-slate-800 truncate">{{ selectedOption.label }}</span>
+                <span class="text-xs font-semibold font-bold-navy truncate">{{ selectedOption.label }}</span>
               </div>
             }
           </ng-template>
           <ng-template #item let-option>
-            <div class="flex items-center gap-2 py-1">
+            <div class="flex-row gap-sm py-1">
               <i [class]="getOptionIcon(option.value)" class="text-xs"></i>
               <span class="text-xs font-medium text-slate-800">{{ option.label }}</span>
             </div>
@@ -291,12 +338,12 @@
             class="hover:bg-slate-100">
           <td>
             <div class="course-identity">
-              <span class="course-code">{{ course.code }}</span>
+              <span class="course-code font-mono font-bold-navy">{{ course.code }}</span>
               <span class="course-title">{{ course.title }}</span>
             </div>
           </td>
           <td>
-            <span class="units-badge">{{ course.creditUnits }} units</span>
+            <span class="units-badge font-mono">{{ course.creditUnits }} units</span>
             <small class="text-muted block">({{ course.lectureUnits }}L / {{ course.labUnits }}Lab)</small>
           </td>
           <td>Year {{ course.yearLevel }} - {{ course.semester }}</td>
@@ -312,11 +359,11 @@
                 @for (p of course.prerequisites; track p.prerequisiteCourseId) {
                   <div class="prereq-chip" [class.satisfied]="p.isSatisfied" [class.unsatisfied]="!p.isSatisfied">
                     <i [class]="p.isSatisfied ? 'pi pi-check' : 'pi pi-times'"></i>
-                    <span>{{ p.prerequisiteCode }}</span>
+                    <span class="font-mono font-semibold">{{ p.prerequisiteCode }}</span>
                     @if (p.isSatisfied) {
-                      <small>Grade: {{ p.studentGrade | number:'1.2-2' }}</small>
+                      <small class="font-mono">Grade: {{ p.studentGrade | number:'1.2-2' }}</small>
                     } @else {
-                      <small class="text-danger">Unmet (Req &le; {{ p.minGradeRequired }})</small>
+                      <small class="text-danger font-mono">Unmet (Req &le; {{ p.minGradeRequired }})</small>
                     }
                   </div>
                 }
@@ -332,7 +379,7 @@
                 Passed & Credited
               </span>
             } @else if (course.availableSections && course.availableSections.length > 0) {
-              <span class="section-count-tag">{{ course.availableSections.length }} sections open</span>
+              <span class="section-count-tag font-mono">{{ course.availableSections.length }} sections open</span>
             } @else {
               <span class="text-muted text-xs">No sections scheduled</span>
             }
@@ -374,22 +421,33 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="7" class="text-center py-6 text-slate-500">
-            <div class="flex flex-col items-center gap-1.5">
-              <i class="pi pi-inbox text-slate-400 text-2xl"></i>
-              <span class="text-sm font-medium">
+          <td colspan="7" class="empty-state-cell">
+            <div class="empty-state-card flex-col flex-center">
+              <div class="empty-state-icon flex-center">
+                <i class="pi pi-inbox"></i>
+              </div>
+              <h4 class="empty-state-title font-bold-navy">
                 @if (statusFilter() === 'ELIGIBLE') {
-                  No eligible courses found for this upcoming semester.
+                  No Eligible Courses Available
                 } @else if (statusFilter() === 'ALREADY_PASSED') {
-                  No completed or credited courses recorded for this student.
+                  No Completed Courses Recorded
                 } @else {
-                  No courses found for this curriculum or academic term.
+                  No Courses Found
                 }
-              </span>
+              </h4>
+              <p class="empty-state-subtext">
+                @if (statusFilter() === 'ELIGIBLE') {
+                  No upcoming courses match eligible prerequisite standing for this student profile.
+                } @else if (statusFilter() === 'ALREADY_PASSED') {
+                  No completed, credited, or articulated courses are recorded for this student.
+                } @else {
+                  No courses found matching your search filter in this curriculum catalog.
+                }
+              </p>
               @if (statusFilter() === 'ELIGIBLE' && passedCount() > 0) {
                 <button 
                   type="button" 
-                  class="mt-1 text-xs font-semibold text-blue-600 hover:text-blue-800 underline inline-flex items-center gap-1 cursor-pointer"
+                  class="mt-2 text-xs font-semibold text-emerald-800 hover:text-emerald-950 underline inline-flex items-center gap-1 cursor-pointer"
                   (click)="statusFilter.set('ALREADY_PASSED')">
                   <i class="pi pi-history text-[11px]"></i>
                   View {{ passedCount() }} already passed courses
@@ -413,34 +471,34 @@
     <ng-template pTemplate="header">
       <div class="drawer-header-title">
         <span class="text-xs font-bold text-emerald-800 uppercase tracking-wider">Section Enlistment Drawer</span>
-        <h3 class="text-base font-bold text-slate-900 m-0 mt-1">{{ selectedCourse()?.code }} — {{ selectedCourse()?.title }}</h3>
+        <h3 class="text-base font-bold font-bold-navy m-0 mt-1">
+          <span class="font-mono">{{ selectedCourse()?.code }}</span> — {{ selectedCourse()?.title }}
+        </h3>
       </div>
     </ng-template>
 
     @if (selectedCourse()) {
-      <div class="drawer-content-body">
-        <div class="drawer-profile-card mb-4">
-          <div class="flex items-center justify-between gap-2 mb-2">
-            <span class="code-badge font-mono text-xs font-bold text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">
-              {{ selectedCourse()!.code }}
-            </span>
-            <span class="text-xs font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded border border-emerald-200">
-              {{ selectedCourse()!.creditUnits }} Credit Units
-            </span>
+      <div class="drawer-content-body flex-col gap-md">
+        <!-- Context Bar in Drawer -->
+        <div class="modal-context-bar flex-between surface-slate">
+          <div class="context-item">
+            <i class="pi pi-book context-icon"></i>
+            <span class="context-label">Course:</span>
+            <span class="context-val font-mono font-bold-navy">{{ selectedCourse()!.code }}</span>
           </div>
-          <div class="drawer-stat-grid mt-2">
-            <div class="drawer-stat-box">
-              <span class="drawer-stat-label">Term Units Loaded</span>
-              <span class="drawer-stat-val text-sm font-bold text-slate-900">{{ store.totalUnits() }} / {{ store.maxUnits() }}</span>
-            </div>
-            <div class="drawer-stat-box">
-              <span class="drawer-stat-label">Remaining Allowable</span>
-              <span class="drawer-stat-val text-sm font-bold text-emerald-700">{{ store.maxUnits() - store.totalUnits() }} Units</span>
-            </div>
+          <div class="context-item">
+            <i class="pi pi-chart-pie context-icon"></i>
+            <span class="context-label">Units:</span>
+            <span class="badge-green font-mono font-bold">{{ selectedCourse()!.creditUnits }} Units</span>
+          </div>
+          <div class="context-item">
+            <i class="pi pi-gauge context-icon"></i>
+            <span class="context-label">Loaded:</span>
+            <span class="context-val font-mono font-bold-navy">{{ store.totalUnits() }} / {{ store.maxUnits() }}</span>
           </div>
         </div>
 
-        <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">Available Class Sections</h4>
+        <h4 class="text-xs font-bold font-bold-navy uppercase tracking-wider mb-1">Available Class Sections</h4>
 
         <p-table [value]="selectedCourse()?.availableSections || []" [rowHover]="true" styleClass="p-datatable-sm institutional-table">
           <ng-template pTemplate="header">
@@ -452,58 +510,567 @@
             </tr>
           </ng-template>
 
-              <ng-template pTemplate="body" let-sec>
-                <tr>
-                  <td><strong class="text-emerald-900 font-mono text-xs">{{ sec.sectionCode }}</strong></td>
-                  <td class="text-xs font-medium text-slate-700 whitespace-normal break-words py-2">
-                    <div class="flex flex-col gap-1">
-                      @for (slot of formatScheduleSlots(sec.scheduleSummary); track slot.day + '-' + slot.timeRoom + '-' + $index) {
-                        <div class="flex items-center gap-1.5">
-                          <span class="px-1.5 py-0.5 text-[10px] font-bold bg-slate-100 text-slate-700 rounded border border-slate-200">
-                            {{ slot.day }}
-                          </span>
-                          <span class="text-xs text-slate-800 font-medium">
-                            {{ slot.timeRoom }}
-                          </span>
-                        </div>
-                      }
+          <ng-template pTemplate="body" let-sec>
+            <tr>
+              <td><strong class="text-emerald-900 font-mono text-xs">{{ sec.sectionCode }}</strong></td>
+              <td class="text-xs font-medium text-slate-700 whitespace-normal break-words py-2">
+                <div class="flex-col gap-xs">
+                  @for (slot of formatScheduleSlots(sec.scheduleSummary); track slot.day + '-' + slot.timeRoom + '-' + $index) {
+                    <div class="flex-row gap-xs">
+                      <span class="px-1.5 py-0.5 text-[10px] font-bold bg-slate-100 text-slate-700 rounded border border-slate-200">
+                        {{ slot.day }}
+                      </span>
+                      <span class="text-xs text-slate-800 font-medium">
+                        {{ slot.timeRoom }}
+                      </span>
                     </div>
-                  </td>
-                  <td class="text-xs">
-                    <span [class.text-red-600]="sec.enrolledCount >= sec.maxCapacity" class="font-semibold">
-                      {{ sec.enrolledCount }}/{{ sec.maxCapacity }}
-                    </span>
-                  </td>
-                  <td style="text-align: center;">
-                    <button 
-                      pButton 
-                      type="button" 
-                      label="Enlist" 
-                      icon="pi pi-check" 
-                      class="p-button-xs p-button-success"
-                      [loading]="store.isEnlisting()"
-                      [disabled]="sec.status !== 'OPEN' || sec.enrolledCount >= sec.maxCapacity || store.isUnitCapReached()"
-                      (click)="enlistInSection(sec)">
-                    </button>
-                  </td>
-                </tr>
-              </ng-template>
+                  }
+                </div>
+              </td>
+              <td class="text-xs font-mono">
+                <span [class.text-red-600]="sec.enrolledCount >= sec.maxCapacity" class="font-semibold">
+                  {{ sec.enrolledCount }}/{{ sec.maxCapacity }}
+                </span>
+              </td>
+              <td style="text-align: center;">
+                <button 
+                  pButton 
+                  type="button" 
+                  label="Enlist" 
+                  icon="pi pi-check" 
+                  class="p-button-xs p-button-success"
+                  [loading]="store.isEnlisting()"
+                  [disabled]="sec.status !== 'OPEN' || sec.enrolledCount >= sec.maxCapacity || store.isUnitCapReached()"
+                  (click)="enlistInSection(sec)">
+                </button>
+              </td>
+            </tr>
+          </ng-template>
 
-              <ng-template pTemplate="emptymessage">
-                <tr>
-                  <td colspan="4" class="text-center py-3 text-slate-500 text-xs">
-                    No open sections currently scheduled for this course.
-                  </td>
-                </tr>
-              </ng-template>
-            </p-table>
-          </div>
-        }
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="4" class="empty-state-cell py-4">
+                <div class="empty-state-card flex-col flex-center">
+                  <div class="empty-state-icon flex-center" style="width: 3rem; height: 3rem; font-size: 1.25rem;">
+                    <i class="pi pi-calendar-times"></i>
+                  </div>
+                  <h5 class="empty-state-title font-bold-navy text-sm">No Sections Open</h5>
+                  <p class="empty-state-subtext text-xs">
+                    No active class sections are currently scheduled for this course in the selected academic term.
+                  </p>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    }
 
-        <ng-template pTemplate="footer">
-          <div class="p-3 flex flex-col gap-2 border-t border-slate-200 bg-white">
-            <p-button label="Close Section Drawer" icon="pi pi-times" severity="secondary" [outlined]="true" styleClass="w-full" (onClick)="closeSectionChooser()"></p-button>
-          </div>
-        </ng-template>
+    <ng-template pTemplate="footer">
+      <div class="dialog-footer-content flex-between">
+        <div class="footer-validation-feedback">
+          <span class="footer-status-badge" [ngClass]="store.isUnitCapReached() ? 'warning' : 'success'">
+            <i class="pi" [ngClass]="store.isUnitCapReached() ? 'pi-exclamation-triangle' : 'pi-check-circle'"></i>
+            {{ store.isUnitCapReached() ? 'Unit Cap Reached (' + store.totalUnits() + '/' + store.maxUnits() + ')' : 'Allowable Load: ' + (store.maxUnits() - store.totalUnits()) + ' Units Remaining' }}
+          </span>
+        </div>
+        <div class="dialog-footer-actions">
+          <p-button label="Close Section Drawer" icon="pi pi-times" severity="secondary" [outlined]="true" size="small" (onClick)="closeSectionChooser()"></p-button>
+        </div>
+      </div>
+    </ng-template>
       </p-drawer>
+
+  <!-- Student Admissions Intake Dialog -->
+  <p-dialog 
+    header="Student Intake & Classification Gatekeeper" 
+    [visible]="isAdmissionsDialogVisible()" 
+    (visibleChange)="isAdmissionsDialogVisible.set($event)"
+    [modal]="true" 
+    [style]="{ width: '48rem', maxWidth: '96vw' }"
+    [draggable]="false"
+    [resizable]="false"
+    styleClass="institutional-dialog">
+    
+    <!-- Modal Context Bar -->
+    <div class="modal-context-bar flex-between surface-slate">
+      <div class="context-item">
+        <i class="pi pi-shield context-icon"></i>
+        <span class="context-label">Admission Protocol:</span>
+        <span class="context-val">CHED CMO No. 25 Gatekeeper</span>
+      </div>
+      <div class="context-item">
+        <i class="pi pi-tag context-icon"></i>
+        <span class="context-label">Intake Category:</span>
+        @if (admissionsForm.get('classification')?.value === 'TRANSFEREE') {
+          <span class="context-val text-amber-700 font-bold">Transferee</span>
+        } @else {
+          <span class="context-val text-emerald-700 font-bold">Freshman</span>
+        }
+      </div>
+      <div class="context-item">
+        <i class="pi pi-verified context-icon"></i>
+        <span class="context-label">Catalog:</span>
+        <span class="badge-green font-mono text-xs">AY 2026-2027</span>
+      </div>
+    </div>
+
+    <form [formGroup]="admissionsForm" (ngSubmit)="submitAdmitStudent()" class="flex-col gap-md pt-1">
+      <!-- Dynamic Classification Guidance Banners -->
+      @if (admissionsForm.get('classification')?.value === 'TRANSFEREE') {
+        <div class="classification-alert-transferee flex-row items-start gap-sm p-3 rounded-lg border">
+          <i class="pi pi-exclamation-triangle text-amber-600 mt-0.5 text-base"></i>
+          <div class="flex-col gap-xs text-xs text-amber-900">
+            <span class="font-bold">Transferee Articulation & Prerequisite Requirement</span>
+            <span>Students classified as <strong>TRANSFEREE</strong> require CMO 25 course equivalency evaluation. Course prerequisite gates will remain locked until prior external units are accredited in the Crediting Portal.</span>
+          </div>
+        </div>
+      } @else {
+        <div class="classification-alert-freshman flex-row items-start gap-sm p-3 rounded-lg border">
+          <i class="pi pi-info-circle text-emerald-700 mt-0.5 text-base"></i>
+          <div class="flex-col gap-xs text-xs text-emerald-800">
+            <span class="font-bold">CHED Gate 1 Freshman Admissions Intake</span>
+            <span>Incoming first-year students are provisioned with standard Year 1 curriculum courses. Bridge and SHS STEM requirements will be evaluated automatically.</span>
+          </div>
+        </div>
+      }
+
+      <!-- Row 1: Student ID & Classification -->
+      <div class="form-row-2col">
+        <div class="form-field flex-col gap-xs">
+          <label class="form-label">Student ID / LRN Number <span class="required-star">*</span></label>
+          <input 
+            pInputText 
+            formControlName="studentNumber" 
+            placeholder="e.g. 2026-0001" 
+            class="w-full text-xs font-mono"
+            (input)="onAdmitNameOrIdChange()"
+            [class.ng-invalid]="isAdmissionsControlInvalid('studentNumber')" />
+          @if (isAdmissionsControlInvalid('studentNumber')) {
+            <small class="p-error">{{ getAdmissionsControlError('studentNumber') }}</small>
+          }
+        </div>
+
+        <div class="form-field flex-col gap-xs">
+          <label class="form-label">Student Classification <span class="required-star">*</span></label>
+          <p-select 
+            [options]="classificationOptions" 
+            formControlName="classification" 
+            optionLabel="label" 
+            optionValue="value" 
+            styleClass="w-full text-xs">
+          </p-select>
+          @if (isAdmissionsControlInvalid('classification')) {
+            <small class="p-error">{{ getAdmissionsControlError('classification') }}</small>
+          }
+        </div>
+      </div>
+
+      <!-- Row 2: Name Fields -->
+      <div class="form-row-2col">
+        <div class="form-field flex-col gap-xs">
+          <label class="form-label">First Name <span class="required-star">*</span></label>
+          <input 
+            pInputText 
+            formControlName="firstName" 
+            placeholder="e.g. Maria" 
+            class="w-full text-xs"
+            (input)="onAdmitNameOrIdChange()"
+            [class.ng-invalid]="isAdmissionsControlInvalid('firstName')" />
+          @if (isAdmissionsControlInvalid('firstName')) {
+            <small class="p-error">{{ getAdmissionsControlError('firstName') }}</small>
+          }
+        </div>
+
+        <div class="form-field flex-col gap-xs">
+          <label class="form-label">Last Name <span class="required-star">*</span></label>
+          <input 
+            pInputText 
+            formControlName="lastName" 
+            placeholder="e.g. Santos" 
+            class="w-full text-xs"
+            (input)="onAdmitNameOrIdChange()"
+            [class.ng-invalid]="isAdmissionsControlInvalid('lastName')" />
+          @if (isAdmissionsControlInvalid('lastName')) {
+            <small class="p-error">{{ getAdmissionsControlError('lastName') }}</small>
+          }
+        </div>
+      </div>
+
+      <!-- Row 3: Program & Curriculum -->
+      <div class="form-row-2col">
+        <div class="form-field flex-col gap-xs">
+          <label class="form-label">Degree Program <span class="required-star">*</span></label>
+          <p-select 
+            [options]="programOptions()" 
+            formControlName="programId" 
+            (ngModelChange)="onAdmitProgramChange($event)"
+            optionLabel="label" 
+            optionValue="value" 
+            placeholder="Select Degree Program"
+            styleClass="w-full text-xs"
+            [class.ng-invalid]="isAdmissionsControlInvalid('programId')">
+          </p-select>
+          @if (isAdmissionsControlInvalid('programId')) {
+            <small class="p-error">{{ getAdmissionsControlError('programId') }}</small>
+          }
+        </div>
+
+        <div class="form-field flex-col gap-xs">
+          <label class="form-label">Active Curriculum Catalog <span class="required-star">*</span></label>
+          <p-select 
+            [options]="curriculumOptions()" 
+            formControlName="curriculumId" 
+            optionLabel="label" 
+            optionValue="value" 
+            placeholder="Select Curriculum Catalog"
+            styleClass="w-full text-xs"
+            [disabled]="curriculumOptions().length === 0"
+            [class.ng-invalid]="isAdmissionsControlInvalid('curriculumId')">
+          </p-select>
+          @if (isAdmissionsControlInvalid('curriculumId')) {
+            <small class="p-error">{{ getAdmissionsControlError('curriculumId') }}</small>
+          }
+        </div>
+      </div>
+
+      <!-- Row 4: Year Level & Auth Username -->
+      <div class="form-row-2col">
+        <div class="form-field flex-col gap-xs">
+          <label class="form-label">Year Level <span class="required-star">*</span></label>
+          <p-select 
+            [options]="yearLevelOptions" 
+            formControlName="yearLevel" 
+            optionLabel="label" 
+            optionValue="value" 
+            styleClass="w-full text-xs">
+          </p-select>
+          @if (isAdmissionsControlInvalid('yearLevel')) {
+            <small class="p-error">{{ getAdmissionsControlError('yearLevel') }}</small>
+          }
+        </div>
+
+        <div class="form-field flex-col gap-xs">
+          <label class="form-label">Username / Auth Handle</label>
+          <input 
+            pInputText 
+            formControlName="username" 
+            placeholder="Auto-generated if empty" 
+            class="w-full text-xs font-mono" />
+        </div>
+      </div>
+
+      <!-- Row 5: Institutional Email -->
+      <div class="form-field flex-col gap-xs">
+        <label class="form-label">Institutional Email Address <span class="required-star">*</span></label>
+        <input 
+          pInputText 
+          formControlName="email" 
+          placeholder="e.g. 20260001@student.university.edu.ph" 
+          class="w-full text-xs font-mono"
+          [class.ng-invalid]="isAdmissionsControlInvalid('email')" />
+        @if (isAdmissionsControlInvalid('email')) {
+          <small class="p-error">{{ getAdmissionsControlError('email') }}</small>
+        }
+      </div>
+    </form>
+
+    <ng-template #footer>
+      <div class="dialog-footer-content flex-between">
+        <div class="footer-validation-feedback">
+          @if (admissionsForm.valid) {
+            <span class="footer-status-badge success">
+              <i class="pi pi-check-circle"></i>
+              All intake fields valid
+            </span>
+          } @else {
+            <span class="footer-status-badge warning">
+              <i class="pi pi-exclamation-triangle"></i>
+              Required intake fields incomplete
+            </span>
+          }
+        </div>
+        <div class="dialog-footer-actions">
+          <p-button label="Cancel" icon="pi pi-times" severity="secondary" [outlined]="true" size="small" (onClick)="closeAdmissionsDialog()"></p-button>
+          <p-button label="Admit Student" icon="pi pi-check" severity="success" size="small" [loading]="store.isLoading()" (onClick)="submitAdmitStudent()"></p-button>
+        </div>
+      </div>
+    </ng-template>
+  </p-dialog>
+
+  <!-- Transferee Course Crediting Dialog -->
+  <p-dialog 
+    header="Accredit Transferee Course (CHED CMO No. 25)" 
+    [visible]="isCreditingDialogVisible()" 
+    (visibleChange)="isCreditingDialogVisible.set($event)"
+    [modal]="true" 
+    [style]="{ width: '50rem', maxWidth: '96vw' }"
+    [draggable]="false"
+    [resizable]="false"
+    styleClass="institutional-dialog">
+
+    <!-- Modal Context Bar -->
+    <div class="modal-context-bar flex-between surface-slate">
+      <div class="context-item">
+        <i class="pi pi-user context-icon"></i>
+        <span class="context-label">Student:</span>
+        <span class="context-val font-bold-navy">{{ selectedStudent()?.fullName || 'No Student Selected' }}</span>
+      </div>
+      <div class="context-item">
+        <i class="pi pi-id-card context-icon"></i>
+        <span class="context-label">Student ID:</span>
+        <span class="context-val font-mono font-bold-navy">{{ selectedStudent()?.studentIdNumber || store.advising()?.studentNumber }}</span>
+      </div>
+      <div class="context-item">
+        <i class="pi pi-graduation-cap context-icon"></i>
+        <span class="context-label">Program:</span>
+        <span class="context-val">{{ selectedStudent()?.programCode || store.advising()?.programCode }}</span>
+      </div>
+    </div>
+
+    @if (availableCurriculumCourses().length === 0) {
+      <div class="empty-state-card flex-col flex-center p-6 text-center">
+        <div class="empty-state-icon flex-center">
+          <i class="pi pi-book"></i>
+        </div>
+        <h4 class="empty-state-title font-bold-navy">No Curriculum Courses Available</h4>
+        <p class="empty-state-subtext">
+          Please select an enrolled student with an active curriculum catalog to map external collegiate credits.
+        </p>
+      </div>
+    } @else {
+      <form [formGroup]="creditingForm" (ngSubmit)="submitCrediting()" class="flex-col gap-md pt-1">
+        <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg flex-row items-start gap-sm">
+          <i class="pi pi-file-edit text-amber-700 mt-0.5 text-base"></i>
+          <div class="flex-col gap-xs text-xs text-amber-900">
+            <span class="font-bold">CMO No. 25 Course Articulation & Prerequisite Policy</span>
+            <span>External collegiate credits earn prerequisite units immediately upon institutional registrar approval, unlocking dependent advanced courses in academic advising.</span>
+          </div>
+        </div>
+
+        <!-- Row 1: External Institution -->
+        <div class="form-field flex-col gap-xs">
+          <label class="form-label">Originating School / University <span class="required-star">*</span></label>
+          <input 
+            pInputText 
+            formControlName="externalInstitution" 
+            placeholder="e.g. Polytechnic State University" 
+            class="w-full text-xs"
+            [class.ng-invalid]="isCreditingControlInvalid('externalInstitution')" />
+          @if (isCreditingControlInvalid('externalInstitution')) {
+            <small class="p-error">{{ getCreditingControlError('externalInstitution') }}</small>
+          }
+        </div>
+
+        <!-- Row 2: Course Identifiers -->
+        <div class="form-row-2col">
+          <div class="form-field flex-col gap-xs">
+            <label class="form-label">Originating Course Code <span class="required-star">*</span></label>
+            <input 
+              pInputText 
+              formControlName="externalCourseCode" 
+              placeholder="e.g. CS 101" 
+              class="w-full text-xs font-mono"
+              [class.ng-invalid]="isCreditingControlInvalid('externalCourseCode')" />
+            @if (isCreditingControlInvalid('externalCourseCode')) {
+              <small class="p-error">{{ getCreditingControlError('externalCourseCode') }}</small>
+            }
+          </div>
+
+          <div class="form-field flex-col gap-xs">
+            <label class="form-label">Originating Course Title <span class="required-star">*</span></label>
+            <input 
+              pInputText 
+              formControlName="externalCourseTitle" 
+              placeholder="e.g. Intro to Computer Science" 
+              class="w-full text-xs"
+              [class.ng-invalid]="isCreditingControlInvalid('externalCourseTitle')" />
+            @if (isCreditingControlInvalid('externalCourseTitle')) {
+              <small class="p-error">{{ getCreditingControlError('externalCourseTitle') }}</small>
+            }
+          </div>
+        </div>
+
+        <!-- Row 3: Target Curriculum Course -->
+        <div class="form-field flex-col gap-xs">
+          <label class="form-label">Equivalent Internal Course <span class="required-star">*</span></label>
+          <p-select 
+            [options]="availableCurriculumCourses()" 
+            formControlName="internalCourseId" 
+            (ngModelChange)="onCreditingInternalCourseChange($event)"
+            optionLabel="label" 
+            optionValue="value" 
+            placeholder="Select Equivalent Institutional Course"
+            styleClass="w-full text-xs"
+            [filter]="true"
+            filterBy="label"
+            [class.ng-invalid]="isCreditingControlInvalid('internalCourseId')">
+          </p-select>
+          @if (isCreditingControlInvalid('internalCourseId')) {
+            <small class="p-error">{{ getCreditingControlError('internalCourseId') }}</small>
+          }
+        </div>
+
+        <!-- Row 4: Grade and Credits -->
+        <div class="form-row-2col">
+          <div class="form-field flex-col gap-xs">
+            <label class="form-label">External Numerical Grade (1.00 - 3.00) <span class="required-star">*</span></label>
+            <p-inputnumber 
+              formControlName="externalNumericalGrade"
+              [min]="1.00" 
+              [max]="3.00" 
+              [step]="0.25" 
+              [minFractionDigits]="2" 
+              [maxFractionDigits]="2"
+              placeholder="Passing grade"
+              styleClass="w-full text-xs font-mono"
+              [class.ng-invalid]="isCreditingControlInvalid('externalNumericalGrade')">
+            </p-inputnumber>
+            @if (isCreditingControlInvalid('externalNumericalGrade')) {
+              <small class="p-error">{{ getCreditingControlError('externalNumericalGrade') }}</small>
+            }
+          </div>
+
+          <div class="form-field flex-col gap-xs">
+            <label class="form-label">Credits Granted (1.0 - 6.0) <span class="required-star">*</span></label>
+            <p-inputnumber 
+              formControlName="creditsGranted"
+              [min]="1.0" 
+              [max]="6.0" 
+              [step]="1.0" 
+              [minFractionDigits]="1" 
+              [maxFractionDigits]="1"
+              placeholder="Units"
+              styleClass="w-full text-xs font-mono"
+              [class.ng-invalid]="isCreditingControlInvalid('creditsGranted')">
+            </p-inputnumber>
+            @if (isCreditingControlInvalid('creditsGranted')) {
+              <small class="p-error">{{ getCreditingControlError('creditsGranted') }}</small>
+            }
+          </div>
+        </div>
+
+        <!-- Row 5: Remarks -->
+        <div class="form-field flex-col gap-xs">
+          <label class="form-label">Accreditation Remarks</label>
+          <input 
+            pInputText 
+            formControlName="remarks" 
+            placeholder="e.g. Syllabi verified per CMO 25 compliance" 
+            class="w-full text-xs" />
+        </div>
+
+        <!-- Interactive Live Articulation & Prerequisite Preview -->
+        <div class="equivalency-preview-card flex-col gap-sm p-3 rounded-lg mt-1">
+          <div class="flex-between">
+            <span class="text-xs font-bold font-bold-navy flex-row gap-xs">
+              <i class="pi pi-arrows-alt text-emerald-700"></i>
+              Interactive Articulation Preview
+            </span>
+            <span class="badge-green text-[10px] font-bold px-2 py-0.5 rounded">CMO 25 Validated</span>
+          </div>
+
+          <div class="equivalency-comparison-grid grid grid-cols-1 sm:grid-cols-5 items-center gap-2">
+            <!-- Source Course -->
+            <div class="course-node external-node sm:col-span-2 p-2.5 rounded border border-slate-200 bg-white flex-col gap-xs">
+              <span class="node-label text-[10px] uppercase font-bold text-slate-400">Originating Source</span>
+              <span class="node-code font-mono font-bold font-bold-navy text-xs">
+                {{ creditingForm.get('externalCourseCode')?.value || 'EXT-CODE' }}
+              </span>
+              <span class="node-title text-slate-600 text-xs truncate">
+                {{ creditingForm.get('externalCourseTitle')?.value || 'External Course Title' }}
+              </span>
+              <div class="flex-row gap-sm mt-1">
+                <span class="text-[10px] font-bold font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">
+                  {{ creditingForm.get('creditsGranted')?.value || 3 }} Units
+                </span>
+                <span class="text-[10px] font-bold font-mono bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.5 rounded">
+                  Grade: {{ creditingForm.get('externalNumericalGrade')?.value | number:'1.2-2' }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Direction Indicator -->
+            <div class="flow-arrow sm:col-span-1 flex-center text-emerald-700 font-bold">
+              <i class="pi pi-arrow-right hidden sm:inline text-base"></i>
+              <i class="pi pi-arrow-down sm:hidden text-base"></i>
+            </div>
+
+            <!-- Internal Target -->
+            <div class="course-node internal-node sm:col-span-2 p-2.5 rounded border border-slate-200 bg-white flex-col gap-xs">
+              <span class="node-label text-[10px] uppercase font-bold text-slate-400">Institutional Equivalent</span>
+              @if (selectedInternalCourse(); as target) {
+                <span class="node-code font-mono font-bold text-emerald-900 text-xs">{{ target.code }}</span>
+                <span class="node-title text-slate-700 text-xs truncate">{{ target.title }}</span>
+                <div class="flex-row gap-sm mt-1">
+                  <span class="text-[10px] font-bold font-mono bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded border border-emerald-300">
+                    {{ target.creditUnits }} Institutional Units
+                  </span>
+                  <span class="text-[10px] font-semibold text-slate-600">Year {{ target.yearLevel }}</span>
+                </div>
+              } @else {
+                <span class="text-xs text-slate-400 italic py-2">Select equivalent course above</span>
+              }
+            </div>
+          </div>
+
+          <!-- Dynamic Prerequisite Unlock Impact -->
+          <div class="prerequisite-impact-box p-2 rounded bg-emerald-50/60 border border-emerald-200 flex-col gap-xs">
+            <div class="flex-row gap-xs text-xs font-bold text-emerald-900">
+              <i class="pi pi-key text-emerald-700"></i>
+              <span>Prerequisite Gate Unlock Impact:</span>
+            </div>
+            @if (dependentCoursesToUnlock().length > 0) {
+              <div class="flex-row flex-wrap gap-xs text-xs">
+                <span class="text-emerald-800">Crediting this course unlocks prerequisite gates for:</span>
+                @for (dep of dependentCoursesToUnlock(); track dep.courseId) {
+                  <span class="badge-green font-mono text-[11px] font-bold px-2 py-0.5 rounded">
+                    <i class="pi pi-lock-open text-[10px] me-1"></i>{{ dep.code }}
+                  </span>
+                }
+              </div>
+            } @else {
+              <span class="text-xs text-slate-600">
+                @if (selectedInternalCourse()) {
+                  Core institutional course. Satisfies curriculum units without blocking downstream prerequisites.
+                } @else {
+                  Select an equivalent course to verify prerequisite gates.
+                }
+              </span>
+            }
+          </div>
+        </div>
+      </form>
+    }
+
+    <ng-template #footer>
+      <div class="dialog-footer-content flex-between">
+        <div class="footer-validation-feedback">
+          @if (creditingForm.valid) {
+            <span class="footer-status-badge success">
+              <i class="pi pi-check-circle"></i>
+              CMO 25 Articulation valid
+            </span>
+          } @else {
+            <span class="footer-status-badge warning">
+              <i class="pi pi-exclamation-triangle"></i>
+              Required articulation details incomplete
+            </span>
+          }
+        </div>
+        <div class="dialog-footer-actions">
+          <p-button label="Cancel" icon="pi pi-times" severity="secondary" [outlined]="true" size="small" (onClick)="closeCreditingDialog()"></p-button>
+          <p-button 
+            label="Accredit & Unlock Gates" 
+            icon="pi pi-check" 
+            severity="warn" 
+            size="small" 
+            [loading]="store.isLoading()" 
+            [disabled]="availableCurriculumCourses().length === 0"
+            (onClick)="submitCrediting()">
+          </p-button>
+        </div>
+      </div>
+    </ng-template>
+  </p-dialog>
 </main>

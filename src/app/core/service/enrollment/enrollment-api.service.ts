@@ -51,5 +51,59 @@ export class EnrollmentApiService {
       params: { query }
     });
   }
+
+  createStudent(request: import('../../models/enrollment.model').CreateStudentRequest): Observable<import('../../models/enrollment.model').StudentProfileResponse> {
+    return this.http.post<import('../../models/enrollment.model').StudentProfileResponse>(`${environment.apiUrl}/v1/students`, request);
+  }
+
+  getStudentById(id: number): Observable<import('../../models/enrollment.model').StudentProfileResponse> {
+    return this.http.get<import('../../models/enrollment.model').StudentProfileResponse>(`${environment.apiUrl}/v1/students/${id}`);
+  }
+
+  creditTransfereeCourses(
+    studentId: number,
+    request: import('../../models/enrollment.model').CreditTransfereeCoursesRequest
+  ): Observable<import('../../models/enrollment.model').TransfereeCreditingSummaryResponse> {
+    return this.http.post<import('../../models/enrollment.model').TransfereeCreditingSummaryResponse>(
+      `${environment.apiUrl}/v1/students/${studentId}/credit-courses`,
+      request
+    );
+  }
+
+  getCreditedCourses(studentId: number): Observable<import('../../models/enrollment.model').CourseEquivalencyDto[]> {
+    return this.http.get<import('../../models/enrollment.model').CourseEquivalencyDto[]>(
+      `${environment.apiUrl}/v1/students/${studentId}/credited-courses`
+    );
+  }
+
+  getSectionRoster(sectionId: number): Observable<import('../../models/enrollment.model').SectionRosterResponse> {
+    return this.http.get<import('../../models/enrollment.model').SectionRosterResponse>(
+      `${environment.apiUrl}/v1/sections/${sectionId}/roster`
+    );
+  }
+
+  saveSectionGrades(
+    sectionId: number,
+    request: import('../../models/enrollment.model').SaveSectionGradesRequest
+  ): Observable<import('../../models/enrollment.model').GradeActionResponse> {
+    return this.http.put<import('../../models/enrollment.model').GradeActionResponse>(
+      `${environment.apiUrl}/v1/sections/${sectionId}/grades`,
+      request
+    );
+  }
+
+  verifySectionGrades(sectionId: number): Observable<import('../../models/enrollment.model').GradeActionResponse> {
+    return this.http.post<import('../../models/enrollment.model').GradeActionResponse>(
+      `${environment.apiUrl}/v1/sections/${sectionId}/grades/verify`,
+      {}
+    );
+  }
+
+  sealSectionGrades(sectionId: number): Observable<import('../../models/enrollment.model').GradeActionResponse> {
+    return this.http.post<import('../../models/enrollment.model').GradeActionResponse>(
+      `${environment.apiUrl}/v1/sections/${sectionId}/grades/seal`,
+      {}
+    );
+  }
 }
 

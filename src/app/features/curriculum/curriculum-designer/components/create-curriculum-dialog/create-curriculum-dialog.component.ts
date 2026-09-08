@@ -62,6 +62,11 @@ export class CreateCurriculumDialogComponent implements OnInit, OnChanges {
     effectiveAcademicYear: new FormControl<string>('2026-2027', { nonNullable: true, validators: [Validators.required, Validators.maxLength(20)] })
   });
 
+  isControlInvalid(controlName: keyof CreateCurriculumForm): boolean {
+    const control = this.form.get(controlName);
+    return !!(control && control.invalid && (control.dirty || control.touched));
+  }
+
   ngOnInit(): void {
     this.loadPrerequisites();
   }

@@ -74,4 +74,29 @@ describe('StudentAdvisingComponent', () => {
     expect(component.isSectionModalVisible()).toBe(false);
     expect(component.selectedCourse()).toBeNull();
   });
+
+  it('should toggle admissions intake dialog and initialize default fields', () => {
+    expect(component.isAdmissionsDialogVisible()).toBe(false);
+    component.openAdmissionsDialog();
+    expect(component.isAdmissionsDialogVisible()).toBe(true);
+    expect(component.admitStudentNumber()).toBeTruthy();
+    expect(component.admitClassification()).toBe('INCOMING_FIRST_YEAR');
+    expect(component.admitYearLevel()).toBe(1);
+
+    component.closeAdmissionsDialog();
+    expect(component.isAdmissionsDialogVisible()).toBe(false);
+  });
+
+  it('should toggle transferee crediting dialog and initialize defaults', () => {
+    store.studentId.set(10);
+    expect(component.isCreditingDialogVisible()).toBe(false);
+    component.openCreditingDialog();
+    expect(component.isCreditingDialogVisible()).toBe(true);
+    expect(component.creditingExternalSchool()).toBe('Polytechnic State College');
+    expect(component.creditingGrade()).toBe(1.50);
+    expect(component.creditingUnits()).toBe(3.00);
+
+    component.closeCreditingDialog();
+    expect(component.isCreditingDialogVisible()).toBe(false);
+  });
 });

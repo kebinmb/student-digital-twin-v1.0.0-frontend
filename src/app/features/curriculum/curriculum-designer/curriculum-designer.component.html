@@ -529,54 +529,74 @@
 
     <!-- Modal 1: Validation Diagnostics Report Dialog -->
     <p-dialog
-      header="Curriculum Validation Audit"
+      header="Curriculum Validation & DAG Diagnostic Audit"
       [visible]="isValidationModalOpen()"
       (visibleChange)="isValidationModalOpen.set($event)"
       [modal]="true"
-      [breakpoints]="{ '960px': '75vw', '640px': '92vw' }"
-      [style]="{ width: '650px', maxWidth: '95vw' }"
-      [contentStyle]="{ 'overflow-x': 'hidden' }">
+      [dismissableMask]="true"
+      [draggable]="false"
+      [resizable]="false"
+      [breakpoints]="{ '960px': '75vw', '640px': '95vw' }"
+      [style]="{ width: '680px', maxWidth: '96vw' }"
+      [contentStyle]="{ 'overflow-x': 'hidden' }"
+      styleClass="institutional-dialog">
       
-      <div class="dialog-content-body">
+      <div class="dialog-content-body flex-col gap-lg">
+        <!-- Context Bar -->
+        <div class="modal-context-bar flex-between surface-slate">
+          <div class="context-item flex-row gap-xs">
+            <i class="pi pi-shield context-icon"></i>
+            <span class="context-label">Audit Engine:</span>
+            <strong class="context-val">CHED CMO No. 25 & DAG Acyclicity</strong>
+          </div>
+          <div class="context-item flex-row gap-xs">
+            <span class="context-label">Status:</span>
+            <span class="badge-green font-mono">{{ curr.status }}</span>
+          </div>
+        </div>
+
         @if (store.isLoading()) {
-          <div style="text-align: center; padding: 2rem 0;">
-            <i class="pi pi-spin pi-spinner" style="font-size: 2rem; color: #116834; margin-bottom: 0.5rem;"></i>
-            <p style="font-size: 0.8125rem; color: #64748b;">Auditing curriculum against CHED CMO rules and graph cycle detection...</p>
+          <div class="text-center py-8">
+            <i class="pi pi-spin pi-spinner text-2xl text-emerald-700 mb-2"></i>
+            <p class="text-xs text-slate-500">Auditing curriculum against CHED CMO rules and graph cycle detection...</p>
           </div>
         } @else if (store.validationReport(); as report) {
           
           <!-- Summary Cards Row -->
-          <div class="val-summary-grid">
-            <div class="val-summary-item">
-              <span class="val-summary-label">Total Units</span>
-              <span class="val-summary-value">{{ report.summary.totalUnits }}</span>
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <span class="metric-label">Total Units</span>
+              <span class="metric-value font-bold-navy font-mono">{{ report.summary.totalUnits }}</span>
+              <span class="metric-subtext">Program Total</span>
             </div>
-            <div class="val-summary-item">
-              <span class="val-summary-label">Required Units</span>
-              <span class="val-summary-value">{{ report.summary.requiredUnits }}</span>
+            <div class="metric-card">
+              <span class="metric-label">Required Units</span>
+              <span class="metric-value font-bold-navy font-mono">{{ report.summary.requiredUnits }}</span>
+              <span class="metric-subtext">CHED Threshold</span>
             </div>
-            <div class="val-summary-item">
-              <span class="val-summary-label">Unit Deficit</span>
+            <div class="metric-card">
+              <span class="metric-label">Unit Deficit</span>
               <span
-                class="val-summary-value"
-                [ngClass]="report.summary.unitDeficit === 0 ? 'deficit-zero' : 'deficit-error'">
+                class="metric-value font-mono font-bold"
+                [ngClass]="report.summary.unitDeficit === 0 ? 'text-emerald-700' : 'text-rose-600'">
                 {{ report.summary.unitDeficit }}
               </span>
+              <span class="metric-subtext">{{ report.summary.unitDeficit === 0 ? 'Fully Met' : 'Units Remaining' }}</span>
             </div>
           </div>
 
           <!-- Blocking Errors with p-message -->
           @if (report.errors.length > 0) {
-            <div>
-              <h4 class="val-section-title errors">
-                <i class="pi pi-times-circle"></i> Blocking Errors ({{ report.errors.length }})
+            <div class="flex-col gap-sm">
+              <h4 class="val-section-title errors flex-row gap-xs text-xs font-bold text-rose-800">
+                <i class="pi pi-times-circle text-rose-600"></i> Blocking Errors ({{ report.errors.length }})
               </h4>
-              <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+              <div class="flex-col gap-xs">
                 @for (err of report.errors; track err.code + err.message) {
-                  <p-message severity="error">
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                      <span style="font-weight: 700; font-size: 0.625rem; padding: 0.15rem 0.4rem; border-radius: 4px; background: #fecaca; color: #991b1b;">{{ err.code }}</span>
-                      <span style="font-size: 0.75rem;">{{ err.message }}</span>
+                  <p-message severity="error" styleClass="w-full">
+                    <div class="flex items-center gap-2">
+                      <span class="font-mono font-bold text-[10px] px-1.5 py-0.5 rounded bg-rose-200 text-rose-900">{{ err.code }}</span>
+                      <span class="text-xs">{{ err.message }}</span>
                     </div>
                   </p-message>
                 }
@@ -586,16 +606,16 @@
 
           <!-- Advisory Warnings with p-message -->
           @if (report.warnings.length > 0) {
-            <div>
-              <h4 class="val-section-title warnings">
-                <i class="pi pi-exclamation-triangle"></i> Advisory Warnings ({{ report.warnings.length }})
+            <div class="flex-col gap-sm">
+              <h4 class="val-section-title warnings flex-row gap-xs text-xs font-bold text-amber-800">
+                <i class="pi pi-exclamation-triangle text-amber-600"></i> Advisory Warnings ({{ report.warnings.length }})
               </h4>
-              <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+              <div class="flex-col gap-xs">
                 @for (w of report.warnings; track w.code + w.message) {
-                  <p-message severity="warn">
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                      <span style="font-weight: 700; font-size: 0.625rem; padding: 0.15rem 0.4rem; border-radius: 4px; background: #fde68a; color: #92400e;">{{ w.code }}</span>
-                      <span style="font-size: 0.75rem;">{{ w.message }}</span>
+                  <p-message severity="warn" styleClass="w-full">
+                    <div class="flex items-center gap-2">
+                      <span class="font-mono font-bold text-[10px] px-1.5 py-0.5 rounded bg-amber-200 text-amber-900">{{ w.code }}</span>
+                      <span class="text-xs">{{ w.message }}</span>
                     </div>
                   </p-message>
                 }
@@ -604,14 +624,35 @@
           }
 
           @if (report.valid && report.warnings.length === 0) {
-            <p-message severity="success">
-              <div style="display: flex; flex-direction: column; gap: 0.25rem; padding: 0.25rem 0;">
-                <span style="font-weight: 700; font-size: 0.875rem;">Curriculum is Fully Compliant</span>
-                <span style="font-size: 0.75rem;">Meets all program unit thresholds, semester load limits, and DAG prerequisite acyclicity.</span>
+            <p-message severity="success" styleClass="w-full">
+              <div class="flex flex-col gap-0.5">
+                <span class="font-bold text-xs text-emerald-900">Curriculum is Fully Compliant</span>
+                <span class="text-xs text-emerald-800">Meets all program unit thresholds, semester load limits, and DAG prerequisite acyclicity.</span>
               </div>
             </p-message>
           }
         }
+
+        <!-- Dialog Footer -->
+        <div class="dialog-footer-content flex-between w-full">
+          <div class="footer-validation-feedback flex-row">
+            <span class="footer-status-badge success flex-row gap-xs">
+              <i class="pi pi-check-circle"></i>
+              <span>Verification complete</span>
+            </span>
+          </div>
+          <div class="dialog-footer-actions">
+            <p-button
+              label="Close"
+              icon="pi pi-times"
+              size="small"
+              [outlined]="true"
+              severity="secondary"
+              styleClass="action-btn-secondary"
+              (onClick)="isValidationModalOpen.set(false)">
+            </p-button>
+          </div>
+        </div>
       </div>
     </p-dialog>
 
@@ -621,54 +662,84 @@
       [visible]="isStateTransitionModalOpen()"
       (visibleChange)="isStateTransitionModalOpen.set($event)"
       [modal]="true"
-      [breakpoints]="{ '960px': '75vw', '640px': '92vw' }"
-      [style]="{ width: '480px', maxWidth: '95vw' }"
-      [contentStyle]="{ 'overflow-x': 'hidden' }">
-      <div class="dialog-content-body">
-        <p style="font-size: 0.8125rem; color: #4b5563; margin: 0;">
-          Current State: <span style="font-weight: 700; color: #111827;">{{ curr.status }}</span>.
-          Transitioning to <span style="font-weight: 600; color: #1d4ed8;">APPROVED</span> or <span style="font-weight: 600; color: #116834;">ACTIVE</span> requires zero validation errors.
+      [dismissableMask]="true"
+      [draggable]="false"
+      [resizable]="false"
+      [breakpoints]="{ '960px': '75vw', '640px': '95vw' }"
+      [style]="{ width: '520px', maxWidth: '96vw' }"
+      [contentStyle]="{ 'overflow-x': 'hidden' }"
+      styleClass="institutional-dialog">
+      <div class="dialog-content-body flex-col gap-md">
+        <!-- Context Bar -->
+        <div class="modal-context-bar flex-between surface-slate">
+          <div class="context-item flex-row gap-xs">
+            <i class="pi pi-sync context-icon"></i>
+            <span class="context-label">Current State:</span>
+            <strong class="context-val">{{ curr.status }}</strong>
+          </div>
+          <div class="context-item flex-row gap-xs">
+            <span class="context-label">Curriculum:</span>
+            <span class="badge-green font-mono">{{ curr.code }}</span>
+          </div>
+        </div>
+
+        <p class="text-xs text-slate-600 m-0">
+          State changes follow institutional governance gates. Transitioning to <span class="font-bold text-sky-800">APPROVED</span> or <span class="font-bold text-emerald-800">ACTIVE</span> requires passing all validation checks.
         </p>
 
-        <div class="transition-options-list">
+        <div class="transition-options-list flex-col gap-sm">
           <div
             (click)="confirmTransition('UNDER_REVIEW')"
-            class="transition-option-card">
-            <div>
+            class="transition-option-card institutional-card flex-between p-3 cursor-pointer hover:border-emerald-600 transition-colors">
+            <div class="flex-col gap-xs">
               <p-tag value="UNDER_REVIEW" severity="info"></p-tag>
-              <div class="transition-option-desc">Submit for Academic Head / Dean Review</div>
+              <div class="text-xs font-semibold text-slate-800">Submit for Academic Head / Dean Review</div>
             </div>
-            <i class="pi pi-chevron-right" style="color: #9ca3af; font-size: 0.875rem;"></i>
+            <i class="pi pi-chevron-right text-slate-400"></i>
           </div>
 
           <div
             (click)="confirmTransition('APPROVED')"
-            class="transition-option-card">
-            <div>
+            class="transition-option-card institutional-card flex-between p-3 cursor-pointer hover:border-emerald-600 transition-colors">
+            <div class="flex-col gap-xs">
               <p-tag value="APPROVED" severity="success"></p-tag>
-              <div class="transition-option-desc">Approved by Registrar / Dean (Locks mutations)</div>
+              <div class="text-xs font-semibold text-slate-800">Approved by Registrar / Dean (Locks mutations)</div>
             </div>
-            <i class="pi pi-chevron-right" style="color: #9ca3af; font-size: 0.875rem;"></i>
+            <i class="pi pi-chevron-right text-slate-400"></i>
           </div>
 
           <div
             (click)="confirmTransition('ACTIVE')"
-            class="transition-option-card active-target">
-            <div>
+            class="transition-option-card institutional-card active-target flex-between p-3 cursor-pointer hover:border-emerald-600 transition-colors">
+            <div class="flex-col gap-xs">
               <p-tag value="ACTIVE" severity="success"></p-tag>
-              <div class="transition-option-desc">Active for Student Enrolment Cohorts</div>
+              <div class="text-xs font-semibold text-slate-800">Active for Student Enrolment Cohorts</div>
             </div>
-            <i class="pi pi-chevron-right" style="color: #9ca3af; font-size: 0.875rem;"></i>
+            <i class="pi pi-chevron-right text-slate-400"></i>
           </div>
 
           <div
             (click)="confirmTransition('ARCHIVED')"
-            class="transition-option-card">
-            <div>
+            class="transition-option-card institutional-card flex-between p-3 cursor-pointer hover:border-emerald-600 transition-colors">
+            <div class="flex-col gap-xs">
               <p-tag value="ARCHIVED" severity="secondary"></p-tag>
-              <div class="transition-option-desc">Retire curriculum from active advising</div>
+              <div class="text-xs font-semibold text-slate-800">Retire curriculum from active advising</div>
             </div>
-            <i class="pi pi-chevron-right" style="color: #9ca3af; font-size: 0.875rem;"></i>
+            <i class="pi pi-chevron-right text-slate-400"></i>
+          </div>
+        </div>
+
+        <div class="dialog-footer-content flex-between w-full">
+          <span class="text-xs text-slate-400">Select target state to proceed</span>
+          <div class="dialog-footer-actions">
+            <p-button
+              label="Cancel"
+              size="small"
+              [outlined]="true"
+              severity="secondary"
+              styleClass="action-btn-secondary"
+              (onClick)="isStateTransitionModalOpen.set(false)">
+            </p-button>
           </div>
         </div>
       </div>
@@ -680,60 +751,103 @@
       [visible]="isCloneModalOpen()"
       (visibleChange)="isCloneModalOpen.set($event)"
       [modal]="true"
-      [breakpoints]="{ '960px': '75vw', '640px': '92vw' }"
-      [style]="{ width: '480px', maxWidth: '95vw' }"
-      [contentStyle]="{ 'overflow-x': 'hidden' }">
-      <div class="dialog-content-body">
-        <p style="font-size: 0.75rem; color: #6b7280; margin: 0 0 0.5rem;">
-          Creates a new draft revision deep-copying all semester term blocks and course allocations.
-        </p>
-        <div class="form-field-group">
-          <label for="cloneCodeInput" class="form-field-label">New Curriculum Code</label>
-          <input
-            id="cloneCodeInput"
-            pInputText
-            type="text"
-            style="width: 100%; font-size: 0.8125rem;"
-            [ngModel]="cloneCode()"
-            (ngModelChange)="cloneCode.set($event)" />
+      [dismissableMask]="true"
+      [draggable]="false"
+      [resizable]="false"
+      [breakpoints]="{ '960px': '75vw', '640px': '95vw' }"
+      [style]="{ width: '520px', maxWidth: '96vw' }"
+      [contentStyle]="{ 'overflow-x': 'hidden' }"
+      styleClass="institutional-dialog">
+      <div class="dialog-content-body flex-col gap-md">
+        <!-- Context Bar -->
+        <div class="modal-context-bar flex-between surface-slate">
+          <div class="context-item flex-row gap-xs">
+            <i class="pi pi-copy context-icon"></i>
+            <span class="context-label">Source:</span>
+            <strong class="context-val">{{ curr.code }}</strong>
+          </div>
+          <div class="context-item flex-row gap-xs">
+            <span class="context-label">Deep Copy:</span>
+            <span class="badge-green font-mono">Full Allocation</span>
+          </div>
         </div>
-        <div class="form-field-group">
-          <label for="cloneNameInput" class="form-field-label">Curriculum Name</label>
+
+        <p class="text-xs text-slate-500 m-0">
+          Creates a new draft revision deep-copying all semester term blocks, course allocations, and prerequisite DAG mappings.
+        </p>
+
+        <div class="form-row-2col">
+          <div class="form-field flex-col gap-xs">
+            <label for="cloneCodeInput" class="form-label">New Curriculum Code <span class="required-star">*</span></label>
+            <input
+              id="cloneCodeInput"
+              pInputText
+              type="text"
+              class="w-full font-mono font-bold-navy"
+              [ngModel]="cloneCode()"
+              (ngModelChange)="cloneCode.set($event)" />
+          </div>
+
+          <div class="form-field flex-col gap-xs">
+            <label for="cloneAyInput" class="form-label">Effective Academic Year <span class="required-star">*</span></label>
+            <input
+              id="cloneAyInput"
+              pInputText
+              type="text"
+              class="w-full font-mono"
+              [ngModel]="cloneAy()"
+              (ngModelChange)="cloneAy.set($event)" />
+          </div>
+        </div>
+
+        <div class="form-field flex-col gap-xs">
+          <label for="cloneNameInput" class="form-label">Curriculum Title / Name <span class="required-star">*</span></label>
           <input
             id="cloneNameInput"
             pInputText
             type="text"
-            style="width: 100%; font-size: 0.8125rem;"
+            class="w-full font-semibold-navy"
             [ngModel]="cloneName()"
             (ngModelChange)="cloneName.set($event)" />
         </div>
-        <div class="form-field-group">
-          <label for="cloneAyInput" class="form-field-label">Effective Academic Year</label>
-          <input
-            id="cloneAyInput"
-            pInputText
-            type="text"
-            style="width: 100%; font-size: 0.8125rem;"
-            [ngModel]="cloneAy()"
-            (ngModelChange)="cloneAy.set($event)" />
-        </div>
 
-        <div class="dialog-footer-row">
-          <p-button
-            label="Cancel"
-            size="small"
-            [outlined]="true"
-            severity="secondary"
-            (onClick)="isCloneModalOpen.set(false)">
-          </p-button>
-          <p-button
-            label="Clone Revision"
-            icon="pi pi-check"
-            size="small"
-            severity="primary"
-            [disabled]="store.isSaving()"
-            (onClick)="confirmClone()">
-          </p-button>
+        <!-- Two-Sided Footer -->
+        <div class="dialog-footer-content flex-between w-full">
+          <div class="footer-validation-feedback flex-row">
+            @if (!cloneCode() || !cloneName() || !cloneAy()) {
+              <span class="footer-status-badge warning flex-row gap-xs">
+                <i class="pi pi-info-circle"></i>
+                <span>Fill clone parameters</span>
+              </span>
+            } @else {
+              <span class="footer-status-badge success flex-row gap-xs">
+                <i class="pi pi-check-circle"></i>
+                <span>Ready to clone</span>
+              </span>
+            }
+          </div>
+
+          <div class="dialog-footer-actions flex-row gap-sm">
+            <p-button
+              label="Cancel"
+              icon="pi pi-times"
+              size="small"
+              [outlined]="true"
+              severity="secondary"
+              styleClass="action-btn-secondary"
+              (onClick)="isCloneModalOpen.set(false)">
+            </p-button>
+            <p-button
+              label="Clone Revision"
+              icon="pi pi-check"
+              size="small"
+              severity="primary"
+              styleClass="action-btn-primary"
+              [disabled]="store.isSaving() || !cloneCode() || !cloneName() || !cloneAy()"
+              [loading]="store.isSaving()"
+              (onClick)="confirmClone()">
+            </p-button>
+          </div>
         </div>
       </div>
     </p-dialog>

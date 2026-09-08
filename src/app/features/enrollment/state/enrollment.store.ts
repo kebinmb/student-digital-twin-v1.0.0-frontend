@@ -83,29 +83,69 @@ export class EnrollmentStore {
     }
   }
 
-  searchStudents(query: string = ''): void {
+  searchStudents(query: string = '', onLoaded?: (students: StudentSearchResultDto[]) => void): void {
     this.enrollmentApi.searchStudents(query).pipe(
       tap(students => {
-        if (students && students.length > 0) {
-          this.searchedStudents.set(students);
-        } else {
-          this.useFallbackStudents();
+        const list = students || [];
+        this.searchedStudents.set(list);
+        if (list.length > 0 && (!this.studentId() || !list.some(s => s.id === this.studentId()))) {
+          this.setStudentId(list[0].id);
         }
+        if (onLoaded) onLoaded(list);
       }),
       catchError(() => {
-        this.useFallbackStudents();
+        this.searchedStudents.set([]);
         return of([]);
       })
     ).subscribe();
   }
 
-  private useFallbackStudents(): void {
-    const fallback: StudentSearchResultDto[] = [
-      { id: 1, studentIdNumber: '2024-0001', fullName: 'Juan Dela Cruz', programCode: 'BSIT', yearLevel: 1, academicStatus: 'REGULAR' },
-      { id: 2, studentIdNumber: '2024-0002', fullName: 'Maria Santos', programCode: 'BSCS', yearLevel: 2, academicStatus: 'REGULAR' },
-      { id: 3, studentIdNumber: '2024-0003', fullName: 'Pedro Penduko', programCode: 'BSIS', yearLevel: 3, academicStatus: 'PROBATION' }
-    ];
-    this.searchedStudents.set(fallback);
+  createStudent(
+    request: import('../../../core/models/enrollment.model').CreateStudentRequest,
+    onSuccess?: (res: import('../../../core/models/enrollment.model').StudentProfileResponse) => void,
+    onError?: (msg: string) => void
+  ): void {
+    this.isLoading.set(true);
+    this.enrollmentApi.createStudent(request).pipe(
+      tap(res => {
+        this.searchStudents('', () => {
+          this.setStudentId(res.id);
+        });
+        if (onSuccess) onSuccess(res);
+      }),
+      catchError(err => {
+        const msg = err.error?.detail || err.error?.message || 'Failed to register new student.';
+        this.errorMessage.set(msg);
+        if (onError) onError(msg);
+        return of(null);
+      }),
+      finalize(() => this.isLoading.set(false))
+    ).subscribe();
+  }
+
+  creditTransfereeCourses(
+    studentId: number,
+    request: import('../../../core/models/enrollment.model').CreditTransfereeCoursesRequest,
+    onSuccess?: (res: import('../../../core/models/enrollment.model').TransfereeCreditingSummaryResponse) => void,
+    onError?: (msg: string) => void
+  ): void {
+    this.isLoading.set(true);
+    this.enrollmentApi.creditTransfereeCourses(studentId, request).pipe(
+      tap(res => {
+        const termId = this.selectedTermId();
+        if (termId) {
+          this.loadStudentAdvising(studentId, termId);
+        }
+        if (onSuccess) onSuccess(res);
+      }),
+      catchError(err => {
+        const msg = err.error?.detail || err.error?.message || 'Failed to credit transferee courses.';
+        this.errorMessage.set(msg);
+        if (onError) onError(msg);
+        return of(null);
+      }),
+      finalize(() => this.isLoading.set(false))
+    ).subscribe();
   }
 
   // Actions

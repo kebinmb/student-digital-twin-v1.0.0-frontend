@@ -53,21 +53,24 @@
       </div>
     } @else {
       <div class="metrics-grid">
-        <div class="metric-box">
+        <div class="metric-card">
           <span class="metric-label">Enlisted Subjects</span>
-          <span class="metric-value">
+          <span class="metric-value font-bold-navy">
             {{ (store.enrollment()?.items?.length || 0) === 1 ? '1 Course' : ((store.enrollment()?.items?.length || 0) + ' Courses') }}
           </span>
+          <span class="metric-subtext">Current Academic Term</span>
         </div>
-        <div class="metric-box">
+        <div class="metric-card">
           <span class="metric-label">Total Credit Units</span>
-          <span class="metric-value">{{ store.totalUnits() }} / {{ store.maxUnits() }} Units</span>
+          <span class="metric-value font-bold-navy font-mono">{{ store.totalUnits() }} / {{ store.maxUnits() }} Units</span>
+          <span class="metric-subtext">CHED Term Load Cap</span>
         </div>
-        <div class="metric-box">
+        <div class="metric-card">
           <span class="metric-label">Registration Status</span>
-          <div class="metric-status-tag">
+          <div class="mt-1">
             <p-tag [value]="store.enrollment()?.status || 'NOT_STARTED'" [severity]="getStatusSeverity(store.enrollment()?.status || 'DRAFT')"></p-tag>
           </div>
+          <span class="metric-subtext">Enrollment Lifecycle</span>
         </div>
       </div>
     }
@@ -102,21 +105,21 @@
 
       <ng-template pTemplate="body" let-item>
         <tr (click)="openItemDrawer(item)" class="table-row-hover">
-          <td><strong class="section-code-badge">{{ item.sectionCode }}</strong></td>
+          <td><strong class="section-code-badge font-mono font-bold-navy">{{ item.sectionCode }}</strong></td>
           <td>
             <div class="course-cell">
-              <span class="course-code">{{ item.courseCode }}</span>
+              <span class="course-code font-mono font-bold-navy">{{ item.courseCode }}</span>
               <span class="course-title">{{ item.courseTitle }}</span>
             </div>
           </td>
           <td>
-            <span class="units-text">{{ item.creditUnits }} units</span>
+            <span class="units-text font-mono font-semibold">{{ item.creditUnits }} units</span>
           </td>
           <td>
             <div class="table-schedule-list">
               @for (slot of formatScheduleSlots(item.scheduleSummary); track slot.day + '-' + slot.timeRoom + '-' + $index) {
                 <div class="table-schedule-pill">
-                  <span class="table-schedule-day">{{ slot.day }}</span>
+                  <span class="table-schedule-day font-mono font-bold">{{ slot.day }}</span>
                   <span class="table-schedule-time">{{ slot.timeRoom }}</span>
                 </div>
               }
@@ -155,10 +158,12 @@
       <ng-template pTemplate="emptymessage">
         <tr>
           <td colspan="6" class="empty-state-cell">
-            <div class="empty-state-wrapper">
-              <i class="pi pi-folder-open empty-icon"></i>
-              <p class="empty-text">No courses currently enlisted for this academic term.</p>
-              <p class="empty-subtext">Switch to the "Course Advising Checklist" tab to review eligible courses and enlist open sections.</p>
+            <div class="empty-state-card flex-col flex-center py-6">
+              <div class="empty-state-icon flex-center">
+                <i class="pi pi-folder-open"></i>
+              </div>
+              <h4 class="empty-state-title">No Courses Currently Enlisted</h4>
+              <p class="empty-state-subtext">Switch to the "Course Advising Checklist" tab to review eligible courses and enlist open sections.</p>
             </div>
           </td>
         </tr>

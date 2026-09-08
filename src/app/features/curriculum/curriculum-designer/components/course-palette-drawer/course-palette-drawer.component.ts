@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { Drawer, DrawerModule } from 'primeng/drawer';
 import { Button, ButtonModule } from 'primeng/button';
 import { InputText, InputTextModule } from 'primeng/inputtext';
-import { Tag, TagModule } from 'primeng/tag';
 import { IconField, IconFieldModule } from 'primeng/iconfield';
 import { InputIcon, InputIconModule } from 'primeng/inputicon';
 import { CurriculumDesignerStore } from '../../state/curriculum-designer.store';
@@ -21,8 +20,6 @@ import { CurriculumDesignerStore } from '../../state/curriculum-designer.store';
     ButtonModule,
     InputText,
     InputTextModule,
-    Tag,
-    TagModule,
     IconField,
     IconFieldModule,
     InputIcon,

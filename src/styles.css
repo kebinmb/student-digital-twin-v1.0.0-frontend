@@ -401,3 +401,346 @@ input::placeholder {
   white-space: nowrap;
   border-width: 0;
 }
+
+/* ==========================================================================
+   CHMSU INSTITUTIONAL DESIGN SYSTEM - ATOMIC LAYOUT & UTILITY CLASSES
+   ========================================================================== */
+
+/* Standard Flex Utility Pairings */
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-row {
+  display: flex;
+  align-items: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-center {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Standard Spacing Scale */
+.gap-xs { gap: 0.25rem; }
+.gap-sm { gap: 0.5rem; }
+.gap-md { gap: 0.75rem; }
+.gap-lg { gap: 1rem; }
+.gap-xl { gap: 1.25rem; }
+.gap-2xl { gap: 1.5rem; }
+
+/* Institutional Typography & Neutral Hierarchy */
+.font-bold-navy {
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+}
+
+.font-semibold-navy {
+  font-weight: 600;
+  color: var(--chmsu-navy-900, #0f172a);
+}
+
+.font-mono {
+  font-family: var(--font-family-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+}
+
+.form-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-800, #1e293b);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.25rem;
+}
+
+.required-star {
+  color: #dc2626;
+  font-weight: 700;
+  margin-left: 0.15rem;
+}
+
+.help-text {
+  font-size: 0.75rem;
+  color: var(--chmsu-slate-500, #64748b);
+  margin-top: 0.25rem;
+}
+
+/* Core Form Fields & Spacing */
+.form-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-row-2col {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.form-field-time-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.time-field {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Modal and Drawer Containers */
+.dialog-form-grid,
+.slot-details-container,
+.faculty-workload-content,
+.workload-dashboard {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Surface & Card Design Tokens */
+.surface-slate {
+  background: var(--chmsu-slate-50, #f8fafc);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-md, 8px);
+}
+
+.institutional-card {
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-300, #cbd5e1);
+  border-radius: var(--chmsu-border-radius-md, 8px);
+}
+
+.badge-green {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--status-emerald-bg, #ecfdf5);
+  border: 1px solid var(--status-emerald-border, #a7f3d0);
+  color: var(--status-emerald-text, #047857);
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+/* Modal Context Bars */
+.modal-context-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.context-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+}
+
+.context-icon {
+  color: var(--chmsu-green-main, #116834);
+  font-size: 0.875rem;
+}
+
+.context-label {
+  color: var(--chmsu-slate-500, #64748b);
+  font-weight: 600;
+}
+
+.context-val {
+  color: var(--chmsu-navy-900, #0f172a);
+  font-weight: 700;
+}
+
+.context-tag {
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
+/* Two-Sided Dialog Footers */
+.dialog-footer-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  width: 100%;
+  padding-top: 1rem;
+  border-top: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  margin-top: 1rem;
+}
+
+.footer-validation-feedback {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.footer-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+}
+
+.footer-status-badge.warning {
+  background: var(--status-amber-bg, #fffbeb);
+  border: 1px solid var(--status-amber-border, #fde68a);
+  color: var(--status-amber-text, #b45309);
+}
+
+.footer-status-badge.success {
+  background: var(--status-emerald-bg, #ecfdf5);
+  border: 1px solid var(--status-emerald-border, #a7f3d0);
+  color: var(--status-emerald-text, #047857);
+}
+
+.dialog-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Primary and Secondary Action Buttons */
+.action-btn-primary.p-button {
+  background: var(--chmsu-green-main, #116834) !important;
+  border-color: var(--chmsu-green-main, #116834) !important;
+  color: #ffffff !important;
+}
+
+.action-btn-primary.p-button:hover {
+  background: var(--chmsu-green-deep, #0c5027) !important;
+  border-color: var(--chmsu-green-deep, #0c5027) !important;
+}
+
+.action-btn-secondary.p-button {
+  background: #ffffff !important;
+  border-color: var(--chmsu-slate-300, #cbd5e1) !important;
+  color: var(--chmsu-navy-800, #1e293b) !important;
+}
+
+.action-btn-secondary.p-button:hover {
+  background: var(--chmsu-slate-100, #f1f5f9) !important;
+  border-color: var(--chmsu-slate-400, #94a3b8) !important;
+}
+
+/* Table Actions & Cells */
+.table-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.schedules-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+/* Centered Table Empty State Patterns */
+.empty-state-cell {
+  text-align: center;
+  padding: 3rem 1.5rem !important;
+}
+
+.empty-state-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.empty-state-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  background: #f1f5f9;
+  border: 2px dashed #cbd5e1;
+  color: #94a3b8;
+  font-size: 1.5rem;
+  margin: 0 auto 0.75rem auto;
+}
+
+.empty-state-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.35rem 0;
+}
+
+.empty-state-subtext {
+  font-size: 0.8125rem;
+  color: #64748b;
+  max-width: 440px;
+  line-height: 1.5;
+  margin: 0 auto;
+}
+
+/* Form Validation Text Fallbacks */
+.p-error,
+.field-error-text {
+  color: #dc2626;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+/* Mobile & Tablet Responsiveness */
+@media (max-width: 768px) {
+  .form-row-2col {
+    grid-template-columns: 1fr;
+  }
+
+  .form-field-time-group {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-context-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dialog-footer-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dialog-footer-actions {
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 640px) {
+  .dialog-footer-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .dialog-footer-actions .p-button {
+    width: 100%;
+  }
+}

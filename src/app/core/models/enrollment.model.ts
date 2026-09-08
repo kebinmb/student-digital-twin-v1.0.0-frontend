@@ -99,4 +99,119 @@ export interface StudentSearchResultDto {
   academicStatus: string;
 }
 
+export interface CreateStudentRequest {
+  studentNumber: string;
+  username: string;
+  email: string;
+  password?: string;
+  programId: number;
+  curriculumId: number;
+  classification: 'INCOMING_FIRST_YEAR' | 'TRANSFEREE' | 'RETURNEE' | 'CONTINUING';
+  yearLevel?: number;
+}
+
+export interface StudentProfileResponse {
+  id: number;
+  studentNumber: string;
+  userId: number;
+  username: string;
+  email: string;
+  programId: number;
+  programCode: string;
+  programName: string;
+  curriculumId: number;
+  curriculumCode: string;
+  classification: string;
+  yearLevel: number;
+  enrollmentStatus: string;
+  isGraduating: boolean;
+  totalUnitsEarned: number;
+  cumulativeGpa?: number | null;
+}
+
+export interface CreditCourseItemRequest {
+  externalInstitution: string;
+  externalCourseCode: string;
+  externalCourseTitle: string;
+  internalCourseId: number;
+  externalNumericalGrade: number;
+  creditsGranted: number;
+  remarks?: string;
+}
+
+export interface CreditTransfereeCoursesRequest {
+  items: CreditCourseItemRequest[];
+}
+
+export interface CourseEquivalencyDto {
+  id: number;
+  studentId: number;
+  externalInstitution: string;
+  externalCourseCode: string;
+  externalCourseTitle: string;
+  internalCourseId: number;
+  internalCourseCode: string;
+  internalCourseTitle: string;
+  externalNumericalGrade: number;
+  creditsGranted: number;
+  status: string;
+  approvedByUsername?: string | null;
+  remarks?: string | null;
+}
+
+export interface TransfereeCreditingSummaryResponse {
+  studentId: number;
+  studentNumber: string;
+  creditedCoursesCount: number;
+  totalUnitsCredited: number;
+  creditedCourses: CourseEquivalencyDto[];
+}
+
+export interface RosterStudentDto {
+  enrollmentItemId: number;
+  studentId: number;
+  studentNumber: string;
+  studentName: string;
+  programCode: string;
+  yearLevel: number;
+  finalNumericalGrade?: number | null;
+  completionStatus: string;
+}
+
+export interface SectionRosterResponse {
+  sectionId: number;
+  sectionCode: string;
+  courseId: number;
+  courseCode: string;
+  courseTitle: string;
+  creditUnits: number;
+  termId: number;
+  termName: string;
+  gradeStatus: 'DRAFT' | 'SUBMITTED' | 'VERIFIED' | 'SEALED';
+  primaryInstructorId?: number | null;
+  primaryInstructorName?: string | null;
+  enrolledCount: number;
+  maxCapacity: number;
+  students: RosterStudentDto[];
+}
+
+export interface GradeEntryDto {
+  enrollmentItemId: number;
+  finalNumericalGrade?: number | null;
+  completionStatus?: string | null;
+}
+
+export interface SaveSectionGradesRequest {
+  grades: GradeEntryDto[];
+  submitForVerification: boolean;
+}
+
+export interface GradeActionResponse {
+  sectionId: number;
+  sectionCode: string;
+  gradeStatus: string;
+  updatedCount: number;
+  message: string;
+}
+
 

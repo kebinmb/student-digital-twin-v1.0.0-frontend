@@ -2,12 +2,12 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  font-family: var(--font-family-base, 'Epic Pro', Arial, sans-serif);
+  font-family: var(--font-family-base, Arial, sans-serif);
 }
 
 .header-card {
-  background: var(--p-surface-0, #ffffff);
-  border: 1px solid var(--p-surface-200, #e5e7eb);
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
   border-radius: 12px;
   padding: 1.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
@@ -29,28 +29,106 @@
   margin: 0 0 0.25rem 0;
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--p-surface-900, #111827);
+  color: var(--chmsu-navy-900, #0f172a);
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-family: var(--font-family-base, 'Epic Pro', Arial, sans-serif);
+  font-family: var(--font-family-heading);
 }
 
 .module-title i {
-  color: var(--p-primary-color, #116834);
+  color: var(--chmsu-green-main, #116834);
 }
 
 .module-subtitle {
   margin: 0;
   font-size: 0.8125rem;
-  color: var(--p-surface-500, #6b7280);
+  color: var(--chmsu-slate-500, #64748b);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Dedicated Filter Strip Toolbar Card */
+.filter-strip-card {
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.filter-controls-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.filter-strip-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.selected-student-badge {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.status-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: var(--status-emerald-text, #047857);
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* Student Selector Collision Prevention */
+.student-selected-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
+  padding-right: 1.25rem;
+}
+
+.student-item-icon {
+  flex-shrink: 0;
+  font-size: 0.8125rem;
+  color: var(--chmsu-green-main, #116834);
+}
+
+.student-item-name {
+  flex-shrink: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.student-item-id {
+  flex-shrink: 0;
+}
+
+.student-option-item {
+  width: 100%;
 }
 
 .selector-label {
   display: block;
   font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--p-surface-600, #4b5563);
+  font-weight: 700;
+  color: var(--chmsu-navy-800, #1e293b);
   margin-bottom: 0.25rem;
   text-transform: uppercase;
   letter-spacing: 0.025em;
@@ -141,8 +219,8 @@
 }
 
 .checklist-card {
-  background: var(--p-surface-0, #ffffff);
-  border: 1px solid var(--p-surface-200, #e5e7eb);
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
@@ -150,20 +228,20 @@
 
 .card-header {
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--p-surface-200, #e5e7eb);
+  border-bottom: 1px solid var(--chmsu-slate-200, #e2e8f0);
 }
 
 .card-title {
   margin: 0 0 0.25rem 0;
   font-size: 1.0625rem;
-  font-weight: 600;
-  color: var(--p-surface-900, #111827);
-  font-family: var(--font-family-base, 'Epic Pro', Arial, sans-serif);
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+  font-family: var(--font-family-heading);
 }
 
 .card-caption {
   font-size: 0.8125rem;
-  color: var(--p-surface-500, #6b7280);
+  color: var(--chmsu-slate-500, #64748b);
 }
 
 .course-identity {
@@ -174,13 +252,13 @@
 
 .course-code {
   font-weight: 700;
-  color: var(--p-primary-color, #116834);
+  color: var(--chmsu-green-main, #116834);
   font-size: 0.875rem;
 }
 
 .course-title {
   font-size: 0.8125rem;
-  color: var(--p-surface-800, #1f2937);
+  color: var(--chmsu-navy-800, #1e293b);
 }
 
 .units-badge {
@@ -442,5 +520,171 @@
   align-items: flex-start !important;
   gap: 0.5rem !important;
 }
+
+/* ==========================================================================
+   ADMISSIONS & TRANSFEREE CREDITING DIALOG STYLES
+   ========================================================================== */
+
+.form-row-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  .form-row-2col {
+    grid-template-columns: 1fr;
+    gap: 0.875rem;
+  }
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.form-label,
+.form-field-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-800, #1e293b);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.25rem;
+}
+
+.required-star {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+/* Dynamic Classification Alert Banners */
+.classification-alert-transferee {
+  background-color: var(--status-amber-bg, #fffbeb);
+  border: 1px solid var(--status-amber-border, #fde68a);
+  color: var(--status-amber-text, #b45309);
+}
+
+.classification-alert-freshman {
+  background-color: var(--chmsu-green-soft, #f0fdf4);
+  border: 1px solid #bbf7d0;
+  color: var(--chmsu-green-deep, #0c5027);
+}
+
+/* Interactive Equivalency Preview Card */
+.equivalency-preview-card {
+  border-radius: 8px;
+  background-color: #f8fafc;
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+}
+
+.course-node {
+  background-color: #ffffff;
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: 8px;
+}
+
+.course-node:hover {
+  border-color: var(--chmsu-slate-300, #cbd5e1);
+}
+
+.node-label {
+  font-size: 0.625rem;
+  letter-spacing: 0.05em;
+}
+
+.node-code {
+  font-size: 0.875rem;
+  letter-spacing: -0.01em;
+  font-family: var(--font-family-mono);
+}
+
+.badge-green {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--status-emerald-bg, #ecfdf5);
+  border: 1px solid var(--status-emerald-border, #a7f3d0);
+  color: var(--status-emerald-text, #047857);
+  font-weight: 700;
+}
+
+/* Empty State Card */
+.empty-state-cell {
+  text-align: center;
+  padding: 3rem 1.5rem !important;
+}
+
+.empty-state-card {
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.empty-state-icon {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  background: #f1f5f9;
+  border: 2px dashed #cbd5e1;
+  color: #94a3b8;
+  font-size: 1.5rem;
+  margin: 0 auto 0.75rem auto;
+}
+
+.empty-state-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+  font-family: var(--font-family-heading);
+  margin: 0 0 0.35rem 0;
+}
+
+.empty-state-subtext {
+  font-size: 0.8125rem;
+  color: var(--chmsu-slate-500, #64748b);
+  max-width: 420px;
+  line-height: 1.5;
+  margin: 0 auto;
+}
+
+/* Responsive Layout Adaptations */
+@media (max-width: 768px) {
+  .header-main {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .header-actions .p-button {
+    flex: 1;
+  }
+
+  .filter-strip-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .filter-controls-group {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .student-switcher-box,
+  .term-selector-box {
+    width: 100% !important;
+  }
+}
+
 
 

@@ -1,0 +1,336 @@
+<main class="gradebook-container" aria-label="Faculty Gradebook & Sealing Engine">
+  <p-toast></p-toast>
+  <p-confirmdialog></p-confirmdialog>
+
+  <!-- Header Card & Section Selector -->
+  <header class="header-card">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="flex-1">
+        <h2 class="module-title">
+          <i class="pi pi-file-edit"></i>
+          Section Gradebook & Registrar Sealing Engine
+        </h2>
+        <p class="module-subtitle">
+          CHED CMO No. 25, s. 2015 Four-Tier Lifecycle: DRAFT &rarr; SUBMITTED &rarr; VERIFIED &rarr; SEALED
+        </p>
+      </div>
+
+      <!-- Term & Section Filter Pickers -->
+      <div class="flex flex-wrap items-center gap-3">
+        <div class="flex flex-col gap-1 w-full sm:w-64">
+          <label for="term-select" class="text-xs font-bold text-slate-700">Academic Term:</label>
+          <p-select 
+            id="term-select"
+            [options]="termOptions()" 
+            [ngModel]="selectedTermId()" 
+            (ngModelChange)="onTermSelect($event)"
+            [panelStyle]="{ 'min-width': '18rem' }"
+            optionLabel="label" 
+            optionValue="value" 
+            placeholder="Select Academic Term"
+            styleClass="w-full text-xs">
+          </p-select>
+        </div>
+
+        <div class="flex flex-col gap-1 w-full sm:w-80">
+          <label for="section-select" class="text-xs font-bold text-slate-700">Class Section:</label>
+          <p-select 
+            id="section-select"
+            [options]="sectionOptions()" 
+            [ngModel]="selectedSectionId()" 
+            (ngModelChange)="onSectionSelect($event)"
+            [filter]="true"
+            filterBy="label"
+            [panelStyle]="{ 'min-width': '24rem', 'max-width': '95vw' }"
+            optionLabel="label" 
+            optionValue="value" 
+            placeholder="Select Course & Section"
+            styleClass="w-full text-xs"
+            [disabled]="sections().length === 0">
+          </p-select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Section Metadata & Sealing Controls -->
+    @if (roster(); as ros) {
+      <div class="section-banner mt-4 pt-4 border-t border-slate-200">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-2">
+              <span class="text-lg font-bold text-slate-900">{{ ros.courseCode }} — {{ ros.courseTitle }}</span>
+              <span class="font-mono text-xs font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 border border-emerald-300">
+                {{ ros.sectionCode }}
+              </span>
+            </div>
+            <div class="flex flex-wrap items-center gap-3 text-xs text-slate-600">
+              <span><strong>Primary Instructor:</strong> {{ ros.primaryInstructorName || 'Unassigned / Adjunct' }}</span>
+              <span class="text-slate-300">&bull;</span>
+              <span><strong>Enrolled Students:</strong> {{ ros.students.length }}</span>
+              <span class="text-slate-300">&bull;</span>
+              <div class="flex items-center gap-1.5">
+                <strong>Gradebook Status:</strong>
+                <p-tag 
+                  [value]="getGradeStatusLabel(ros.gradeStatus)" 
+                  [severity]="getStatusBadgeSeverity(ros.gradeStatus)"
+                  styleClass="text-[11px] font-bold">
+                </p-tag>
+              </div>
+            </div>
+          </div>
+
+          <!-- Grade Workflow Actions -->
+          <div class="flex flex-wrap items-center gap-2">
+            <!-- Save Draft (Faculty / Dean / Admin) -->
+            <p-button 
+              label="Save Draft" 
+              icon="pi pi-save" 
+              severity="secondary" 
+              size="small"
+              [disabled]="!canEditGrades() || hasGradeErrors() || isSaving()"
+              [loading]="isSaving()"
+              (onClick)="saveDraft()">
+            </p-button>
+
+            <!-- Submit to Dean (Faculty) -->
+            <p-button 
+              label="Submit to Dean" 
+              icon="pi pi-send" 
+              severity="info" 
+              size="small"
+              [disabled]="ros.gradeStatus !== 'DRAFT' || hasGradeErrors() || isSaving()"
+              [loading]="isSaving()"
+              (onClick)="submitToDean()">
+            </p-button>
+
+            <!-- Verify Grades (Dean / Admin) -->
+            @if (isDean()) {
+              <p-button 
+                label="Verify Grades" 
+                icon="pi pi-verified" 
+                severity="help" 
+                size="small"
+                [disabled]="ros.gradeStatus === 'SEALED' || ros.gradeStatus === 'VERIFIED'"
+                [loading]="isSaving()"
+                (onClick)="verifyGrades()">
+              </p-button>
+            }
+
+            <!-- Seal & Lock Records (Registrar / Admin) -->
+            @if (isRegistrar()) {
+              <p-button 
+                label="Seal Grades" 
+                icon="pi pi-lock" 
+                severity="success" 
+                size="small"
+                [disabled]="ros.gradeStatus === 'SEALED' || (ros.gradeStatus !== 'VERIFIED' && !isAdmin())"
+                [loading]="isSaving()"
+                (onClick)="sealGrades()">
+              </p-button>
+            }
+          </div>
+        </div>
+
+        <!-- KPI Metrics Grid -->
+        <div class="metrics-grid mt-4">
+          <div class="metric-card">
+            <span class="metric-label">Class Size</span>
+            <span class="metric-value font-bold-navy">{{ totalStudents() }} Students</span>
+            <span class="metric-subtext">Total Enrolled</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Passing Rate</span>
+            <span class="metric-value text-emerald-700">
+              {{ totalStudents() > 0 ? ((passedCount() / totalStudents()) * 100 | number:'1.0-0') : 0 }}%
+            </span>
+            <span class="metric-subtext">{{ passedCount() }} of {{ totalStudents() }} Passed</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Deficient / INC</span>
+            <span class="metric-value text-amber-600">
+              {{ failedCount() + incCount() }}
+            </span>
+            <span class="metric-subtext">{{ failedCount() }} Failed &bull; {{ incCount() }} Incomplete</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Class Grade Average</span>
+            <span class="metric-value font-mono font-bold-navy">
+              {{ averageGrade() !== null ? (averageGrade() | number:'1.2-2') : 'N/A' }}
+            </span>
+            <span class="metric-subtext">CHED Scale (1.00 - 5.00)</span>
+          </div>
+        </div>
+      </div>
+    }
+  </header>
+
+  <!-- Contextual Phase Status Banner -->
+  @if (roster(); as ros) {
+    <div class="phase-banner mb-4" [ngClass]="'phase-' + ros.gradeStatus.toLowerCase()">
+      <div class="flex items-start gap-3">
+        <div class="phase-icon-box">
+          <i [class]="phaseInfo().icon"></i>
+        </div>
+        <div class="flex flex-col gap-1 flex-1">
+          <div class="flex items-center gap-2">
+            <span class="phase-title">{{ phaseInfo().title }}</span>
+            <span class="phase-badge" [ngClass]="phaseInfo().badgeClass">
+              {{ ros.gradeStatus }}
+            </span>
+          </div>
+          <p class="phase-description">{{ phaseInfo().description }}</p>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Grade Validation Error Alert -->
+  @if (hasGradeErrors()) {
+    <div class="mb-4">
+      <p-message severity="error" styleClass="w-full shadow-none border border-rose-200 bg-rose-50/70 rounded-lg">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold text-rose-900">Grading Scale Error:</span>
+          <span class="text-xs text-rose-700">One or more student grades do not conform to CHED CMO 25 increments (1.00, 1.25, 1.50, ..., 3.00, 4.00, 5.00). Save and submit operations are disabled until corrected.</span>
+        </div>
+      </p-message>
+    </div>
+  }
+
+  <!-- Error Notice -->
+  @if (errorMessage()) {
+    <div class="mb-4">
+      <p-message severity="warn" styleClass="w-full shadow-none border border-amber-200 bg-amber-50/60 rounded-lg">
+        <div class="flex flex-col gap-0.5 ml-2">
+          <span class="text-xs font-bold text-amber-900">Notice:</span>
+          <span class="text-sm text-amber-800">{{ errorMessage() }}</span>
+        </div>
+      </p-message>
+    </div>
+  }
+
+  <!-- Gradebook Roster Table Card -->
+  <section class="table-card">
+    <p-table 
+      [value]="editableStudents()" 
+      [loading]="isLoading()" 
+      responsiveLayout="scroll"
+      styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped">
+      
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 50px; text-align: center;">#</th>
+          <th style="width: 140px;">Student ID</th>
+          <th>Student Full Name</th>
+          <th style="width: 160px;">Program & Year</th>
+          <th style="width: 170px;">Numerical Grade (1.00-5.00)</th>
+          <th style="width: 190px;">Completion Status</th>
+          <th style="width: 130px; text-align: center;">Academic Status</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-student let-rowIndex="rowIndex">
+        <tr [class.bg-amber-50]="student.isDirty">
+          <td style="text-align: center;" class="text-xs text-slate-500 font-mono">
+            {{ rowIndex + 1 }}
+          </td>
+          <td>
+            <span class="font-mono text-xs font-bold font-bold-navy bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+              {{ student.studentNumber }}
+            </span>
+          </td>
+          <td class="font-semibold text-xs font-bold-navy">
+            {{ student.studentName }}
+          </td>
+          <td class="text-xs text-slate-700">
+            <span class="font-semibold">{{ student.programCode }}</span>
+            <span class="text-slate-400 ms-1">Year {{ student.yearLevel }}</span>
+          </td>
+          <td>
+            @if (canEditGrades()) {
+              <div class="flex flex-col gap-1">
+                <p-inputnumber 
+                  [ngModel]="student.finalNumericalGrade" 
+                  (ngModelChange)="onGradeChange(student, $event)"
+                  [min]="1.00" 
+                  [max]="5.00" 
+                  [step]="0.25" 
+                  [minFractionDigits]="2" 
+                  [maxFractionDigits]="2"
+                  placeholder="Grade"
+                  [invalid]="!!student.gradeError"
+                  styleClass="w-full text-xs">
+                </p-inputnumber>
+                @if (student.gradeError) {
+                  <small class="p-error text-[11px] leading-tight">
+                    {{ student.gradeError }}
+                  </small>
+                }
+              </div>
+            } @else {
+              <span class="font-mono text-xs font-bold" 
+                    [ngClass]="{
+                      'text-emerald-700': student.finalNumericalGrade && student.finalNumericalGrade <= 3.00,
+                      'text-rose-600': student.finalNumericalGrade && student.finalNumericalGrade > 3.00,
+                      'text-slate-500': !student.finalNumericalGrade
+                    }">
+                {{ student.finalNumericalGrade ? (student.finalNumericalGrade | number:'1.2-2') : 'No Grade' }}
+              </span>
+            }
+          </td>
+          <td>
+            @if (canEditGrades()) {
+              <p-select 
+                [options]="completionStatusOptions" 
+                [ngModel]="student.completionStatus" 
+                (ngModelChange)="onStatusChange(student, $event)"
+                optionLabel="label" 
+                optionValue="value" 
+                styleClass="w-full text-xs">
+              </p-select>
+            } @else {
+              <p-tag 
+                [value]="student.completionStatus || 'IN_PROGRESS'" 
+                [severity]="getCompletionSeverity(student.completionStatus)">
+              </p-tag>
+            }
+          </td>
+          <td style="text-align: center;">
+            @if (student.completionStatus === 'PASSED') {
+              <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
+                CREDITED
+              </span>
+            } @else if (student.completionStatus === 'FAILED') {
+              <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-rose-100 text-rose-800 border border-rose-300">
+                DEFICIENT
+              </span>
+            } @else if (student.completionStatus === 'INCOMPLETE') {
+              <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-amber-100 text-amber-800 border border-amber-300">
+                INC PENDING
+              </span>
+            } @else {
+              <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-slate-100 text-slate-700 border border-slate-200">
+                PENDING
+              </span>
+            }
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="empty-state-cell">
+            <div class="empty-state-card flex flex-col items-center justify-center">
+              <div class="empty-state-icon flex items-center justify-center">
+                <i class="pi pi-users"></i>
+              </div>
+              <h3 class="empty-state-title">No Enrolled Students In This Section</h3>
+              <p class="empty-state-subtext">
+                Select a scheduled section with active enrollments from the header above to load the official gradebook roster.
+              </p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </section>
+</main>

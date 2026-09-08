@@ -289,14 +289,14 @@
       </ng-template>
 
       <ng-template pTemplate="emptymessage">
-        <tr>
+        <tr class="p-datatable-emptymessage">
           <td colspan="7">
-            <div class="empty-state-card flex-col">
+            <div class="empty-state-card flex-col align-items-center">
               <div class="empty-state-icon flex-center">
                 <i class="pi pi-calendar-times"></i>
               </div>
               <h3 class="empty-state-title">No Class Sections Scheduled</h3>
-              <p class="empty-state-subtext">
+              <p class="empty-state-subtext text-center">
                 There are no active class section schedule allocations created for this academic term and curriculum yet.
               </p>
               @if (store.isCurriculumActive()) {
@@ -497,23 +497,23 @@
               <span class="ched-badge badge-green">CHED CMO No. 25</span>
             </div>
 
-            <div class="duration-breakdown-row text-slate-400">
-              <div class="breakdown-card flex-row text-slate-400" [class.matched]="isLecDurationValid()" [class.mismatched]="!isLecDurationValid()">
-                <div class="breakdown-card-icon flex-row flex-center text-slate-400">
+            <div class="duration-breakdown-row">
+              <div class="breakdown-card flex-row gap-sm" [class.matched]="isLecDurationValid()" [class.mismatched]="!isLecDurationValid()">
+                <div class="breakdown-card-icon flex-center">
                   <i class="pi" [ngClass]="isLecDurationValid() ? 'pi-check' : 'pi-times'"></i>
                 </div>
-                <div class="breakdown-card-info flex-col flex-row text-slate-400">
-                  <span class="breakdown-card-label flex-row text-slate-400 kpi-label">Lecture Hours</span>
-                  <span class="breakdown-card-val flex-row text-slate-400">{{ allocatedLecMinutes() }}m / {{ requiredLecMinutes() }}m ({{ selectedCourse()?.lectureUnits || 0 }} hrs)</span>
+                <div class="breakdown-card-info flex-col">
+                  <span class="breakdown-card-label kpi-label">Lecture Hours</span>
+                  <span class="breakdown-card-val">{{ allocatedLecMinutes() }}m / {{ requiredLecMinutes() }}m ({{ selectedCourse()?.lectureUnits || 0 }} hrs)</span>
                 </div>
               </div>
-              <div class="breakdown-card flex-row text-slate-400" [class.matched]="isLabDurationValid()" [class.mismatched]="!isLabDurationValid()">
-                <div class="breakdown-card-icon flex-row flex-center text-slate-400">
+              <div class="breakdown-card flex-row gap-sm" [class.matched]="isLabDurationValid()" [class.mismatched]="!isLabDurationValid()">
+                <div class="breakdown-card-icon flex-center">
                   <i class="pi" [ngClass]="isLabDurationValid() ? 'pi-check' : 'pi-times'"></i>
                 </div>
-                <div class="breakdown-card-info flex-col flex-row text-slate-400">
-                  <span class="breakdown-card-label flex-row text-slate-400 kpi-label">Laboratory Hours</span>
-                  <span class="breakdown-card-val flex-row text-slate-400">{{ allocatedLabMinutes() }}m / {{ requiredLabMinutes() }}m ({{ (selectedCourse()?.labUnits || 0) * 3 }} hrs)</span>
+                <div class="breakdown-card-info flex-col">
+                  <span class="breakdown-card-label kpi-label">Laboratory Hours</span>
+                  <span class="breakdown-card-val">{{ allocatedLabMinutes() }}m / {{ requiredLabMinutes() }}m ({{ (selectedCourse()?.labUnits || 0) * 3 }} hrs)</span>
                 </div>
               </div>
             </div>
