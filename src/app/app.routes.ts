@@ -64,7 +64,7 @@ export const routes: Routes = [
       },
       {
         path: 'grades',
-        canActivate: [roleGuard(['FACULTY', 'DEAN', 'ADMIN', 'REGISTRAR'])],
+        canActivate: [roleGuard(['ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY'])],
         loadComponent: () =>
           import('./features/gradebook/faculty-gradebook.component').then(m => m.FacultyGradebookComponent)
       },

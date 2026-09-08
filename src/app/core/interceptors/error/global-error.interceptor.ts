@@ -21,7 +21,13 @@ export const globalErrorInterceptor: HttpInterceptorFn = (req: HttpRequest<unkno
       let summary = 'Request Error';
       let detail = error.error?.detail || error.error?.message || error.message || 'An unexpected error occurred.';
 
-      if (error.status === 400) {
+      if (error.status === 0) {
+        summary = 'Connection Failure';
+        detail = 'Unable to reach backend services. Please check network connectivity.';
+      } else if (error.status === 404) {
+        summary = 'Not Found';
+        detail = error.error?.detail || 'The requested resource was not found.';
+      } else if (error.status === 400) {
         summary = error.error?.title || 'Bad Request';
         if (error.error?.invalidParams) {
           const fields = Object.entries(error.error.invalidParams)
