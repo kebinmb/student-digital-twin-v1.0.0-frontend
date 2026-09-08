@@ -1,4 +1,7 @@
-import { inject, Injectable, signal, computed } from '@angular/core';
+// File: src/app/features/scheduling/state/scheduling.store.ts
+
+import { inject, Injectable, signal, computed, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SchedulingApiService } from '../../../core/service/scheduling/scheduling-api.service';
 import { ProgramService, TermService } from '../../../core/services/institution.service';
 import { Program } from '../../../core/models/institution.model';
@@ -13,7 +16,7 @@ import {
 } from '../../../core/models/scheduling.model';
 import { CurriculumLookupOption } from '../../../core/models/curriculum-designer.model';
 import { EnrollmentStore } from '../../enrollment/state/enrollment.store';
-import { catchError, finalize, map, of, tap } from 'rxjs';
+import { catchError, finalize, forkJoin, map, of, tap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -24,6 +27,7 @@ export class SchedulingStore {
   private readonly curriculumApi = inject(CurriculumApiService);
   private readonly programService = inject(ProgramService);
   private readonly enrollmentStore = inject(EnrollmentStore);
+  private readonly destroyRef = inject(DestroyRef);
 
   // Signals
   readonly terms = signal<SchedulingTermDto[]>([]);
@@ -66,16 +70,13 @@ export class SchedulingStore {
 
   readonly totalSections = computed(() => this.sections().length);
 
-  // Actions
   loadInitialData(): void {
     this.isLoading.set(true);
 
-    // 1. Load terms via dedicated Scheduling API (with fallback to TermService)
-    this.schedulingApi.getSchedulingTerms().pipe(
+    const terms$ = this.schedulingApi.getSchedulingTerms().pipe(
       catchError(() => {
-        // Fallback to TermService if necessary
         return this.termService.getAll().pipe(
-          map((rawTerms: Array<{ id: number; academicYearId?: number; academicYearCode?: string; termType: string; isCurrent?: boolean; isActive?: boolean; enrollmentOpen?: boolean }>): SchedulingTermDto[] => {
+          map((rawTerms): SchedulingTermDto[] => {
             return rawTerms.map(t => ({
               id: t.id,
               academicYearId: t.academicYearId || 0,
@@ -89,9 +90,40 @@ export class SchedulingStore {
           }),
           catchError(() => of([]))
         );
-      }),
-      tap((terms: SchedulingTermDto[]) => {
+      })
+    );
+
+    const curricula$ = this.curriculumApi.getCurriculumLookupOptions().pipe(
+      catchError(() => of([]))
+    );
+
+    const rooms$ = this.schedulingApi.getAllRooms().pipe(
+      catchError(() => of([]))
+    );
+
+    const instructors$ = this.schedulingApi.getAvailableInstructors().pipe(
+      catchError(() => of([]))
+    );
+
+    const programs$ = this.programService.getAll().pipe(
+      catchError(() => of([]))
+    );
+
+    forkJoin({
+      terms: terms$,
+      curricula: curricula$,
+      rooms: rooms$,
+      instructors: instructors$,
+      programs: programs$
+    }).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      tap(({ terms, curricula, rooms, instructors, programs }) => {
         this.terms.set(terms);
+        this.curricula.set(curricula);
+        this.rooms.set(rooms);
+        this.instructors.set(instructors);
+        this.programs.set(programs);
+
         if (terms.length > 0 && !this.selectedTermId()) {
           const activeTerm = terms.find(t => t.isActive) || terms.find(t => t.isCurrent) || terms[0];
           if (activeTerm) {
@@ -99,17 +131,7 @@ export class SchedulingStore {
             this.loadSections(activeTerm.id);
           }
         }
-      }),
-      catchError(() => {
-        this.errorMessage.set('Failed to load academic terms.');
-        return of([]);
-      })
-    ).subscribe();
 
-    // 2. Load curricula
-    this.curriculumApi.getCurriculumLookupOptions().pipe(
-      tap((curricula: CurriculumLookupOption[]) => {
-        this.curricula.set(curricula);
         if (curricula.length > 0 && !this.selectedCurriculumId()) {
           const activeCurr = curricula.find(c => c.status === 'ACTIVE') || curricula[0];
           if (activeCurr) {
@@ -117,28 +139,10 @@ export class SchedulingStore {
           }
         }
       }),
-      catchError(() => {
-        this.errorMessage.set('Failed to load curricula.');
-        return of([]);
-      })
-    ).subscribe();
-
-    // 3. Load rooms
-    this.schedulingApi.getAllRooms().pipe(
-      tap(rooms => this.rooms.set(rooms)),
-      catchError(() => of([]))
-    ).subscribe();
-
-    // 4. Load instructors
-    this.schedulingApi.getAvailableInstructors().pipe(
-      tap(instructors => this.instructors.set(instructors)),
-      catchError(() => of([]))
-    ).subscribe();
-
-    // 5. Load programs (GET /api/v1/programs)
-    this.programService.getAll().pipe(
-      tap(programs => this.programs.set(programs)),
-      catchError(() => of([])),
+      catchError(err => {
+        this.errorMessage.set('Failed to load initial scheduling dataset.');
+        return of(null);
+      }),
       finalize(() => this.isLoading.set(false))
     ).subscribe();
   }
@@ -148,6 +152,7 @@ export class SchedulingStore {
     this.errorMessage.set(null);
 
     this.schedulingApi.getSectionsByTerm(termId).pipe(
+      takeUntilDestroyed(this.destroyRef),
       tap(sections => this.sections.set(sections)),
       catchError(err => {
         this.errorMessage.set(err.error?.detail || 'Failed to load class sections.');
@@ -162,6 +167,7 @@ export class SchedulingStore {
     this.errorMessage.set(null);
 
     this.schedulingApi.createSection(request).pipe(
+      takeUntilDestroyed(this.destroyRef),
       tap(newSection => {
         this.sections.update(list => [...list, newSection]);
         this.enrollmentStore.refreshAdvising();
@@ -184,6 +190,7 @@ export class SchedulingStore {
   loadFacultyWorkload(termId: number, facultyId: number): void {
     this.isWorkloadLoading.set(true);
     this.schedulingApi.getFacultyWorkload(termId, facultyId).pipe(
+      takeUntilDestroyed(this.destroyRef),
       tap(workload => this.selectedFacultyWorkload.set(workload)),
       catchError(err => {
         const msg = err.error?.detail || 'Failed to load faculty workload.';
@@ -197,6 +204,7 @@ export class SchedulingStore {
   approveFacultyOverload(termId: number, facultyUserId: number, onSuccess?: () => void, onError?: (msg: string) => void): void {
     this.isApprovingOverload.set(true);
     this.schedulingApi.approveOverload(termId, facultyUserId).pipe(
+      takeUntilDestroyed(this.destroyRef),
       tap(() => {
         if (this.selectedFacultyWorkload()) {
           this.selectedFacultyWorkload.update(w => w ? { ...w, isOverloadApproved: true } : null);
@@ -222,6 +230,7 @@ export class SchedulingStore {
   ): void {
     this.isWorkloadLoading.set(true);
     this.schedulingApi.updateFacultyWorkloadLimit(facultyUserId, { termId, customMaxUnits, reason }).pipe(
+      takeUntilDestroyed(this.destroyRef),
       tap(workload => {
         this.selectedFacultyWorkload.set(workload);
         if (onSuccess) onSuccess();
@@ -243,6 +252,7 @@ export class SchedulingStore {
   ): void {
     this.isSaving.set(true);
     this.schedulingApi.updateTermMaxHoursPerClass(termId, maxHoursPerClass).pipe(
+      takeUntilDestroyed(this.destroyRef),
       tap(updatedTerm => {
         this.terms.update(list => list.map(t => t.id === updatedTerm.id ? updatedTerm : t));
         if (onSuccess) onSuccess();

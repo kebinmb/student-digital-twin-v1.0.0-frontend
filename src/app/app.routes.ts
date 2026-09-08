@@ -1,15 +1,15 @@
+// File: src/app/app.routes.ts
+
 import { Routes } from '@angular/router';
 import { guestGuard, authGuard } from './core/guards/authentication/auth-guard';
+import { roleGuard } from './core/guards/authorization/role.guard';
 
 export const routes: Routes = [
-  // Default redirect
   {
     path: '',
     pathMatch: 'full',
     redirectTo: 'dashboard'
   },
-
-  // Public / Guest Only Routes
   {
     path: 'login',
     loadComponent: () =>
@@ -28,47 +28,6 @@ export const routes: Routes = [
       import('./features/login/reset-password-component/reset-password-component').then(m => m.ResetPasswordComponent),
     canActivate: [guestGuard]
   },
-
-  // Academics Curriculum Designer URL Aliases
-  {
-    path: 'academics/curriculum-designer',
-    redirectTo: 'dashboard/curriculum/designer',
-    pathMatch: 'full'
-  },
-  {
-    path: 'academics/curriculum-designer/:id',
-    redirectTo: 'dashboard/curriculum/designer/:id'
-  },
-
-  // Scheduling & Enrollment URL Aliases
-  {
-    path: 'scheduling',
-    redirectTo: 'dashboard/scheduling',
-    pathMatch: 'full'
-  },
-  {
-    path: 'enrollment',
-    redirectTo: 'dashboard/enrollment',
-    pathMatch: 'full'
-  },
-  {
-    path: 'grades',
-    redirectTo: 'dashboard/grades',
-    pathMatch: 'full'
-  },
-
-  // Institutional Management URL Aliases
-  {
-    path: 'institution',
-    redirectTo: 'dashboard/institution/academic-periods',
-    pathMatch: 'full'
-  },
-  {
-    path: 'institution/:tab',
-    redirectTo: 'dashboard/institution/:tab'
-  },
-
-  // Protected Dashboard Layout with Child Routes
   {
     path: 'dashboard',
     loadComponent: () =>
@@ -82,16 +41,19 @@ export const routes: Routes = [
       },
       {
         path: 'curriculum',
+        canActivate: [roleGuard(['ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR'])],
         loadChildren: () =>
           import('./features/curriculum/curriculum.routes').then(m => m.CURRICULUM_ROUTES)
       },
       {
         path: 'institution',
+        canActivate: [roleGuard(['ADMIN', 'DEAN', 'REGISTRAR'])],
         loadChildren: () =>
           import('./features/institution/institution.routes').then(m => m.INSTITUTION_ROUTES)
       },
       {
         path: 'scheduling',
+        canActivate: [roleGuard(['ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR'])],
         loadChildren: () =>
           import('./features/scheduling/scheduling.routes').then(m => m.SCHEDULING_ROUTES)
       },
@@ -102,6 +64,7 @@ export const routes: Routes = [
       },
       {
         path: 'grades',
+        canActivate: [roleGuard(['FACULTY', 'DEAN', 'ADMIN', 'REGISTRAR'])],
         loadComponent: () =>
           import('./features/gradebook/faculty-gradebook.component').then(m => m.FacultyGradebookComponent)
       },
@@ -111,8 +74,6 @@ export const routes: Routes = [
       }
     ]
   },
-
-  // Wildcard fallback
   {
     path: '**',
     redirectTo: 'dashboard'

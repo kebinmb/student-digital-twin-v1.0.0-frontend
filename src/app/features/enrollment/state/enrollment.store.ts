@@ -1,15 +1,22 @@
-import { inject, Injectable, signal, computed } from '@angular/core';
+// File: src/app/features/enrollment/state/enrollment.store.ts
+
+import { inject, Injectable, signal, computed, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { EnrollmentApiService } from '../../../core/service/enrollment/enrollment-api.service';
 import { TermService } from '../../../core/services/institution.service';
 import {
   AdvisingEligibilityResponse,
   CourseEligibilityItemDto,
+  CreateStudentRequest,
+  CreditTransfereeCoursesRequest,
   EnrollmentConfirmationDto,
   StudentEnrollmentResponse,
-  StudentSearchResultDto
+  StudentProfileResponse,
+  StudentSearchResultDto,
+  TransfereeCreditingSummaryResponse
 } from '../../../core/models/enrollment.model';
 import { TermResponse } from '../../../core/models/institution.model';
-import { catchError, finalize, of, tap } from 'rxjs';
+import { catchError, finalize, forkJoin, of, tap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -17,9 +24,10 @@ import { catchError, finalize, of, tap } from 'rxjs';
 export class EnrollmentStore {
   private readonly enrollmentApi = inject(EnrollmentApiService);
   private readonly termService = inject(TermService);
+  private readonly destroyRef = inject(DestroyRef);
 
   // State Signals
-  readonly studentId = signal<number>(1);
+  readonly studentId = signal<number | null>(null);
   readonly searchedStudents = signal<StudentSearchResultDto[]>([]);
   readonly selectedTermId = signal<number | null>(null);
   readonly terms = signal<TermResponse[]>([]);
@@ -70,21 +78,28 @@ export class EnrollmentStore {
 
   setSelectedTermId(termId: number): void {
     this.selectedTermId.set(termId);
-    this.loadStudentAdvising(this.studentId(), termId);
+    const sid = this.studentId();
+    if (sid) {
+      this.loadStudentAdvising(sid, termId);
+    }
     this.loadTermEnrollments(termId);
   }
 
-  setStudentId(studentId: number): void {
+  setStudentId(studentId: number | null): void {
     this.studentId.set(studentId);
     const termId = this.selectedTermId();
-    if (termId) {
+    if (studentId && termId) {
       this.loadStudentAdvising(studentId, termId);
       this.loadTermEnrollments(termId);
+    } else {
+      this.advising.set(null);
+      this.enrollment.set(null);
     }
   }
 
   searchStudents(query: string = '', onLoaded?: (students: StudentSearchResultDto[]) => void): void {
     this.enrollmentApi.searchStudents(query).pipe(
+      takeUntilDestroyed(this.destroyRef),
       tap(students => {
         const list = students || [];
         this.searchedStudents.set(list);
@@ -101,12 +116,13 @@ export class EnrollmentStore {
   }
 
   createStudent(
-    request: import('../../../core/models/enrollment.model').CreateStudentRequest,
-    onSuccess?: (res: import('../../../core/models/enrollment.model').StudentProfileResponse) => void,
+    request: CreateStudentRequest,
+    onSuccess?: (res: StudentProfileResponse) => void,
     onError?: (msg: string) => void
   ): void {
     this.isLoading.set(true);
     this.enrollmentApi.createStudent(request).pipe(
+      takeUntilDestroyed(this.destroyRef),
       tap(res => {
         this.searchStudents('', () => {
           this.setStudentId(res.id);
@@ -125,12 +141,13 @@ export class EnrollmentStore {
 
   creditTransfereeCourses(
     studentId: number,
-    request: import('../../../core/models/enrollment.model').CreditTransfereeCoursesRequest,
-    onSuccess?: (res: import('../../../core/models/enrollment.model').TransfereeCreditingSummaryResponse) => void,
+    request: CreditTransfereeCoursesRequest,
+    onSuccess?: (res: TransfereeCreditingSummaryResponse) => void,
     onError?: (msg: string) => void
   ): void {
     this.isLoading.set(true);
     this.enrollmentApi.creditTransfereeCourses(studentId, request).pipe(
+      takeUntilDestroyed(this.destroyRef),
       tap(res => {
         const termId = this.selectedTermId();
         if (termId) {
@@ -148,25 +165,15 @@ export class EnrollmentStore {
     ).subscribe();
   }
 
-  refreshAdvising(): void {
-    const studentId = this.studentId();
-    const termId = this.selectedTermId();
-    if (studentId && termId) {
-      this.loadStudentAdvising(studentId, termId);
-    }
-  }
-
-  // Actions
   loadInitialData(): void {
     this.searchStudents('');
     if (this.terms().length > 0) {
-      if (this.studentId() && this.selectedTermId()) {
-        this.refreshAdvising();
-      }
+      this.refreshAdvising();
       return;
     }
     this.isLoading.set(true);
     this.termService.getAll().pipe(
+      takeUntilDestroyed(this.destroyRef),
       tap((terms: TermResponse[]) => {
         const formattedTerms = terms.map(t => ({
           ...t,
@@ -190,41 +197,47 @@ export class EnrollmentStore {
     this.isLoading.set(true);
     this.errorMessage.set(null);
 
-    this.enrollmentApi.getAdvisingEligibility(studentId, termId).pipe(
-      tap(advising => {
+    forkJoin({
+      advising: this.enrollmentApi.getAdvisingEligibility(studentId, termId).pipe(
+        catchError(err => {
+          this.errorMessage.set(err.error?.detail || 'Failed to load advising checklist.');
+          return of(null);
+        })
+      ),
+      enrollment: this.enrollmentApi.getEnrollment(studentId, termId).pipe(
+        catchError(() => of(null))
+      )
+    }).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      tap(({ advising, enrollment }) => {
         this.advising.set(advising);
-      }),
-      catchError(err => {
-        this.errorMessage.set(err.error?.detail || 'Failed to load advising checklist.');
-        return of(null);
-      })
-    ).subscribe();
-
-    // Also load existing enrollment
-    this.enrollmentApi.getEnrollment(studentId, termId).pipe(
-      tap(enrollment => {
         this.enrollment.set(enrollment);
-      }),
-      catchError(() => {
-        this.enrollment.set(null);
-        return of(null);
       }),
       finalize(() => this.isLoading.set(false))
     ).subscribe();
   }
 
+  refreshAdvising(): void {
+    const sid = this.studentId();
+    const termId = this.selectedTermId();
+    if (sid && termId) {
+      this.loadStudentAdvising(sid, termId);
+    }
+  }
+
   enlistSection(sectionId: number, onSuccess?: () => void, onError?: (msg: string) => void): void {
     const termId = this.selectedTermId();
-    if (!termId) return;
+    const sid = this.studentId();
+    if (!termId || !sid) return;
 
     this.isEnlisting.set(true);
     this.errorMessage.set(null);
 
-    this.enrollmentApi.enlistSection(this.studentId(), { termId, sectionId }).pipe(
+    this.enrollmentApi.enlistSection(sid, { termId, sectionId }).pipe(
+      takeUntilDestroyed(this.destroyRef),
       tap(updatedEnrollment => {
         this.enrollment.set(updatedEnrollment);
-        // Refresh advising to update course status and capacities
-        this.loadStudentAdvising(this.studentId(), termId);
+        this.loadStudentAdvising(sid, termId);
         if (onSuccess) onSuccess();
       }),
       catchError(err => {
@@ -239,13 +252,15 @@ export class EnrollmentStore {
 
   removeEnlistedSection(sectionId: number, onSuccess?: () => void, onError?: (msg: string) => void): void {
     const termId = this.selectedTermId();
-    if (!termId) return;
+    const sid = this.studentId();
+    if (!termId || !sid) return;
 
     this.isEnlisting.set(true);
-    this.enrollmentApi.removeEnlistedSection(this.studentId(), termId, sectionId).pipe(
+    this.enrollmentApi.removeEnlistedSection(sid, termId, sectionId).pipe(
+      takeUntilDestroyed(this.destroyRef),
       tap(updatedEnrollment => {
         this.enrollment.set(updatedEnrollment);
-        this.loadStudentAdvising(this.studentId(), termId);
+        this.loadStudentAdvising(sid, termId);
         if (onSuccess) onSuccess();
       }),
       catchError(err => {
@@ -257,14 +272,14 @@ export class EnrollmentStore {
     ).subscribe();
   }
 
-  readonly termEnrollments = signal<StudentEnrollmentResponse[]>([]);
-
   confirmEnrollment(onSuccess?: (conf: EnrollmentConfirmationDto) => void, onError?: (msg: string) => void): void {
     const termId = this.selectedTermId();
-    if (!termId) return;
+    const sid = this.studentId();
+    if (!termId || !sid) return;
 
     this.isEnlisting.set(true);
-    this.enrollmentApi.confirmEnrollment(this.studentId(), termId).pipe(
+    this.enrollmentApi.confirmEnrollment(sid, termId).pipe(
+      takeUntilDestroyed(this.destroyRef),
       tap(conf => {
         if (this.enrollment()) {
           this.enrollment.update(e => e ? { ...e, status: 'ENROLLED' } : null);
@@ -280,9 +295,12 @@ export class EnrollmentStore {
     ).subscribe();
   }
 
+  readonly termEnrollments = signal<StudentEnrollmentResponse[]>([]);
+
   loadTermEnrollments(termId: number): void {
     this.isLoading.set(true);
     this.enrollmentApi.getEnrollmentsByTerm(termId).pipe(
+      takeUntilDestroyed(this.destroyRef),
       tap(list => this.termEnrollments.set(list)),
       catchError(() => {
         this.termEnrollments.set([]);
@@ -292,9 +310,16 @@ export class EnrollmentStore {
     ).subscribe();
   }
 
-  updateEnrollmentStatus(enrollmentId: number, status: string, isOverloadApproved?: boolean, onSuccess?: () => void, onError?: (msg: string) => void): void {
+  updateEnrollmentStatus(
+    enrollmentId: number,
+    status: string,
+    isOverloadApproved?: boolean,
+    onSuccess?: () => void,
+    onError?: (msg: string) => void
+  ): void {
     this.isEnlisting.set(true);
     this.enrollmentApi.updateEnrollmentStatus(enrollmentId, { status, isOverloadApproved }).pipe(
+      takeUntilDestroyed(this.destroyRef),
       tap(updated => {
         this.termEnrollments.update(list => list.map(item => item.enrollmentId === enrollmentId ? updated : item));
         if (this.enrollment()?.enrollmentId === enrollmentId) {
@@ -311,4 +336,3 @@ export class EnrollmentStore {
     ).subscribe();
   }
 }
-
