@@ -119,5 +119,60 @@ export class EnrollmentApiService {
       {}
     );
   }
+
+  // Dynamic Class Record & Assessment Weight Engine Endpoints
+  getGradingConfig(sectionId: number): Observable<import('../../models/enrollment.model').SectionGradingConfigResponse> {
+    return this.http.get<import('../../models/enrollment.model').SectionGradingConfigResponse>(
+      `${environment.apiUrl}/v1/class-records/sections/${sectionId}/config`
+    );
+  }
+
+  updateGradingConfig(
+    sectionId: number,
+    request: import('../../models/enrollment.model').UpdateSectionGradingConfigRequest
+  ): Observable<import('../../models/enrollment.model').SectionGradingConfigResponse> {
+    return this.http.put<import('../../models/enrollment.model').SectionGradingConfigResponse>(
+      `${environment.apiUrl}/v1/class-records/sections/${sectionId}/config`,
+      request
+    );
+  }
+
+  addAssessmentItem(
+    sectionId: number,
+    request: import('../../models/enrollment.model').CreateClassRecordItemRequest
+  ): Observable<import('../../models/enrollment.model').ClassRecordItemDto> {
+    return this.http.post<import('../../models/enrollment.model').ClassRecordItemDto>(
+      `${environment.apiUrl}/v1/class-records/sections/${sectionId}/items`,
+      request
+    );
+  }
+
+  deleteAssessmentItem(itemId: number): Observable<void> {
+    return this.http.delete<void>(`${environment.apiUrl}/v1/class-records/items/${itemId}`);
+  }
+
+  getScoreMatrix(sectionId: number): Observable<import('../../models/enrollment.model').ClassRecordMatrixResponse> {
+    return this.http.get<import('../../models/enrollment.model').ClassRecordMatrixResponse>(
+      `${environment.apiUrl}/v1/class-records/sections/${sectionId}/matrix`
+    );
+  }
+
+  batchSaveScores(
+    sectionId: number,
+    request: import('../../models/enrollment.model').BatchSaveScoresRequest
+  ): Observable<import('../../models/enrollment.model').ClassRecordMatrixResponse> {
+    return this.http.post<import('../../models/enrollment.model').ClassRecordMatrixResponse>(
+      `${environment.apiUrl}/v1/class-records/sections/${sectionId}/scores/batch`,
+      request
+    );
+  }
+
+  recalculateAndSyncSectionGrades(sectionId: number): Observable<import('../../models/enrollment.model').ClassRecordMatrixResponse> {
+    return this.http.post<import('../../models/enrollment.model').ClassRecordMatrixResponse>(
+      `${environment.apiUrl}/v1/class-records/sections/${sectionId}/recalculate`,
+      {}
+    );
+  }
 }
+
 

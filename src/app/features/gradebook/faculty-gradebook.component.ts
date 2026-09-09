@@ -1,6 +1,8 @@
-import { Component, OnInit, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subscription } from 'rxjs';
 
 // PrimeNG Imports
 import { TableModule } from 'primeng/table';
@@ -11,6 +13,10 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { ToastModule } from 'primeng/toast';
 import { MessageModule } from 'primeng/message';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { SkeletonModule } from 'primeng/skeleton';
+import { TooltipModule } from 'primeng/tooltip';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
 // Core Services & Models
@@ -23,7 +29,11 @@ import { TermResponse } from '../../core/models/institution.model';
 import {
   SectionRosterResponse,
   RosterStudentDto,
-  GradeEntryDto
+  GradeEntryDto,
+  ClassRecordMatrixResponse,
+  StudentScoreEntryDto,
+  SectionGradingCategoryDto,
+  ClassRecordItemDto
 } from '../../core/models/enrollment.model';
 
 export const VALID_CHED_GRADES = [1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 2.75, 3.00, 4.00, 5.00] as const;
@@ -46,7 +56,11 @@ export interface EditableRosterRow extends RosterStudentDto {
     InputNumberModule,
     ToastModule,
     MessageModule,
-    ConfirmDialogModule
+    ConfirmDialogModule,
+    SkeletonModule,
+    TooltipModule,
+    DialogModule,
+    InputTextModule
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './faculty-gradebook.component.html',
@@ -54,17 +68,25 @@ export interface EditableRosterRow extends RosterStudentDto {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FacultyGradebookComponent implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
   private readonly enrollmentApi = inject(EnrollmentApiService);
   private readonly schedulingApi = inject(SchedulingApiService);
   private readonly termService = inject(TermService);
-  private readonly authService = inject(AuthService);
+  readonly authService = inject(AuthService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly messageService = inject(MessageService);
+
+  private sectionsSub?: Subscription;
+  private rosterSub?: Subscription;
+
+  // Active Tab State
+  readonly activeTab = signal<'ROSTER' | 'CLASS_RECORD'>('ROSTER');
 
   // User auth state
   readonly currentUser = this.authService.currentUser;
   readonly userRole = computed(() => (this.currentUser().role || '').toUpperCase());
   readonly isAdmin = computed(() => this.userRole().includes('ADMIN'));
+  readonly isFaculty = computed(() => this.userRole().includes('FACULTY'));
   readonly isDean = computed(() => this.isAdmin() || this.userRole().includes('DEAN'));
   readonly isRegistrar = computed(() => this.isAdmin() || this.userRole().includes('REGISTRAR'));
 
@@ -81,58 +103,136 @@ export class FacultyGradebookComponent implements OnInit {
   readonly isSaving = signal<boolean>(false);
   readonly errorMessage = signal<string | null>(null);
 
+  // Dynamic Class Record State
+  readonly classRecordMatrix = signal<ClassRecordMatrixResponse | null>(null);
+  readonly isMatrixLoading = signal<boolean>(false);
+  readonly isSavingMatrix = signal<boolean>(false);
+  readonly showAddItemModal = signal<boolean>(false);
+  readonly newItemCategoryId = signal<number | null>(null);
+  readonly newItemTitle = signal<string>('');
+  readonly newItemMaxPoints = signal<number>(50);
+  readonly manualRosterOverride = signal<boolean>(false);
+
   // Computed states
   readonly currentGradeStatus = computed(() => this.roster()?.gradeStatus || 'DRAFT');
   readonly isSealed = computed(() => this.currentGradeStatus() === 'SEALED');
   readonly isSubmitted = computed(() => this.currentGradeStatus() === 'SUBMITTED');
   readonly isVerified = computed(() => this.currentGradeStatus() === 'VERIFIED');
 
-  readonly canEditGrades = computed(() => {
-    if (this.isSealed()) return false;
-    if (this.isAdmin()) return true;
-    if (this.isDean() && (this.currentGradeStatus() === 'DRAFT' || this.isSubmitted())) return true;
-    return this.currentGradeStatus() === 'DRAFT';
-  });
-
-  readonly hasGradeErrors = computed(() => this.editableStudents().some(s => !!s.gradeError));
-
   readonly phaseInfo = computed(() => {
     const status = this.currentGradeStatus();
     switch (status) {
       case 'SUBMITTED':
         return {
-          title: 'Tier 2: Awaiting Dean Compliance Verification',
-          description: 'Grades submitted to the College Dean for academic compliance and prerequisite verification. Grade editing is locked for instructors unless returned by Dean.',
-          icon: 'pi pi-send',
-          severity: 'info' as const,
-          badgeClass: 'bg-sky-100 text-sky-800 border-sky-300'
+          title: 'Tier 2: Dean Review & Verification',
+          severity: 'info',
+          description: 'Grades have been submitted to the College Dean for academic compliance verification.'
         };
       case 'VERIFIED':
         return {
-          title: 'Tier 3: Dean Verified & Ready for Registrar Sealing',
-          description: 'Dean verification completed successfully. Class roster is cleared for Registrar Sealing Engine execution and official transcript synchronization.',
-          icon: 'pi pi-verified',
-          severity: 'help' as const,
-          badgeClass: 'bg-purple-100 text-purple-800 border-purple-300'
+          title: 'Tier 3: Registrar Ready for Sealing',
+          severity: 'help',
+          description: 'Grades have been verified by the Dean and are ready for official Registrar sealing.'
         };
       case 'SEALED':
         return {
-          title: 'Tier 4: Officially Sealed & Locked by Registrar',
-          description: 'Official academic records finalized. Grades locked in permanent transcript ledger, cumulative GPA updated, and subsequent course prerequisites satisfied.',
-          icon: 'pi pi-lock',
-          severity: 'success' as const,
-          badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300'
+          title: 'Tier 4: Sealed & Locked Official Records',
+          severity: 'success',
+          description: 'Grades are permanently sealed and synchronized to student academic records.'
         };
       case 'DRAFT':
       default:
         return {
-          title: 'Tier 1: Faculty Grade Encoding (Draft Open)',
-          description: 'Faculty members encode final numerical grades (1.00 to 5.00) adhering to CHED CMO No. 25 standards. All draft changes can be saved locally before final submission.',
-          icon: 'pi pi-pencil',
-          severity: 'warn' as const,
-          badgeClass: 'bg-amber-100 text-amber-800 border-amber-300'
+          title: 'Tier 1: Faculty Draft Mode',
+          severity: 'warn',
+          description: 'Faculty can edit assessment scores and grades before submitting to the Dean.'
         };
     }
+  });
+
+  readonly isAssignedInstructor = computed(() => {
+    const user = this.currentUser();
+    const ros = this.roster();
+    if (!user || !ros) return false;
+    return (user as { id?: number }).id === ros.primaryInstructorId;
+  });
+
+  readonly canEditGrades = computed(() => {
+    if (this.currentGradeStatus() !== 'DRAFT') return false;
+    return this.isAdmin() || (this.isFaculty() && this.isAssignedInstructor());
+  });
+
+  readonly hasIncompleteGrades = computed(() =>
+    this.editableStudents().some(
+      s => s.finalNumericalGrade === null || s.finalNumericalGrade === undefined || s.completionStatus === 'IN_PROGRESS'
+    )
+  );
+
+  readonly hasGradeErrors = computed(() => this.editableStudents().some(s => !!s.gradeError));
+
+  // Grade Curve Distribution Statistics
+  readonly superiorCount = computed(() =>
+    this.editableStudents().filter(s => s.finalNumericalGrade !== null && s.finalNumericalGrade !== undefined && s.finalNumericalGrade >= 1.00 && s.finalNumericalGrade <= 1.50).length
+  );
+  readonly satisfactoryCount = computed(() =>
+    this.editableStudents().filter(s => s.finalNumericalGrade !== null && s.finalNumericalGrade !== undefined && s.finalNumericalGrade >= 1.75 && s.finalNumericalGrade <= 3.00).length
+  );
+  readonly conditionalCount = computed(() =>
+    this.editableStudents().filter(s => s.finalNumericalGrade === 4.00 || s.completionStatus === 'INCOMPLETE').length
+  );
+  readonly deficientCount = computed(() =>
+    this.editableStudents().filter(s => s.finalNumericalGrade === 5.00 || s.completionStatus === 'FAILED' || s.completionStatus === 'DROPPED').length
+  );
+  readonly unassignedCount = computed(() =>
+    this.editableStudents().filter(s => (s.finalNumericalGrade === null || s.finalNumericalGrade === undefined) && s.completionStatus === 'IN_PROGRESS').length
+  );
+
+  readonly superiorPercent = computed(() => this.totalStudents() > 0 ? (this.superiorCount() / this.totalStudents()) * 100 : 0);
+  readonly satisfactoryPercent = computed(() => this.totalStudents() > 0 ? (this.satisfactoryCount() / this.totalStudents()) * 100 : 0);
+  readonly conditionalPercent = computed(() => this.totalStudents() > 0 ? (this.conditionalCount() / this.totalStudents()) * 100 : 0);
+  readonly deficientPercent = computed(() => this.totalStudents() > 0 ? (this.deficientCount() / this.totalStudents()) * 100 : 0);
+  readonly unassignedPercent = computed(() => this.totalStudents() > 0 ? (this.unassignedCount() / this.totalStudents()) * 100 : 0);
+
+  // Disabled Tooltip Messages
+  readonly saveDisabledTooltip = computed(() => {
+    if (this.isSaving()) return 'Saving changes...';
+    if (!this.canEditGrades()) {
+      if (this.currentGradeStatus() !== 'DRAFT') {
+        return `Save disabled: Gradebook is in ${this.currentGradeStatus()} status`;
+      }
+      return 'Restricted to assigned primary instructor';
+    }
+    if (this.hasGradeErrors()) return 'Save blocked: Grade scale errors must be resolved';
+    return '';
+  });
+
+  readonly submitDisabledTooltip = computed(() => {
+    if (this.isSaving()) return 'Submitting grades...';
+    if (this.currentGradeStatus() !== 'DRAFT') {
+      return `Submission disabled: Current status is ${this.currentGradeStatus()}`;
+    }
+    if (this.hasGradeErrors()) return 'Submission blocked: Grade scale errors must be resolved';
+    if (this.hasIncompleteGrades()) {
+      return `Submission blocked: ${this.unassignedCount()} student(s) missing numerical grade or in progress`;
+    }
+    return '';
+  });
+
+  readonly verifyDisabledTooltip = computed(() => {
+    if (this.isSaving()) return 'Verifying grades...';
+    if (this.currentGradeStatus() === 'DRAFT') return 'Verification requires prior submission by instructor';
+    if (this.currentGradeStatus() === 'VERIFIED') return 'Section grades are already verified by Dean';
+    if (this.currentGradeStatus() === 'SEALED') return 'Section grades are permanently sealed';
+    return '';
+  });
+
+  readonly sealDisabledTooltip = computed(() => {
+    if (this.isSaving()) return 'Sealing grades...';
+    if (this.currentGradeStatus() === 'SEALED') return 'Section grades are permanently sealed';
+    if (this.currentGradeStatus() !== 'VERIFIED') {
+      return `Registrar sealing requires prior Dean verification (Current: ${this.currentGradeStatus()})`;
+    }
+    return '';
   });
 
   readonly termOptions = computed(() => {
@@ -169,18 +269,44 @@ export class FacultyGradebookComponent implements OnInit {
     return sum / valid.length;
   });
 
+  // Flat list of assessment items for dynamic table columns
+  readonly allAssessmentItems = computed(() => {
+    const matrix = this.classRecordMatrix();
+    if (!matrix || !matrix.config || !matrix.config.categories) return [];
+    const items: { categoryName: string; termPeriod: string; item: ClassRecordItemDto }[] = [];
+    for (const cat of matrix.config.categories) {
+      if (cat.items) {
+        for (const item of cat.items) {
+          items.push({ categoryName: cat.categoryName, termPeriod: cat.termPeriod, item });
+        }
+      }
+    }
+    return items;
+  });
+
+  readonly categoryOptions = computed(() => {
+    const matrix = this.classRecordMatrix();
+    if (!matrix || !matrix.config || !matrix.config.categories) return [];
+    return matrix.config.categories.map(cat => ({
+      label: `${cat.termPeriod} — ${cat.categoryName} (${cat.weightPercentage}%)`,
+      value: cat.id
+    }));
+  });
+
   ngOnInit(): void {
     this.loadTerms();
   }
 
   loadTerms(): void {
     this.isLoading.set(true);
-    this.termService.getAll().subscribe({
+    this.termService.getAll().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (terms: TermResponse[]) => {
         this.terms.set(terms || []);
         if (terms && terms.length > 0) {
           const active = terms.find(t => t.isActive) || terms[0];
           this.onTermSelect(active.id);
+        } else {
+          this.isLoading.set(false);
         }
       },
       error: () => {
@@ -193,26 +319,39 @@ export class FacultyGradebookComponent implements OnInit {
   onTermSelect(termId: number | { value: number } | null): void {
     const id = typeof termId === 'object' && termId !== null ? termId.value : Number(termId);
     if (!id) return;
+
+    if (this.sectionsSub) {
+      this.sectionsSub.unsubscribe();
+      this.sectionsSub = undefined;
+    }
+    if (this.rosterSub) {
+      this.rosterSub.unsubscribe();
+      this.rosterSub = undefined;
+    }
+
     this.selectedTermId.set(id);
     this.selectedSectionId.set(null);
     this.roster.set(null);
     this.editableStudents.set([]);
+    this.classRecordMatrix.set(null);
 
     this.isLoading.set(true);
-    this.schedulingApi.getSectionsByTerm(id).subscribe({
-      next: (secs: SectionDetailResponse[]) => {
-        this.sections.set(secs || []);
-        if (secs && secs.length > 0) {
-          this.onSectionSelect(secs[0].id);
-        } else {
+    this.sectionsSub = this.schedulingApi.getSectionsByTerm(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (secs: SectionDetailResponse[]) => {
+          this.sections.set(secs || []);
+          if (secs && secs.length > 0) {
+            this.onSectionSelect(secs[0].id);
+          } else {
+            this.isLoading.set(false);
+          }
+        },
+        error: () => {
+          this.sections.set([]);
           this.isLoading.set(false);
         }
-      },
-      error: () => {
-        this.sections.set([]);
-        this.isLoading.set(false);
-      }
-    });
+      });
   }
 
   onSectionSelect(sectionId: number | { value: number } | null): void {
@@ -220,6 +359,357 @@ export class FacultyGradebookComponent implements OnInit {
     if (!id) return;
     this.selectedSectionId.set(id);
     this.loadSectionRoster(id);
+    if (this.activeTab() === 'CLASS_RECORD') {
+      this.loadClassRecordMatrix(id);
+    }
+  }
+
+  setTab(tab: 'ROSTER' | 'CLASS_RECORD'): void {
+    this.activeTab.set(tab);
+    const sid = this.selectedSectionId();
+    if (tab === 'CLASS_RECORD' && sid && !this.classRecordMatrix()) {
+      this.loadClassRecordMatrix(sid);
+    }
+  }
+
+  toggleManualRosterOverride(): void {
+    this.manualRosterOverride.update(v => !v);
+    if (!this.manualRosterOverride()) {
+      const matrix = this.classRecordMatrix();
+      if (matrix) {
+        this.syncMatrixToRoster(matrix);
+      }
+    }
+  }
+
+  loadClassRecordMatrix(sectionId: number): void {
+    this.isMatrixLoading.set(true);
+    this.enrollmentApi.getScoreMatrix(sectionId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: matrix => {
+          this.classRecordMatrix.set(matrix);
+          this.syncMatrixToRoster(matrix);
+          this.isMatrixLoading.set(false);
+        },
+        error: () => {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to load class record matrix.' });
+          this.isMatrixLoading.set(false);
+        }
+      });
+  }
+
+  syncMatrixToRoster(matrix: ClassRecordMatrixResponse | null): void {
+    if (!matrix || this.manualRosterOverride()) return;
+    const rosterList = this.editableStudents();
+    if (!rosterList || rosterList.length === 0) return;
+
+    const updated = rosterList.map(student => {
+      const matrixRow = matrix.rows.find(r => r.studentId === student.studentId);
+      if (matrixRow && matrixRow.transmutedGrade !== null && matrixRow.transmutedGrade !== undefined) {
+        const grade = matrixRow.transmutedGrade;
+        const status = matrixRow.completionStatus || (grade <= 3.00 ? 'PASSED' : 'FAILED');
+        return {
+          ...student,
+          finalNumericalGrade: grade,
+          completionStatus: status,
+          gradeError: null
+        };
+      }
+      return student;
+    });
+
+    this.editableStudents.set(updated);
+  }
+
+  getStudentScoreValue(studentId: number, itemId: number): number | null {
+    const matrix = this.classRecordMatrix();
+    if (!matrix) return null;
+    const row = matrix.rows.find(r => r.studentId === studentId);
+    if (!row) return null;
+    const s = row.scores.find(score => score.itemId === itemId);
+    return s ? (s.scoreEarned ?? null) : null;
+  }
+
+  transmutePercentageToChedGrade(pct: number): number {
+    if (pct >= 96.00) return 1.00;
+    if (pct >= 93.00) return 1.25;
+    if (pct >= 90.00) return 1.50;
+    if (pct >= 87.00) return 1.75;
+    if (pct >= 84.00) return 2.00;
+    if (pct >= 81.00) return 2.25;
+    if (pct >= 78.00) return 2.50;
+    if (pct >= 75.00) return 2.75;
+    if (pct >= 70.00) return 3.00;
+    return 5.00;
+  }
+
+  recalculateRowGrades(row: any): void {
+    const matrix = this.classRecordMatrix();
+    if (!matrix || !matrix.config || !matrix.config.categories) return;
+
+    const categories = matrix.config.categories;
+    let midtermWeightedSum = 0;
+    let hasMidtermScores = false;
+    let finalWeightedSum = 0;
+    let hasFinalScores = false;
+
+    for (const cat of categories) {
+      const items = cat.items || [];
+      if (items.length === 0) continue;
+
+      let catMax = 0;
+      let catEarned = 0;
+      let hasScoresInCat = false;
+
+      for (const item of items) {
+        const scoreObj = row.scores?.find((s: any) => s.itemId === item.id);
+        if (scoreObj && scoreObj.scoreEarned !== null && scoreObj.scoreEarned !== undefined && !scoreObj.isExcused) {
+          catEarned += Number(scoreObj.scoreEarned);
+          catMax += Number(item.maxPoints);
+          hasScoresInCat = true;
+        }
+      }
+
+      if (catMax > 0 && hasScoresInCat) {
+        const catPct = (catEarned / catMax) * 100;
+        const weighted = (catPct * Number(cat.weightPercentage)) / 100;
+        if (cat.termPeriod === 'MIDTERM') {
+          midtermWeightedSum += weighted;
+          hasMidtermScores = true;
+        } else if (cat.termPeriod === 'FINAL') {
+          finalWeightedSum += weighted;
+          hasFinalScores = true;
+        }
+      }
+    }
+
+    row.midtermRawPercentage = hasMidtermScores ? Math.round(midtermWeightedSum * 100) / 100 : null;
+    row.finalRawPercentage = hasFinalScores ? Math.round(finalWeightedSum * 100) / 100 : null;
+
+    let totalRaw = 0;
+    let hasRaw = false;
+    const midtermWeight = Number(matrix.config.midtermWeight || 50);
+    const finalWeight = Number(matrix.config.finalWeight || 50);
+
+    if (row.midtermRawPercentage !== null) {
+      totalRaw += (row.midtermRawPercentage * midtermWeight) / 100;
+      hasRaw = true;
+    }
+    if (row.finalRawPercentage !== null) {
+      totalRaw += (row.finalRawPercentage * finalWeight) / 100;
+      hasRaw = true;
+    }
+
+    row.totalRawPercentage = hasRaw ? Math.round(totalRaw * 100) / 100 : null;
+    if (row.totalRawPercentage !== null) {
+      row.transmutedGrade = this.transmutePercentageToChedGrade(row.totalRawPercentage);
+      row.completionStatus = row.transmutedGrade <= 3.00 ? 'PASSED' : 'FAILED';
+    } else {
+      row.transmutedGrade = null;
+      row.completionStatus = 'IN_PROGRESS';
+    }
+
+    if (!this.manualRosterOverride()) {
+      const rosterList = this.editableStudents();
+      const studentInRoster = rosterList.find(s => s.studentId === row.studentId);
+      if (studentInRoster) {
+        studentInRoster.finalNumericalGrade = row.transmutedGrade;
+        studentInRoster.completionStatus = row.completionStatus;
+        studentInRoster.isDirty = true;
+        studentInRoster.gradeError = this.validateStudentRow(studentInRoster);
+      }
+    }
+  }
+
+  onMatrixScoreChange(studentId: number, itemId: number, newScore: number | null): void {
+    const matrix = this.classRecordMatrix();
+    if (!matrix) return;
+
+    const row = matrix.rows.find(r => r.studentId === studentId);
+    if (!row) return;
+
+    let scoreObj = row.scores.find(s => s.itemId === itemId);
+    if (scoreObj) {
+      scoreObj.scoreEarned = newScore;
+    } else {
+      scoreObj = { itemId, studentId, scoreEarned: newScore, isExcused: false };
+      row.scores.push(scoreObj);
+    }
+
+    this.recalculateRowGrades(row);
+    this.editableStudents.update(list => [...list]);
+  }
+
+  onMatrixKeydown(event: KeyboardEvent, rowIndex: number, colIndex: number): void {
+    if (event.key === 'Enter' || event.key === 'ArrowDown') {
+      event.preventDefault();
+      this.focusMatrixInput(rowIndex + 1, colIndex);
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      this.focusMatrixInput(rowIndex - 1, colIndex);
+    }
+  }
+
+  private focusMatrixInput(rowIndex: number, colIndex: number): void {
+    const matrix = this.classRecordMatrix();
+    if (!matrix) return;
+    if (rowIndex < 0 || rowIndex >= matrix.rows.length) return;
+
+    setTimeout(() => {
+      const selector = `.gb-matrix-row-${rowIndex}-col-${colIndex} input`;
+      const input = document.querySelector<HTMLInputElement>(selector);
+      if (input) {
+        input.focus();
+        input.select();
+      }
+    }, 0);
+  }
+
+  saveMatrixScores(): void {
+    const sid = this.selectedSectionId();
+    const matrix = this.classRecordMatrix();
+    if (!sid || !matrix) return;
+
+    // Client-side score validation prior to sending API payload
+    for (const row of matrix.rows) {
+      for (const score of row.scores) {
+        if (score.scoreEarned !== null && score.scoreEarned !== undefined && !score.isExcused) {
+          if (score.scoreEarned < 0) {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Invalid Score Entry',
+              detail: `Raw score for student (${row.studentNumber}) cannot be negative.`
+            });
+            return;
+          }
+          const matchedItem = this.allAssessmentItems().find(i => i.item.id === score.itemId);
+          if (matchedItem && score.scoreEarned > matchedItem.item.maxPoints) {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Score Exceeds Maximum Points',
+              detail: `Score ${score.scoreEarned} for student (${row.studentNumber}) exceeds activity '${matchedItem.item.itemTitle}' maximum points (${matchedItem.item.maxPoints}).`
+            });
+            return;
+          }
+        }
+      }
+    }
+
+    const allScoreEntries: StudentScoreEntryDto[] = [];
+    for (const row of matrix.rows) {
+      for (const score of row.scores) {
+        allScoreEntries.push({
+          itemId: score.itemId,
+          studentId: row.studentId,
+          scoreEarned: score.scoreEarned,
+          isExcused: score.isExcused
+        });
+      }
+    }
+
+    this.isSavingMatrix.set(true);
+    this.enrollmentApi.batchSaveScores(sid, { scores: allScoreEntries })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: updatedMatrix => {
+          this.classRecordMatrix.set(updatedMatrix);
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Class Record Saved',
+            detail: 'Raw scores saved & transmuted CHED grades synced to gradebook roster.'
+          });
+          this.isSavingMatrix.set(false);
+          this.loadSectionRoster(sid);
+        },
+        error: err => {
+          const detailMsg = err.error?.detail || err.message || 'Failed to save class record scores.';
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Save Blocked / Failed',
+            detail: detailMsg
+          });
+          this.isSavingMatrix.set(false);
+        }
+      });
+  }
+
+  openAddItemModal(): void {
+    const matrix = this.classRecordMatrix();
+    if (matrix && matrix.config && matrix.config.categories && matrix.config.categories.length > 0) {
+      this.newItemCategoryId.set(matrix.config.categories[0].id);
+    }
+    this.newItemTitle.set('');
+    this.newItemMaxPoints.set(50);
+    this.showAddItemModal.set(true);
+  }
+
+  submitAddItem(): void {
+    const sid = this.selectedSectionId();
+    const catId = this.newItemCategoryId();
+    const title = this.newItemTitle();
+    const max = this.newItemMaxPoints();
+
+    if (!sid) {
+      this.messageService.add({ severity: 'error', summary: 'Validation Error', detail: 'No class section selected.' });
+      return;
+    }
+    if (!catId) {
+      this.messageService.add({ severity: 'error', summary: 'Validation Error', detail: 'Please select a grading category.' });
+      return;
+    }
+    if (!title || !title.trim()) {
+      this.messageService.add({ severity: 'error', summary: 'Validation Error', detail: 'Activity title cannot be blank.' });
+      return;
+    }
+    if (!max || max <= 0) {
+      this.messageService.add({ severity: 'error', summary: 'Validation Error', detail: 'Maximum points must be greater than 0.' });
+      return;
+    }
+
+    this.enrollmentApi.addAssessmentItem(sid, {
+      categoryId: catId,
+      itemTitle: title.trim(),
+      maxPoints: max,
+      sequenceOrder: 1
+    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.messageService.add({ severity: 'success', summary: 'Item Added', detail: `Added '${title}' (${max} pts)` });
+        this.showAddItemModal.set(false);
+        this.loadClassRecordMatrix(sid);
+      },
+      error: err => {
+        const detailMsg = err.error?.detail || err.message || 'Failed to add assessment item.';
+        this.messageService.add({ severity: 'error', summary: 'Add Item Failed', detail: detailMsg });
+      }
+    });
+  }
+
+  deleteItem(itemId: number, title: string): void {
+    const sid = this.selectedSectionId();
+    if (!sid) return;
+
+    this.confirmationService.confirm({
+      message: `Delete assessment item '${title}' and all recorded student scores for this activity?`,
+      header: 'Confirm Item Deletion',
+      icon: 'pi pi-trash',
+      acceptLabel: 'Delete Item',
+      rejectLabel: 'Cancel',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        this.enrollmentApi.deleteAssessmentItem(itemId)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({
+            next: () => {
+              this.messageService.add({ severity: 'info', summary: 'Item Removed', detail: `Assessment item '${title}' deleted.` });
+              this.loadClassRecordMatrix(sid);
+            },
+            error: err => {
+              this.messageService.add({ severity: 'error', summary: 'Error', detail: err.error?.detail || 'Failed to delete assessment item.' });
+            }
+          });
+      }
+    });
   }
 
   validatePhilippineGrade(grade: number | null | undefined): string | null {
@@ -237,48 +727,96 @@ export class FacultyGradebookComponent implements OnInit {
     return null;
   }
 
+  validateStudentRow(row: EditableRosterRow): string | null {
+    const grade = row.finalNumericalGrade;
+    const status = row.completionStatus;
+
+    const gradeErr = this.validatePhilippineGrade(grade);
+    if (gradeErr) return gradeErr;
+
+    if (grade !== null && grade !== undefined) {
+      const rounded = Math.round(grade * 100) / 100;
+      if (rounded >= 1.00 && rounded <= 3.00) {
+        if (status === 'FAILED') {
+          return 'Passing grade (1.00-3.00) cannot have FAILED status.';
+        }
+      } else if (Math.abs(rounded - 5.00) < 0.001) {
+        if (status === 'PASSED') {
+          return 'Failing grade (5.00) cannot have PASSED status.';
+        }
+      } else if (Math.abs(rounded - 4.00) < 0.001) {
+        if (status !== 'INCOMPLETE') {
+          return 'Conditional grade (4.00) requires INCOMPLETE status.';
+        }
+      }
+    }
+    return null;
+  }
+
   loadSectionRoster(sectionId: number): void {
+    if (this.rosterSub) {
+      this.rosterSub.unsubscribe();
+      this.rosterSub = undefined;
+    }
+
     this.isLoading.set(true);
     this.errorMessage.set(null);
 
-    this.enrollmentApi.getSectionRoster(sectionId).subscribe({
-      next: (res: SectionRosterResponse) => {
-        this.roster.set(res);
-        const rows: EditableRosterRow[] = (res.students || []).map(s => {
-          const initialGrade = s.finalNumericalGrade ?? null;
-          return {
-            ...s,
-            finalNumericalGrade: initialGrade,
-            completionStatus: s.completionStatus || 'IN_PROGRESS',
-            isDirty: false,
-            gradeError: this.validatePhilippineGrade(initialGrade)
-          };
-        });
-        this.editableStudents.set(rows);
-        this.isLoading.set(false);
-      },
-      error: err => {
-        const msg = err.error?.detail || 'Failed to load section gradebook roster.';
-        this.errorMessage.set(msg);
-        this.roster.set(null);
-        this.editableStudents.set([]);
-        this.isLoading.set(false);
-      }
-    });
+    this.rosterSub = this.enrollmentApi.getSectionRoster(sectionId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res: SectionRosterResponse) => {
+          this.roster.set(res);
+          const matrix = this.classRecordMatrix();
+          const rows: EditableRosterRow[] = (res.students || []).map(s => {
+            let initialGrade = s.finalNumericalGrade ?? null;
+            let status = s.completionStatus || 'IN_PROGRESS';
+
+            if (!this.manualRosterOverride() && matrix) {
+              const matrixRow = matrix.rows.find(r => r.studentId === s.studentId);
+              if (matrixRow && matrixRow.transmutedGrade !== null && matrixRow.transmutedGrade !== undefined) {
+                initialGrade = matrixRow.transmutedGrade;
+                status = matrixRow.completionStatus || (initialGrade <= 3.00 ? 'PASSED' : 'FAILED');
+              }
+            }
+
+            const r: EditableRosterRow = {
+              ...s,
+              finalNumericalGrade: initialGrade,
+              completionStatus: status,
+              isDirty: false
+            };
+            r.gradeError = this.validateStudentRow(r);
+            return r;
+          });
+          this.editableStudents.set(rows);
+          this.isLoading.set(false);
+
+          if (!matrix) {
+            this.loadClassRecordMatrix(sectionId);
+          }
+        },
+        error: err => {
+          const msg = err.error?.detail || 'Failed to load section gradebook roster.';
+          this.errorMessage.set(msg);
+          this.roster.set(null);
+          this.editableStudents.set([]);
+          this.isLoading.set(false);
+        }
+      });
   }
 
   onGradeChange(row: EditableRosterRow, newGrade: number | null): void {
     row.finalNumericalGrade = newGrade;
     row.isDirty = true;
-    row.gradeError = this.validatePhilippineGrade(newGrade);
 
-    // Automated smart status recommendation based on CMO 25 grading threshold (3.00 passing cap)
-    if (!row.gradeError && newGrade !== null && newGrade !== undefined) {
-      if (newGrade <= 3.00 && newGrade >= 1.00) {
+    if (newGrade !== null && newGrade !== undefined && !isNaN(newGrade)) {
+      const rounded = Math.round(newGrade * 100) / 100;
+      if (rounded <= 3.00 && rounded >= 1.00) {
         row.completionStatus = 'PASSED';
-      } else if (newGrade === 5.00) {
+      } else if (Math.abs(rounded - 5.00) < 0.001) {
         row.completionStatus = 'FAILED';
-      } else if (newGrade === 4.00) {
+      } else if (Math.abs(rounded - 4.00) < 0.001) {
         row.completionStatus = 'INCOMPLETE';
       }
     } else if (newGrade === null || newGrade === undefined) {
@@ -287,18 +825,48 @@ export class FacultyGradebookComponent implements OnInit {
       }
     }
 
-    this.editableStudents.update(list => [...list]);
+    row.gradeError = this.validateStudentRow(row);
+
+    this.editableStudents.update(list =>
+      list.map(s => s.enrollmentItemId === row.enrollmentItemId ? { ...row } : s)
+    );
   }
 
   onStatusChange(row: EditableRosterRow, newStatus: string): void {
     row.completionStatus = newStatus;
     row.isDirty = true;
-    this.editableStudents.update(list => [...list]);
+    row.gradeError = this.validateStudentRow(row);
+
+    this.editableStudents.update(list =>
+      list.map(s => s.enrollmentItemId === row.enrollmentItemId ? { ...row } : s)
+    );
+  }
+
+  onGradeKeydown(event: KeyboardEvent, index: number): void {
+    if (event.key === 'Enter' || event.key === 'ArrowDown') {
+      event.preventDefault();
+      this.focusGradeInput(index + 1);
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      this.focusGradeInput(index - 1);
+    }
+  }
+
+  private focusGradeInput(index: number): void {
+    const total = this.editableStudents().length;
+    if (index < 0 || index >= total) return;
+    setTimeout(() => {
+      const inputs = document.querySelectorAll<HTMLInputElement>('.grade-input-field input, p-inputnumber input');
+      if (inputs && inputs[index]) {
+        inputs[index].focus();
+        inputs[index].select();
+      }
+    }, 0);
   }
 
   saveDraft(): void {
     const sectionId = this.selectedSectionId();
-    if (!sectionId || this.hasGradeErrors()) return;
+    if (!sectionId || this.hasGradeErrors() || !this.canEditGrades()) return;
 
     const payload: GradeEntryDto[] = this.editableStudents().map(s => ({
       enrollmentItemId: s.enrollmentItemId,
@@ -310,7 +878,7 @@ export class FacultyGradebookComponent implements OnInit {
     this.enrollmentApi.saveSectionGrades(sectionId, {
       grades: payload,
       submitForVerification: false
-    }).subscribe({
+    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: res => {
         this.messageService.add({
           severity: 'success',
@@ -333,7 +901,7 @@ export class FacultyGradebookComponent implements OnInit {
 
   submitToDean(): void {
     const sectionId = this.selectedSectionId();
-    if (!sectionId || this.hasGradeErrors()) return;
+    if (!sectionId || this.hasGradeErrors() || this.hasIncompleteGrades()) return;
 
     this.confirmationService.confirm({
       message: 'Submit grades to College Dean for academic compliance review? You will not be able to modify grades once submitted unless returned by the Dean.',
@@ -353,7 +921,7 @@ export class FacultyGradebookComponent implements OnInit {
         this.enrollmentApi.saveSectionGrades(sectionId, {
           grades: payload,
           submitForVerification: true
-        }).subscribe({
+        }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
           next: res => {
             this.messageService.add({
               severity: 'success',
@@ -378,7 +946,8 @@ export class FacultyGradebookComponent implements OnInit {
 
   verifyGrades(): void {
     const sectionId = this.selectedSectionId();
-    if (!sectionId) return;
+    const ros = this.roster();
+    if (!sectionId || !ros || ros.gradeStatus !== 'SUBMITTED') return;
 
     this.confirmationService.confirm({
       message: 'Verify section grade sheet per institutional curriculum and grading policies? Once verified, grades will proceed to Registrar sealing.',
@@ -389,32 +958,35 @@ export class FacultyGradebookComponent implements OnInit {
       acceptButtonStyleClass: 'p-button-help',
       accept: () => {
         this.isSaving.set(true);
-        this.enrollmentApi.verifySectionGrades(sectionId).subscribe({
-          next: res => {
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Grades Verified',
-              detail: `Section grades verified successfully by Dean. Status: ${res.gradeStatus}`
-            });
-            this.isSaving.set(false);
-            this.loadSectionRoster(sectionId);
-          },
-          error: err => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Verification Blocked',
-              detail: err.error?.detail || 'Failed to verify section grades.'
-            });
-            this.isSaving.set(false);
-          }
-        });
+        this.enrollmentApi.verifySectionGrades(sectionId)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({
+            next: res => {
+              this.messageService.add({
+                severity: 'success',
+                summary: 'Grades Verified',
+                detail: `Section grades verified successfully by Dean. Status: ${res.gradeStatus}`
+              });
+              this.isSaving.set(false);
+              this.loadSectionRoster(sectionId);
+            },
+            error: err => {
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Verification Blocked',
+                detail: err.error?.detail || 'Failed to verify section grades.'
+              });
+              this.isSaving.set(false);
+            }
+          });
       }
     });
   }
 
   sealGrades(): void {
     const sectionId = this.selectedSectionId();
-    if (!sectionId) return;
+    const ros = this.roster();
+    if (!sectionId || !ros || ros.gradeStatus !== 'VERIFIED') return;
 
     this.confirmationService.confirm({
       message: 'CRITICAL: Execute Registrar Sealing Engine? This permanently locks the section gradebook, syncs official grades to student academic records, recalculates cumulative GPA, and satisfies CHED CMO 25 prerequisites for subsequent term enrollment.',
@@ -425,25 +997,27 @@ export class FacultyGradebookComponent implements OnInit {
       acceptButtonStyleClass: 'p-button-success',
       accept: () => {
         this.isSaving.set(true);
-        this.enrollmentApi.sealSectionGrades(sectionId).subscribe({
-          next: res => {
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Grades Sealed & Locked',
-              detail: `Registrar Sealing Engine successfully executed! Student records finalized. Status: ${res.gradeStatus}`
-            });
-            this.isSaving.set(false);
-            this.loadSectionRoster(sectionId);
-          },
-          error: err => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Sealing Blocked',
-              detail: err.error?.detail || 'Failed to seal section grades.'
-            });
-            this.isSaving.set(false);
-          }
-        });
+        this.enrollmentApi.sealSectionGrades(sectionId)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({
+            next: res => {
+              this.messageService.add({
+                severity: 'success',
+                summary: 'Grades Sealed & Locked',
+                detail: `Registrar Sealing Engine successfully executed! Student records finalized. Status: ${res.gradeStatus}`
+              });
+              this.isSaving.set(false);
+              this.loadSectionRoster(sectionId);
+            },
+            error: err => {
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Sealing Blocked',
+                detail: err.error?.detail || 'Failed to seal section grades.'
+              });
+              this.isSaving.set(false);
+            }
+          });
       }
     });
   }

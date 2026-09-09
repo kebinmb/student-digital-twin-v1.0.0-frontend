@@ -2,23 +2,23 @@
   <p-toast></p-toast>
   <p-confirmdialog></p-confirmdialog>
 
-  <!-- Header Card & Section Selector -->
-  <header class="header-card">
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-      <div class="flex-1">
-        <h2 class="module-title">
-          <i class="pi pi-file-edit"></i>
+  <!-- 1. Header Card with Academic Term & Class Section Pickers -->
+  <header class="gb-header-card">
+    <div class="gb-header-top-row">
+      <div class="gb-title-group">
+        <h2 class="gb-module-title">
+          <i class="pi pi-file-edit gb-title-icon"></i>
           Section Gradebook & Registrar Sealing Engine
         </h2>
-        <p class="module-subtitle">
-          CHED CMO No. 25, s. 2015 Four-Tier Lifecycle: DRAFT &rarr; SUBMITTED &rarr; VERIFIED &rarr; SEALED
+        <p class="gb-module-subtitle">
+          CHED CMO No. 25, s. 2015 Four-Tier Academic Lifecycle: DRAFT &rarr; SUBMITTED &rarr; VERIFIED &rarr; SEALED
         </p>
       </div>
 
-      <!-- Term & Section Filter Pickers -->
-      <div class="flex flex-wrap items-center gap-3">
-        <div class="flex flex-col gap-1 w-full sm:w-64">
-          <label for="term-select" class="text-xs font-bold text-slate-700">Academic Term:</label>
+      <!-- Term & Section Pickers -->
+      <div class="gb-selectors-bar">
+        <div class="gb-selector-field term-field">
+          <label for="term-select" class="gb-field-label">Academic Term</label>
           <p-select 
             id="term-select"
             [options]="termOptions()" 
@@ -28,12 +28,12 @@
             optionLabel="label" 
             optionValue="value" 
             placeholder="Select Academic Term"
-            styleClass="w-full text-xs">
+            styleClass="gb-select-full">
           </p-select>
         </div>
 
-        <div class="flex flex-col gap-1 w-full sm:w-80">
-          <label for="section-select" class="text-xs font-bold text-slate-700">Class Section:</label>
+        <div class="gb-selector-field section-field">
+          <label for="section-select" class="gb-field-label">Class Section</label>
           <p-select 
             id="section-select"
             [options]="sectionOptions()" 
@@ -45,292 +45,620 @@
             optionLabel="label" 
             optionValue="value" 
             placeholder="Select Course & Section"
-            styleClass="w-full text-xs"
+            styleClass="gb-select-full"
             [disabled]="sections().length === 0">
           </p-select>
         </div>
       </div>
     </div>
 
-    <!-- Active Section Metadata & Sealing Controls -->
+    <!-- 2. Active Section Banner (Primary Instructor, Gradebook Status, Actions) -->
     @if (roster(); as ros) {
-      <div class="section-banner mt-4 pt-4 border-t border-slate-200">
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div class="flex flex-col gap-1">
-            <div class="flex items-center gap-2">
-              <span class="text-lg font-bold text-slate-900">{{ ros.courseCode }} — {{ ros.courseTitle }}</span>
-              <span class="font-mono text-xs font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 border border-emerald-300">
-                {{ ros.sectionCode }}
-              </span>
-            </div>
-            <div class="flex flex-wrap items-center gap-3 text-xs text-slate-600">
-              <span><strong>Primary Instructor:</strong> {{ ros.primaryInstructorName || 'Unassigned / Adjunct' }}</span>
-              <span class="text-slate-300">&bull;</span>
-              <span><strong>Enrolled Students:</strong> {{ ros.students.length }}</span>
-              <span class="text-slate-300">&bull;</span>
-              <div class="flex items-center gap-1.5">
-                <strong>Gradebook Status:</strong>
-                <p-tag 
-                  [value]="getGradeStatusLabel(ros.gradeStatus)" 
-                  [severity]="getStatusBadgeSeverity(ros.gradeStatus)"
-                  styleClass="text-[11px] font-bold">
-                </p-tag>
-              </div>
-            </div>
+      <div class="gb-context-banner">
+        <div class="gb-context-meta-group">
+          <div class="gb-course-heading">
+            <span class="gb-course-title">{{ ros.courseCode }} — {{ ros.courseTitle }}</span>
+            <span class="gb-section-badge">{{ ros.sectionCode }}</span>
           </div>
-
-          <!-- Grade Workflow Actions -->
-          <div class="flex flex-wrap items-center gap-2">
-            <!-- Save Draft (Faculty / Dean / Admin) -->
-            <p-button 
-              label="Save Draft" 
-              icon="pi pi-save" 
-              severity="secondary" 
-              size="small"
-              [disabled]="!canEditGrades() || hasGradeErrors() || isSaving()"
-              [loading]="isSaving()"
-              (onClick)="saveDraft()">
-            </p-button>
-
-            <!-- Submit to Dean (Faculty) -->
-            <p-button 
-              label="Submit to Dean" 
-              icon="pi pi-send" 
-              severity="info" 
-              size="small"
-              [disabled]="ros.gradeStatus !== 'DRAFT' || hasGradeErrors() || isSaving()"
-              [loading]="isSaving()"
-              (onClick)="submitToDean()">
-            </p-button>
-
-            <!-- Verify Grades (Dean / Admin) -->
-            @if (isDean()) {
-              <p-button 
-                label="Verify Grades" 
-                icon="pi pi-verified" 
-                severity="help" 
-                size="small"
-                [disabled]="ros.gradeStatus === 'SEALED' || ros.gradeStatus === 'VERIFIED'"
-                [loading]="isSaving()"
-                (onClick)="verifyGrades()">
-              </p-button>
-            }
-
-            <!-- Seal & Lock Records (Registrar / Admin) -->
-            @if (isRegistrar()) {
-              <p-button 
-                label="Seal Grades" 
-                icon="pi pi-lock" 
-                severity="success" 
-                size="small"
-                [disabled]="ros.gradeStatus === 'SEALED' || (ros.gradeStatus !== 'VERIFIED' && !isAdmin())"
-                [loading]="isSaving()"
-                (onClick)="sealGrades()">
-              </p-button>
-            }
+          <div class="gb-meta-pills-row">
+            <span class="gb-meta-item">
+              <i class="pi pi-user gb-meta-icon"></i>
+              <strong>Primary Instructor:</strong> {{ ros.primaryInstructorName || 'Unassigned / Adjunct' }}
+            </span>
+            <span class="gb-dot-separator">&bull;</span>
+            <span class="gb-meta-item">
+              <i class="pi pi-users gb-meta-icon"></i>
+              <strong>Enrolled Students:</strong> {{ ros.students.length }}
+            </span>
+            <span class="gb-dot-separator">&bull;</span>
+            <div class="gb-meta-item">
+              <strong>Gradebook Status:</strong>
+              <p-tag 
+                [value]="getGradeStatusLabel(ros.gradeStatus)" 
+                [severity]="getStatusBadgeSeverity(ros.gradeStatus)"
+                styleClass="gb-status-tag">
+              </p-tag>
+            </div>
           </div>
         </div>
 
-        <!-- KPI Metrics Grid -->
-        <div class="metrics-grid mt-4">
-          <div class="metric-card">
-            <span class="metric-label">Class Size</span>
-            <span class="metric-value font-bold-navy">{{ totalStudents() }} Students</span>
-            <span class="metric-subtext">Total Enrolled</span>
-          </div>
-          <div class="metric-card">
-            <span class="metric-label">Passing Rate</span>
-            <span class="metric-value text-emerald-700">
-              {{ totalStudents() > 0 ? ((passedCount() / totalStudents()) * 100 | number:'1.0-0') : 0 }}%
-            </span>
-            <span class="metric-subtext">{{ passedCount() }} of {{ totalStudents() }} Passed</span>
-          </div>
-          <div class="metric-card">
-            <span class="metric-label">Deficient / INC</span>
-            <span class="metric-value text-amber-600">
-              {{ failedCount() + incCount() }}
-            </span>
-            <span class="metric-subtext">{{ failedCount() }} Failed &bull; {{ incCount() }} Incomplete</span>
-          </div>
-          <div class="metric-card">
-            <span class="metric-label">Class Grade Average</span>
-            <span class="metric-value font-mono font-bold-navy">
-              {{ averageGrade() !== null ? (averageGrade() | number:'1.2-2') : 'N/A' }}
-            </span>
-            <span class="metric-subtext">CHED Scale (1.00 - 5.00)</span>
-          </div>
+        <!-- Grade Workflow Action Buttons -->
+        <div class="gb-actions-toolbar">
+          <p-button 
+            label="Save Draft" 
+            icon="pi pi-save" 
+            severity="secondary" 
+            size="small"
+            [disabled]="!canEditGrades() || hasGradeErrors() || isSaving()"
+            [loading]="isSaving()"
+            [pTooltip]="saveDisabledTooltip()"
+            tooltipPosition="bottom"
+            (onClick)="saveDraft()">
+          </p-button>
+
+          <p-button 
+            label="Submit to Dean" 
+            icon="pi pi-send" 
+            severity="info" 
+            size="small"
+            [disabled]="ros.gradeStatus !== 'DRAFT' || hasGradeErrors() || hasIncompleteGrades() || isSaving() || !canEditGrades()"
+            [loading]="isSaving()"
+            [pTooltip]="submitDisabledTooltip()"
+            tooltipPosition="bottom"
+            (onClick)="submitToDean()">
+          </p-button>
+
+          @if (isDean()) {
+            <p-button 
+              label="Verify Grades" 
+              icon="pi pi-verified" 
+              severity="help" 
+              size="small"
+              [disabled]="ros.gradeStatus !== 'SUBMITTED' || isSaving()"
+              [loading]="isSaving()"
+              [pTooltip]="verifyDisabledTooltip()"
+              tooltipPosition="bottom"
+              (onClick)="verifyGrades()">
+            </p-button>
+          }
+
+          @if (isRegistrar()) {
+            <p-button 
+              label="Seal Grades" 
+              icon="pi pi-lock" 
+              severity="success" 
+              size="small"
+              [disabled]="ros.gradeStatus !== 'VERIFIED' || isSaving()"
+              [loading]="isSaving()"
+              [pTooltip]="sealDisabledTooltip()"
+              tooltipPosition="bottom"
+              (onClick)="sealGrades()">
+            </p-button>
+          }
         </div>
       </div>
+
+      <!-- 3. Workspace Tab Switcher Navigation -->
+      <div class="gb-workspace-tabs">
+        <button 
+          class="gb-tab-btn" 
+          [class.tab-active]="activeTab() === 'ROSTER'"
+          (click)="setTab('ROSTER')">
+          <i class="pi pi-list"></i>
+          Official Grade Roster & 4-Tier Workflow
+        </button>
+        <button 
+          class="gb-tab-btn" 
+          [class.tab-active]="activeTab() === 'CLASS_RECORD'"
+          (click)="setTab('CLASS_RECORD')">
+          <i class="pi pi-table"></i>
+          Dynamic Class Record & Assessment Weight Engine
+        </button>
+      </div>
+
+      <!-- TAB 1: 4-Tier Workflow & KPI Cards & Official Roster -->
+      @if (activeTab() === 'ROSTER') {
+        <!-- 4-Tier Stepper -->
+        <div class="gb-stepper-track">
+          <!-- Tier 1 -->
+          <div class="gb-stepper-node"
+               [ngClass]="{
+                 'active-stage': ros.gradeStatus === 'DRAFT',
+                 'completed-stage': ros.gradeStatus !== 'DRAFT'
+               }">
+            <div class="gb-stepper-avatar">
+              <i [class]="ros.gradeStatus === 'DRAFT' ? 'pi pi-pencil' : 'pi pi-check'"></i>
+            </div>
+            <div class="gb-stepper-details">
+              <span class="gb-stepper-tier-name">Tier 1: Faculty Draft</span>
+              <span class="gb-stepper-tier-sub">Instructor Grade Encoding</span>
+            </div>
+          </div>
+
+          <!-- Tier 2 -->
+          <div class="gb-stepper-node"
+               [ngClass]="{
+                 'active-stage': ros.gradeStatus === 'SUBMITTED',
+                 'completed-stage': ros.gradeStatus === 'VERIFIED' || ros.gradeStatus === 'SEALED',
+                 'pending-stage': ros.gradeStatus === 'DRAFT'
+               }">
+            <div class="gb-stepper-avatar">
+              <i [class]="ros.gradeStatus === 'VERIFIED' || ros.gradeStatus === 'SEALED' ? 'pi pi-check' : 'pi pi-send'"></i>
+            </div>
+            <div class="gb-stepper-details">
+              <span class="gb-stepper-tier-name">Tier 2: Dean Review</span>
+              <span class="gb-stepper-tier-sub">Academic Compliance</span>
+            </div>
+          </div>
+
+          <!-- Tier 3 -->
+          <div class="gb-stepper-node"
+               [ngClass]="{
+                 'active-stage': ros.gradeStatus === 'VERIFIED',
+                 'completed-stage': ros.gradeStatus === 'SEALED',
+                 'pending-stage': ros.gradeStatus === 'DRAFT' || ros.gradeStatus === 'SUBMITTED'
+               }">
+            <div class="gb-stepper-avatar">
+              <i [class]="ros.gradeStatus === 'SEALED' ? 'pi pi-check' : 'pi pi-verified'"></i>
+            </div>
+            <div class="gb-stepper-details">
+              <span class="gb-stepper-tier-name">Tier 3: Registrar Ready</span>
+              <span class="gb-stepper-tier-sub">Dean Clearance Granted</span>
+            </div>
+          </div>
+
+          <!-- Tier 4 -->
+          <div class="gb-stepper-node"
+               [ngClass]="{
+                 'active-stage': ros.gradeStatus === 'SEALED',
+                 'completed-stage': ros.gradeStatus === 'SEALED',
+                 'pending-stage': ros.gradeStatus !== 'SEALED'
+               }">
+            <div class="gb-stepper-avatar">
+              <i class="pi pi-lock"></i>
+            </div>
+            <div class="gb-stepper-details">
+              <span class="gb-stepper-tier-name">Tier 4: Sealed & Locked</span>
+              <span class="gb-stepper-tier-sub">Transcript Sync & GPA Final</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPI Metrics Cards -->
+        <div class="gb-kpi-container">
+          <div class="gb-kpi-box">
+            <div class="gb-kpi-top">
+              <span class="gb-kpi-caption">Enrolled Class Size</span>
+              <i class="pi pi-users gb-kpi-symbol"></i>
+            </div>
+            <span class="gb-kpi-number">{{ totalStudents() }} Students</span>
+            <span class="gb-kpi-footnote">Total Registered Roster</span>
+          </div>
+
+          <div class="gb-kpi-box">
+            <div class="gb-kpi-top">
+              <span class="gb-kpi-caption kpi-pass">Passing Rate</span>
+              <i class="pi pi-chart-pie gb-kpi-symbol kpi-icon-pass"></i>
+            </div>
+            <span class="gb-kpi-number number-pass">
+              {{ totalStudents() > 0 ? ((passedCount() / totalStudents()) * 100 | number:'1.0-0') : 0 }}%
+            </span>
+            <span class="gb-kpi-footnote">{{ passedCount() }} of {{ totalStudents() }} Passed</span>
+          </div>
+
+          <div class="gb-kpi-box">
+            <div class="gb-kpi-top">
+              <span class="gb-kpi-caption kpi-def">Deficient / INC</span>
+              <i class="pi pi-exclamation-triangle gb-kpi-symbol kpi-icon-def"></i>
+            </div>
+            <span class="gb-kpi-number number-def">{{ failedCount() + incCount() }}</span>
+            <span class="gb-kpi-footnote">{{ failedCount() }} Failed &bull; {{ incCount() }} Incomplete</span>
+          </div>
+
+          <div class="gb-kpi-box">
+            <div class="gb-kpi-top">
+              <span class="gb-kpi-caption">Class Grade Average</span>
+              <i class="pi pi-calculator gb-kpi-symbol"></i>
+            </div>
+            <span class="gb-kpi-number number-mono">
+              {{ averageGrade() !== null ? (averageGrade() | number:'1.2-2') : 'N/A' }}
+            </span>
+            <span class="gb-kpi-footnote">CHED Scale (1.00 - 5.00)</span>
+          </div>
+        </div>
+      }
     }
   </header>
 
-  <!-- Contextual Phase Status Banner -->
-  @if (roster(); as ros) {
-    <div class="phase-banner mb-4" [ngClass]="'phase-' + ros.gradeStatus.toLowerCase()">
-      <div class="flex items-start gap-3">
-        <div class="phase-icon-box">
-          <i [class]="phaseInfo().icon"></i>
+  <!-- Validation & Error Messages -->
+  @if (hasGradeErrors()) {
+    <p-message severity="error" styleClass="gb-full-message">
+      <div class="gb-msg-content">
+        <span class="gb-msg-title gb-msg-title-error">Grading Scale Error:</span>
+        <span class="gb-msg-text gb-msg-text-error">One or more student grades do not conform to CHED CMO 25 increments (1.00, 1.25, ..., 3.00, 4.00, 5.00). Save and submit operations are disabled until corrected.</span>
+      </div>
+    </p-message>
+  }
+
+  @if (errorMessage()) {
+    <p-message severity="warn" styleClass="gb-full-message">
+      <div class="gb-msg-content gb-msg-content-col">
+        <span class="gb-msg-title gb-msg-title-warn">Notice:</span>
+        <span class="gb-msg-text gb-msg-text-warn">{{ errorMessage() }}</span>
+      </div>
+    </p-message>
+  }
+
+  <!-- TAB 1 CONTENT: Roster Table -->
+  @if (activeTab() === 'ROSTER') {
+    <section class="gb-distribution-card">
+      <div class="gb-roster-header-bar">
+        <div class="gb-roster-info font-medium text-xs text-slate-700 flex items-center gap-2">
+          <i class="pi pi-calculator text-emerald-700 font-bold"></i>
+          <span>Official Roster Grades are derived automatically from the <strong>Dynamic Class Record & Assessment Weight Engine</strong>.</span>
         </div>
-        <div class="flex flex-col gap-1 flex-1">
-          <div class="flex items-center gap-2">
-            <span class="phase-title">{{ phaseInfo().title }}</span>
-            <span class="phase-badge" [ngClass]="phaseInfo().badgeClass">
-              {{ ros.gradeStatus }}
-            </span>
+        @if (canEditGrades()) {
+          <p-button 
+            type="button" 
+            [icon]="manualRosterOverride() ? 'pi pi-lock-open' : 'pi pi-lock'" 
+            [label]="manualRosterOverride() ? 'Manual Override Active' : 'Derived from Class Record (Read-Only)'" 
+            [severity]="manualRosterOverride() ? 'warn' : 'secondary'" 
+            size="small" 
+            (onClick)="toggleManualRosterOverride()"
+            [pTooltip]="'Toggle between derived Class Record grades and manual grade override'"
+            tooltipPosition="left">
+          </p-button>
+        }
+      </div>
+
+      @if (roster() && totalStudents() > 0) {
+        <div class="gb-dist-header">
+          <span class="gb-dist-title">
+            <i class="pi pi-chart-bar"></i>
+            CHED CMO 25 Grade Curve Distribution
+          </span>
+          <div class="gb-dist-legend">
+            <span>Passed: <strong>{{ passedCount() }}</strong></span>
+            <span>&bull;</span>
+            <span>Conditional: <strong>{{ conditionalCount() }}</strong></span>
+            <span>&bull;</span>
+            <span>Deficient: <strong>{{ deficientCount() }}</strong></span>
           </div>
-          <p class="phase-description">{{ phaseInfo().description }}</p>
+        </div>
+
+        <div class="gb-dist-body">
+          <div class="gb-dist-bar-track">
+            <div class="gb-bar-segment gb-seg-superior" [style.width.%]="superiorPercent()" [pTooltip]="'Dean\'s List (1.00-1.50): ' + superiorCount()" tooltipPosition="top"></div>
+            <div class="gb-bar-segment gb-seg-satisfactory" [style.width.%]="satisfactoryPercent()" [pTooltip]="'Satisfactory (1.75-3.00): ' + satisfactoryCount()" tooltipPosition="top"></div>
+            <div class="gb-bar-segment gb-seg-conditional" [style.width.%]="conditionalPercent()" [pTooltip]="'Conditional / INC: ' + conditionalCount()" tooltipPosition="top"></div>
+            <div class="gb-bar-segment gb-seg-deficient" [style.width.%]="deficientPercent()" [pTooltip]="'Deficient / Failed: ' + deficientCount()" tooltipPosition="top"></div>
+            <div class="gb-bar-segment gb-seg-unassigned" [style.width.%]="unassignedPercent()" [pTooltip]="'Pending: ' + unassignedCount()" tooltipPosition="top"></div>
+          </div>
+        </div>
+      }
+
+      <p-table 
+        [value]="$any(isLoading() ? [{}, {}, {}, {}, {}] : editableStudents())" 
+        dataKey="enrollmentItemId"
+        [rowHover]="true"
+        responsiveLayout="scroll"
+        styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped">
+        
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width: 48px; text-align: center;">#</th>
+            <th style="width: 140px;">Student ID</th>
+            <th>Student Full Name</th>
+            <th style="width: 180px;">Program & Year</th>
+            <th style="width: 190px;">Numerical Grade (1.00-5.00)</th>
+            <th style="width: 190px;">Completion Status</th>
+            <th style="width: 130px; text-align: center;">Academic Status</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-student let-rowIndex="rowIndex">
+          @if (isLoading()) {
+            <tr>
+              <td style="text-align: center;"><p-skeleton width="1.5rem" height="1.2rem"></p-skeleton></td>
+              <td><p-skeleton width="6rem" height="1.2rem"></p-skeleton></td>
+              <td><p-skeleton width="12rem" height="1.2rem"></p-skeleton></td>
+              <td><p-skeleton width="8rem" height="1.2rem"></p-skeleton></td>
+              <td><p-skeleton width="6rem" height="1.8rem"></p-skeleton></td>
+              <td><p-skeleton width="7rem" height="1.8rem"></p-skeleton></td>
+              <td style="text-align: center;"><p-skeleton width="5rem" height="1.2rem"></p-skeleton></td>
+            </tr>
+          } @else {
+            <tr [class.row-dirty]="student.isDirty">
+              <td style="text-align: center;" class="row-index-cell">{{ rowIndex + 1 }}</td>
+              <td><span class="student-id-pill">{{ student.studentNumber }}</span></td>
+              <td class="student-name-cell">{{ student.studentName }}</td>
+              <td>
+                <div class="program-wrapper">
+                  <span class="program-code">{{ student.programCode }}</span>
+                  <span class="year-badge">Year {{ student.yearLevel }}</span>
+                </div>
+              </td>
+              <td>
+                @if (canEditGrades() && manualRosterOverride()) {
+                  <div class="grade-input-box">
+                    <p-inputnumber 
+                      [ngModel]="student.finalNumericalGrade" 
+                      (ngModelChange)="onGradeChange(student, $event)"
+                      (keydown)="onGradeKeydown($event, rowIndex)"
+                      [min]="1.00" 
+                      [max]="5.00" 
+                      [minFractionDigits]="2" 
+                      [maxFractionDigits]="2"
+                      placeholder="Grade"
+                      [invalid]="!!student.gradeError"
+                      [ariaLabel]="'Final numerical grade for ' + student.studentName"
+                      styleClass="gb-select-full">
+                    </p-inputnumber>
+                    @if (student.gradeError) {
+                      <small class="grade-error-text">{{ student.gradeError }}</small>
+                    }
+                  </div>
+                } @else {
+                  <div class="gb-readonly-grade-pill">
+                    <span class="grade-read-only" 
+                          [ngClass]="{
+                            'grade-pass': student.finalNumericalGrade && student.finalNumericalGrade <= 3.00,
+                            'grade-fail': student.finalNumericalGrade && student.finalNumericalGrade > 3.00,
+                            'grade-none': !student.finalNumericalGrade
+                          }"
+                          [pTooltip]="manualRosterOverride() ? 'Manual grade override active' : 'Derived automatically from Dynamic Class Record'"
+                          tooltipPosition="top">
+                      <i class="pi pi-calculator text-xs mr-1 opacity-70"></i>
+                      {{ student.finalNumericalGrade ? (student.finalNumericalGrade | number:'1.2-2') : 'Pending Matrix' }}
+                    </span>
+                  </div>
+                }
+              </td>
+              <td>
+                @if (canEditGrades() && manualRosterOverride()) {
+                  <p-select 
+                    [options]="completionStatusOptions" 
+                    [ngModel]="student.completionStatus" 
+                    (ngModelChange)="onStatusChange(student, $event)"
+                    optionLabel="label" 
+                    optionValue="value" 
+                    [ariaLabel]="'Completion status for ' + student.studentName"
+                    styleClass="gb-select-full">
+                  </p-select>
+                } @else {
+                  <p-tag [value]="student.completionStatus || 'IN_PROGRESS'" [severity]="getCompletionSeverity(student.completionStatus)"></p-tag>
+                }
+              </td>
+              <td style="text-align: center;">
+                @if (student.completionStatus === 'PASSED') {
+                  <span class="status-pill status-passed">CREDITED</span>
+                } @else if (student.completionStatus === 'FAILED') {
+                  <span class="status-pill status-failed">DEFICIENT</span>
+                } @else if (student.completionStatus === 'INCOMPLETE') {
+                  <span class="status-pill status-inc">INC PENDING</span>
+                } @else {
+                  <span class="status-pill status-pending">PENDING</span>
+                }
+              </td>
+            </tr>
+          }
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          @if (!isLoading()) {
+            <tr>
+              <td colspan="7">
+                <div class="gb-empty-wrapper">
+                  <div class="gb-empty-icon-circle"><i class="pi pi-users"></i></div>
+                  <h3 class="gb-empty-heading">No Enrolled Students In This Section</h3>
+                  <p class="gb-empty-subtext">Select a scheduled section with active enrollments from the header above to load the official gradebook roster.</p>
+                </div>
+              </td>
+            </tr>
+          }
+        </ng-template>
+      </p-table>
+    </section>
+  }
+
+  <!-- TAB 2 CONTENT: Dynamic Class Record & Assessment Weight Engine -->
+  @if (activeTab() === 'CLASS_RECORD') {
+    <section class="gb-distribution-card">
+      <div class="gb-cr-toolbar">
+        <div class="gb-cr-scheme-summary">
+          <span class="gb-cr-badge"><i class="pi pi-sliders-h"></i> Midterm: {{ classRecordMatrix()?.config?.midtermWeight || 50 }}%</span>
+          <span class="gb-cr-badge"><i class="pi pi-sliders-h"></i> Final: {{ classRecordMatrix()?.config?.finalWeight || 50 }}%</span>
+          <span class="gb-cr-info-text">Automatic CHED Transmutation Engine (1.00 – 5.00) Enabled</span>
+        </div>
+
+        <div class="gb-cr-actions">
+          @if (canEditGrades()) {
+            <p-button 
+              label="Add Activity / Exam" 
+              icon="pi pi-plus" 
+              severity="secondary" 
+              size="small"
+              (onClick)="openAddItemModal()">
+            </p-button>
+
+            <p-button 
+              label="Save Scores & Sync Roster" 
+              icon="pi pi-save" 
+              severity="success" 
+              size="small"
+              [loading]="isSavingMatrix()"
+              (onClick)="saveMatrixScores()">
+            </p-button>
+          }
         </div>
       </div>
-    </div>
-  }
 
-  <!-- Grade Validation Error Alert -->
-  @if (hasGradeErrors()) {
-    <div class="mb-4">
-      <p-message severity="error" styleClass="w-full shadow-none border border-rose-200 bg-rose-50/70 rounded-lg">
-        <div class="flex items-center gap-2">
-          <span class="text-xs font-bold text-rose-900">Grading Scale Error:</span>
-          <span class="text-xs text-rose-700">One or more student grades do not conform to CHED CMO 25 increments (1.00, 1.25, 1.50, ..., 3.00, 4.00, 5.00). Save and submit operations are disabled until corrected.</span>
-        </div>
-      </p-message>
-    </div>
-  }
+      <!-- Dynamic Spreadsheet Table -->
+      <p-table 
+        [value]="classRecordMatrix()?.rows || []" 
+        dataKey="studentId"
+        [rowHover]="true"
+        [scrollable]="true"
+        scrollHeight="calc(100vh - 380px)"
+        responsiveLayout="scroll"
+        styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped gb-matrix-table">
+        
+        <ng-template pTemplate="header">
+          <tr>
+            <th pFrozenColumn style="width: 48px; text-align: center; left: 0px; z-index: 10;">#</th>
+            <th pFrozenColumn style="width: 130px; left: 48px; z-index: 10;">Student ID</th>
+            <th pFrozenColumn style="width: 180px; left: 178px; z-index: 10;">Student Name</th>
 
-  <!-- Error Notice -->
-  @if (errorMessage()) {
-    <div class="mb-4">
-      <p-message severity="warn" styleClass="w-full shadow-none border border-amber-200 bg-amber-50/60 rounded-lg">
-        <div class="flex flex-col gap-0.5 ml-2">
-          <span class="text-xs font-bold text-amber-900">Notice:</span>
-          <span class="text-sm text-amber-800">{{ errorMessage() }}</span>
-        </div>
-      </p-message>
-    </div>
-  }
+            <!-- Dynamic Assessment Activity Header Columns -->
+            @for (col of allAssessmentItems(); track col.item.id) {
+              <th style="min-width: 110px; text-align: center;" [ngClass]="col.termPeriod === 'MIDTERM' ? 'th-midterm' : 'th-final'">
+                <div class="gb-th-item">
+                  <span class="gb-th-title">{{ col.item.itemTitle }}</span>
+                  <span class="gb-th-sub">Max: {{ col.item.maxPoints }} pts</span>
+                  <span class="gb-th-cat" [ngClass]="col.termPeriod === 'MIDTERM' ? 'cat-midterm' : 'cat-final'">
+                    {{ col.termPeriod }} &bull; {{ col.categoryName }}
+                  </span>
+                  @if (canEditGrades()) {
+                    <button class="gb-th-del-btn" (click)="deleteItem(col.item.id, col.item.itemTitle)" title="Delete Activity">
+                      <i class="pi pi-times"></i>
+                    </button>
+                  }
+                </div>
+              </th>
+            }
 
-  <!-- Gradebook Roster Table Card -->
-  <section class="table-card">
-    <p-table 
-      [value]="editableStudents()" 
-      [loading]="isLoading()" 
-      responsiveLayout="scroll"
-      styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped">
-      
-      <ng-template pTemplate="header">
-        <tr>
-          <th style="width: 50px; text-align: center;">#</th>
-          <th style="width: 140px;">Student ID</th>
-          <th>Student Full Name</th>
-          <th style="width: 160px;">Program & Year</th>
-          <th style="width: 170px;">Numerical Grade (1.00-5.00)</th>
-          <th style="width: 190px;">Completion Status</th>
-          <th style="width: 130px; text-align: center;">Academic Status</th>
-        </tr>
-      </ng-template>
+            <th style="width: 100px; text-align: center;">Midterm %</th>
+            <th style="width: 100px; text-align: center;">Final %</th>
+            <th style="width: 110px; text-align: center;">Total Raw %</th>
+            <th style="width: 130px; text-align: center;">Transmuted Grade</th>
+            <th style="width: 110px; text-align: center;">Status</th>
+          </tr>
+        </ng-template>
 
-      <ng-template pTemplate="body" let-student let-rowIndex="rowIndex">
-        <tr [class.bg-amber-50]="student.isDirty">
-          <td style="text-align: center;" class="text-xs text-slate-500 font-mono">
-            {{ rowIndex + 1 }}
-          </td>
-          <td>
-            <span class="font-mono text-xs font-bold font-bold-navy bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-              {{ student.studentNumber }}
-            </span>
-          </td>
-          <td class="font-semibold text-xs font-bold-navy">
-            {{ student.studentName }}
-          </td>
-          <td class="text-xs text-slate-700">
-            <span class="font-semibold">{{ student.programCode }}</span>
-            <span class="text-slate-400 ms-1">Year {{ student.yearLevel }}</span>
-          </td>
-          <td>
-            @if (canEditGrades()) {
-              <div class="flex flex-col gap-1">
-                <p-inputnumber 
-                  [ngModel]="student.finalNumericalGrade" 
-                  (ngModelChange)="onGradeChange(student, $event)"
-                  [min]="1.00" 
-                  [max]="5.00" 
-                  [step]="0.25" 
-                  [minFractionDigits]="2" 
-                  [maxFractionDigits]="2"
-                  placeholder="Grade"
-                  [invalid]="!!student.gradeError"
-                  styleClass="w-full text-xs">
-                </p-inputnumber>
-                @if (student.gradeError) {
-                  <small class="p-error text-[11px] leading-tight">
-                    {{ student.gradeError }}
-                  </small>
+        <ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
+          <tr>
+            <td pFrozenColumn style="text-align: center; left: 0px;" class="row-index-cell">{{ rowIndex + 1 }}</td>
+            <td pFrozenColumn style="left: 48px;"><span class="student-id-pill">{{ row.studentNumber }}</span></td>
+            <td pFrozenColumn style="left: 178px;" class="student-name-cell">{{ row.studentName }}</td>
+
+            <!-- Dynamic Raw Score Cells -->
+            @for (col of allAssessmentItems(); track col.item.id; let colIndex = $index) {
+              <td style="text-align: center;" class="matrix-cell">
+                @if (canEditGrades()) {
+                  <p-inputnumber 
+                    [ngModel]="getStudentScoreValue(row.studentId, col.item.id)"
+                    (ngModelChange)="onMatrixScoreChange(row.studentId, col.item.id, $event)"
+                    (keydown)="onMatrixKeydown($event, rowIndex, colIndex)"
+                    [min]="0" 
+                    [max]="col.item.maxPoints"
+                    [minFractionDigits]="0"
+                    [maxFractionDigits]="2"
+                    placeholder="—"
+                    [styleClass]="'gb-matrix-input gb-matrix-row-' + rowIndex + '-col-' + colIndex"
+                    [inputStyle]="{ 'text-align': 'center', 'font-weight': '600', 'font-family': 'monospace' }">
+                  </p-inputnumber>
+                } @else {
+                  <span class="font-mono text-xs font-semibold">
+                    {{ getStudentScoreValue(row.studentId, col.item.id) !== null ? getStudentScoreValue(row.studentId, col.item.id) : '—' }}
+                  </span>
                 }
-              </div>
-            } @else {
-              <span class="font-mono text-xs font-bold" 
-                    [ngClass]="{
-                      'text-emerald-700': student.finalNumericalGrade && student.finalNumericalGrade <= 3.00,
-                      'text-rose-600': student.finalNumericalGrade && student.finalNumericalGrade > 3.00,
-                      'text-slate-500': !student.finalNumericalGrade
-                    }">
-                {{ student.finalNumericalGrade ? (student.finalNumericalGrade | number:'1.2-2') : 'No Grade' }}
-              </span>
+              </td>
             }
-          </td>
-          <td>
-            @if (canEditGrades()) {
-              <p-select 
-                [options]="completionStatusOptions" 
-                [ngModel]="student.completionStatus" 
-                (ngModelChange)="onStatusChange(student, $event)"
-                optionLabel="label" 
-                optionValue="value" 
-                styleClass="w-full text-xs">
-              </p-select>
-            } @else {
-              <p-tag 
-                [value]="student.completionStatus || 'IN_PROGRESS'" 
-                [severity]="getCompletionSeverity(student.completionStatus)">
-              </p-tag>
-            }
-          </td>
-          <td style="text-align: center;">
-            @if (student.completionStatus === 'PASSED') {
-              <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
-                CREDITED
-              </span>
-            } @else if (student.completionStatus === 'FAILED') {
-              <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-rose-100 text-rose-800 border border-rose-300">
-                DEFICIENT
-              </span>
-            } @else if (student.completionStatus === 'INCOMPLETE') {
-              <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-amber-100 text-amber-800 border border-amber-300">
-                INC PENDING
-              </span>
-            } @else {
-              <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-slate-100 text-slate-700 border border-slate-200">
-                PENDING
-              </span>
-            }
-          </td>
-        </tr>
-      </ng-template>
 
-      <ng-template pTemplate="emptymessage">
-        <tr>
-          <td colspan="7" class="empty-state-cell">
-            <div class="empty-state-card flex flex-col items-center justify-center">
-              <div class="empty-state-icon flex items-center justify-center">
-                <i class="pi pi-users"></i>
+            <td style="text-align: center;" class="font-mono text-xs font-semibold text-slate-700">
+              {{ row.midtermRawPercentage !== null ? (row.midtermRawPercentage | number:'1.2-2') + '%' : '—' }}
+            </td>
+            <td style="text-align: center;" class="font-mono text-xs font-semibold text-slate-700">
+              {{ row.finalRawPercentage !== null ? (row.finalRawPercentage | number:'1.2-2') + '%' : '—' }}
+            </td>
+            <td style="text-align: center;" class="font-mono text-xs font-bold text-slate-900">
+              {{ row.totalRawPercentage !== null ? (row.totalRawPercentage | number:'1.2-2') + '%' : '—' }}
+            </td>
+            <td style="text-align: center;">
+              <span class="grade-read-only" 
+                    [ngClass]="{
+                      'grade-pass': row.transmutedGrade && row.transmutedGrade <= 3.00,
+                      'grade-fail': row.transmutedGrade && row.transmutedGrade > 3.00,
+                      'grade-none': !row.transmutedGrade
+                    }">
+                {{ row.transmutedGrade ? (row.transmutedGrade | number:'1.2-2') : 'Uncalculated' }}
+              </span>
+            </td>
+            <td style="text-align: center;">
+              @if (row.completionStatus === 'PASSED') {
+                <span class="status-pill status-passed">PASSED</span>
+              } @else if (row.completionStatus === 'FAILED') {
+                <span class="status-pill status-failed">FAILED</span>
+              } @else {
+                <span class="status-pill status-pending">PENDING</span>
+              }
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td [attr.colspan]="4 + allAssessmentItems().length">
+              <div class="gb-empty-wrapper">
+                <div class="gb-empty-icon-circle"><i class="pi pi-table"></i></div>
+                <h3 class="gb-empty-heading">No Class Record Scores Configured</h3>
+                <p class="gb-empty-subtext">Add quizzes, assignments, or major exams using the "Add Activity / Exam" button above to generate the section score matrix.</p>
               </div>
-              <h3 class="empty-state-title">No Enrolled Students In This Section</h3>
-              <p class="empty-state-subtext">
-                Select a scheduled section with active enrollments from the header above to load the official gradebook roster.
-              </p>
-            </div>
-          </td>
-        </tr>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </section>
+
+    <!-- Dialog for Adding New Assessment Activity -->
+    <p-dialog 
+      header="Add Assessment Activity / Exam" 
+      [(visible)]="showAddItemModal" 
+      [modal]="true" 
+      [style]="{ width: '420px' }"
+      [breakpoints]="{ '960px': '75vw', '640px': '92vw' }"
+      [draggable]="false"
+      [resizable]="false">
+      
+      <div class="gb-dialog-body">
+        <div class="gb-selector-field">
+          <label class="gb-field-label">Target Assessment Category</label>
+          <p-select 
+            [options]="categoryOptions()" 
+            [ngModel]="newItemCategoryId()" 
+            (ngModelChange)="newItemCategoryId.set($event)"
+            optionLabel="label" 
+            optionValue="value" 
+            styleClass="gb-select-full">
+          </p-select>
+        </div>
+
+        <div class="gb-selector-field" style="margin-top: 1rem;">
+          <label class="gb-field-label">Activity Title (e.g. Quiz 1, Midterm Exam)</label>
+          <input 
+            pInputText 
+            [ngModel]="newItemTitle()" 
+            (ngModelChange)="newItemTitle.set($event)"
+            placeholder="Enter activity title" 
+            class="w-full text-xs p-2 border rounded" />
+        </div>
+
+        <div class="gb-selector-field" style="margin-top: 1rem;">
+          <label class="gb-field-label">Total Possible Raw Points</label>
+          <p-inputnumber 
+            [ngModel]="newItemMaxPoints()" 
+            (ngModelChange)="newItemMaxPoints.set($event)"
+            [min]="1" 
+            [max]="1000"
+            styleClass="gb-select-full">
+          </p-inputnumber>
+        </div>
+      </div>
+
+      <ng-template pTemplate="footer">
+        <p-button label="Cancel" severity="secondary" (onClick)="showAddItemModal.set(false)"></p-button>
+        <p-button label="Add Activity" severity="primary" (onClick)="submitAddItem()"></p-button>
       </ng-template>
-    </p-table>
-  </section>
+    </p-dialog>
+  }
 </main>

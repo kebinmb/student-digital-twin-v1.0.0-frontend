@@ -214,4 +214,86 @@ export interface GradeActionResponse {
   message: string;
 }
 
+export interface ClassRecordItemDto {
+  id: number;
+  categoryId: number;
+  itemTitle: string;
+  maxPoints: number;
+  sequenceOrder: number;
+}
+
+export interface SectionGradingCategoryDto {
+  id: number;
+  categoryName: string;
+  weightPercentage: number;
+  termPeriod: 'MIDTERM' | 'FINAL';
+  displayOrder: number;
+  items: ClassRecordItemDto[];
+}
+
+export interface SectionGradingConfigResponse {
+  id: number;
+  sectionId: number;
+  midtermWeight: number;
+  finalWeight: number;
+  isLocked: boolean;
+  categories: SectionGradingCategoryDto[];
+}
+
+export interface CategoryWeightRequest {
+  id?: number;
+  categoryName: string;
+  weightPercentage: number;
+  termPeriod: string;
+  displayOrder: number;
+}
+
+export interface UpdateSectionGradingConfigRequest {
+  midtermWeight: number;
+  finalWeight: number;
+  categories: CategoryWeightRequest[];
+}
+
+export interface CreateClassRecordItemRequest {
+  categoryId: number;
+  itemTitle: string;
+  maxPoints: number;
+  sequenceOrder: number;
+}
+
+export interface StudentScoreEntryDto {
+  itemId: number;
+  studentId: number;
+  scoreEarned?: number | null;
+  isExcused: boolean;
+}
+
+export interface BatchSaveScoresRequest {
+  scores: StudentScoreEntryDto[];
+}
+
+export interface StudentScoreMatrixRowDto {
+  studentId: number;
+  studentNumber: string;
+  studentName: string;
+  programCode: string;
+  yearLevel: number;
+  scores: StudentScoreEntryDto[];
+  midtermRawPercentage?: number | null;
+  finalRawPercentage?: number | null;
+  totalRawPercentage?: number | null;
+  transmutedGrade?: number | null;
+  completionStatus: string;
+}
+
+export interface ClassRecordMatrixResponse {
+  sectionId: number;
+  sectionCode: string;
+  courseCode: string;
+  courseTitle: string;
+  config: SectionGradingConfigResponse;
+  rows: StudentScoreMatrixRowDto[];
+}
+
+
 

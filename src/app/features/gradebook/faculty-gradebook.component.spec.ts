@@ -1,13 +1,29 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { signal } from '@angular/core';
+import { vi } from 'vitest';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { FacultyGradebookComponent, EditableRosterRow } from './faculty-gradebook.component';
 import { SectionRosterResponse } from '../../core/models/enrollment.model';
+import { AuthService } from '../../core/service/authentication/auth-service';
 
 describe('FacultyGradebookComponent', () => {
   let component: FacultyGradebookComponent;
   let fixture: ComponentFixture<FacultyGradebookComponent>;
+
+  const currentUserSignal = signal<{ id?: number; role?: string; username?: string; roles?: string[] }>({
+    id: 5,
+    role: 'FACULTY',
+    username: 'alan.turing',
+    roles: ['FACULTY']
+  });
+
+  const mockAuthService = {
+    currentUser: currentUserSignal,
+    accessToken: signal(null),
+    isAuthenticated: signal(false)
+  };
 
   const mockRoster: SectionRosterResponse = {
     sectionId: 10,
@@ -48,13 +64,21 @@ describe('FacultyGradebookComponent', () => {
   };
 
   beforeEach(async () => {
+    currentUserSignal.set({
+      id: 5,
+      role: 'FACULTY',
+      username: 'alan.turing',
+      roles: ['FACULTY']
+    });
+
     await TestBed.configureTestingModule({
       imports: [FacultyGradebookComponent],
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
         MessageService,
-        ConfirmationService
+        ConfirmationService,
+        { provide: AuthService, useValue: mockAuthService }
       ]
     }).compileComponents();
 
@@ -80,8 +104,93 @@ describe('FacultyGradebookComponent', () => {
     expect(component.getCompletionSeverity('IN_PROGRESS')).toBe('info');
   });
 
+  it('should restrict canEditGrades for non-assigned faculty', () => {
+    component.roster.set(mockRoster);
+
+    // Assigned instructor (id: 5)
+    currentUserSignal.set({ id: 5, role: 'FACULTY', username: 'alan.turing', roles: ['FACULTY'] });
+    expect(component.isAssignedInstructor()).toBe(true);
+    expect(component.canEditGrades()).toBe(true);
+
+    // Unassigned faculty (id: 99)
+    currentUserSignal.set({ id: 99, role: 'FACULTY', username: 'other.faculty', roles: ['FACULTY'] });
+    expect(component.isAssignedInstructor()).toBe(false);
+    expect(component.canEditGrades()).toBe(false);
+
+    // Admin (id: 1) can edit in DRAFT
+    currentUserSignal.set({ id: 1, role: 'ADMIN', username: 'admin.user', roles: ['ADMIN'] });
+    expect(component.canEditGrades()).toBe(true);
+  });
+
+  it('should block submitToDean when students have incomplete grades or IN_PROGRESS status', () => {
+    component.selectedSectionId.set(10);
+    component.roster.set(mockRoster);
+    component.editableStudents.set([
+      {
+        enrollmentItemId: 101,
+        studentId: 1,
+        studentNumber: '2026-0001',
+        studentName: 'Alice Santos',
+        programCode: 'BSIT',
+        yearLevel: 3,
+        finalNumericalGrade: 1.50,
+        completionStatus: 'PASSED'
+      },
+      {
+        enrollmentItemId: 102,
+        studentId: 2,
+        studentNumber: '2026-0002',
+        studentName: 'Bob Reyes',
+        programCode: 'BSIT',
+        yearLevel: 3,
+        finalNumericalGrade: null,
+        completionStatus: 'IN_PROGRESS'
+      }
+    ]);
+
+    expect(component.hasIncompleteGrades()).toBe(true);
+
+    const confirmationService = TestBed.inject(ConfirmationService);
+    const spyConfirm = vi.spyOn(confirmationService, 'confirm');
+
+    component.submitToDean();
+    expect(spyConfirm).not.toHaveBeenCalled();
+  });
+
+  it('should flag errors on mismatched grade and completion status pairs', () => {
+    const row: EditableRosterRow = {
+      enrollmentItemId: 1,
+      studentId: 10,
+      studentNumber: '2026-0010',
+      studentName: 'Test Student',
+      programCode: 'BSIT',
+      yearLevel: 1,
+      finalNumericalGrade: 1.50,
+      completionStatus: 'FAILED',
+      isDirty: false
+    };
+
+    // Passing grade 1.50 with FAILED status
+    expect(component.validateStudentRow(row)).toContain('Passing grade (1.00-3.00) cannot have FAILED status.');
+
+    // Failing grade 5.00 with PASSED status
+    row.finalNumericalGrade = 5.00;
+    row.completionStatus = 'PASSED';
+    expect(component.validateStudentRow(row)).toContain('Failing grade (5.00) cannot have PASSED status.');
+
+    // Conditional grade 4.00 with PASSED status
+    row.finalNumericalGrade = 4.00;
+    row.completionStatus = 'PASSED';
+    expect(component.validateStudentRow(row)).toContain('Conditional grade (4.00) requires INCOMPLETE status.');
+
+    // Valid pair
+    row.finalNumericalGrade = 1.50;
+    row.completionStatus = 'PASSED';
+    expect(component.validateStudentRow(row)).toBeNull();
+  });
+
   it('should auto-recommend completion status on grade change', () => {
-    const row = {
+    const row: EditableRosterRow = {
       enrollmentItemId: 1,
       studentId: 10,
       studentNumber: '2026-0010',
@@ -93,14 +202,40 @@ describe('FacultyGradebookComponent', () => {
       isDirty: false
     };
 
+    component.editableStudents.set([row]);
     component.onGradeChange(row, 2.00);
-    expect(row.finalNumericalGrade).toBe(2.00);
-    expect(row.completionStatus).toBe('PASSED');
-    expect(row.isDirty).toBe(true);
 
-    component.onGradeChange(row, 5.00);
-    expect(row.finalNumericalGrade).toBe(5.00);
-    expect(row.completionStatus).toBe('FAILED');
+    const updated = component.editableStudents();
+    expect(updated[0].finalNumericalGrade).toBe(2.00);
+    expect(updated[0].completionStatus).toBe('PASSED');
+    expect(updated[0].isDirty).toBe(true);
+    expect(updated[0].gradeError).toBeNull();
+  });
+
+  it('should update row immutably and preserve enrollmentItemId identity on rapid updates', () => {
+    const row: EditableRosterRow = {
+      enrollmentItemId: 101,
+      studentId: 1,
+      studentNumber: '2026-0001',
+      studentName: 'Alice Santos',
+      programCode: 'BSIT',
+      yearLevel: 3,
+      finalNumericalGrade: 1.50,
+      completionStatus: 'PASSED'
+    };
+    component.editableStudents.set([row]);
+
+    component.onGradeChange(row, 2.50);
+
+    const list1 = component.editableStudents();
+    expect(list1.length).toBe(1);
+    expect(list1[0].enrollmentItemId).toBe(101);
+    expect(list1[0].finalNumericalGrade).toBe(2.50);
+
+    component.onStatusChange(list1[0], 'PASSED');
+    const list2 = component.editableStudents();
+    expect(list2[0].enrollmentItemId).toBe(101);
+    expect(list2[0].completionStatus).toBe('PASSED');
   });
 
   it('should accurately calculate gradebook KPI statistics', () => {
@@ -205,10 +340,13 @@ describe('FacultyGradebookComponent', () => {
       isDirty: false
     };
 
+    component.editableStudents.set([row]);
     component.onGradeChange(row, 4.00);
-    expect(row.finalNumericalGrade).toBe(4.00);
-    expect(row.completionStatus).toBe('INCOMPLETE');
-    expect(row.gradeError).toBeNull();
+
+    const updated = component.editableStudents();
+    expect(updated[0].finalNumericalGrade).toBe(4.00);
+    expect(updated[0].completionStatus).toBe('INCOMPLETE');
+    expect(updated[0].gradeError).toBeNull();
   });
 
   it('should provide appropriate phaseInfo metadata across all four tiers', () => {
