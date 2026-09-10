@@ -12,6 +12,7 @@ import { MenuItem } from 'primeng/api';
 
 import { AuthService } from '../../../core/service/authentication/auth-service';
 import { ButtonModule } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
 
 export interface NavItem {
   label: string;
@@ -41,7 +42,8 @@ export interface NavSection {
     Badge,
     InputText,
     Menu,
-    ButtonModule
+    ButtonModule,
+    TooltipModule
   ],
   templateUrl: './dashboard-layout.component.html',
   styleUrls: ['./dashboard-layout.component.css'],

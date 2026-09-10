@@ -4,18 +4,34 @@
    ========================================================================== */
 
 :host {
+  --sidebar-w: 260px;
+  --sidebar-collapsed-w: 68px;
+  --topbar-h: 60px;
+
+  /* Institutional Theme Tokens */
+  --chmsu-green-50: var(--p-primary-50, #ecfdf5);
+  --chmsu-green-100: var(--p-primary-100, #d1fae5);
+  --chmsu-green-600: var(--p-primary-600, #116834);
+  --chmsu-green-700: var(--p-primary-700, #0c5027);
+  --chmsu-green-800: var(--p-primary-800, #1b4332);
+
+  --border-color: var(--p-surface-200, #e2e8f0);
+  --border-subtle: var(--p-surface-100, #f1f5f9);
+  --bg-page: var(--p-surface-50, #f8fafc);
+  --surface-card: var(--p-surface-0, #ffffff);
+
   display: block;
   min-height: 100vh;
-  background-color: #f8fafc;
-  color: #111827;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: var(--bg-page);
+  color: var(--p-surface-900, #0f172a);
+  box-sizing: border-box;
 }
 
 .layout-wrapper {
   display: flex;
   min-height: 100vh;
   position: relative;
-  background-color: #f8fafc;
+  background-color: var(--bg-page);
 }
 
 /* ==========================================================================
@@ -43,28 +59,27 @@
   top: 0;
   bottom: 0;
   left: 0;
-  width: 256px;
-  background: #ffffff;
-  border-right: 1px solid #e5e7eb;
+  width: var(--sidebar-w);
+  background: var(--surface-card);
+  border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   z-index: 999;
   transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 1px 0 3px 0 rgba(0, 0, 0, 0.02);
 }
 
 .layout-sidebar.collapsed {
-  width: 72px;
+  width: var(--sidebar-collapsed-w);
 }
 
 /* Sidebar Brand Header */
 .sidebar-header {
-  height: 64px;
+  height: var(--topbar-h);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 1.125rem;
-  border-bottom: 1px solid #f1f5f9;
+  padding: 0 1rem;
+  border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
 }
 
@@ -74,11 +89,12 @@
   gap: 0.75rem;
   text-decoration: none;
   cursor: pointer;
+  min-width: 0;
 }
 
 .sidebar-logo {
   flex-shrink: 0;
-  border-radius: 6px;
+  border-radius: 4px;
 }
 
 .brand-copy {
@@ -90,38 +106,31 @@
 }
 
 .brand-institution {
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.6875rem;
+  font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #116834;
+  color: var(--chmsu-green-600);
 }
 
 .brand-title {
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   font-weight: 700;
-  color: #111827;
+  color: var(--p-surface-900, #0f172a);
   letter-spacing: -0.01em;
 }
 
-.collapse-toggle {
+.sidebar-close-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 6px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  color: #64748b;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--p-surface-600, #475569);
   cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.collapse-toggle:hover {
-  background: #f1f5f9;
-  color: #111827;
-  border-color: #cbd5e1;
 }
 
 /* Sidebar Navigation Items */
@@ -129,7 +138,7 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 1rem 0.75rem;
+  padding: 0.875rem 0.625rem;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -140,7 +149,7 @@
 }
 
 .sidebar-nav::-webkit-scrollbar-thumb {
-  background: #e2e8f0;
+  background: var(--border-color);
   border-radius: 4px;
 }
 
@@ -150,14 +159,14 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #94a3b8;
-  padding: 0 0.625rem;
+  color: var(--p-surface-400, #94a3b8);
+  padding: 0 0.5rem;
   margin-bottom: 0.35rem;
 }
 
 .nav-section-divider {
   height: 1px;
-  background: #f1f5f9;
+  background: var(--border-color);
   margin: 0.5rem 0.25rem;
 }
 
@@ -174,19 +183,18 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.5625rem 0.75rem;
-  border-radius: 8px;
-  color: #4b5563;
+  padding: 0.5rem 0.65rem;
+  border-radius: 6px;
+  color: var(--p-surface-600, #475569);
   text-decoration: none;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 500;
-  transition: all 0.12s ease-in-out;
-  position: relative;
+  transition: background-color 0.12s ease, color 0.12s ease;
 }
 
 .nav-icon {
-  font-size: 1.05rem;
-  color: #6b7280;
+  font-size: 1rem;
+  color: var(--p-surface-400, #94a3b8);
   flex-shrink: 0;
   transition: color 0.12s ease;
 }
@@ -199,22 +207,22 @@
 }
 
 .nav-link:hover {
-  background-color: #f8fafc;
-  color: #111827;
+  background-color: var(--p-surface-100, #f1f5f9);
+  color: var(--p-surface-900, #0f172a);
 }
 
 .nav-link:hover .nav-icon {
-  color: #116834;
+  color: var(--chmsu-green-600);
 }
 
 .nav-link.active-nav-item {
-  background-color: #ecfdf5;
-  color: #116834;
+  background-color: var(--chmsu-green-50);
+  color: var(--chmsu-green-600);
   font-weight: 600;
 }
 
 .nav-link.active-nav-item .nav-icon {
-  color: #116834;
+  color: var(--chmsu-green-600);
 }
 
 .layout-sidebar.collapsed .nav-link {
@@ -223,89 +231,150 @@
 }
 
 .layout-sidebar.collapsed .nav-icon {
-  font-size: 1.2rem;
+  font-size: 1.15rem;
 }
 
 /* Sidebar Footer / Digital Twin Status Card */
 .sidebar-footer {
-  padding: 0.875rem;
-  border-top: 1px solid #f1f5f9;
+  padding: 0.75rem;
+  border-top: 1px solid var(--border-color);
   flex-shrink: 0;
 }
 
 .twin-status-card {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 0.75rem;
+  background: var(--p-surface-50, #f8fafc);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.65rem 0.75rem;
 }
 
 .status-indicator {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.2rem;
 }
 
 .status-dot-pulse {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: #116834;
-  box-shadow: 0 0 0 2px rgba(17, 104, 52, 0.2);
+  background: var(--chmsu-green-600);
+  outline: 2px solid rgba(17, 104, 52, 0.2);
 }
 
 .status-heading {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #116834;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--chmsu-green-600);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .status-description {
   font-size: 0.6875rem;
-  color: #64748b;
+  color: var(--p-surface-500, #64748b);
   margin: 0;
-  line-height: 1.3;
+  line-height: 1.35;
 }
 
 /* ==========================================================================
-   Main Content Layout & Topbar
+   Main Content Layout & Unified Topbar
    ========================================================================== */
 .layout-main-wrapper {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-width: 0;
-  margin-left: 256px;
+  margin-left: var(--sidebar-w);
   transition: margin-left 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .layout-wrapper.sidebar-collapsed .layout-main-wrapper {
-  margin-left: 72px;
+  margin-left: var(--sidebar-collapsed-w);
 }
 
-/* Global Topbar */
+/* Modern Institutional Topbar Grid */
 .layout-topbar {
-  height: 64px;
+  height: var(--topbar-h);
   position: sticky;
   top: 0;
   z-index: 950;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(8px);
-  border-bottom: 1px solid #e5e7eb;
-  padding: 0 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  padding: 0 1.25rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
 }
 
+/* Zone 1: Left */
 .topbar-left {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  flex: 0 0 auto;
+}
+
+.sidebar-toggle-btn {
+  display: flex;
+}
+
+.context-badge {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  background-color: var(--p-surface-100, #f1f5f9);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--p-surface-600, #475569);
+  letter-spacing: 0.02em;
+}
+
+/* Zone 2: Center Institutional Motto */
+.topbar-center {
   flex: 1;
-  max-width: 460px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.motto-heading {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 0.04em;
+  display: flex;
+  gap: 0.35rem;
+  align-items: baseline;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.motto-green {
+  color: var(--chmsu-green-600);
+}
+
+.motto-blue {
+  color: #1d4ed8;
+}
+
+.motto-orange {
+  color: #ea580c;
+}
+
+/* Zone 3: Right Controls */
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex: 0 0 auto;
 }
 
 .topbar-icon-btn {
@@ -314,120 +383,91 @@
   justify-content: center;
   width: 36px;
   height: 36px;
-  border-radius: 8px;
+  border-radius: 6px;
   background: transparent;
   border: 1px solid transparent;
-  color: #4b5563;
+  color: var(--p-surface-600, #475569);
   cursor: pointer;
   position: relative;
-  transition: all 0.15s ease;
+  transition: background-color 0.12s ease, color 0.12s ease;
 }
 
 .topbar-icon-btn:hover {
-  background: #f1f5f9;
-  color: #111827;
-}
-
-.mobile-menu-btn {
-  display: none;
-}
-
-/* Global Topbar Search Box */
-.topbar-search {
-  position: relative;
-  width: 100%;
-  max-width: 360px;
-}
-
-.search-icon {
-  position: absolute;
-  left: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 0.85rem;
-  color: #9ca3af;
-  pointer-events: none;
-}
-
-.search-input {
-  width: 100%;
-  height: 36px;
-  font-size: 0.8125rem !important;
-  padding-left: 2.2rem !important;
-  background: #f8fafc !important;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 8px !important;
-  color: #111827 !important;
-  transition: all 0.15s ease !important;
-}
-
-.search-input:focus {
-  background: #ffffff !important;
-  border-color: #116834 !important;
-  box-shadow: 0 0 0 2px rgba(17, 104, 52, 0.12) !important;
-}
-
-/* Topbar Right Area */
-.topbar-right {
-  display: flex;
-  align-items: center;
-  gap: 0.875rem;
+  background: var(--p-surface-100, #f1f5f9);
+  color: var(--p-surface-900, #0f172a);
 }
 
 .topbar-sync-badge {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.25rem 0.65rem;
-  background: #ecfdf5;
+  padding: 0.2rem 0.6rem;
+  background: var(--chmsu-green-50);
   border: 1px solid #bbf7d0;
-  border-radius: 9999px;
+  border-radius: 4px;
 }
 
 .sync-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #116834;
+  background: var(--chmsu-green-600);
 }
 
 .sync-label {
   font-size: 0.6875rem;
-  font-weight: 600;
-  color: #116834;
+  font-weight: 700;
+  color: var(--chmsu-green-600);
   letter-spacing: 0.02em;
 }
 
-.notif-badge {
+.pulse-badge {
   position: absolute;
-  top: 3px;
-  right: 3px;
-  transform: scale(0.8);
+  top: 4px;
+  right: 4px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  background: #dc2626;
+  color: #ffffff;
+  border-radius: 9999px;
+  min-width: 15px;
+  height: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+}
+
+.topbar-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border-color);
+  margin: 0 0.25rem;
 }
 
 /* User Profile Trigger */
 .user-profile-btn {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 8px;
+  gap: 0.55rem;
+  padding: 0.25rem 0.45rem;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid transparent;
   cursor: pointer;
   user-select: none;
   transition: background-color 0.12s ease;
-  border: 1px solid transparent;
 }
 
 .user-profile-btn:hover {
-  background: #f1f5f9;
-  border-color: #e2e8f0;
+  background: var(--p-surface-100, #f1f5f9);
 }
 
 :host ::ng-deep .user-avatar {
-  background: #116834 !important;
+  background: var(--chmsu-green-700) !important;
   color: #ffffff !important;
   font-weight: 600 !important;
-  font-size: 0.8125rem !important;
+  font-size: 0.75rem !important;
   width: 32px !important;
   height: 32px !important;
 }
@@ -442,23 +482,23 @@
 .user-name {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #111827;
+  color: var(--p-surface-900, #0f172a);
   white-space: nowrap;
 }
 
 .user-role {
   font-size: 0.6875rem;
-  color: #6b7280;
+  color: var(--p-surface-500, #64748b);
   text-transform: capitalize;
 }
 
 .user-chevron {
-  font-size: 0.75rem;
-  color: #9ca3af;
+  font-size: 0.6875rem;
+  color: var(--p-surface-400, #94a3b8);
 }
 
 /* ==========================================================================
-   Main Content Area
+   Main Content Viewport
    ========================================================================== */
 .layout-content {
   flex: 1;
@@ -467,19 +507,21 @@
 }
 
 .content-viewport {
-  max-width: 1400px;
+  max-width: 1440px;
   margin: 0 auto;
   width: 100%;
 }
 
 /* ==========================================================================
-   Responsive Breakpoints (Mobile / Tablet)
+   Responsive Breakpoints
    ========================================================================== */
+
+/* Tablet & Mobile Screens (< 992px) */
 @media (max-width: 991px) {
   .layout-sidebar {
     transform: translateX(-100%);
-    width: 270px !important;
-    box-shadow: 4px 0 16px rgba(0, 0, 0, 0.08);
+    width: 280px !important;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.08);
   }
 
   .layout-sidebar.mobile-open {
@@ -490,33 +532,34 @@
     margin-left: 0 !important;
   }
 
-  .mobile-menu-btn {
-    display: flex;
-  }
-
-  .topbar-search {
-    max-width: 220px;
-  }
-
-  .layout-content {
-    padding: 1rem;
-  }
-}
-
-@media (max-width: 640px) {
-  .layout-topbar {
-    padding: 0 1rem;
-  }
-
-  .topbar-search {
-    display: none;
-  }
-
   .topbar-sync-badge {
     display: none;
   }
 
-  .user-meta {
+  .motto-heading {
+    font-size: 0.875rem;
+  }
+}
+
+/* Mobile Screens (< 640px) */
+@media (max-width: 640px) {
+  .layout-topbar {
+    padding: 0 0.75rem;
+  }
+
+  /* Keep mobile header functional and uncluttered */
+  .topbar-center,
+  .context-badge,
+  .user-meta,
+  .user-chevron {
     display: none;
+  }
+
+  .topbar-left {
+    flex: 1;
+  }
+
+  .layout-content {
+    padding: 1rem 0.75rem;
   }
 }
