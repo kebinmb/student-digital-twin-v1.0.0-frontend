@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -14,6 +14,8 @@ import { MessageService } from 'primeng/api';
 import { FacultyApiService } from '../../core/service/faculty/faculty-api.service';
 import { FacultyProfile, CreateFacultyAccountRequest } from '../../core/models/faculty-management.model';
 import { AuthService } from '../../core/service/authentication/auth-service';
+import { DepartmentService, ProgramService } from '../../core/services/institution.service';
+import { Department, Program } from '../../core/models/institution.model';
 
 export const DEGREES = ['BACHELORS', 'MASTERS', 'DOCTORATE', 'POST_DOCTORATE'];
 export const RANKS = [
@@ -44,10 +46,25 @@ export const EMPLOYMENT_STATUSES = ['FULL_TIME', 'PART_TIME', 'ADJUNCT'];
 })
 export class FacultyManagementComponent implements OnInit {
   private readonly facultyApiService = inject(FacultyApiService);
+  private readonly departmentService = inject(DepartmentService);
+  private readonly programService = inject(ProgramService);
   private readonly messageService = inject(MessageService);
   protected readonly authService = inject(AuthService);
 
   readonly facultyList = signal<FacultyProfile[]>([]);
+  readonly departments = signal<Department[]>([]);
+  readonly colleges = computed<Department[]>(() =>
+    this.departments().filter(d => d.type === 'COLLEGE' || d.type === 'DEPARTMENT')
+  );
+  readonly allPrograms = signal<Program[]>([]);
+  readonly selectedCollegeId = signal<number | null>(null);
+
+  readonly filteredPrograms = computed<Program[]>(() => {
+    const cid = this.selectedCollegeId();
+    if (!cid) return this.allPrograms();
+    return this.allPrograms().filter(p => p.departmentId === cid);
+  });
+
   readonly isLoading = signal<boolean>(false);
   readonly isSaving = signal<boolean>(false);
   readonly isDialogVisible = signal<boolean>(false);
@@ -65,7 +82,9 @@ export class FacultyManagementComponent implements OnInit {
     academicRank: new FormControl<string>('INSTRUCTOR_I', { nonNullable: true, validators: [Validators.required] }),
     prcLicenseNo: new FormControl<string>('', { nonNullable: true }),
     employmentStatus: new FormControl<string>('FULL_TIME', { nonNullable: true, validators: [Validators.required] }),
-    isTenured: new FormControl<boolean>(false, { nonNullable: true })
+    isTenured: new FormControl<boolean>(false, { nonNullable: true }),
+    collegeId: new FormControl<number | null>(null),
+    programId: new FormControl<number | null>(null)
   });
 
   ngOnInit(): void {
@@ -88,9 +107,49 @@ export class FacultyManagementComponent implements OnInit {
         this.isLoading.set(false);
       }
     });
+
+    this.departmentService.getAll().subscribe({
+      next: (data) => this.departments.set(data),
+      error: () => console.warn('Could not load departments')
+    });
+
+    this.programService.getAll().subscribe({
+      next: (data) => this.allPrograms.set(data),
+      error: () => console.warn('Could not load programs')
+    });
+  }
+
+  onCollegeChange(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    const cid = value ? Number(value) : null;
+    this.selectedCollegeId.set(cid);
+    this.facultyForm.controls.collegeId.setValue(cid);
+
+    const currentProgId = this.facultyForm.controls.programId.value;
+    if (currentProgId) {
+      const prog = this.allPrograms().find(p => p.id === currentProgId);
+      if (prog && cid && prog.departmentId !== cid) {
+        this.facultyForm.controls.programId.setValue(null);
+      }
+    }
+  }
+
+  onProgramChange(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    const pid = value ? Number(value) : null;
+    this.facultyForm.controls.programId.setValue(pid);
+
+    if (pid && !this.selectedCollegeId()) {
+      const prog = this.allPrograms().find(p => p.id === pid);
+      if (prog) {
+        this.selectedCollegeId.set(prog.departmentId);
+        this.facultyForm.controls.collegeId.setValue(prog.departmentId);
+      }
+    }
   }
 
   openCreateDialog(): void {
+    this.selectedCollegeId.set(null);
     this.facultyForm.reset({
       username: '',
       email: '',
@@ -100,7 +159,9 @@ export class FacultyManagementComponent implements OnInit {
       academicRank: 'INSTRUCTOR_I',
       prcLicenseNo: '',
       employmentStatus: 'FULL_TIME',
-      isTenured: false
+      isTenured: false,
+      collegeId: null,
+      programId: null
     });
     this.isDialogVisible.set(true);
   }
@@ -123,7 +184,9 @@ export class FacultyManagementComponent implements OnInit {
       academicRank: formVal.academicRank,
       prcLicenseNo: formVal.prcLicenseNo ? formVal.prcLicenseNo : undefined,
       employmentStatus: formVal.employmentStatus,
-      isTenured: formVal.isTenured
+      isTenured: formVal.isTenured,
+      collegeId: formVal.collegeId,
+      programId: formVal.programId
     };
 
     this.facultyApiService.createFacultyAccount(createReq).subscribe({

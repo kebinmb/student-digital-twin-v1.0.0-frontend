@@ -5,6 +5,12 @@ export interface UserDetail {
   roles: string[];
   enabled: boolean;
   createdAt: string;
+  collegeId?: number | null;
+  collegeCode?: string | null;
+  collegeName?: string | null;
+  programId?: number | null;
+  programCode?: string | null;
+  programName?: string | null;
 }
 
 export interface CreateUserRequest {
@@ -13,6 +19,8 @@ export interface CreateUserRequest {
   password?: string;
   roles: string[];
   enabled?: boolean;
+  collegeId?: number | null;
+  programId?: number | null;
 }
 
 export interface UpdateUserRequest {
@@ -20,4 +28,8 @@ export interface UpdateUserRequest {
   password?: string;
   roles?: string[];
   enabled?: boolean;
+  collegeId?: number | null;
+  programId?: number | null;
+  clearCollege?: boolean;
+  clearProgram?: boolean;
 }

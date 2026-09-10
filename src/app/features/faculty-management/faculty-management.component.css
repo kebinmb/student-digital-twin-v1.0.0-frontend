@@ -165,3 +165,18 @@
   padding-top: 1rem;
   border-top: 1px solid #f1f5f9;
 }
+
+.affiliation-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.affiliation-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.775rem;
+  color: #334155;
+}
+

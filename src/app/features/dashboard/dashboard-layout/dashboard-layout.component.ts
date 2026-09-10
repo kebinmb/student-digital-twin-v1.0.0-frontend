@@ -93,7 +93,7 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
     {
       title: 'Administration',
       items: [
-        { label: 'User Accounts', icon: 'pi pi-users', routerLink: '/dashboard/users', roles: ['ADMIN'] },
+        { label: 'User Accounts', icon: 'pi pi-users', routerLink: '/dashboard/users', roles: ['ADMIN', 'REGISTRAR'] },
         { label: 'Faculty Accounts', icon: 'pi pi-briefcase', routerLink: '/dashboard/faculty-accounts', roles: ['ADMIN', 'REGISTRAR'] }
       ]
     },

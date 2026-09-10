@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -15,6 +15,8 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { UserApiService } from '../../../core/service/user/user-api.service';
 import { UserDetail, CreateUserRequest, UpdateUserRequest } from '../../../core/models/user-management.model';
 import { AuthService } from '../../../core/service/authentication/auth-service';
+import { DepartmentService, ProgramService } from '../../../core/services/institution.service';
+import { Department, Program } from '../../../core/models/institution.model';
 
 export const AVAILABLE_ROLES = [
   'ADMIN',
@@ -47,11 +49,26 @@ export const AVAILABLE_ROLES = [
 })
 export class UserManagementComponent implements OnInit {
   private readonly userApiService = inject(UserApiService);
+  private readonly departmentService = inject(DepartmentService);
+  private readonly programService = inject(ProgramService);
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
   protected readonly authService = inject(AuthService);
 
   readonly users = signal<UserDetail[]>([]);
+  readonly departments = signal<Department[]>([]);
+  readonly colleges = computed<Department[]>(() =>
+    this.departments().filter(d => d.type === 'COLLEGE' || d.type === 'DEPARTMENT')
+  );
+  readonly allPrograms = signal<Program[]>([]);
+  readonly selectedCollegeId = signal<number | null>(null);
+
+  readonly filteredPrograms = computed<Program[]>(() => {
+    const cid = this.selectedCollegeId();
+    if (!cid) return this.allPrograms();
+    return this.allPrograms().filter(p => p.departmentId === cid);
+  });
+
   readonly isLoading = signal<boolean>(false);
   readonly isSaving = signal<boolean>(false);
   readonly isDialogVisible = signal<boolean>(false);
@@ -64,7 +81,9 @@ export class UserManagementComponent implements OnInit {
     username: new FormControl<string>('', { nonNullable: true, validators: [Validators.required, Validators.minLength(3)] }),
     email: new FormControl<string>('', { nonNullable: true, validators: [Validators.required, Validators.email] }),
     password: new FormControl<string>('', { nonNullable: true }),
-    enabled: new FormControl<boolean>(true, { nonNullable: true })
+    enabled: new FormControl<boolean>(true, { nonNullable: true }),
+    collegeId: new FormControl<number | null>(null),
+    programId: new FormControl<number | null>(null)
   });
 
   ngOnInit(): void {
@@ -87,16 +106,70 @@ export class UserManagementComponent implements OnInit {
         this.isLoading.set(false);
       }
     });
+
+    this.departmentService.getAll().subscribe({
+      next: (data) => this.departments.set(data),
+      error: () => console.warn('Could not load departments')
+    });
+
+    this.programService.getAll().subscribe({
+      next: (data) => this.allPrograms.set(data),
+      error: () => console.warn('Could not load programs')
+    });
+  }
+
+  isDeanSelected(): boolean {
+    return this.selectedRoles().includes('DEAN');
+  }
+
+  isChairpersonSelected(): boolean {
+    return this.selectedRoles().includes('CHAIRPERSON');
+  }
+
+  isFacultySelected(): boolean {
+    return this.selectedRoles().includes('FACULTY');
+  }
+
+  onCollegeChange(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    const cid = value ? Number(value) : null;
+    this.selectedCollegeId.set(cid);
+    this.userForm.controls.collegeId.setValue(cid);
+
+    const currentProgId = this.userForm.controls.programId.value;
+    if (currentProgId) {
+      const prog = this.allPrograms().find(p => p.id === currentProgId);
+      if (prog && cid && prog.departmentId !== cid) {
+        this.userForm.controls.programId.setValue(null);
+      }
+    }
+  }
+
+  onProgramChange(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    const pid = value ? Number(value) : null;
+    this.userForm.controls.programId.setValue(pid);
+
+    if (pid && !this.selectedCollegeId()) {
+      const prog = this.allPrograms().find(p => p.id === pid);
+      if (prog) {
+        this.selectedCollegeId.set(prog.departmentId);
+        this.userForm.controls.collegeId.setValue(prog.departmentId);
+      }
+    }
   }
 
   openCreateDialog(): void {
     this.editingUser.set(null);
     this.selectedRoles.set(['STUDENT']);
+    this.selectedCollegeId.set(null);
     this.userForm.reset({
       username: '',
       email: '',
       password: '',
-      enabled: true
+      enabled: true,
+      collegeId: null,
+      programId: null
     });
     this.userForm.controls.username.enable();
     this.userForm.controls.password.setValidators([Validators.required, Validators.minLength(6)]);
@@ -107,11 +180,14 @@ export class UserManagementComponent implements OnInit {
   openEditDialog(user: UserDetail): void {
     this.editingUser.set(user);
     this.selectedRoles.set([...user.roles]);
+    this.selectedCollegeId.set(user.collegeId ?? null);
     this.userForm.reset({
       username: user.username,
       email: user.email,
       password: '',
-      enabled: user.enabled
+      enabled: user.enabled,
+      collegeId: user.collegeId ?? null,
+      programId: user.programId ?? null
     });
     this.userForm.controls.username.disable();
     this.userForm.controls.password.clearValidators();
@@ -132,7 +208,11 @@ export class UserManagementComponent implements OnInit {
       }
       this.selectedRoles.set(current.filter(r => r !== role));
     } else {
-      this.selectedRoles.set([...current, role]);
+      const updated = [...current, role];
+      this.selectedRoles.set(updated);
+      if (role === 'DEAN') {
+        this.userForm.controls.programId.setValue(null);
+      }
     }
   }
 
@@ -152,6 +232,37 @@ export class UserManagementComponent implements OnInit {
     }
 
     const formVal = this.userForm.getRawValue();
+
+    if (this.isDeanSelected()) {
+      if (!formVal.collegeId) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Scoping Validation',
+          detail: 'DEAN role requires a College assignment.'
+        });
+        return;
+      }
+      if (formVal.programId) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Scoping Validation',
+          detail: 'DEAN cannot be assigned to a specific Program; only a College.'
+        });
+        return;
+      }
+    }
+
+    if (this.isChairpersonSelected()) {
+      if (!formVal.collegeId || !formVal.programId) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Scoping Validation',
+          detail: 'CHAIRPERSON role requires both College and Program assignments.'
+        });
+        return;
+      }
+    }
+
     this.isSaving.set(true);
 
     if (this.editingUser()) {
@@ -159,7 +270,11 @@ export class UserManagementComponent implements OnInit {
         email: formVal.email,
         password: formVal.password ? formVal.password : undefined,
         roles: this.selectedRoles(),
-        enabled: formVal.enabled
+        enabled: formVal.enabled,
+        collegeId: formVal.collegeId,
+        programId: formVal.programId,
+        clearCollege: !formVal.collegeId,
+        clearProgram: !formVal.programId
       };
 
       this.userApiService.updateUser(this.editingUser()!.id, updateReq).subscribe({
@@ -188,7 +303,9 @@ export class UserManagementComponent implements OnInit {
         email: formVal.email,
         password: formVal.password,
         roles: this.selectedRoles(),
-        enabled: formVal.enabled
+        enabled: formVal.enabled,
+        collegeId: formVal.collegeId,
+        programId: formVal.programId
       };
 
       this.userApiService.createUser(createReq).subscribe({

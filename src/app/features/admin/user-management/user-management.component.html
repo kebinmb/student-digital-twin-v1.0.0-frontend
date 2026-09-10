@@ -4,7 +4,7 @@
     <div class="header-content">
       <div class="badge-row">
         <span class="module-badge">SYSTEM ADMINISTRATION</span>
-        <span class="role-badge">ADMIN ONLY</span>
+        <span class="role-badge">ADMIN & REGISTRAR</span>
       </div>
       <h1 class="page-title">User Accounts Directory</h1>
       <p class="page-subtitle">
@@ -34,11 +34,12 @@
     >
       <ng-template pTemplate="header">
         <tr>
-          <th style="width: 22%;">Username</th>
-          <th style="width: 28%;">Institutional Email</th>
-          <th style="width: 25%;">Assigned Roles</th>
-          <th style="width: 10%; text-align: center;">Status</th>
-          <th style="width: 15%; text-align: right;">Actions</th>
+          <th style="width: 18%;">Username</th>
+          <th style="width: 22%;">Institutional Email</th>
+          <th style="width: 18%;">Assigned Roles</th>
+          <th style="width: 22%;">Academic Scope</th>
+          <th style="width: 8%; text-align: center;">Status</th>
+          <th style="width: 12%; text-align: right;">Actions</th>
         </tr>
       </ng-template>
 
@@ -64,6 +65,26 @@
                 <span class="role-pill" [attr.data-role]="role">
                   {{ role }}
                 </span>
+              }
+            </div>
+          </td>
+          <td>
+            <div class="affiliation-cell">
+              @if (u.collegeCode) {
+                <div class="affiliation-badge">
+                  <i class="pi pi-building text-xs text-sky-600"></i>
+                  <span class="font-semibold text-slate-800">{{ u.collegeCode }}</span>
+                  <span class="text-xs text-slate-500">({{ u.collegeName }})</span>
+                </div>
+              }
+              @if (u.programCode) {
+                <div class="affiliation-badge">
+                  <i class="pi pi-book text-xs text-emerald-600"></i>
+                  <span class="font-semibold text-slate-700">{{ u.programCode }}</span>
+                </div>
+              }
+              @if (!u.collegeCode && !u.programCode) {
+                <span class="text-xs text-slate-400 italic">Institutional (Unrestricted)</span>
               }
             </div>
           </td>
@@ -97,7 +118,7 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="5" class="empty-state">
+          <td colspan="6" class="empty-state">
             <i class="pi pi-users text-4xl text-slate-300 mb-2"></i>
             <p class="text-slate-500 font-medium">No user accounts found.</p>
           </td>
@@ -111,7 +132,7 @@
     [header]="editingUser() ? 'Modify User Account' : 'Provision User Account'"
     [(visible)]="isDialogVisible"
     [modal]="true"
-    [style]="{ width: '480px', maxWidth: '95vw' }"
+    [style]="{ width: '560px', maxWidth: '95vw' }"
     [draggable]="false"
     [resizable]="false"
     styleClass="user-dialog"
@@ -178,6 +199,67 @@
               <i class="pi" [ngClass]="selectedRoles().includes(role) ? 'pi-check-circle' : 'pi-circle'"></i>
               <span>{{ role }}</span>
             </button>
+          }
+        </div>
+      </div>
+
+      @if (isDeanSelected() || isChairpersonSelected() || isFacultySelected()) {
+        <div class="scoping-alert">
+          <i class="pi pi-info-circle"></i>
+          <span>
+            @if (isDeanSelected()) {
+              DEAN assignment requires an active College. Program scoping is not permitted.
+            } @else if (isChairpersonSelected()) {
+              CHAIRPERSON assignment requires both a College and an affiliated Program.
+            } @else {
+              FACULTY members should be linked to their primary College and academic Program.
+            }
+          </span>
+        </div>
+      }
+
+      <div class="form-row-2">
+        <div class="form-field">
+          <label for="userCollege" class="field-label">
+            Assigned College
+            @if (isDeanSelected() || isChairpersonSelected()) {
+              <span class="text-red-500">*</span>
+            }
+          </label>
+          <select
+            id="userCollege"
+            class="custom-select"
+            [value]="selectedCollegeId() ?? ''"
+            (change)="onCollegeChange($event)"
+          >
+            <option value="">-- None / Unrestricted --</option>
+            @for (col of colleges(); track col.id) {
+              <option [value]="col.id">{{ col.code }} - {{ col.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label for="userProgram" class="field-label">
+            Assigned Program
+            @if (isChairpersonSelected()) {
+              <span class="text-red-500">*</span>
+            }
+          </label>
+          <select
+            id="userProgram"
+            class="custom-select"
+            [disabled]="isDeanSelected()"
+            [value]="userForm.controls.programId.value ?? ''"
+            (change)="onProgramChange($event)"
+          >
+            <option value="">-- None / Unassigned --</option>
+            @for (prog of filteredPrograms(); track prog.id) {
+              <option [value]="prog.id">{{ prog.code }} - {{ prog.name }}</option>
+            }
+          </select>
+          @if (isDeanSelected()) {
+            <small class="field-hint text-amber-600">Deans operate college-wide across all programs.</small>
           }
         </div>
       </div>

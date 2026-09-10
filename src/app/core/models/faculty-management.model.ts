@@ -9,6 +9,12 @@ export interface FacultyProfile {
   prcLicenseNo: string | null;
   employmentStatus: string;
   isTenured: boolean;
+  collegeId?: number | null;
+  collegeCode?: string | null;
+  collegeName?: string | null;
+  programId?: number | null;
+  programCode?: string | null;
+  programName?: string | null;
 }
 
 export interface CreateFacultyAccountRequest {
@@ -21,4 +27,6 @@ export interface CreateFacultyAccountRequest {
   prcLicenseNo?: string;
   employmentStatus: string;
   isTenured: boolean;
+  collegeId?: number | null;
+  programId?: number | null;
 }

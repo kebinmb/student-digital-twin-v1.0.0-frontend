@@ -77,7 +77,7 @@ export const routes: Routes = [
       },
       {
         path: 'users',
-        canActivate: [roleGuard(['ADMIN'])],
+        canActivate: [roleGuard(['ADMIN', 'REGISTRAR'])],
         loadComponent: () =>
           import('./features/admin/user-management/user-management.component').then(m => m.UserManagementComponent)
       },
