@@ -1,72 +1,83 @@
 <div class="institution-page-container">
+  <!-- System Modals & Feedback -->
   <p-confirmdialog></p-confirmdialog>
+  <p-toast position="top-right"></p-toast>
 
-  <!-- Institutional Header Banner -->
-  <div class="institution-header-card">
-    <div class="header-content-left">
-      <div class="brand-row">
-        <span class="brand-tag">CHMSU Academic Registry</span>
+  <!-- Institutional Master Header -->
+  <header class="institution-header-bar" role="banner">
+    <div class="header-left">
+      <div class="title-cluster">
+        <h1 class="page-title">Institutional Master Data</h1>
+        <span class="meta-separator" aria-hidden="true">•</span>
+        <span class="institution-badge">CHMSU Registry</span>
+
         @if (currentAcademicYear()) {
           <p-tag
             severity="success"
-            [value]="'Active AY: ' + currentAcademicYear()!.code"
-            icon="pi pi-check-circle">
+            [value]="currentAcademicYear()!.code"
+            icon="pi pi-check-circle"
+            styleClass="compact-ay-tag">
           </p-tag>
         } @else {
           <p-tag
             severity="warn"
-            value="No Active Academic Year"
-            icon="pi pi-exclamation-triangle">
+            value="No Active Term"
+            icon="pi pi-exclamation-triangle"
+            styleClass="compact-ay-tag">
           </p-tag>
         }
       </div>
-      <h1 class="page-title">Institutional Master Data & Relational Foundations</h1>
-      <p class="page-subtitle">
-        Manage campuses, academic units, degree programs, master courses, grading scales, and financial foundations feeding the Curriculum Designer.
+      <p class="page-caption">
+        Campuses, academic units, degrees, courses, grading scales, and fiscal foundations feeding curriculum.
       </p>
     </div>
 
-    <div class="header-content-right">
+    <div class="header-right">
       <p-button
         label="Curriculum Designer"
         icon="pi pi-sitemap"
         size="small"
         severity="secondary"
         [outlined]="true"
-        (onClick)="navigateToCurriculumDesigner()">
+        (onClick)="navigateToCurriculumDesigner()"
+        styleClass="compact-action-btn">
       </p-button>
     </div>
-  </div>
+  </header>
 
-  <!-- Prerequisite Warning: If no active academic year is set -->
+  <!-- Prerequisite Operational Warning -->
   @if (!isLoadingAy() && !currentAcademicYear()) {
-    <div class="alert-banner">
-      <p-message
-        severity="warn"
-        text="Prerequisite Warning: No operational academic year is currently designated. Please activate an Academic Year below to enable curriculum revisions and scheduling."
-        styleClass="w-full">
-      </p-message>
+    <div class="alert-compact" role="alert" aria-live="polite">
+      <i class="pi pi-exclamation-circle alert-icon" aria-hidden="true"></i>
+      <div class="alert-body">
+        <span class="alert-title">Operational Prerequisite:</span>
+        <span class="alert-msg">No active academic year is set. Activate a term in Academic Periods to enable curriculum revisions and scheduling.</span>
+      </div>
     </div>
   }
 
-  <!-- Master Tab Navigation (Routing-backed) -->
-  <div class="tabs-nav-bar">
-    <p-selectbutton
-      [options]="tabs"
-      [(ngModel)]="activeTab"
-      (onChange)="onTabChange($event.value)"
-      optionLabel="label"
-      optionValue="value"
-      styleClass="institution-tab-switch">
-      <ng-template let-item #item>
-        <i [class]="item.icon" class="tab-btn-icon"></i>
-        <span class="tab-btn-label">{{ item.label }}</span>
-      </ng-template>
-    </p-selectbutton>
-  </div>
+  <!-- Semantic Underline Tab Navigation -->
+  <nav class="institutional-tab-nav" aria-label="Institutional Modules">
+    <ul class="tab-list" role="tablist">
+      @for (tab of tabs; track tab.value) {
+        <li class="tab-item" role="presentation">
+          <button
+            type="button"
+            class="tab-btn"
+            [class.active]="activeTab === tab.value"
+            role="tab"
+            [attr.aria-selected]="activeTab === tab.value"
+            (click)="onTabChange(tab.value)">
+            <i [class]="tab.icon" class="tab-icon" aria-hidden="true"></i>
+            <span class="tab-label">{{ tab.label }}</span>
+          </button>
+        </li>
+      }
+    </ul>
+  </nav>
 
-  <!-- Child Route Content Outlet -->
-  <div class="tab-content-container">
+  <!-- Child Route Viewport -->
+  <main class="tab-content-container" role="region" aria-label="Selected Module View">
     <router-outlet></router-outlet>
-  </div>
+  </main>
 </div>

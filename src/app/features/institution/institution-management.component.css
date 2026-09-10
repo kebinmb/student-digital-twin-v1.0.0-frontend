@@ -1,88 +1,256 @@
 :host {
   display: block;
-  padding: 1.5rem;
-  background: #f8fafc;
-  min-height: 100vh;
+  padding: 0.5rem 1.25rem 1.25rem;
+  background-color: var(--p-surface-50, #f8fafc);
+  min-height: 100%;
   box-sizing: border-box;
 }
+
 .institution-page-container {
-  max-width: 1380px;
+  max-width: 1400px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 0.875rem; /* Professional tight density */
 }
-.institution-header-card {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 1.5rem 1.75rem;
+
+/* ========================================================================= */
+/* 1. COMPACT INSTITUTIONAL HEADER                                           */
+/* ========================================================================= */
+
+.institution-header-bar {
+  background-color: var(--p-surface-0, #ffffff);
+  border: 1px solid var(--p-surface-200, #e2e8f0);
+  border-radius: var(--p-form-field-border-radius, 8px);
+  padding: 0.75rem 1.25rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 1.5rem;
-  box-shadow: 0 1px 3px 0 rgba(0,0,0,0.04), 0 1px 2px -1px rgba(0,0,0,0.04);
-  flex-wrap: wrap;
+  gap: 1.25rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
-.header-content-left {
+
+.header-left {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.25rem;
+  min-width: 0;
 }
-.brand-row {
+
+.title-cluster {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.25rem;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
-.brand-tag {
+
+.page-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--p-surface-900, #0f172a);
+  margin: 0;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.meta-separator {
+  color: var(--p-surface-300, #cbd5e1);
+  font-size: 0.75rem;
+  user-select: none;
+}
+
+.institution-badge {
   font-size: 0.6875rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #116834;
-  background: #ecfdf5;
-  padding: 0.2rem 0.5rem;
+  color: var(--p-primary-700, #0c5027);
+  background-color: var(--p-primary-50, #ecfdf5);
+  padding: 0.15rem 0.5rem;
   border-radius: 4px;
-  border: 1px solid #bbf7d0;
+  border: 1px solid var(--p-primary-200, #a7f3d0);
+  line-height: 1.2;
 }
-.page-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #111827;
-  margin: 0;
-  letter-spacing: -0.02em;
+
+:host ::ng-deep .compact-ay-tag {
+  font-size: 0.6875rem !important;
+  padding: 0.15rem 0.5rem !important;
+  height: 22px !important;
+  font-weight: 600 !important;
+  border-radius: 4px !important;
 }
-.page-subtitle {
-  font-size: 0.84rem;
-  color: #64748b;
+
+.page-caption {
+  font-size: 0.75rem;
+  color: var(--p-surface-500, #64748b);
   margin: 0;
   line-height: 1.4;
-  max-width: 780px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 860px;
 }
-.alert-banner {
-  width: 100%;
-}
-.tabs-nav-bar {
+
+.header-right {
   display: flex;
   align-items: center;
+  flex-shrink: 0;
+}
+
+/* Action Button Polish */
+:host ::ng-deep .compact-action-btn {
+  height: 34px !important;
+  font-size: 0.8125rem !important;
+  font-weight: 600 !important;
+  border-radius: var(--p-form-field-border-radius, 6px) !important;
+  padding: 0 0.875rem !important;
+  border-color: var(--p-surface-300, #cbd5e1) !important;
+  color: var(--p-surface-700, #334155) !important;
+  background-color: var(--p-surface-0, #ffffff) !important;
+  transition: all 0.15s ease !important;
+}
+
+:host ::ng-deep .compact-action-btn:hover {
+  background-color: var(--p-surface-100, #f1f5f9) !important;
+  border-color: var(--p-surface-400, #94a3b8) !important;
+  color: var(--p-surface-900, #0f172a) !important;
+}
+
+/* ========================================================================= */
+/* 2. DENSE ALERT BANNER                                                     */
+/* ========================================================================= */
+
+.alert-compact {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #fffbeb;
+  border: 1px solid #fde68a;
+  border-left: 3px solid #d97706;
+  border-radius: 6px;
+  padding: 0.5rem 0.875rem;
+}
+
+.alert-icon {
+  font-size: 0.9375rem;
+  color: #b45309;
+  flex-shrink: 0;
+}
+
+.alert-body {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.alert-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #92400e;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.alert-msg {
+  font-size: 0.75rem;
+  color: #78350f;
+}
+
+/* ========================================================================= */
+/* 3. SEMANTIC UNDERLINE TAB BAR (Replaces p-selectbutton)                   */
+/* ========================================================================= */
+
+.institutional-tab-nav {
+  width: 100%;
+  border-bottom: 1px solid var(--p-surface-200, #e2e8f0);
   overflow-x: auto;
+  scrollbar-width: none; /* Firefox */
+  -webkit-overflow-scrolling: touch;
 }
-:host ::ng-deep .institution-tab-switch .p-button {
+
+.institutional-tab-nav::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+.tab-list {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 1.75rem;
+}
+
+.tab-item {
+  display: flex;
+}
+
+.tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 0.75rem 0.25rem;
   font-size: 0.8125rem;
-  padding: 0.55rem 1rem;
   font-weight: 600;
+  color: var(--p-surface-500, #64748b);
+  cursor: pointer;
+  transition: all 0.15s ease;
   white-space: nowrap;
+  margin-bottom: -1px; /* Overlaps container's bottom border cleanly */
 }
-.tab-btn-icon {
-  margin-right: 0.4rem;
+
+.tab-btn:hover {
+  color: var(--p-surface-900, #0f172a);
 }
-.tab-btn-label {
-  font-weight: 600;
+
+.tab-btn.active {
+  color: var(--p-primary-600, #116834);
+  border-bottom-color: var(--p-primary-600, #116834);
 }
+
+.tab-icon {
+  font-size: 0.875rem;
+}
+
+/* ========================================================================= */
+/* 4. CONTENT VIEWPORT                                                       */
+/* ========================================================================= */
+
 .tab-content-container {
   width: 100%;
+  padding-top: 0.25rem;
 }
-.w-full {
-  width: 100%;
+
+/* Responsive constraints */
+@media (max-width: 768px) {
+  :host {
+    padding: 0.5rem;
+  }
+
+  .institution-header-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+
+  .page-caption {
+    white-space: normal;
+  }
+
+  .header-right {
+    width: 100%;
+  }
+
+  :host ::ng-deep .compact-action-btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+  
+  .tab-list {
+    gap: 1rem;
+  }
 }
