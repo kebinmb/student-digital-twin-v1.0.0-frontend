@@ -1,116 +1,118 @@
-<div class="login-page">
-  <!-- Muted Organic Background Curves -->
-  <div class="bg-shape bg-shape-1"></div>
-  <div class="bg-shape bg-shape-2"></div>
+<div class="login-viewport">
+  <main class="login-card" role="main">
 
-  <!-- Central Split Card Container -->
-  <main class="login-split-card" role="main">
-    
-    <!-- LEFT COLUMN: Institutional Brand Panel -->
-    <div class="brand-column">
-      <div class="brand-content">
-        <!-- University Header -->
-        <div class="brand-header">
-          <span class="institution-acronym">CHMSU PORTAL</span>
-          <h2 class="university-name">Carlos Hilado Memorial State University</h2>
-          <span class="system-badge">Student Digital Twin</span>
-        </div>
+    <!-- INSTITUTIONAL BRAND PANEL (Desktop >= 768px) -->
+    <aside class="brand-panel" aria-label="Institutional Identity">
+      <div class="brand-panel-inner">
+        
+        <!-- Institution Header Hierarchy -->
+        <header class="institution-header">
+          <span class="portal-tag">School Management System</span>
+          <h1 class="university-name">Carlos Hilado Memorial State University</h1>
+          <p class="portal-edition">Student Digital Twin System</p>
+        </header>
 
-        <!-- Centerpiece: University Seal Crest -->
-        <div class="crest-wrapper">
-          <div class="crest-ring">
-            <img src="chmsu-logo.png" alt="CHMSU Official University Seal" class="crest-logo" width="96" height="96" />
+        <!-- Crest Presentation -->
+        <div class="crest-area">
+          <div class="crest-frame">
+            <img 
+              src="chmsu-logo.png" 
+              alt="CHMSU Official University Seal" 
+              class="crest-image" 
+              width="84" 
+              height="84" />
           </div>
-          <p class="brand-tagline">
+          <p class="mission-statement">
             Empowering Green Global Leaders through Digital Innovation & Academic Excellence
           </p>
         </div>
 
-        <!-- Institutional Pillars / Core Values -->
-        <div class="pillars-footer">
-          <div class="pillar-item">
-            <i class="pi pi-star-fill"></i>
-            <span>Excellence</span>
+        <!-- Administrative Editorial Bylines (Replaces AI badge boxes) -->
+        <div class="institutional-bylines">
+          <div class="byline-group">
+            <span class="byline-label">Governing Body</span>
+            <span class="byline-value">Commission on Higher Education (CHED)</span>
           </div>
-          <div class="pillar-item">
-            <i class="pi pi-shield"></i>
-            <span>Integrity</span>
-          </div>
-          <div class="pillar-item">
-            <i class="pi pi-bolt"></i>
-            <span>Innovation</span>
+          <div class="byline-group">
+            <span class="byline-label">System Operations</span>
+            <span class="byline-value">Management Information Systems Unit</span>
           </div>
         </div>
+
       </div>
-    </div>
+    </aside>
 
-    <!-- RIGHT COLUMN: Authentication Form -->
-    <div class="form-column">
-      <div class="form-wrapper">
-        
-        <!-- Form Header -->
-        <header class="form-header">
-          <!-- Mobile Brand Badge (visible < 768px) -->
-          <div class="mobile-brand-badge">
-            <img src="chmsu-logo.png" alt="CHMSU Logo" width="36" height="36" />
-            <div class="mobile-brand-text">
-              <span class="mobile-univ-name">CHMSU</span>
-              <span class="mobile-sys-name">Digital Twin</span>
-            </div>
+    <!-- AUTHENTICATION FORM PANEL -->
+    <section class="auth-panel" aria-label="Account Login">
+      <div class="auth-panel-inner">
+
+        <!-- Mobile Institutional Header (< 768px) -->
+        <div class="mobile-header">
+          <img src="chmsu-logo.png" alt="CHMSU Logo" width="36" height="36" />
+          <div class="mobile-header-text">
+            <span class="mobile-univ-title">CHMSU</span>
+            <span class="mobile-portal-title">Student Portal</span>
           </div>
+        </div>
 
-          <h1 class="login-title">Sign in</h1>
-          <p class="login-subtitle">Enter your credentials to access the student portal</p>
-        </header>
+        <!-- Form Title -->
+        <div class="form-title-group">
+          <h2 class="form-title">Sign In</h2>
+          <p class="form-subtitle">Enter your institutional credentials to access your account</p>
+        </div>
 
         <!-- Error Alert Banner -->
         @if (errorMessage()) {
-          <div class="alert-compact" role="alert" aria-live="assertive">
-            <i class="pi pi-exclamation-circle alert-icon"></i>
+          <div class="system-alert" role="alert" aria-live="assertive">
+            <i class="pi pi-exclamation-circle alert-icon" aria-hidden="true"></i>
             <div class="alert-content">
-              <span class="alert-title">Unable to sign in</span>
-              <span class="alert-desc">{{ errorMessage() }}</span>
+              <span class="alert-title">Unable to Sign In</span>
+              <span class="alert-message">{{ errorMessage() }}</span>
             </div>
-            <button type="button" class="alert-close" (click)="errorMessage.set(null)" aria-label="Dismiss error">
-              <i class="pi pi-times"></i>
+            <button 
+              type="button" 
+              class="alert-close-btn" 
+              (click)="errorMessage.set(null)" 
+              aria-label="Dismiss error notification">
+              <i class="pi pi-times" aria-hidden="true"></i>
             </button>
           </div>
         }
 
-        <!-- Login Form -->
-        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate class="login-form">
+        <!-- Reactive Form -->
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate class="credential-form">
           
-          <!-- Student ID / Email Field -->
+          <!-- Username / Student ID -->
           <div class="form-field">
-            <label for="usernameOrEmail" class="field-label">Student ID or Email</label>
+            <label for="usernameOrEmail" class="field-label">Student ID or Institutional Email</label>
             <input 
               pInputText 
               id="usernameOrEmail" 
               type="text" 
               formControlName="usernameOrEmail" 
               autocomplete="username"
-              placeholder="e.g. 2024-1234 or student@chmsu.edu.ph" 
-              class="w-full compact-input"
+              placeholder="e.g., 2024-1234 or student@chmsu.edu.ph" 
+              class="w-full text-input"
               [invalid]="isFieldInvalid('usernameOrEmail')" />
 
             @if (isFieldInvalid('usernameOrEmail')) {
-              <div class="field-error" role="alert">
-                <i class="pi pi-exclamation-circle"></i>
+              <div class="field-error-msg" role="alert">
+                <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
                 @if (usernameOrEmail?.errors?.['required']) {
-                  <span>Student ID or email is required.</span>
+                  <span>Student ID or institutional email is required.</span>
                 }
                 @if (usernameOrEmail?.errors?.['minlength']) {
-                  <span>Must be at least 3 characters.</span>
+                  <span>Identification must be at least 3 characters.</span>
                 }
               </div>
             }
           </div>
 
-          <!-- Password Field -->
+          <!-- Password -->
           <div class="form-field">
-            <div class="label-row">
+            <div class="field-label-group">
               <label for="password" class="field-label">Password</label>
-              <a routerLink="/forgot-password" class="forgot-link" tabindex="0">
+              <a routerLink="/forgot-password" class="inline-link" tabindex="0">
                 Forgot password?
               </a>
             </div>
@@ -120,65 +122,98 @@
               [feedback]="false" 
               [toggleMask]="true"
               [autocomplete]="'current-password'" 
-              placeholder="Enter your password" 
+              placeholder="Enter your portal password" 
               [fluid]="true" 
               class="w-full"
               [invalid]="isFieldInvalid('password')">
             </p-password>
 
             @if (isFieldInvalid('password')) {
-              <div class="field-error" role="alert">
-                <i class="pi pi-exclamation-circle"></i>
+              <div class="field-error-msg" role="alert">
+                <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
                 <span>Password is required.</span>
               </div>
             }
           </div>
 
           <!-- Stay Signed In Checkbox -->
-          <div class="options-row">
-            <div class="remember-group">
-              <p-checkbox formControlName="rememberMe" [binary]="true" inputId="rememberMe">
+          <div class="form-options">
+            <div class="checkbox-container">
+              <p-checkbox 
+                formControlName="rememberMe" 
+                [binary]="true" 
+                inputId="rememberMe">
               </p-checkbox>
-              <label for="rememberMe" class="remember-label">Stay signed in</label>
+              <label for="rememberMe" class="checkbox-text">Keep me signed in on this device</label>
             </div>
           </div>
 
           <!-- Submit Button -->
-          <div class="action-row">
+          <div class="form-action">
             <p-button 
               type="submit" 
               [disabled]="isLoading()" 
               [loading]="isLoading()"
-              [label]="isLoading() ? 'Signing in...' : 'Sign in to Portal'" 
+              [label]="isLoading() ? 'Authenticating...' : 'Sign In'" 
               icon="pi pi-arrow-right" 
               iconPos="right" 
               [fluid]="true"
-              styleClass="continue-btn">
+              styleClass="portal-submit-btn">
             </p-button>
           </div>
 
-          <!-- Security Policy Note -->
-          <div class="security-row">
-            <i class="pi pi-shield"></i>
-            <span>Authorized university access only. Subject to CHMSU ICT security policies.</span>
+          <!-- Academic Security Notice -->
+          <div class="security-policy-notice">
+            <i class="pi pi-shield" aria-hidden="true"></i>
+            <span>Authorized access only. Subject to CHMSU ICT Acceptable Use Policies.</span>
           </div>
         </form>
 
-        <!-- Divider & Help Footer -->
-        <div class="divider">
+        <!-- Helpdesk & Support Divider -->
+        <div class="section-divider" role="separator">
           <span class="divider-text">Student Support</span>
         </div>
 
-        <footer class="card-footer">
-          <span>Need assistance?</span>
-          <a routerLink="/support" class="help-link">Contact ICT Helpdesk</a>
-        </footer>
+        <div class="support-footer">
+          <span>Need technical assistance?</span>
+          <a routerLink="/support" class="inline-link font-medium">Contact ICT Helpdesk</a>
+        </div>
+
       </div>
-    </div>
+    </section>
+
   </main>
 
-  <!-- Page Copyright Footer -->
-  <footer class="page-footer">
-    <p>© 2026 Carlos Hilado Memorial State University • All rights reserved</p>
+  <!-- UNIFIED INSTITUTIONAL BRAND FOOTER -->
+  <footer class="site-footer" role="contentinfo">
+    <div class="motto-banner">
+      <p class="motto-heading" aria-label="Green CHMSU Excelsior">
+        <span class="motto-green">GREEN</span>
+        <span class="motto-blue">CHMSU</span>
+        <span class="motto-orange">ExCELSIOR!</span>
+      </p>
+
+      <ul class="values-list" aria-label="CHMSU Core Values">
+        <li>Excellence</li>
+        <li class="separator" aria-hidden="true">•</li>
+        <li>Compassion</li>
+        <li class="separator" aria-hidden="true">•</li>
+        <li>Environmentalism</li>
+        <li class="separator" aria-hidden="true">•</li>
+        <li>Love of Country</li>
+        <li class="separator" aria-hidden="true">•</li>
+        <li>Social Responsibility</li>
+        <li class="separator" aria-hidden="true">•</li>
+        <li>Integrity</li>
+        <li class="separator" aria-hidden="true">•</li>
+        <li>Openness</li>
+        <li class="separator" aria-hidden="true">•</li>
+        <li>Resilience</li>
+      </ul>
+    </div>
+
+    <p class="copyright-text">
+      © 2026 Carlos Hilado Memorial State University. All rights reserved.
+    </p>
   </footer>
 </div>

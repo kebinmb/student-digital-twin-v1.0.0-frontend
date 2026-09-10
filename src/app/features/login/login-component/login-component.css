@@ -1,339 +1,166 @@
 :host {
   display: block;
   min-height: 100vh;
-}
-
-/* Base Canvas / Page Backdrop */
-.login-page {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 2rem 1rem;
-  background-color: var(--p-surface-50, #f8fafc);
-  position: relative;
-  overflow: hidden;
+  color: var(--p-surface-800, #1e293b);
   box-sizing: border-box;
 }
 
-/* Soft Organic Background Curves */
-.bg-shape {
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 0;
-  filter: blur(60px);
+/* ========================================================================= */
+/* 1. MOBILE-FIRST BASE CANVAS (< 768px)                                     */
+/* ========================================================================= */
+
+.login-viewport {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  background-color: var(--p-surface-50, #f8fafc);
+  padding: 1.25rem 1rem 2rem;
+  box-sizing: border-box;
 }
 
-.bg-shape-1 {
-  top: -10%;
-  left: -5%;
-  width: 450px;
-  height: 450px;
-  background: radial-gradient(circle, rgba(17, 104, 52, 0.08) 0%, rgba(236, 253, 245, 0.4) 70%, transparent 100%);
-}
-
-.bg-shape-2 {
-  bottom: -10%;
-  right: -5%;
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.06) 0%, rgba(240, 253, 244, 0.5) 70%, transparent 100%);
-}
-
-/* Central Split Card Container */
-.login-split-card {
-  position: relative;
-  z-index: 1;
+/* Central Card Structure */
+.login-card {
   width: 100%;
-  max-width: 920px;
-  background: #ffffff;
-  border: 1px solid var(--p-surface-200, #e2e8f0);
-  border-radius: 24px;
-  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.12), 0 4px 6px -1px rgba(0, 0, 0, 0.03);
-  display: grid;
-  grid-template-columns: 44% 56%;
+  max-width: 440px;
+  background-color: var(--p-surface-0, #ffffff);
+  border: 1px solid var(--p-surface-300, #cbd5e1);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
-/* ========================================================================= */
-/* LEFT COLUMN: Institutional Brand Panel                                    */
-/* ========================================================================= */
-.brand-column {
-  background: linear-gradient(145deg, #0c5027 0%, #116834 60%, #15803d 100%);
-  color: #ffffff;
-  padding: 2.75rem 2.25rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  position: relative;
-  overflow: hidden;
-}
-
-/* Subtle overlay pattern on brand panel */
-.brand-column::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.12) 0%, transparent 50%);
-  pointer-events: none;
-}
-
-.brand-content {
-  position: relative;
-  z-index: 1;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-/* Header Text Group */
-.brand-header {
-  display: flex;
-  flex-direction: column;
-}
-
-.institution-acronym {
-  font-size: 0.6875rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #a7f3d0;
-  margin-bottom: 0.25rem;
-}
-
-.university-name {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 700;
-  line-height: 1.3;
-  color: #ffffff;
-  letter-spacing: -0.01em;
-}
-
-.system-badge {
-  display: inline-block;
-  align-self: flex-start;
-  margin-top: 0.5rem;
-  padding: 0.2rem 0.6rem;
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 9999px;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  color: #f0fdf4;
-}
-
-/* Centerpiece: Crest Seal */
-.crest-wrapper {
-  margin: 2rem 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-
-.crest-ring {
-  width: 110px;
-  height: 110px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.2);
-  margin-bottom: 1.25rem;
-  transition: transform 0.3s ease;
-}
-
-.crest-ring:hover {
-  transform: scale(1.03);
-}
-
-.crest-logo {
-  width: 88px;
-  height: 88px;
-  object-fit: contain;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
-}
-
-.brand-tagline {
-  margin: 0;
-  font-size: 0.8125rem;
-  line-height: 1.5;
-  color: #ecfdf5;
-  font-weight: 500;
-  max-width: 260px;
-  opacity: 0.95;
-}
-
-/* Institutional Core Values / Pillars */
-.pillars-footer {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-
-.pillar-item {
-  flex: 1;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 10px;
-  padding: 0.5rem 0.35rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
-  text-align: center;
-  transition: background 0.2s ease;
-}
-
-.pillar-item:hover {
-  background: rgba(255, 255, 255, 0.14);
-}
-
-.pillar-item i {
-  font-size: 0.8125rem;
-  color: #6ee7b7;
-}
-
-.pillar-item span {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  color: #ffffff;
-  letter-spacing: 0.01em;
-}
-
-/* ========================================================================= */
-/* RIGHT COLUMN: Authentication Form                                         */
-/* ========================================================================= */
-.form-column {
-  background: #ffffff;
-  padding: 2.75rem 2.5rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.form-wrapper {
-  width: 100%;
-  max-width: 400px;
-  margin: 0 auto;
-}
-
-/* Mobile Brand Badge */
-.mobile-brand-badge {
+/* Brand Panel hidden on mobile viewport */
+.brand-panel {
   display: none;
-  align-items: center;
-  gap: 0.625rem;
-  margin-bottom: 1rem;
 }
 
-.mobile-brand-text {
+/* Mobile Institutional Header */
+.mobile-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: 1.25rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--p-surface-200, #e2e8f0);
+}
+
+.mobile-header img {
+  display: block;
+  object-fit: contain;
+}
+
+.mobile-header-text {
   display: flex;
   flex-direction: column;
-  line-height: 1.2;
 }
 
-.mobile-univ-name {
-  font-size: 0.75rem;
-  font-weight: 800;
-  color: #116834;
+.mobile-univ-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
   letter-spacing: 0.05em;
+  color: #0c5027;
 }
 
-.mobile-sys-name {
-  font-size: 0.6875rem;
-  color: #64748b;
+.mobile-portal-title {
+  font-size: 0.75rem;
+  color: var(--p-surface-500, #64748b);
   font-weight: 500;
 }
 
-/* Form Header */
-.form-header {
-  margin-bottom: 1.5rem;
+/* Form Panel */
+.auth-panel {
+  padding: 1.75rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
-.login-title {
+.auth-panel-inner {
+  width: 100%;
+}
+
+.form-title-group {
+  margin-bottom: 1.35rem;
+}
+
+.form-title {
   margin: 0;
-  font-size: 1.75rem;
-  font-weight: 800;
-  color: #0f172a;
-  letter-spacing: -0.025em;
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--p-surface-900, #0f172a);
 }
 
-.login-subtitle {
-  margin: 0.35rem 0 0;
-  font-size: 0.875rem;
-  color: #64748b;
+.form-subtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--p-surface-500, #64748b);
   line-height: 1.4;
 }
 
-/* Compact Error Alert */
-.alert-compact {
+/* Academic Error Banner */
+.system-alert {
   display: flex;
   align-items: flex-start;
   gap: 0.625rem;
-  background: #fef2f2;
+  background-color: #fef2f2;
   border: 1px solid #fecaca;
-  border-left: 4px solid #dc2626;
-  border-radius: 10px;
-  padding: 0.75rem 0.9rem;
+  border-left: 3px solid #dc2626;
+  border-radius: 6px;
+  padding: 0.75rem;
   margin-bottom: 1.25rem;
 }
 
 .alert-icon {
-  font-size: 1.1rem;
+  font-size: 1rem;
   color: #dc2626;
-  margin-top: 0.05rem;
+  margin-top: 0.1rem;
   flex-shrink: 0;
 }
 
 .alert-content {
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
   flex: 1;
 }
 
 .alert-title {
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: #991b1b;
 }
 
-.alert-desc {
+.alert-message {
   font-size: 0.75rem;
   color: #b91c1c;
   line-height: 1.35;
 }
 
-.alert-close {
+.alert-close-btn {
   background: transparent;
   border: none;
   color: #991b1b;
   cursor: pointer;
-  padding: 0.1rem;
-  font-size: 0.875rem;
+  padding: 0.2rem;
+  font-size: 0.75rem;
   opacity: 0.7;
-  transition: opacity 0.15s;
+  transition: opacity 0.15s ease;
 }
 
-.alert-close:hover {
+.alert-close-btn:hover {
   opacity: 1;
 }
 
-/* Form Field Styling */
-.login-form {
+/* Form Layout */
+.credential-form {
   display: flex;
   flex-direction: column;
-  gap: 1.125rem;
+  gap: 1.1rem;
 }
 
 .form-field {
@@ -348,47 +175,56 @@
   margin-bottom: 0.35rem;
 }
 
-.label-row {
+.field-label-group {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   margin-bottom: 0.35rem;
 }
 
-.label-row .field-label {
+.field-label-group .field-label {
   margin-bottom: 0;
 }
 
-.forgot-link {
+.inline-link {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #116834;
-  text-decoration: none;
-  transition: color 0.15s;
-}
-
-.forgot-link:hover {
-  text-decoration: underline;
   color: #0c5027;
+  text-decoration: none;
+  transition: color 0.15s ease;
 }
 
-.compact-input {
-  height: 44px;
+.inline-link:hover {
+  color: #083b1c;
+  text-decoration: underline;
+}
+
+.inline-link.font-medium {
+  font-weight: 600;
+}
+
+.text-input {
+  height: 42px;
   font-size: 0.875rem;
-  padding: 0.55rem 0.85rem;
-  border-radius: 10px;
-  border: 1px solid #cbd5e1;
-  color: #0f172a;
-  background: #ffffff;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--p-surface-300, #cbd5e1);
+  color: var(--p-surface-900, #0f172a);
+  background-color: var(--p-surface-0, #ffffff);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.compact-input:focus {
-  border-color: #116834;
-  box-shadow: 0 0 0 3px rgba(17, 104, 52, 0.12);
+.text-input:hover {
+  border-color: var(--p-surface-400, #94a3b8);
 }
 
-.field-error {
+.text-input:focus {
+  border-color: #116834;
+  outline: none;
+  box-shadow: 0 0 0 1px #116834;
+}
+
+.field-error-msg {
   display: flex;
   align-items: center;
   gap: 0.35rem;
@@ -398,141 +234,195 @@
   margin-top: 0.35rem;
 }
 
-.field-error i {
+.field-error-msg i {
   font-size: 0.75rem;
 }
 
-/* Options (Remember Me) */
-.options-row {
+.form-options {
   display: flex;
   align-items: center;
-  margin-top: -0.15rem;
 }
 
-.remember-group {
+.checkbox-container {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.remember-label {
+.checkbox-text {
   cursor: pointer;
   user-select: none;
   font-size: 0.8125rem;
-  color: #475569;
+  color: var(--p-surface-600, #475569);
   font-weight: 500;
 }
 
-/* Submit Action Button */
-.action-row {
+.form-action {
   margin-top: 0.25rem;
 }
 
-:host ::ng-deep .continue-btn {
+/* Primary Flat Button */
+:host ::ng-deep .portal-submit-btn {
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
-  height: 46px !important;
-  font-size: 0.9375rem !important;
+  height: 42px !important;
+  font-size: 0.875rem !important;
   font-weight: 600 !important;
-  border-radius: 12px !important;
-  background: #116834 !important;
-  border: 1px solid #116834 !important;
+  border-radius: 6px !important;
+  background-color: #0c5027 !important;
+  border: 1px solid #0c5027 !important;
   color: #ffffff !important;
-  box-shadow: 0 2px 4px rgba(17, 104, 52, 0.15) !important;
-  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease !important;
+  box-shadow: none !important;
+  transition: background-color 0.15s ease, border-color 0.15s ease !important;
 }
 
-:host ::ng-deep .continue-btn:hover:not(:disabled) {
-  background: #0c5027 !important;
-  border-color: #0c5027 !important;
-  box-shadow: 0 4px 8px rgba(12, 80, 39, 0.25) !important;
+:host ::ng-deep .portal-submit-btn:hover:not(:disabled) {
+  background-color: #083b1c !important;
+  border-color: #083b1c !important;
 }
 
-:host ::ng-deep .continue-btn:active:not(:disabled) {
-  transform: scale(0.99) !important;
-}
-
-:host ::ng-deep .continue-btn:disabled {
+:host ::ng-deep .portal-submit-btn:disabled {
   opacity: 0.65 !important;
   cursor: not-allowed !important;
 }
 
-/* Security Note */
-.security-row {
+.security-policy-notice {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.45rem;
-  font-size: 0.71875rem;
-  color: #64748b;
+  font-size: 0.6875rem;
+  color: var(--p-surface-500, #64748b);
   line-height: 1.35;
-  margin-top: 0.15rem;
 }
 
-.security-row i {
-  font-size: 0.8125rem;
-  color: #116834;
+.security-policy-notice i {
+  font-size: 0.75rem;
+  color: var(--p-surface-500, #64748b);
+  margin-top: 0.1rem;
   flex-shrink: 0;
 }
 
-/* Divider & Footer */
-.divider {
+/* Separator */
+.section-divider {
   display: flex;
   align-items: center;
-  margin: 1.5rem 0 1.25rem;
-  text-align: center;
+  margin: 1.35rem 0 1rem;
 }
 
-.divider::before,
-.divider::after {
+.section-divider::before,
+.section-divider::after {
   content: '';
   flex: 1;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--p-surface-200, #e2e8f0);
 }
 
 .divider-text {
-  padding: 0 0.75rem;
+  padding: 0 0.5rem;
   font-size: 0.6875rem;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #94a3b8;
+  letter-spacing: 0.05em;
+  color: var(--p-surface-400, #94a3b8);
 }
 
-.card-footer {
+.support-footer {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.8125rem;
-  color: #64748b;
-}
-
-.help-link {
-  color: #116834;
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.help-link:hover {
-  text-decoration: underline;
-  color: #0c5027;
-}
-
-.page-footer {
-  margin-top: 1.5rem;
-  text-align: center;
   font-size: 0.75rem;
-  color: #94a3b8;
-  position: relative;
-  z-index: 1;
+  color: var(--p-surface-500, #64748b);
 }
 
-.page-footer p {
+/* ========================================================================= */
+/* 2. UNIFIED INSTITUTIONAL MOTTO FOOTER                                     */
+/* ========================================================================= */
+
+.site-footer {
+  width: 100%;
+  max-width: 860px;
+  margin-top: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  text-align: center;
+  background: transparent;
+}
+
+.motto-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.motto-heading {
   margin: 0;
+  font-size: 1.125rem;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 0.04em;
+  display: flex;
+  gap: 0.4rem;
+  justify-content: center;
+  align-items: baseline;
+  text-transform: uppercase;
 }
 
-/* PrimeNG Component Overrides */
+.motto-green {
+  color: #116834;
+}
+
+.motto-blue {
+  color: #1d4ed8;
+}
+
+.motto-orange {
+  color: #ea580c;
+}
+
+.values-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  row-gap: 0.25rem;
+  column-gap: 0.4rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  font-style: italic;
+  color: var(--p-surface-600, #475569);
+  max-width: 720px;
+}
+
+.values-list li {
+  display: inline-flex;
+  align-items: center;
+}
+
+.values-list .separator {
+  color: var(--p-surface-400, #94a3b8);
+  font-style: normal;
+  user-select: none;
+  font-size: 0.55rem;
+}
+
+.copyright-text {
+  margin: 0.25rem 0 0;
+  font-size: 0.6875rem;
+  color: var(--p-surface-400, #94a3b8);
+}
+
+/* ========================================================================= */
+/* 3. PRIMENG FORM CONTROL OVERRIDES                                         */
+/* ========================================================================= */
+
 .w-full {
   width: 100% !important;
 }
@@ -543,61 +433,189 @@
 }
 
 :host ::ng-deep .p-password input {
-  height: 44px;
+  height: 42px;
   width: 100%;
   font-size: 0.875rem;
-  padding: 0.55rem 0.85rem;
-  border-radius: 10px;
-  border: 1px solid #cbd5e1;
-  color: #0f172a;
-  background: #ffffff;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--p-surface-300, #cbd5e1);
+  color: var(--p-surface-900, #0f172a);
+  background-color: var(--p-surface-0, #ffffff);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+:host ::ng-deep .p-password input:hover {
+  border-color: var(--p-surface-400, #94a3b8);
 }
 
 :host ::ng-deep .p-password input:focus {
   border-color: #116834;
-  box-shadow: 0 0 0 3px rgba(17, 104, 52, 0.12);
+  outline: none;
+  box-shadow: 0 0 0 1px #116834;
 }
 
 :host ::ng-deep .p-password .p-password-toggle-mask-icon {
-  color: #64748b;
-}
-
-:host ::ng-deep .p-password .p-password-toggle-mask-icon:hover {
-  color: #0f172a;
+  color: var(--p-surface-500, #64748b);
 }
 
 :host ::ng-deep .p-checkbox .p-checkbox-box {
-  border-radius: 5px;
-  border-color: #cbd5e1;
+  border-radius: 4px;
+  border-color: var(--p-surface-300, #cbd5e1);
 }
 
 :host ::ng-deep .p-checkbox.p-checkbox-checked .p-checkbox-box {
-  background: #116834;
-  border-color: #116834;
+  background-color: #0c5027;
+  border-color: #0c5027;
 }
 
-/* RESPONSIVE LAYOUT (< 768px) */
-@media (max-width: 768px) {
-  .login-split-card {
-    grid-template-columns: 1fr;
-    max-width: 440px;
-    border-radius: 18px;
+/* ========================================================================= */
+/* 4. TABLET & DESKTOP ENHANCEMENT (min-width: 768px)                       */
+/* ========================================================================= */
+
+@media (min-width: 768px) {
+  .login-viewport {
+    justify-content: center;
+    padding: 2.5rem 1.5rem;
   }
 
-  .brand-column {
+  .login-card {
+    max-width: 860px;
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  }
+
+  .mobile-header {
     display: none;
   }
 
-  .form-column {
-    padding: 2rem 1.5rem;
-  }
-
-  .mobile-brand-badge {
+  /* Solid Green Brand Panel */
+  .brand-panel {
     display: flex;
+    flex-direction: column;
+    background-color: #0c5027;
+    border-right: 1px solid #083b1c;
+    color: #ffffff;
+    padding: 2.25rem 2rem;
   }
 
-  .login-title {
-    font-size: 1.45rem;
+  .brand-panel-inner {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .institution-header {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .portal-tag {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #a7f3d0;
+    margin-bottom: 0.35rem;
+  }
+
+  .university-name {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1.35;
+    color: #ffffff;
+  }
+
+  .portal-edition {
+    margin: 0.35rem 0 0;
+    font-size: 0.75rem;
+    color: #d1fae5;
+  }
+
+  .crest-area {
+    margin: 2rem 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .crest-frame {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    background-color: #ffffff;
+    border: 2px solid #15803d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.25rem;
+  }
+
+  .crest-image {
+    display: block;
+    object-fit: contain;
+  }
+
+  .mission-statement {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: #d1fae5;
+    max-width: 250px;
+  }
+
+  /* Option 1: Editorial Administrative Bylines */
+  .institutional-bylines {
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    padding-top: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .byline-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .byline-label {
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #a7f3d0;
+  }
+
+  .byline-value {
+    font-size: 0.75rem;
+    color: #ecfdf5;
+    line-height: 1.35;
+  }
+
+  /* Right Panel Adjustments */
+  .auth-panel {
+    padding: 2.75rem 2.5rem;
+  }
+
+  .form-title {
+    font-size: 1.5rem;
+  }
+
+  .site-footer {
+    margin-top: 2rem;
+  }
+
+  .motto-heading {
+    font-size: 1.25rem;
+  }
+
+  .values-list {
+    font-size: 0.75rem;
+    column-gap: 0.45rem;
   }
 }
