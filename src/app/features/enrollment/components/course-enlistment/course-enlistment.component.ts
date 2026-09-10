@@ -27,7 +27,6 @@ import { Skeleton } from 'primeng/skeleton';
     Drawer,
     Skeleton
   ],
-  providers: [ConfirmationService, MessageService],
   templateUrl: './course-enlistment.component.html',
   styleUrls: ['./course-enlistment.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush

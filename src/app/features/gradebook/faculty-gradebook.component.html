@@ -1,5 +1,4 @@
 <main class="gradebook-container" aria-label="Faculty Gradebook & Sealing Engine">
-  <p-toast></p-toast>
   <p-confirmdialog></p-confirmdialog>
 
   <!-- 1. Header Card with Academic Term & Class Section Pickers -->
@@ -18,7 +17,18 @@
       <!-- Term & Section Pickers -->
       <div class="gb-selectors-bar">
         <div class="gb-selector-field term-field">
-          <label for="term-select" class="gb-field-label">Academic Term</label>
+          <div class="flex justify-between items-center mb-1">
+            <label for="term-select" class="gb-field-label m-0">Academic Term</label>
+            <button
+              type="button"
+              class="text-xs px-2 py-0.5 rounded border border-slate-300 hover:border-emerald-600 font-medium text-slate-600 hover:text-emerald-700 bg-slate-50 transition-colors"
+              (click)="toggleTermFilter()"
+              [title]="showActiveTermOnly() ? 'Click to show all academic terms' : 'Click to show active terms only'"
+            >
+              <i class="pi" [ngClass]="showActiveTermOnly() ? 'pi-filter-fill text-emerald-600' : 'pi-history'"></i>
+              {{ showActiveTermOnly() ? 'Active Only' : 'All Terms' }}
+            </button>
+          </div>
           <p-select 
             id="term-select"
             [options]="termOptions()" 

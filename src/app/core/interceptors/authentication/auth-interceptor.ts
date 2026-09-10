@@ -6,6 +6,11 @@ import { AuthService } from '../../service/authentication/auth-service';
 let isRefreshing = false;
 const refreshTokenSubject = new BehaviorSubject<string | null>(null);
 
+export function resetInterceptorState(): void {
+  isRefreshing = false;
+  refreshTokenSubject.next(null);
+}
+
 export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, next: HttpHandlerFn) => {
   const authService = inject(AuthService);
   const token = authService.accessToken();

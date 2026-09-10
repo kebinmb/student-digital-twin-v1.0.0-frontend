@@ -29,6 +29,12 @@ export const routes: Routes = [
     canActivate: [guestGuard]
   },
   {
+    path: 'forbidden',
+    loadComponent: () =>
+      import('./features/forbidden/forbidden.component').then(m => m.ForbiddenComponent),
+    title: 'Access Restricted — Student Digital Twin'
+  },
+  {
     path: 'dashboard',
     loadComponent: () =>
       import('./features/dashboard/dashboard-layout/dashboard-layout.component').then(m => m.DashboardLayoutComponent),
@@ -41,32 +47,45 @@ export const routes: Routes = [
       },
       {
         path: 'curriculum',
-        canActivate: [roleGuard(['ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR'])],
+        canActivate: [roleGuard(['ADMIN', 'DEAN', 'CHAIRPERSON'])],
         loadChildren: () =>
           import('./features/curriculum/curriculum.routes').then(m => m.CURRICULUM_ROUTES)
       },
       {
         path: 'institution',
-        canActivate: [roleGuard(['ADMIN', 'DEAN', 'REGISTRAR'])],
+        canActivate: [roleGuard(['ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON'])],
         loadChildren: () =>
           import('./features/institution/institution.routes').then(m => m.INSTITUTION_ROUTES)
       },
       {
         path: 'scheduling',
-        canActivate: [roleGuard(['ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR'])],
+        canActivate: [roleGuard(['ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON'])],
         loadChildren: () =>
           import('./features/scheduling/scheduling.routes').then(m => m.SCHEDULING_ROUTES)
       },
       {
         path: 'enrollment',
+        canActivate: [roleGuard(['ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'STUDENT'])],
         loadChildren: () =>
           import('./features/enrollment/enrollment.routes').then(m => m.ENROLLMENT_ROUTES)
       },
       {
         path: 'grades',
-        canActivate: [roleGuard(['ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY'])],
+        canActivate: [roleGuard(['ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'FACULTY'])],
         loadComponent: () =>
           import('./features/gradebook/faculty-gradebook.component').then(m => m.FacultyGradebookComponent)
+      },
+      {
+        path: 'users',
+        canActivate: [roleGuard(['ADMIN'])],
+        loadComponent: () =>
+          import('./features/admin/user-management/user-management.component').then(m => m.UserManagementComponent)
+      },
+      {
+        path: 'faculty-accounts',
+        canActivate: [roleGuard(['ADMIN', 'REGISTRAR'])],
+        loadComponent: () =>
+          import('./features/faculty-management/faculty-management.component').then(m => m.FacultyManagementComponent)
       },
       {
         path: '**',

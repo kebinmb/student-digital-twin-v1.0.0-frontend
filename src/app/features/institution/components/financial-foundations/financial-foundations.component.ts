@@ -52,7 +52,8 @@ export class FinancialFoundationsComponent implements OnInit {
   private readonly confirmationService = inject(ConfirmationService);
   private readonly authService = inject(AuthService);
 
-  readonly canManage = () => this.authService.hasAnyRole(['ADMIN', 'DEAN', 'REGISTRAR', 'CHAIRPERSON']);
+  readonly canManage = () => this.authService.hasAnyRole(['ADMIN', 'DEAN']);
+  readonly canDelete = () => this.authService.hasRole('ADMIN');
 
   activeSubTab = 'fees';
   readonly subTabs = [

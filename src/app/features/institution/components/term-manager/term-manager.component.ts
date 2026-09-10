@@ -54,7 +54,9 @@ export class TermManagerComponent implements OnInit {
   private readonly confirmationService = inject(ConfirmationService);
   private readonly authService = inject(AuthService);
 
-  readonly canManage = () => this.authService.hasAnyRole(['ADMIN', 'DEAN', 'REGISTRAR', 'CHAIRPERSON']);
+  readonly canManage = () => this.authService.hasAnyRole(['ADMIN', 'DEAN', 'REGISTRAR']);
+  readonly canManageWindows = () => this.authService.hasAnyRole(['ADMIN', 'REGISTRAR']);
+  readonly canDelete = () => this.authService.hasRole('ADMIN');
 
   readonly selectedTermForDetail = signal<Term | null>(null);
   readonly isDetailDrawerOpen = signal<boolean>(false);

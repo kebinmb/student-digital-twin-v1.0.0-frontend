@@ -22,3 +22,13 @@ export interface ProblemDetail {
   detail: string;
   invalidParams?: Record<string, string>;
 }
+
+export interface UserContext {
+  id: number | null;
+  username: string;
+  email: string;
+  role: string;
+  roles: string[];
+  collegeId?: number | null;
+  programId?: number | null;
+}

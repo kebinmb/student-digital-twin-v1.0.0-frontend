@@ -26,7 +26,6 @@ import { StudentEnrollmentResponse } from '../../../../core/models/enrollment.mo
     Drawer,
     Skeleton
   ],
-  providers: [MessageService],
   templateUrl: './enrollment-audit.component.html',
   styleUrls: ['./enrollment-audit.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush

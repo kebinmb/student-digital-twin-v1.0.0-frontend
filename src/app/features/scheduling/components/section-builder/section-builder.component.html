@@ -1,6 +1,4 @@
 <div class="section-builder-wrapper">
-  <!-- Toast & Scoped Confirmation Dialog -->
-  <p-toast></p-toast>
   <p-confirmdialog key="schedulingConfirmDialog"></p-confirmdialog>
 
   <!-- Header & Gate 1 Alert -->
@@ -23,15 +21,17 @@
           styleClass="action-btn-secondary"
           (onClick)="openFacultyLoadModal()">
         </p-button>
-        <p-button 
-          label="Add Schedule" 
-          icon="pi pi-plus" 
-          severity="success" 
-          size="small"
-          styleClass="action-btn-primary"
-          [disabled]="store.isLoading()"
-          (onClick)="openCreateModal()">
-        </p-button>
+        @if (canAddSchedule()) {
+          <p-button 
+            label="Add Schedule" 
+            icon="pi pi-plus" 
+            severity="success" 
+            size="small"
+            styleClass="action-btn-primary"
+            [disabled]="store.isLoading()"
+            (onClick)="openCreateModal()">
+          </p-button>
+        }
       </div>
     </div>
 
@@ -299,12 +299,12 @@
               <p class="empty-state-subtext text-center">
                 There are no active class section schedule allocations created for this academic term and curriculum yet.
               </p>
-              @if (store.isCurriculumActive()) {
+              @if (store.isCurriculumActive() && canAddSchedule()) {
                 <p-button 
                   label="Create First Class Section" 
                   icon="pi pi-plus" 
                   severity="success" 
-                  size="small"
+                  size="small" 
                   styleClass="action-btn-primary"
                   (onClick)="openCreateModal()">
                 </p-button>
@@ -390,7 +390,7 @@
           <div class="form-field flex-col gap-sm">
             <label class="form-label">Academic Program <span class="required-star">*</span></label>
             <p-select 
-              [options]="store.programs()" 
+              [options]="programOptions()" 
               optionLabel="code" 
               optionValue="code" 
               formControlName="programCode" 

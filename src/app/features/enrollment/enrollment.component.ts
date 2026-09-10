@@ -32,7 +32,8 @@ export class EnrollmentComponent implements OnInit {
   readonly store = inject(EnrollmentStore);
   readonly auth = inject(AuthService);
 
-  readonly isStaff = computed(() => this.auth.hasAnyRole(['ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON']));
+  readonly isStaff = computed(() => this.auth.hasAnyRole(['ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'FACULTY']));
+  readonly canViewAudit = computed(() => this.auth.hasAnyRole(['ADMIN', 'REGISTRAR', 'DEAN']));
 
   readonly activeTab = signal<'advising' | 'enlistment' | 'audit'>('advising');
 
@@ -41,7 +42,7 @@ export class EnrollmentComponent implements OnInit {
       { label: 'Student Advising & Checklist', value: 'advising', icon: 'pi pi-compass' },
       { label: 'Enlisted Courses & Timetable', value: 'enlistment', icon: 'pi pi-check-square' }
     ];
-    if (this.isStaff()) {
+    if (this.canViewAudit()) {
       opts.push({ label: 'Registrar Oversight & Audit', value: 'audit', icon: 'pi pi-shield' });
     }
     return opts;

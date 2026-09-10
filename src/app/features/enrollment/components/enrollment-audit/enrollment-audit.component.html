@@ -1,5 +1,4 @@
 <div class="audit-wrapper">
-  <p-toast></p-toast>
 
   <!-- Filter & Term Selector Toolbar -->
   <div class="audit-toolbar">
@@ -146,39 +145,41 @@
           </div>
 
           <!-- Administrative Action Bar -->
-          <div class="action-strip">
-            <span class="text-xs font-bold text-slate-700 uppercase">Administrative Workflow:</span>
-            <div class="flex items-center gap-2 mt-2">
-              @if (e.status !== 'ENROLLED') {
-                <p-button 
-                  label="Approve & Enroll" 
-                  icon="pi pi-check" 
-                  severity="success" 
-                  size="small"
-                  (onClick)="updateStatus(e.enrollmentId, 'ENROLLED')">
-                </p-button>
-              }
-              @if (e.status !== 'ASSESSED') {
-                <p-button 
-                  label="Mark Assessed" 
-                  icon="pi pi-calculator" 
-                  severity="warn" 
-                  size="small"
-                  (onClick)="updateStatus(e.enrollmentId, 'ASSESSED')">
-                </p-button>
-              }
-              @if (!e.isOverloadApproved) {
-                <p-button 
-                  label="Approve Overload" 
-                  icon="pi pi-shield" 
-                  severity="info" 
-                  [outlined]="true"
-                  size="small"
-                  (onClick)="updateStatus(e.enrollmentId, e.status, true)">
-                </p-button>
-              }
+          @if (store.canUpdateStatus()) {
+            <div class="action-strip">
+              <span class="text-xs font-bold text-slate-700 uppercase">Administrative Workflow:</span>
+              <div class="flex items-center gap-2 mt-2">
+                @if (e.status !== 'ENROLLED') {
+                  <p-button 
+                    label="Approve & Enroll" 
+                    icon="pi pi-check" 
+                    severity="success" 
+                    size="small"
+                    (onClick)="updateStatus(e.enrollmentId, 'ENROLLED')">
+                  </p-button>
+                }
+                @if (e.status !== 'ASSESSED') {
+                  <p-button 
+                    label="Mark Assessed" 
+                    icon="pi pi-calculator" 
+                    severity="warn" 
+                    size="small"
+                    (onClick)="updateStatus(e.enrollmentId, 'ASSESSED')">
+                  </p-button>
+                }
+                @if (!e.isOverloadApproved) {
+                  <p-button 
+                    label="Approve Overload" 
+                    icon="pi pi-shield" 
+                    severity="info" 
+                    [outlined]="true" 
+                    size="small"
+                    (onClick)="updateStatus(e.enrollmentId, e.status, true)">
+                  </p-button>
+                }
+              </div>
             </div>
-          </div>
+          }
 
           <!-- Enlisted Subjects Table -->
           <div class="items-table-section">

@@ -63,6 +63,7 @@ export class ProgramManagerComponent implements OnInit {
   private readonly authService = inject(AuthService);
 
   readonly canManage = () => this.authService.hasAnyRole(['ADMIN', 'DEAN', 'CHAIRPERSON']);
+  readonly canCreate = () => this.authService.hasAnyRole(['ADMIN', 'DEAN']);
 
   readonly selectedProgForDetail = signal<Program | null>(null);
   readonly isDetailDrawerOpen = signal<boolean>(false);
@@ -96,17 +97,40 @@ export class ProgramManagerComponent implements OnInit {
     { label: 'Diploma / Certificate', value: 'DIPLOMA' }
   ];
 
-  readonly departmentOptions = computed(() =>
-    this.departments().map((d) => ({ label: `${d.code} - ${d.name}`, value: d.id }))
-  );
+  readonly departmentOptions = computed(() => {
+    const user = this.authService.currentUser();
+    let depts = this.departments();
+    if (this.authService.hasRole('DEAN') && user?.collegeId) {
+      depts = depts.filter((d) => d.id === user.collegeId || d.parentDepartmentId === user.collegeId);
+    }
+    return depts.map((d) => ({ label: `${d.code} - ${d.name}`, value: d.id }));
+  });
 
-  readonly departmentFilterOptions = computed(() => [
-    { label: 'All Departments', value: null },
-    ...this.departments().map((d) => ({ label: `${d.code} - ${d.name}`, value: d.id }))
-  ]);
+  readonly departmentFilterOptions = computed(() => {
+    const user = this.authService.currentUser();
+    let depts = this.departments();
+    if (this.authService.hasRole('DEAN') && user?.collegeId) {
+      depts = depts.filter((d) => d.id === user.collegeId || d.parentDepartmentId === user.collegeId);
+    }
+    return [
+      { label: 'All Departments', value: null },
+      ...depts.map((d) => ({ label: `${d.code} - ${d.name}`, value: d.id }))
+    ];
+  });
 
   readonly filteredPrograms = computed(() => {
-    const list = this.programs();
+    const user = this.authService.currentUser();
+    let list = this.programs();
+    if (this.authService.hasRole('CHAIRPERSON') && user?.programId) {
+      list = list.filter((p) => p.id === user.programId);
+    } else if (this.authService.hasRole('DEAN') && user?.collegeId) {
+      const allowedDeptIds = new Set(
+        this.departments()
+          .filter((d) => d.id === user.collegeId || d.parentDepartmentId === user.collegeId)
+          .map((d) => d.id)
+      );
+      list = list.filter((p) => allowedDeptIds.has(p.departmentId));
+    }
     if (!this.selectedDepartmentId) return list;
     return list.filter((p) => p.departmentId === this.selectedDepartmentId);
   });
@@ -150,8 +174,9 @@ export class ProgramManagerComponent implements OnInit {
   openCreateDialog(): void {
     this.isEditing = false;
     this.selectedProgram = null;
+    const defaultDept = this.departmentOptions().length > 0 ? this.departmentOptions()[0].value : null;
     this.programForm.reset({
-      departmentId: this.departments().length > 0 ? this.departments()[0].id : null,
+      departmentId: defaultDept,
       code: '',
       name: '',
       degreeLevel: 'UNDERGRADUATE',

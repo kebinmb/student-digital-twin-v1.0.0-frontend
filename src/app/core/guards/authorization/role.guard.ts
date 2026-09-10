@@ -15,7 +15,7 @@ function checkRoles(roles: string[], authService: AuthService, router: Router, s
     if (checkRole()) {
       return true;
     }
-    return router.createUrlTree(['/dashboard']);
+    return router.createUrlTree(['/forbidden'], { queryParams: { blockedUrl: state.url } });
   }
 
   return authService.refreshToken().pipe(
@@ -23,7 +23,7 @@ function checkRoles(roles: string[], authService: AuthService, router: Router, s
       if (checkRole()) {
         return true;
       }
-      return router.createUrlTree(['/dashboard']);
+      return router.createUrlTree(['/forbidden'], { queryParams: { blockedUrl: state.url } });
     }),
     catchError(() => {
       return of(router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } }));

@@ -45,6 +45,9 @@ export interface AdvisingEligibilityResponse {
   cumulativeGpa?: number | null;
   maxAllowedUnits: number;
   currentEnrolledUnits: number;
+  financialClearance?: string;
+  departmentalClearance?: string;
+  isClearedForEnrollment?: boolean;
   courses: CourseEligibilityItemDto[];
 }
 
@@ -127,6 +130,8 @@ export interface StudentProfileResponse {
   isGraduating: boolean;
   totalUnitsEarned: number;
   cumulativeGpa?: number | null;
+  financialClearance?: string;
+  departmentalClearance?: string;
 }
 
 export interface CreditCourseItemRequest {

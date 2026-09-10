@@ -53,7 +53,8 @@ export class GradingScaleManagerComponent implements OnInit {
   private readonly confirmationService = inject(ConfirmationService);
   private readonly authService = inject(AuthService);
 
-  readonly canManage = () => this.authService.hasAnyRole(['ADMIN', 'DEAN', 'REGISTRAR', 'CHAIRPERSON']);
+  readonly canManage = () => this.authService.hasAnyRole(['ADMIN', 'DEAN', 'REGISTRAR']);
+  readonly canDelete = () => this.authService.hasRole('ADMIN');
 
   readonly gradingScales = signal<GradingScale[]>([]);
   readonly isLoading = signal<boolean>(false);

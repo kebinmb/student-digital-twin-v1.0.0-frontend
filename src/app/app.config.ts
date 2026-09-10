@@ -15,6 +15,7 @@ import { authInterceptor } from './core/interceptors/authentication/auth-interce
 import { globalErrorInterceptor } from './core/interceptors/error/global-error.interceptor';
 import { CustomTheme } from './theme/custom-theme';
 import { ConfirmationService, MessageService } from 'primeng/api';
+import { DeduplicatingMessageService } from './core/services/toast.service';
 
 function initializeApp(authService: AuthService) {
   return () => {
@@ -33,7 +34,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideZonelessChangeDetection(),
     provideRouter(routes, withComponentInputBinding()),
-    MessageService,
+    { provide: MessageService, useClass: DeduplicatingMessageService },
     ConfirmationService,
     providePrimeNG({
       theme: {

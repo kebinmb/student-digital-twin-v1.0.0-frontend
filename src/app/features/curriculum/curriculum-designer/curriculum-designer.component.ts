@@ -17,7 +17,6 @@ import { Button, ButtonModule } from 'primeng/button';
 import { Tag, TagModule } from 'primeng/tag';
 import { Dialog, DialogModule } from 'primeng/dialog';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { Toast, ToastModule } from 'primeng/toast';
 import { InputText, InputTextModule } from 'primeng/inputtext';
 import { Tooltip, TooltipModule } from 'primeng/tooltip';
 import { SelectButton } from 'primeng/selectbutton';
@@ -53,8 +52,6 @@ import { CourseItemDto, TermStats } from '../../../core/models/curriculum-design
     Dialog,
     DialogModule,
     ConfirmDialogModule,
-    Toast,
-    ToastModule,
     InputText,
     InputTextModule,
     Tooltip,

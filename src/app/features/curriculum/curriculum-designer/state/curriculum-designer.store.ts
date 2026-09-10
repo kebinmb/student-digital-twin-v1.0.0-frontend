@@ -45,7 +45,7 @@ export class CurriculumDesignerStore {
   });
 
   readonly hasEditRole = computed(() => {
-    return this.authService.hasAnyRole(['ADMIN', 'DEAN', 'CHAIRPERSON']);
+    return this.authService.hasAnyRole(['ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR']);
   });
 
   readonly canEdit = computed(() => {

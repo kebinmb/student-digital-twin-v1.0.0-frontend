@@ -21,6 +21,8 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { ProgramService } from '../../../../core/services/institution.service';
 import { CurriculumApiService } from '../../../../core/service/curriculum/curriculum-api.service';
 
+import { AuthService } from '../../../../core/service/authentication/auth-service';
+
 @Component({
   selector: 'app-student-advising',
   standalone: true,
@@ -42,16 +44,19 @@ import { CurriculumApiService } from '../../../../core/service/curriculum/curric
     IconField,
     InputIcon
   ],
-  providers: [MessageService],
   templateUrl: './student-advising.component.html',
   styleUrls: ['./student-advising.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class StudentAdvisingComponent implements OnInit {
   readonly store = inject(EnrollmentStore);
+  readonly authService = inject(AuthService);
   private readonly messageService = inject(MessageService);
   private readonly programService = inject(ProgramService);
   private readonly curriculumApi = inject(CurriculumApiService);
+
+  readonly canAdmitStudent = computed(() => this.authService.hasAnyRole(['ADMIN', 'REGISTRAR']));
+  readonly canCreditTransferee = computed(() => this.authService.hasAnyRole(['ADMIN', 'DEAN', 'REGISTRAR']));
 
   readonly isSectionModalVisible = signal<boolean>(false);
   readonly selectedCourse = signal<CourseEligibilityItemDto | null>(null);

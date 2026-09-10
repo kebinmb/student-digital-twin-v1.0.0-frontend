@@ -1,5 +1,4 @@
 <main class="advising-container" aria-label="Academic Advising Module">
-  <p-toast></p-toast>
 
   <!-- Advising Banner & Student Profile Header -->
   <header class="header-card">
@@ -24,21 +23,25 @@
           [loading]="store.isLoading()"
           (onClick)="store.refreshAdvising()">
         </p-button>
-        <p-button 
-          label="Admit Student" 
-          icon="pi pi-user-plus" 
-          severity="success" 
-          size="small"
-          (onClick)="openAdmissionsDialog()">
-        </p-button>
-        <p-button 
-          label="Credit Transferee" 
-          icon="pi pi-file-edit" 
-          severity="warn" 
-          size="small"
-          [disabled]="!store.studentId()"
-          (onClick)="openCreditingDialog()">
-        </p-button>
+        @if (canAdmitStudent()) {
+          <p-button 
+            label="Admit Student" 
+            icon="pi pi-user-plus" 
+            severity="success" 
+            size="small"
+            (onClick)="openAdmissionsDialog()">
+          </p-button>
+        }
+        @if (canCreditTransferee()) {
+          <p-button 
+            label="Credit Transferee" 
+            icon="pi pi-file-edit" 
+            severity="warn" 
+            size="small"
+            [disabled]="!store.studentId()"
+            (onClick)="openCreditingDialog()">
+          </p-button>
+        }
       </div>
     </div>
 
@@ -73,7 +76,37 @@
           <span class="meta-label">Cumulative GPA</span>
           <span class="meta-val font-mono font-bold-navy">{{ adv.cumulativeGpa ? (adv.cumulativeGpa | number:'1.2-2') : 'N/A' }}</span>
         </div>
+        <div class="meta-item">
+          <span class="meta-label">Financial Clearance</span>
+          <div class="mt-1">
+            <p-tag
+              [value]="adv.financialClearance || 'CLEARED'"
+              [severity]="(adv.financialClearance || 'CLEARED') === 'CLEARED' ? 'success' : ((adv.financialClearance) === 'PENDING' ? 'warn' : 'danger')"
+            />
+          </div>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Dept. Clearance</span>
+          <div class="mt-1">
+            <p-tag
+              [value]="adv.departmentalClearance || 'CLEARED'"
+              [severity]="(adv.departmentalClearance || 'CLEARED') === 'CLEARED' ? 'success' : ((adv.departmentalClearance) === 'PENDING' ? 'warn' : 'danger')"
+            />
+          </div>
+        </div>
       </div>
+
+      @if (adv.isClearedForEnrollment === false || (adv.financialClearance && adv.financialClearance !== 'CLEARED') || (adv.departmentalClearance && adv.departmentalClearance !== 'CLEARED')) {
+        <div class="clearance-lock-alert p-3 mt-3 border rounded-lg bg-amber-50 border-amber-300 text-amber-900 flex items-center gap-3">
+          <i class="pi pi-lock text-amber-700 text-xl"></i>
+          <div>
+            <strong class="font-bold">Self-Enrollment Gate Locked:</strong>
+            <span class="text-sm ml-1">
+              Student account has active administrative holds (Financial: {{ adv.financialClearance || 'CLEARED' }}, Departmental: {{ adv.departmentalClearance || 'CLEARED' }}). Course enlistment and confirmation are restricted until all clearances are verified as CLEARED.
+            </span>
+          </div>
+        </div>
+      }
 
       <!-- Unit Cap Progress Bar -->
       <div class="unit-cap-container mt-4">

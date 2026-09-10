@@ -3,7 +3,8 @@ import { computed, inject, Injectable, Service, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { environment } from '../../../../environments/environment';
 import { Observable, tap, catchError, throwError } from 'rxjs';
-import { RegisterRequest, LoginRequest, AuthResponse } from '../../models/auth.model';
+import { RegisterRequest, LoginRequest, AuthResponse, UserContext } from '../../models/auth.model';
+import { resetInterceptorState } from '../../interceptors/authentication/auth-interceptor';
 
 @Injectable({
   providedIn: 'root'
@@ -18,16 +19,16 @@ export class AuthService {
     readonly accessToken = computed(() => this.accessTokenSignal());
     readonly isAuthenticated = computed(() => !!this.accessTokenSignal());
 
-    readonly currentUser = computed(() => {
+    readonly currentUser = computed<UserContext>(() => {
       const token = this.accessTokenSignal();
       if (!token) {
         try {
           const saved = localStorage.getItem('chmsu_remembered_user');
-          if (saved) return { username: saved, role: 'STUDENT', roles: ['STUDENT'] };
+          if (saved) return { id: null, username: saved, email: '', role: 'STUDENT', roles: ['STUDENT'] };
         } catch {
 
         }
-        return { username: 'Student User', role: 'STUDENT', roles: ['STUDENT'] };
+        return { id: null, username: '', email: '', role: 'GUEST', roles: [] };
       }
       try {
         const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
@@ -37,16 +38,35 @@ export class AuthService {
         const normalizedRoles = rawRoles.map((r: string) => r.replace(/^ROLE_/, '').toUpperCase());
         const primaryRole = normalizedRoles[0] || 'STUDENT';
 
+        const rawId = payload.sub ?? payload.id ?? payload.userId;
+        const parsedId = rawId !== undefined && rawId !== null ? Number(rawId) : null;
+        const userId = parsedId !== null && !isNaN(parsedId) ? parsedId : null;
+
+        const rawCollegeId = payload.college_id ?? payload.collegeId;
+        const parsedCollegeId = rawCollegeId !== undefined && rawCollegeId !== null ? Number(rawCollegeId) : null;
+        const collegeId = parsedCollegeId !== null && !isNaN(parsedCollegeId) ? parsedCollegeId : null;
+
+        const rawProgramId = payload.program_id ?? payload.programId;
+        const parsedProgramId = rawProgramId !== undefined && rawProgramId !== null ? Number(rawProgramId) : null;
+        const programId = parsedProgramId !== null && !isNaN(parsedProgramId) ? parsedProgramId : null;
+
         return {
+          id: userId,
           username: payload.preferred_username || payload.username || 'Student User',
           email: payload.email || '',
           role: primaryRole,
-          roles: normalizedRoles
+          roles: normalizedRoles,
+          collegeId,
+          programId
         };
       } catch {
-        return { username: 'Student User', role: 'STUDENT', roles: ['STUDENT'] };
+        return { id: null, username: '', email: '', role: 'GUEST', roles: [] };
       }
     });
+
+    getUserId(): number | null {
+      return this.currentUser().id;
+    }
 
     hasAnyRole(requiredRoles: string[]): boolean {
       const userRoles = this.currentUser().roles || [this.currentUser().role.toUpperCase()];
@@ -100,5 +120,6 @@ export class AuthService {
 
   clearAuth(): void {
     this.accessTokenSignal.set(null);
+    resetInterceptorState();
   }
 }

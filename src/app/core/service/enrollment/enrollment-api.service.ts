@@ -74,6 +74,10 @@ export class EnrollmentApiService {
     return this.http.get<import('../../models/enrollment.model').StudentProfileResponse>(`${environment.apiUrl}/v1/students/${id}`);
   }
 
+  getCurrentStudentProfile(): Observable<import('../../models/enrollment.model').StudentProfileResponse> {
+    return this.http.get<import('../../models/enrollment.model').StudentProfileResponse>(`${environment.apiUrl}/v1/students/me`);
+  }
+
   creditTransfereeCourses(
     studentId: number,
     request: import('../../models/enrollment.model').CreditTransfereeCoursesRequest

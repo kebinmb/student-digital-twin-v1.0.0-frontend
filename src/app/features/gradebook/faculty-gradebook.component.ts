@@ -62,7 +62,6 @@ export interface EditableRosterRow extends RosterStudentDto {
     DialogModule,
     InputTextModule
   ],
-  providers: [ConfirmationService, MessageService],
   templateUrl: './faculty-gradebook.component.html',
   styleUrls: ['./faculty-gradebook.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -87,7 +86,7 @@ export class FacultyGradebookComponent implements OnInit {
   readonly userRole = computed(() => (this.currentUser().role || '').toUpperCase());
   readonly isAdmin = computed(() => this.userRole().includes('ADMIN'));
   readonly isFaculty = computed(() => this.userRole().includes('FACULTY'));
-  readonly isDean = computed(() => this.isAdmin() || this.userRole().includes('DEAN'));
+  readonly isDean = computed(() => this.isAdmin() || this.userRole().includes('DEAN') || this.userRole().includes('CHAIRPERSON'));
   readonly isRegistrar = computed(() => this.isAdmin() || this.userRole().includes('REGISTRAR'));
 
   // Term & Section State
@@ -235,12 +234,35 @@ export class FacultyGradebookComponent implements OnInit {
     return '';
   });
 
+  readonly showActiveTermOnly = signal<boolean>(true);
+
+  readonly displayedTerms = computed(() => {
+    const all = this.terms();
+    if (this.showActiveTermOnly()) {
+      const active = all.filter(t => t.isActive);
+      return active.length > 0 ? active : all;
+    }
+    return all;
+  });
+
   readonly termOptions = computed(() => {
-    return this.terms().map(t => ({
-      label: t.academicYearCode ? `${t.academicYearCode} - ${this.formatTermType(t.termType)}` : `Term ${t.id}`,
+    return this.displayedTerms().map(t => ({
+      label: t.academicYearCode ? `${t.academicYearCode} - ${this.formatTermType(t.termType)}${t.isActive ? ' (Active)' : ''}` : `Term ${t.id}`,
       value: t.id
     }));
   });
+
+  toggleTermFilter(): void {
+    this.showActiveTermOnly.update(v => !v);
+    const available = this.displayedTerms();
+    if (available.length > 0) {
+      const currentSelected = this.selectedTermId();
+      const stillPresent = available.some(t => t.id === currentSelected);
+      if (!stillPresent) {
+        this.onTermSelect(available[0].id);
+      }
+    }
+  }
 
   readonly sectionOptions = computed(() => {
     return this.sections().map(s => ({

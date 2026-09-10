@@ -14,6 +14,7 @@ import { CurriculumDesignerStore } from '../../state/curriculum-designer.store';
 import { CreateCurriculumRequest } from '../../../../../core/models/curriculum-designer.model';
 import { AcademicYearService, ProgramService } from '../../../../../core/services/institution.service';
 import { AcademicYear, Program } from '../../../../../core/models/institution.model';
+import { AuthService } from '../../../../../core/service/authentication/auth-service';
 
 interface CreateCurriculumForm {
   programId: FormControl<number | null>;
@@ -40,6 +41,7 @@ interface CreateCurriculumForm {
 })
 export class CreateCurriculumDialogComponent implements OnInit, OnChanges {
   readonly store = inject(CurriculumDesignerStore);
+  readonly authService = inject(AuthService);
   private readonly programService = inject(ProgramService);
   private readonly ayService = inject(AcademicYearService);
   private readonly router = inject(Router);
@@ -83,7 +85,11 @@ export class CreateCurriculumDialogComponent implements OnInit, OnChanges {
     this.programService.getAll().subscribe({
       next: (list) => {
         this.programs.set(list);
-        if (list.length > 0 && !this.form.controls.programId.value) {
+        const user = this.authService.currentUser();
+        if (this.authService.hasRole('CHAIRPERSON') && user.programId) {
+          this.form.controls.programId.setValue(user.programId);
+          this.form.controls.programId.disable();
+        } else if (list.length > 0 && !this.form.controls.programId.value) {
           this.form.controls.programId.setValue(list[0].id);
         }
         this.isLoadingPrereqs.set(false);

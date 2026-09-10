@@ -76,7 +76,6 @@ function nonWhitespaceValidator(): ValidatorFn {
     Drawer,
     Skeleton
   ],
-  providers: [ConfirmationService, MessageService],
   templateUrl: './section-builder.component.html',
   styleUrls: ['./section-builder.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -92,7 +91,9 @@ export class SectionBuilderComponent implements OnInit {
 
   // RBAC permissions
   readonly isAdmin = computed(() => this.auth.hasRole('ADMIN'));
+  readonly isChairperson = computed(() => this.auth.hasRole('CHAIRPERSON'));
   readonly canOverrideWorkload = computed(() => this.auth.hasAnyRole(['ADMIN', 'DEAN']));
+  readonly canAddSchedule = computed(() => this.auth.hasAnyRole(['ADMIN', 'DEAN', 'CHAIRPERSON']));
 
   // Modals visibility
   readonly isCreateModalVisible = signal<boolean>(false);
@@ -150,6 +151,15 @@ export class SectionBuilderComponent implements OnInit {
     { label: 'Laboratory', value: 'LABORATORY' }
   ];
 
+  readonly programOptions = computed(() => {
+    const user = this.auth.currentUser();
+    const progs = this.store.programs();
+    if (this.isChairperson() && user?.programId) {
+      return progs.filter(p => p.id === user.programId);
+    }
+    return progs;
+  });
+
   constructor() {
     effect(() => {
       if (this.store.openModalRequest()) {
@@ -160,6 +170,11 @@ export class SectionBuilderComponent implements OnInit {
   }
 
   getDefaultProgramCode(): string {
+    const user = this.auth.currentUser();
+    if (this.isChairperson() && user?.programId) {
+      const match = this.store.programs().find(p => p.id === user.programId);
+      if (match) return match.code;
+    }
     const selectedCurr = this.store.selectedCurriculum();
     if (selectedCurr && selectedCurr.code) {
       const parts = selectedCurr.code.split('-');
@@ -168,7 +183,7 @@ export class SectionBuilderComponent implements OnInit {
         if (match) return match.code;
       }
     }
-    const programs = this.store.programs();
+    const programs = this.programOptions();
     if (programs.length > 0) {
       return programs[0].code;
     }
@@ -269,6 +284,10 @@ export class SectionBuilderComponent implements OnInit {
 
     this.selectedCourseId.set(null);
     this.addSlot(['MONDAY', 'WEDNESDAY']);
+
+    if (this.isChairperson()) {
+      this.sectionForm.get('programCode')?.disable();
+    }
 
     const updateSectionCode = () => {
       const pCode = this.sectionForm.get('programCode')?.value || '';
@@ -653,7 +672,7 @@ export class SectionBuilderComponent implements OnInit {
       return;
     }
 
-    const formValue = this.sectionForm.value;
+    const formValue = this.sectionForm.getRawValue();
     const request: CreateSectionRequest = {
       termId: Number(formValue.termId || this.store.selectedTermId()),
       curriculumId: Number(formValue.curriculumId || this.store.selectedCurriculumId()),

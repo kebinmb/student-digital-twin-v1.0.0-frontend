@@ -1,7 +1,9 @@
-import { HttpErrorResponse, HttpHandlerFn, HttpInterceptorFn, HttpRequest } from '@angular/common/http';
+import { HttpContextToken, HttpErrorResponse, HttpHandlerFn, HttpInterceptorFn, HttpRequest } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
 import { MessageService } from 'primeng/api';
+
+export const SKIP_GLOBAL_ERROR_TOAST = new HttpContextToken<boolean>(() => false);
 
 export const globalErrorInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, next: HttpHandlerFn) => {
   let messageService: MessageService | null = null;
@@ -45,13 +47,15 @@ export const globalErrorInterceptor: HttpInterceptorFn = (req: HttpRequest<unkno
         detail = 'An unexpected server error occurred. Please try again later.';
       }
 
-      if (messageService) {
+      const skipGlobalToast = req.context.get(SKIP_GLOBAL_ERROR_TOAST);
+      if (!skipGlobalToast && messageService) {
         messageService.add({
           severity: error.status >= 500 ? 'error' : 'warn',
           summary,
           detail,
           life: 5000
         });
+        (error as any).__globalToastShown = true;
       }
 
       return throwError(() => error);

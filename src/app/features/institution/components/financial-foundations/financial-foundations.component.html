@@ -87,7 +87,7 @@
                 size="small"
                 [text]="true"
                 severity="danger"
-                [disabled]="!canManage()"
+                [disabled]="!canDelete()"
                 title="Delete Fee Item"
                 (onClick)="confirmDeleteFee(f)">
               </p-button>
@@ -149,7 +149,7 @@
                 size="small"
                 [text]="true"
                 severity="danger"
-                [disabled]="!canManage()"
+                [disabled]="!canDelete()"
                 title="Delete Template"
                 (onClick)="confirmDeleteTemplate(t)">
               </p-button>
@@ -227,7 +227,7 @@
                 size="small"
                 [text]="true"
                 severity="danger"
-                [disabled]="!canManage()"
+                [disabled]="!canDelete()"
                 title="Delete Scholarship"
                 (onClick)="confirmDeleteScholarship(s)">
               </p-button>

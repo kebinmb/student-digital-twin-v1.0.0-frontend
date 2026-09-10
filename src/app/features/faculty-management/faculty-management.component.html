@@ -1,0 +1,248 @@
+<div class="faculty-mgmt-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <div class="header-content">
+      <div class="badge-row">
+        <span class="module-badge">INSTITUTIONAL ROSTER</span>
+        <span class="role-badge">REGISTRAR & ADMIN</span>
+      </div>
+      <h1 class="page-title">Faculty Roster & Workload Registry</h1>
+      <p class="page-subtitle">
+        Provision institutional faculty appointments, academic credentials, and teaching profiles.
+      </p>
+    </div>
+    <div class="header-actions">
+      @if (authService.hasAnyRole(['ADMIN', 'REGISTRAR'])) {
+        <p-button
+          label="Provision Faculty Member"
+          icon="pi pi-user-plus"
+          styleClass="p-button-primary provision-btn"
+          (onClick)="openCreateDialog()"
+        />
+      }
+    </div>
+  </div>
+
+  <!-- Content Table Card -->
+  <div class="card-table-wrapper">
+    <p-table
+      [value]="facultyList()"
+      [loading]="isLoading()"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      styleClass="p-datatable-striped faculty-table"
+      responsiveLayout="scroll"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 18%;">Faculty ID</th>
+          <th style="width: 22%;">Faculty Name</th>
+          <th style="width: 25%;">Institutional Email</th>
+          <th style="width: 15%;">Highest Degree</th>
+          <th style="width: 20%;">Rank & Tenure</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-f>
+        <tr>
+          <td>
+            <span class="font-mono font-bold text-slate-800 text-sm">{{ f.facultyIdNumber }}</span>
+          </td>
+          <td>
+            <div class="faculty-identity">
+              <div class="faculty-avatar">
+                <i class="pi pi-briefcase text-slate-500"></i>
+              </div>
+              <div class="faculty-meta">
+                <span class="font-semibold text-slate-900">{{ f.username }}</span>
+                @if (f.prcLicenseNo) {
+                  <span class="text-xs text-slate-400">PRC: {{ f.prcLicenseNo }}</span>
+                }
+              </div>
+            </div>
+          </td>
+          <td>
+            <span class="text-slate-700 text-sm font-mono">{{ f.email }}</span>
+          </td>
+          <td>
+            <p-tag
+              [value]="f.highestDegree"
+              severity="info"
+              styleClass="text-xs font-semibold"
+            />
+          </td>
+          <td>
+            <div class="rank-tenure-cell">
+              <span class="text-sm font-medium text-slate-800">{{ f.academicRank }}</span>
+              <div class="flex gap-1 mt-1">
+                <p-tag
+                  [value]="f.employmentStatus"
+                  severity="secondary"
+                  styleClass="text-xs"
+                />
+                @if (f.isTenured) {
+                  <p-tag
+                    value="TENURED"
+                    severity="success"
+                    styleClass="text-xs font-bold"
+                  />
+                }
+              </div>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="5" class="empty-state">
+            <i class="pi pi-briefcase text-4xl text-slate-300 mb-2"></i>
+            <p class="text-slate-500 font-medium">No faculty members found in the institutional roster.</p>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- Provision Faculty Dialog -->
+  <p-dialog
+    header="Provision Faculty Appointment"
+    [(visible)]="isDialogVisible"
+    [modal]="true"
+    [style]="{ width: '540px', maxWidth: '95vw' }"
+    [draggable]="false"
+    [resizable]="false"
+    styleClass="faculty-dialog"
+  >
+    <form [formGroup]="facultyForm" (ngSubmit)="saveFaculty()" class="dialog-form">
+      <div class="form-row-2">
+        <div class="form-field">
+          <label for="facUsername" class="field-label">Username</label>
+          <input
+            id="facUsername"
+            type="text"
+            pInputText
+            formControlName="username"
+            placeholder="e.g. prof_delacruz"
+            class="w-full"
+          />
+          @if (facultyForm.controls.username.invalid && facultyForm.controls.username.touched) {
+            <small class="p-error">Username is required (min 3 chars).</small>
+          }
+        </div>
+
+        <div class="form-field">
+          <label for="facEmail" class="field-label">Institutional Email</label>
+          <input
+            id="facEmail"
+            type="email"
+            pInputText
+            formControlName="email"
+            placeholder="e.g. faculty@chmsu.edu.ph"
+            class="w-full"
+          />
+          @if (facultyForm.controls.email.invalid && facultyForm.controls.email.touched) {
+            <small class="p-error">Valid email is required.</small>
+          }
+        </div>
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-field">
+          <label for="facIdNum" class="field-label">Faculty ID Number</label>
+          <input
+            id="facIdNum"
+            type="text"
+            pInputText
+            formControlName="facultyIdNumber"
+            placeholder="e.g. FAC-2026-010"
+            class="w-full"
+          />
+          @if (facultyForm.controls.facultyIdNumber.invalid && facultyForm.controls.facultyIdNumber.touched) {
+            <small class="p-error">Faculty ID is required.</small>
+          }
+        </div>
+
+        <div class="form-field">
+          <label for="facPassword" class="field-label">Initial Password</label>
+          <input
+            id="facPassword"
+            type="password"
+            pInputText
+            formControlName="password"
+            placeholder="Default: Faculty123!"
+            class="w-full"
+          />
+        </div>
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-field">
+          <label for="facDegree" class="field-label">Highest Degree</label>
+          <select id="facDegree" formControlName="highestDegree" class="custom-select">
+            @for (deg of availableDegrees; track deg) {
+              <option [value]="deg">{{ deg }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label for="facStatus" class="field-label">Employment Status</label>
+          <select id="facStatus" formControlName="employmentStatus" class="custom-select">
+            @for (st of availableStatuses; track st) {
+              <option [value]="st">{{ st }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-field">
+          <label for="facRank" class="field-label">Academic Rank</label>
+          <select id="facRank" formControlName="academicRank" class="custom-select">
+            @for (rnk of availableRanks; track rnk) {
+              <option [value]="rnk">{{ rnk }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label for="facPrc" class="field-label">PRC License No. (Optional)</label>
+          <input
+            id="facPrc"
+            type="text"
+            pInputText
+            formControlName="prcLicenseNo"
+            placeholder="e.g. 0123456"
+            class="w-full"
+          />
+        </div>
+      </div>
+
+      <div class="form-field-switch">
+        <div>
+          <span class="switch-title">Tenured Appointment</span>
+          <p class="field-hint">Check if the faculty member holds permanent institutional tenure.</p>
+        </div>
+        <p-toggleSwitch formControlName="isTenured" />
+      </div>
+
+      <div class="dialog-footer">
+        <p-button
+          label="Cancel"
+          icon="pi pi-times"
+          styleClass="p-button-text p-button-secondary"
+          (onClick)="isDialogVisible.set(false)"
+        />
+        <p-button
+          [label]="isSaving() ? 'Provisioning...' : 'Complete Provisioning'"
+          icon="pi pi-check"
+          type="submit"
+          [loading]="isSaving()"
+          styleClass="p-button-primary"
+        />
+      </div>
+    </form>
+  </p-dialog>
+</div>

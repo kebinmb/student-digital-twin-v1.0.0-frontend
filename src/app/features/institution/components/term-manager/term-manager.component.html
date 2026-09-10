@@ -70,11 +70,11 @@
               class="window-chip cursor-pointer transition-all border-0 rounded px-2.5 py-1 text-xs font-semibold shadow-xs flex items-center"
               [class.bg-emerald-100]="t.enrollmentOpen"
               [class.text-emerald-800]="t.enrollmentOpen"
-              [class.hover:bg-emerald-200]="t.enrollmentOpen && canManage() && t.isActive"
+              [class.hover:bg-emerald-200]="t.enrollmentOpen && canManageWindows() && t.isActive"
               [class.bg-slate-100]="!t.enrollmentOpen"
               [class.text-slate-600]="!t.enrollmentOpen"
-              [class.hover:bg-slate-200]="!t.enrollmentOpen && canManage() && t.isActive"
-              [disabled]="!canManage() || !t.isActive"
+              [class.hover:bg-slate-200]="!t.enrollmentOpen && canManageWindows() && t.isActive"
+              [disabled]="!canManageWindows() || !t.isActive"
               [title]="t.isActive ? (t.enrollmentOpen ? 'Click to Close Enrollment' : 'Click to Open Enrollment') : 'Windows can only be toggled on active terms'"
               (click)="toggleEnrollmentWindow(t)">
               <i [class]="t.enrollmentOpen ? 'pi pi-lock-open mr-1 text-[10px]' : 'pi pi-lock mr-1 text-[10px]'"></i>
@@ -85,11 +85,11 @@
               class="window-chip cursor-pointer transition-all border-0 rounded px-2.5 py-1 text-xs font-semibold shadow-xs flex items-center"
               [class.bg-emerald-100]="t.gradingOpen"
               [class.text-emerald-800]="t.gradingOpen"
-              [class.hover:bg-emerald-200]="t.gradingOpen && canManage() && t.isActive"
+              [class.hover:bg-emerald-200]="t.gradingOpen && canManageWindows() && t.isActive"
               [class.bg-slate-100]="!t.gradingOpen"
               [class.text-slate-600]="!t.gradingOpen"
-              [class.hover:bg-slate-200]="!t.gradingOpen && canManage() && t.isActive"
-              [disabled]="!canManage() || !t.isActive"
+              [class.hover:bg-slate-200]="!t.gradingOpen && canManageWindows() && t.isActive"
+              [disabled]="!canManageWindows() || !t.isActive"
               [title]="t.isActive ? (t.gradingOpen ? 'Click to Close Grading' : 'Click to Open Grading') : 'Windows can only be toggled on active terms'"
               (click)="toggleGradingWindow(t)">
               <i [class]="t.gradingOpen ? 'pi pi-lock-open mr-1 text-[10px]' : 'pi pi-lock mr-1 text-[10px]'"></i>
@@ -106,7 +106,7 @@
                 [text]="true"
                 severity="success"
                 title="Activate Term"
-                [disabled]="!canManage()"
+                [disabled]="!canManageWindows()"
                 (onClick)="confirmActivate(t)">
               </p-button>
             }
@@ -125,7 +125,7 @@
               [text]="true"
               severity="danger"
               title="Delete Term"
-              [disabled]="!canManage() || t.isActive"
+              [disabled]="!canDelete() || t.isActive"
               (onClick)="confirmDelete(t)">
             </p-button>
           </div>
@@ -183,7 +183,7 @@
               <span class="drawer-stat-val text-xs font-bold" [class.text-emerald-700]="selectedTermForDetail()!.enrollmentOpen" [class.text-slate-600]="!selectedTermForDetail()!.enrollmentOpen">
                 {{ selectedTermForDetail()!.enrollmentOpen ? 'OPEN' : 'CLOSED' }}
               </span>
-              @if (canManage() && selectedTermForDetail()!.isActive) {
+              @if (canManageWindows() && selectedTermForDetail()!.isActive) {
                 <p-button
                   [label]="selectedTermForDetail()!.enrollmentOpen ? 'Close' : 'Open'"
                   size="small"
@@ -200,7 +200,7 @@
               <span class="drawer-stat-val text-xs font-bold" [class.text-emerald-700]="selectedTermForDetail()!.gradingOpen" [class.text-slate-600]="!selectedTermForDetail()!.gradingOpen">
                 {{ selectedTermForDetail()!.gradingOpen ? 'OPEN' : 'CLOSED' }}
               </span>
-              @if (canManage() && selectedTermForDetail()!.isActive) {
+              @if (canManageWindows() && selectedTermForDetail()!.isActive) {
                 <p-button
                   [label]="selectedTermForDetail()!.gradingOpen ? 'Close' : 'Open'"
                   size="small"
@@ -214,7 +214,7 @@
         </div>
 
         <div class="mt-6 flex flex-col gap-2">
-          @if (canManage() && !selectedTermForDetail()!.isActive) {
+          @if (canManageWindows() && !selectedTermForDetail()!.isActive) {
             <p-button label="Activate Term" icon="pi pi-play" severity="success" styleClass="w-full" (onClick)="confirmActivate(selectedTermForDetail()!); isDetailDrawerOpen.set(false)"></p-button>
           }
           @if (canManage()) {

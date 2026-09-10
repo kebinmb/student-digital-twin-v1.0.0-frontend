@@ -6,16 +6,18 @@
         Manage institutional degree programs and their Program Educational Outcomes (PILOs) under academic departments.
       </p>
     </div>
-    <div class="header-actions">
-      <p-button
-        label="Register Program"
-        icon="pi pi-plus"
-        size="small"
-        severity="primary"
-        [disabled]="!canManage() || departments().length === 0"
-        (onClick)="openCreateDialog()">
-      </p-button>
-    </div>
+    @if (canCreate()) {
+      <div class="header-actions">
+        <p-button
+          label="Register Program"
+          icon="pi pi-plus"
+          size="small"
+          severity="primary"
+          [disabled]="departmentOptions().length === 0"
+          (onClick)="openCreateDialog()">
+        </p-button>
+      </div>
+    }
   </div>
 
   <!-- Prerequisite Warning: If no departments exist -->
@@ -92,7 +94,7 @@
               size="small"
               [text]="true"
               severity="secondary"
-              [disabled]="!canManage()"
+              [disabled]="!canCreate()"
               title="Edit Program"
               (onClick)="openEditDialog(p)">
             </p-button>
@@ -101,7 +103,7 @@
               size="small"
               [text]="true"
               severity="danger"
-              [disabled]="!canManage()"
+              [disabled]="!canCreate()"
               title="Delete Program"
               (onClick)="confirmDelete(p)">
             </p-button>

@@ -17,6 +17,7 @@ import {
 } from '../../../core/models/enrollment.model';
 import { TermResponse } from '../../../core/models/institution.model';
 import { catchError, finalize, forkJoin, of, tap } from 'rxjs';
+import { AuthService } from '../../../core/service/authentication/auth-service';
 
 @Injectable({
   providedIn: 'root'
@@ -24,6 +25,7 @@ import { catchError, finalize, forkJoin, of, tap } from 'rxjs';
 export class EnrollmentStore {
   private readonly enrollmentApi = inject(EnrollmentApiService);
   private readonly termService = inject(TermService);
+  private readonly authService = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
 
   // State Signals
@@ -55,6 +57,7 @@ export class EnrollmentStore {
   });
 
   readonly isUnitCapReached = computed(() => this.totalUnits() >= this.maxUnits());
+  readonly canUpdateStatus = computed(() => this.authService.hasAnyRole(['ADMIN', 'DEAN', 'REGISTRAR']));
 
   readonly eligibleCourses = computed(() => {
     return this.advising()?.courses.filter(c => c.eligibilityStatus === 'ELIGIBLE') || [];
@@ -166,7 +169,37 @@ export class EnrollmentStore {
   }
 
   loadInitialData(): void {
-    this.searchStudents('');
+    const isStudent = this.authService.hasRole('STUDENT');
+    if (isStudent) {
+      this.isLoading.set(true);
+      this.enrollmentApi.getCurrentStudentProfile().pipe(
+        takeUntilDestroyed(this.destroyRef),
+        tap(profile => {
+          this.studentId.set(profile.id);
+          this.searchedStudents.set([{
+            id: profile.id,
+            studentIdNumber: profile.studentNumber,
+            fullName: profile.username || `Student ${profile.studentNumber}`,
+            programCode: profile.programCode,
+            yearLevel: profile.yearLevel,
+            academicStatus: profile.enrollmentStatus || 'REGULAR'
+          }]);
+          this.loadTerms();
+        }),
+        catchError(err => {
+          this.errorMessage.set(err.error?.detail || 'Failed to load student profile.');
+          this.loadTerms();
+          return of(null);
+        }),
+        finalize(() => this.isLoading.set(false))
+      ).subscribe();
+    } else {
+      this.searchStudents('');
+      this.loadTerms();
+    }
+  }
+
+  private loadTerms(): void {
     if (this.terms().length > 0) {
       this.refreshAdvising();
       return;
