@@ -1,134 +1,340 @@
-:host { display: block; }
-.course-summary-banner {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  margin-bottom: 1rem;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+/* course-detail-dialog.component.css */
+:host {
+  display: block;
 }
-.summary-left {
+
+/* ==========================================================================
+   DRAWER CONTAINER & LAYOUT ARCHITECTURE
+   ========================================================================== */
+
+:host ::ng-deep .course-matrix-drawer .p-drawer-header {
+  padding: 1rem 1.25rem;
+  background: var(--chmsu-white, #ffffff);
+  border-bottom: 1px solid var(--chmsu-slate-200, #e2e8f0);
+}
+
+:host ::ng-deep .course-matrix-drawer .p-drawer-content {
+  padding: 1.25rem;
+  background: var(--chmsu-slate-50, #f8fafc);
+}
+
+:host ::ng-deep .course-matrix-drawer .p-drawer-footer {
+  padding: 0.875rem 1.25rem;
+  background: var(--chmsu-white, #ffffff);
+  border-top: 1px solid var(--chmsu-slate-200, #e2e8f0);
+}
+
+/* Header Avatar & Title Layout */
+.drawer-header-content {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  width: 100%;
 }
-.course-code-pill {
-  font-family: monospace;
+
+.drawer-header-avatar {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  background: var(--chmsu-green-soft, #f0fdf4);
+  border: 1px solid var(--status-emerald-border, #a7f3d0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.drawer-header-avatar i {
+  font-size: 0.9375rem;
+  color: var(--chmsu-green-main, #116834);
+}
+
+.drawer-header-titles {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.drawer-pre-title {
+  font-size: 0.625rem;
   font-weight: 700;
-  background: #116834;
-  color: #ffffff;
-  padding: 0.25rem 0.6rem;
-  border-radius: 6px;
+  color: var(--chmsu-green-main, #116834);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+.drawer-main-title {
+  font-family: var(--font-family-heading);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+  margin: 0.2rem 0 0 0;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.drawer-scroll-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+}
+
+/* ==========================================================================
+   HERO SUMMARY PROFILE CARD
+   ========================================================================== */
+
+.course-hero-card {
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 1.125rem;
+  box-shadow: var(--chmsu-shadow-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.hero-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.code-badge-hero {
+  font-family: var(--font-family-mono);
+  font-weight: 700;
+  background: var(--chmsu-slate-100, #f1f5f9);
+  color: var(--chmsu-navy-900, #0f172a);
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--chmsu-border-radius-sm, 6px);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
   font-size: 0.8125rem;
 }
-.course-name {
-  font-weight: 600;
-  color: #0f172a;
-  font-size: 0.9375rem;
+
+.units-pill-hero {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--chmsu-green-main, #116834);
+  background: var(--chmsu-green-soft, #f0fdf4);
+  border: 1px solid var(--status-emerald-border, #a7f3d0);
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--chmsu-border-radius-sm, 6px);
 }
-.units-badge {
+
+.hero-course-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+  margin: 0;
+  line-height: 1.35;
+}
+
+.hero-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--chmsu-slate-200, #e2e8f0);
+}
+
+@media (max-width: 480px) {
+  .hero-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.hero-metric-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  background: var(--chmsu-slate-50, #f8fafc);
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--chmsu-border-radius-sm, 6px);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+}
+
+.metric-label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--chmsu-slate-500, #64748b);
+}
+
+.metric-val {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #475569;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
+  color: var(--chmsu-navy-900, #0f172a);
 }
-.dialog-tabs-header {
-  margin-bottom: 1rem;
+
+/* Segmented Tab Bar */
+.segment-tab-wrapper {
+  width: 100%;
 }
+
+:host ::ng-deep .selectbutton-chmsu .p-button {
+  font-size: 0.75rem;
+  padding: 0.45rem 0.75rem;
+}
+
+/* ==========================================================================
+   PANEL WORKSPACES & ACTION BARS
+   ========================================================================== */
+
+.tab-panel-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
 .panel-action-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.75rem;
-  gap: 1rem;
+  gap: 0.75rem;
   flex-wrap: wrap;
 }
-.section-instruction {
-  font-size: 0.75rem;
-  color: #64748b;
-}
-.inline-form-card {
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  box-shadow: 0 1px 3px 0 rgba(0,0,0,0.05);
-}
-.inline-form-header {
+
+.bar-intro {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.75rem;
+  flex-direction: column;
+  gap: 0.15rem;
 }
-.inline-title {
+
+.bar-title {
   font-size: 0.8125rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--chmsu-navy-900, #0f172a);
+  margin: 0;
 }
+
+.bar-subtitle {
+  font-size: 0.6875rem;
+  color: var(--chmsu-slate-500, #64748b);
+  margin: 0;
+}
+
+/* Inline Card Forms */
+.inline-definition-card {
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--status-emerald-border, #a7f3d0);
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  padding: 1rem;
+  box-shadow: 0 2px 6px -1px rgba(17, 104, 52, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.inline-form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--chmsu-slate-100, #f1f5f9);
+}
+
+.inline-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.25rem;
 }
+
 .form-row-2col {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.75rem;
 }
+
+@media (max-width: 480px) {
+  .form-row-2col {
+    grid-template-columns: 1fr;
+  }
+}
+
 .form-label {
   font-size: 0.75rem;
-  font-weight: 600;
-  color: #374151;
+  font-weight: 700;
+  color: var(--chmsu-navy-800, #1e293b);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
+
 .form-control-input {
   width: 100%;
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
+  padding: 0.45rem 0.65rem;
 }
-.error-hint {
-  font-size: 0.6875rem;
-  color: #dc2626;
-}
-.field-hint {
-  font-size: 0.6875rem;
-  color: #64748b;
-}
+
 .inline-form-actions {
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--chmsu-slate-100, #f1f5f9);
 }
-.code-badge {
-  font-family: monospace;
-  font-weight: 600;
-  background: #f1f5f9;
-  color: #0f172a;
-  padding: 0.2rem 0.45rem;
-  border-radius: 4px;
-  border: 1px solid #e2e8f0;
-  font-size: 0.8125rem;
+
+/* Badges & Tables */
+.cilo-badge {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--chmsu-green-main, #116834);
+  background: var(--chmsu-green-soft, #f0fdf4);
+  border: 1px solid var(--status-emerald-border, #a7f3d0);
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--chmsu-border-radius-sm, 6px);
+  display: inline-block;
 }
+
 .grade-pill {
-  font-family: monospace;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--status-emerald-text, #047857);
+  background: var(--status-emerald-bg, #ecfdf5);
+  border: 1px solid var(--status-emerald-border, #a7f3d0);
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--chmsu-border-radius-sm, 6px);
+  display: inline-block;
+}
+
+.action-buttons-cell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.25rem;
+}
+
+/* Footer Layout */
+.drawer-action-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.5rem;
+}
+
+.footer-meta-text {
+  font-size: 0.6875rem;
   font-weight: 600;
-  color: #047857;
-  background: #ecfdf5;
-  padding: 0.15rem 0.4rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
+  color: var(--chmsu-slate-500, #64748b);
+  display: flex;
+  align-items: center;
 }
-.empty-table-cell {
-  text-align: center;
-  padding: 1.5rem !important;
-  color: #94a3b8;
-  font-size: 0.8125rem;
-}
-.mt-2 { margin-top: 0.5rem; }
-.w-full { width: 100%; }
