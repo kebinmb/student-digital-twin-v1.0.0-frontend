@@ -1,4 +1,14 @@
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  model,
+  output,
+  signal
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -51,12 +61,11 @@ interface PrereqForm {
   styleUrl: './course-detail-dialog.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class CourseDetailDialogComponent implements OnChanges {
-  @Input() course: Course | null = null;
-  @Input() allCourses: Course[] = [];
-  @Input() visible: boolean = false;
-  @Output() visibleChange = new EventEmitter<boolean>();
-  @Output() courseUpdated = new EventEmitter<void>();
+export class CourseDetailDialogComponent {
+  readonly course = input<Course | null>(null);
+  readonly allCourses = input<Course[]>([]);
+  readonly visible = model<boolean>(false);
+  readonly courseUpdated = output<void>();
 
   private readonly outcomeService = inject(CourseOutcomeService);
   private readonly prereqService = inject(CoursePrerequisiteService);
@@ -101,7 +110,8 @@ export class CourseDetailDialogComponent implements OnChanges {
   readonly isSavingPrereq = signal<boolean>(false);
 
   get dialogTitle(): string {
-    return this.course ? `Curricular Configuration: ${this.course.code}` : 'Course Details';
+    const c = this.course();
+    return c ? `Curricular Configuration: ${c.code}` : 'Course Details';
   }
 
   readonly ciloForm = new FormGroup<CiloForm>({
@@ -117,21 +127,26 @@ export class CourseDetailDialogComponent implements OnChanges {
   });
 
   get filteredAvailableCourses() {
-    if (!this.course) return [];
-    return this.allCourses
-      .filter((c) => c.id !== this.course!.id)
-      .map((c) => ({ label: `${c.code} - ${c.title}`, value: c.id }));
+    const c = this.course();
+    if (!c) return [];
+    return this.allCourses()
+      .filter((item) => item.id !== c.id)
+      .map((item) => ({ label: `${item.code} - ${item.title}`, value: item.id }));
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['course'] && this.course) {
-      this.loadCourseData();
-    }
+  constructor() {
+    effect(() => {
+      const c = this.course();
+      if (c && this.visible()) {
+        this.loadCourseData();
+      }
+    });
   }
 
   loadCourseData(): void {
-    if (!this.course) return;
-    const cid = this.course.id;
+    const c = this.course();
+    if (!c) return;
+    const cid = c.id;
 
     this.isLoadingOutcomes.set(true);
     this.outcomeService.getByCourse(cid).subscribe({
@@ -153,8 +168,7 @@ export class CourseDetailDialogComponent implements OnChanges {
   }
 
   onVisibilityChange(val: boolean): void {
-    this.visible = val;
-    this.visibleChange.emit(val);
+    this.visible.set(val);
   }
 
   // --- CILO Actions ---
@@ -185,7 +199,8 @@ export class CourseDetailDialogComponent implements OnChanges {
   }
 
   submitCiloForm(): void {
-    if (this.ciloForm.invalid || !this.course) return;
+    const currentCourse = this.course();
+    if (this.ciloForm.invalid || !currentCourse) return;
     const val = this.ciloForm.getRawValue();
     this.isSavingCilo.set(true);
 
@@ -195,7 +210,7 @@ export class CourseDetailDialogComponent implements OnChanges {
         description: val.description.trim(),
         bloomsLevel: val.bloomsLevel
       };
-      this.outcomeService.update(this.course.id, editId, req).subscribe({
+      this.outcomeService.update(currentCourse.id, editId, req).subscribe({
         next: () => {
           this.isSavingCilo.set(false);
           this.cancelCiloForm();
@@ -213,7 +228,7 @@ export class CourseDetailDialogComponent implements OnChanges {
         description: val.description.trim(),
         bloomsLevel: val.bloomsLevel
       };
-      this.outcomeService.create(this.course.id, req).subscribe({
+      this.outcomeService.create(currentCourse.id, req).subscribe({
         next: () => {
           this.isSavingCilo.set(false);
           this.cancelCiloForm();
@@ -229,13 +244,15 @@ export class CourseDetailDialogComponent implements OnChanges {
   }
 
   confirmDeleteCilo(co: CourseOutcome): void {
+    const currentCourse = this.course();
+    if (!currentCourse) return;
     this.confirmationService.confirm({
       message: `Delete outcome "${co.code}"? Blocked if linked in the CILO-PILO curriculum alignment matrix.`,
       header: 'Delete Course Outcome',
       icon: 'pi pi-trash',
       acceptButtonStyleClass: 'p-button-danger',
       accept: () => {
-        this.outcomeService.delete(this.course!.id, co.id).subscribe({
+        this.outcomeService.delete(currentCourse.id, co.id).subscribe({
           next: () => {
             this.messageService.add({ severity: 'success', summary: 'Deleted', detail: `${co.code} removed.` });
             this.loadCourseData();
@@ -273,18 +290,19 @@ export class CourseDetailDialogComponent implements OnChanges {
   }
 
   submitPrereqForm(): void {
-    if (this.prereqForm.invalid || !this.course) return;
+    const currentCourse = this.course();
+    if (this.prereqForm.invalid || !currentCourse) return;
     const val = this.prereqForm.getRawValue();
     this.isSavingPrereq.set(true);
 
     const req: CreateCoursePrerequisiteRequest = {
-      courseId: this.course.id,
+      courseId: currentCourse.id,
       prerequisiteCourseId: val.prerequisiteCourseId!,
       ruleType: val.ruleType,
       minGradeRequired: val.minGradeRequired.trim()
     };
 
-    this.prereqService.create(this.course.id, req).subscribe({
+    this.prereqService.create(currentCourse.id, req).subscribe({
       next: () => {
         this.isSavingPrereq.set(false);
         this.cancelPrereqForm();
@@ -299,13 +317,15 @@ export class CourseDetailDialogComponent implements OnChanges {
   }
 
   confirmDeletePrereq(prereq: CoursePrerequisite): void {
+    const currentCourse = this.course();
+    if (!currentCourse) return;
     this.confirmationService.confirm({
       message: `Remove prerequisite requirement "${prereq.prerequisiteCourseCode}"?`,
       header: 'Remove Prerequisite Rule',
       icon: 'pi pi-trash',
       acceptButtonStyleClass: 'p-button-danger',
       accept: () => {
-        this.prereqService.delete(this.course!.id, prereq.id).subscribe({
+        this.prereqService.delete(currentCourse.id, prereq.id).subscribe({
           next: () => {
             this.messageService.add({ severity: 'success', summary: 'Removed', detail: 'Prerequisite rule detached.' });
             this.loadCourseData();

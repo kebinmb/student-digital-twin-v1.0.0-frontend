@@ -1,20 +1,26 @@
-import { Component, EventEmitter, inject, Input, OnChanges, OnInit, Output, SimpleChanges, computed, signal, ChangeDetectionStrategy } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  computed,
+  inject,
+  model,
+  effect,
+  signal
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-
-// PrimeNG UI Components
-import { Dialog } from 'primeng/dialog';
 import { Button } from 'primeng/button';
+import { Dialog } from 'primeng/dialog';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { Message } from 'primeng/message';
-
-import { CurriculumDesignerStore } from '../../state/curriculum-designer.store';
-import { CreateCurriculumRequest } from '../../../../../core/models/curriculum-designer.model';
 import { AcademicYearService, ProgramService } from '../../../../../core/services/institution.service';
-import { AcademicYear, Program } from '../../../../../core/models/institution.model';
 import { AuthService } from '../../../../../core/service/authentication/auth-service';
+import { AcademicYear, Program } from '../../../../../core/models/institution.model';
+import { CreateCurriculumRequest } from '../../../../../core/models/curriculum-designer.model';
+import { CurriculumDesignerStore } from '../../state/curriculum-designer.store';
 
 interface CreateCurriculumForm {
   programId: FormControl<number | null>;
@@ -39,15 +45,14 @@ interface CreateCurriculumForm {
   styleUrl: './create-curriculum-dialog.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class CreateCurriculumDialogComponent implements OnInit, OnChanges {
+export class CreateCurriculumDialogComponent implements OnInit {
   readonly store = inject(CurriculumDesignerStore);
   readonly authService = inject(AuthService);
   private readonly programService = inject(ProgramService);
   private readonly ayService = inject(AcademicYearService);
   private readonly router = inject(Router);
 
-  @Input() visible = false;
-  @Output() visibleChange = new EventEmitter<boolean>();
+  readonly visible = model<boolean>(false);
 
   readonly programs = signal<Program[]>([]);
   readonly currentAcademicYear = signal<AcademicYear | null>(null);
@@ -64,6 +69,14 @@ export class CreateCurriculumDialogComponent implements OnInit, OnChanges {
     effectiveAcademicYear: new FormControl<string>('2026-2027', { nonNullable: true, validators: [Validators.required, Validators.maxLength(20)] })
   });
 
+  constructor() {
+    effect(() => {
+      if (this.visible()) {
+        this.loadPrerequisites();
+      }
+    });
+  }
+
   isControlInvalid(controlName: keyof CreateCurriculumForm): boolean {
     const control = this.form.get(controlName);
     return !!(control && control.invalid && (control.dirty || control.touched));
@@ -71,12 +84,6 @@ export class CreateCurriculumDialogComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     this.loadPrerequisites();
-  }
-
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['visible'] && this.visible) {
-      this.loadPrerequisites();
-    }
   }
 
   loadPrerequisites(): void {
@@ -114,8 +121,7 @@ export class CreateCurriculumDialogComponent implements OnInit, OnChanges {
   }
 
   onClose(): void {
-    this.visible = false;
-    this.visibleChange.emit(false);
+    this.visible.set(false);
   }
 
   onSubmit(): void {

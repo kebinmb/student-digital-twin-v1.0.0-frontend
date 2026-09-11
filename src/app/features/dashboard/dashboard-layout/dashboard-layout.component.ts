@@ -40,7 +40,6 @@ export interface NavSection {
     RouterLinkActive,
     Avatar,
     Badge,
-    InputText,
     Menu,
     ButtonModule,
     TooltipModule

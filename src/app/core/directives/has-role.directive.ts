@@ -1,4 +1,4 @@
-import { Directive, Input, TemplateRef, ViewContainerRef, inject, effect } from '@angular/core';
+import { Directive, TemplateRef, ViewContainerRef, inject, effect, input } from '@angular/core';
 import { AuthService } from '../service/authentication/auth-service';
 
 @Directive({
@@ -10,24 +10,21 @@ export class HasRoleDirective {
   private readonly viewContainer = inject(ViewContainerRef);
   private readonly authService = inject(AuthService);
 
-  private requiredRoles: string[] = [];
+  readonly hasRole = input<string | string[]>([]);
   private isVisible = false;
 
-  @Input() set hasRole(roles: string | string[]) {
-    this.requiredRoles = Array.isArray(roles) ? roles : [roles];
-    this.updateView();
-  }
-
   constructor() {
-    // Automatically re-evaluate whenever the currentUser reactive signal changes
+    // Automatically re-evaluate whenever the currentUser reactive signal or hasRole input changes
     effect(() => {
       this.authService.currentUser();
-      this.updateView();
+      const rolesVal = this.hasRole();
+      const requiredRoles = Array.isArray(rolesVal) ? rolesVal : [rolesVal];
+      this.updateView(requiredRoles);
     });
   }
 
-  private updateView(): void {
-    if (this.requiredRoles.length === 0) {
+  private updateView(requiredRoles: string[]): void {
+    if (requiredRoles.length === 0 || (requiredRoles.length === 1 && !requiredRoles[0])) {
       if (!this.isVisible) {
         this.viewContainer.createEmbeddedView(this.templateRef);
         this.isVisible = true;
@@ -35,7 +32,7 @@ export class HasRoleDirective {
       return;
     }
 
-    const hasPermission = this.authService.hasAnyRole(this.requiredRoles);
+    const hasPermission = this.authService.hasAnyRole(requiredRoles);
 
     if (hasPermission && !this.isVisible) {
       this.viewContainer.createEmbeddedView(this.templateRef);

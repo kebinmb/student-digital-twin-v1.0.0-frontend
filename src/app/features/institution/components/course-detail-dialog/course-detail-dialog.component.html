@@ -2,10 +2,9 @@
   position="right"
   [header]="dialogTitle"
   [(visible)]="visible"
-  (visibleChange)="onVisibilityChange($event)"
   styleClass="institutional-drawer w-full md:w-30rem">
   
-  @if (course) {
+  @if (course(); as course) {
     <!-- Course Profile Summary Card -->
     <div class="drawer-profile-card">
       <div class="flex items-center justify-between gap-2 mb-2">

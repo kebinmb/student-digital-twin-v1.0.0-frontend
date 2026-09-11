@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, ChangeDetectionStrategy, signal, computed, Output, EventEmitter } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, signal, computed, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SelectModule } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
@@ -31,7 +31,7 @@ export interface GridSlotItem {
 export class TimetableGridComponent {
   readonly store = inject(SchedulingStore);
 
-  @Output() addSchedule = new EventEmitter<void>();
+  readonly addSchedule = output<void>();
 
   readonly selectedRoomId = signal<number | null>(null);
 
