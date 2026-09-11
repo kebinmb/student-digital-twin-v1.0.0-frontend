@@ -1,10 +1,24 @@
 <p-drawer
   position="right"
-  [header]="dialogTitle"
   [(visible)]="visible"
-  styleClass="institutional-drawer w-full md:w-30rem">
-  
-  @if (course(); as course) {
+  [modal]="true"
+  [blockScroll]="true"
+  ariaLabelledBy="course-detail-drawer-title"
+  styleClass="institutional-drawer w-full md:w-[32rem]"
+  (onHide)="visible.set(false)">
+
+  <ng-template pTemplate="header">
+    <div class="flex items-center gap-2">
+      <i class="pi pi-sliders-h text-emerald-800 text-base"></i>
+      <div>
+        <h3 id="course-detail-drawer-title" class="text-sm font-bold text-slate-900 m-0">{{ dialogTitle }}</h3>
+        <span class="text-xs text-slate-500 font-medium">Outcome & Prerequisite Matrix</span>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="content">
+    @if (course(); as course) {
     <!-- Course Profile Summary Card -->
     <div class="drawer-profile-card">
       <div class="flex items-center justify-between gap-2 mb-2">
@@ -237,4 +251,19 @@
       </div>
     }
   }
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <div class="flex items-center justify-between w-full gap-2">
+      <span class="text-xs text-slate-500 font-medium">Curricular Configuration &amp; OBE</span>
+      <p-button
+        label="Close Details"
+        icon="pi pi-times"
+        severity="secondary"
+        [outlined]="true"
+        size="small"
+        (onClick)="visible.set(false)">
+      </p-button>
+    </div>
+  </ng-template>
 </p-drawer>

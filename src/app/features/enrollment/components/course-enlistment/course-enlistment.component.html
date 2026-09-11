@@ -174,18 +174,27 @@
   <p-drawer 
     [(visible)]="isItemDrawerOpen" 
     position="right" 
-    [style]="{ width: '32rem', maxWidth: '100vw' }" 
-    styleClass="institutional-drawer">
+    [modal]="true"
+    [blockScroll]="true"
+    ariaLabelledBy="enlisted-item-drawer-title"
+    styleClass="institutional-drawer w-full md:w-[32rem]"
+    (onHide)="isItemDrawerOpen.set(false)">
     
     <ng-template pTemplate="header">
-      <div class="drawer-header-title">
-        <span class="drawer-header-category">Enlisted Section Profile</span>
-        <h3 class="drawer-header-name">{{ selectedEnlistedItem()?.courseCode }} — {{ selectedEnlistedItem()?.courseTitle }}</h3>
+      <div class="flex items-center gap-2">
+        <i class="pi pi-book text-emerald-800 text-base"></i>
+        <div>
+          <span class="text-xs font-bold text-emerald-800 uppercase tracking-wider block">Enlisted Section Profile</span>
+          <h3 id="enlisted-item-drawer-title" class="text-sm font-bold text-slate-900 m-0 mt-0.5">
+            {{ selectedEnlistedItem()?.courseCode }} — {{ selectedEnlistedItem()?.courseTitle }}
+          </h3>
+        </div>
       </div>
     </ng-template>
 
-    @if (selectedEnlistedItem()) {
-      <div class="drawer-content-body">
+    <ng-template pTemplate="content">
+      @if (selectedEnlistedItem()) {
+        <div class="drawer-content-body">
         <!-- Header Badge Row: Section Tag + Status Tag + Credit Units -->
         <div class="drawer-badge-row">
           <div class="drawer-badge-group">
@@ -261,28 +270,29 @@
             }
           </div>
         </div>
-      </div>
-    }
+        </div>
+      }
+    </ng-template>
 
     <ng-template pTemplate="footer">
-      <div class="drawer-footer-content">
-        @if (store.enrollment()?.status !== 'ENROLLED' && selectedEnlistedItem()) {
-          <p-button 
-            label="Drop Enlisted Section" 
-            icon="pi pi-trash" 
-            severity="danger" 
-            styleClass="w-full" 
-            (onClick)="confirmDropSection(selectedEnlistedItem()!); isItemDrawerOpen.set(false)">
-          </p-button>
-        }
+      <div class="flex items-center justify-between w-full gap-2">
         <p-button 
           label="Close Details" 
           icon="pi pi-times" 
           severity="secondary" 
           [outlined]="true" 
-          styleClass="w-full" 
+          size="small"
           (onClick)="isItemDrawerOpen.set(false)">
         </p-button>
+        @if (store.enrollment()?.status !== 'ENROLLED' && selectedEnlistedItem()) {
+          <p-button 
+            label="Drop Enlisted Section" 
+            icon="pi pi-trash" 
+            severity="danger" 
+            size="small"
+            (onClick)="confirmDropSection(selectedEnlistedItem()!); isItemDrawerOpen.set(false)">
+          </p-button>
+        }
       </div>
     </ng-template>
   </p-drawer>

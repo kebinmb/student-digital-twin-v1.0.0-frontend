@@ -2,119 +2,158 @@
   [visible]="store.isDrawerOpen()"
   (visibleChange)="store.isDrawerOpen.set($event)"
   position="right"
-  [style]="{ width: '480px', maxWidth: '100vw' }"
-  styleClass="institutional-drawer"
-  header="Available Course Catalog">
+  [modal]="true"
+  [blockScroll]="true"
+  ariaLabelledBy="course-palette-drawer-title"
+  styleClass="institutional-drawer w-full md:w-[30rem]"
+  (onHide)="store.isDrawerOpen.set(false)">
+
+  <ng-template pTemplate="header">
+    <div class="flex items-center gap-2">
+      <i class="pi pi-book text-emerald-800 text-base"></i>
+      <div>
+        <h3 id="course-palette-drawer-title" class="text-sm font-bold text-slate-900 m-0">Available Course Catalog</h3>
+        <span class="text-xs text-slate-500 font-medium">Approved Curricular Course Pool</span>
+      </div>
+    </div>
+  </ng-template>
   
-  <div class="drawer-content-container flex-col gap-md">
-    <!-- Context Bar -->
-    <div class="modal-context-bar flex-between surface-slate">
-      <div class="context-item flex-row gap-xs">
-        <i class="pi pi-book context-icon"></i>
-        <span class="context-label">Catalog Pool:</span>
-        <strong class="context-val">Approved Subjects</strong>
+  <ng-template pTemplate="content">
+    <div class="drawer-content-container flex-col gap-3">
+      <!-- Context Bar -->
+      <div class="modal-context-bar flex-between surface-slate">
+        <div class="context-item flex-row gap-xs">
+          <i class="pi pi-compass context-icon"></i>
+          <span class="context-label">Catalog Pool:</span>
+          <strong class="context-val">Approved Subjects</strong>
+        </div>
+        <div class="context-item flex-row gap-xs">
+          <span class="context-label">Unassigned:</span>
+          <span class="badge-green font-mono">{{ store.availableCourses().length }}</span>
+        </div>
       </div>
-      <div class="context-item flex-row gap-xs">
-        <span class="context-label">Unassigned:</span>
-        <span class="badge-green font-mono">{{ store.availableCourses().length }}</span>
+      
+      <!-- Search Input with PrimeNG IconField -->
+      <div class="catalog-search-wrapper">
+        <p-iconfield style="width: 100%;">
+          <p-inputicon class="pi pi-search text-slate-400"></p-inputicon>
+          <input
+            pInputText
+            type="text"
+            placeholder="Search course code or title..."
+            class="w-full text-xs"
+            [ngModel]="searchQuery()"
+            (ngModelChange)="onSearchChanged($event)" />
+        </p-iconfield>
       </div>
-    </div>
-    
-    <!-- Search Input with PrimeNG IconField -->
-    <div class="catalog-search-wrapper">
-      <p-iconfield style="width: 100%;">
-        <p-inputicon class="pi pi-search text-slate-400"></p-inputicon>
-        <input
-          pInputText
-          type="text"
-          placeholder="Search course code or title..."
-          class="w-full text-xs"
-          [ngModel]="searchQuery()"
-          (ngModelChange)="onSearchChanged($event)" />
-      </p-iconfield>
-    </div>
 
-    <!-- Catalog Status Counter -->
-    <div class="catalog-status-bar flex-between">
-      <span class="catalog-status-tag flex-row gap-xs text-xs text-slate-500 font-semibold">
-        <span class="status-dot"></span>
-        {{ store.availableCourses().length }} course(s) eligible for placement
-      </span>
-      @if (store.isSearching()) {
-        <span class="text-xs font-bold text-emerald-700 flex-row gap-xs">
-          <i class="pi pi-spin pi-spinner"></i> Searching...
+      <!-- Catalog Status Counter -->
+      <div class="catalog-status-bar flex-between">
+        <span class="catalog-status-tag flex-row gap-xs text-xs text-slate-500 font-semibold">
+          <span class="status-dot"></span>
+          {{ store.availableCourses().length }} course(s) eligible for placement
         </span>
-      }
-    </div>
+        @if (store.isSearching()) {
+          <span class="text-xs font-bold text-emerald-700 flex-row gap-xs">
+            <i class="pi pi-spin pi-spinner"></i> Searching...
+          </span>
+        }
+      </div>
 
-    <!-- Course List Cards -->
-    <div class="catalog-scroll-list flex-col gap-sm">
-      @for (course of store.availableCourses(); track course.courseId) {
-        <div class="catalog-course-card institutional-card flex-col gap-sm">
-          
-          <!-- Card Header -->
-          <div class="catalog-card-header flex-between">
-            <div>
-              <span class="catalog-course-code font-mono font-bold-navy">{{ course.code }}</span>
-              <h4 class="catalog-course-title text-slate-800">{{ course.title }}</h4>
-            </div>
-            <span class="badge-green font-mono text-xs font-bold">{{ course.creditUnits }} Units</span>
-          </div>
-
-          <!-- Course Load Breakdown -->
-          <div class="catalog-load-row flex-row gap-sm text-xs text-slate-600">
-            <span class="load-tag font-mono">Lec: {{ course.lectureUnits }}h</span>
-            <span class="load-tag font-mono">Lab: {{ course.labUnits * 3 }}h</span>
-            <span class="ms-auto font-semibold text-slate-700">Weekly: {{ course.contactHoursLec + course.contactHoursLab }} hrs</span>
-          </div>
-
-          <!-- Quick Target Placement Selector & Action -->
-          @if (store.canEdit()) {
-            <div class="placement-action-row flex-between pt-2 border-t border-slate-200">
-              <div class="term-select-controls flex-row gap-xs">
-                <select
-                  #yearSelect
-                  aria-label="Target Year Level"
-                  class="term-select font-mono">
-                  <option value="1">Year 1</option>
-                  <option value="2">Year 2</option>
-                  <option value="3">Year 3</option>
-                  <option value="4">Year 4</option>
-                </select>
-
-                <select
-                  #semSelect
-                  aria-label="Target Semester"
-                  class="term-select font-mono">
-                  <option value="1ST_SEM">1st Sem</option>
-                  <option value="2ND_SEM">2nd Sem</option>
-                  <option value="SUMMER">Summer</option>
-                </select>
+      <!-- Course List Cards -->
+      <div class="catalog-scroll-list flex-col gap-2">
+        @for (course of store.availableCourses(); track course.courseId) {
+          <div class="catalog-course-card institutional-card flex-col gap-2">
+            
+            <!-- Card Header -->
+            <div class="catalog-card-header flex-between">
+              <div>
+                <span class="catalog-course-code font-mono font-bold-navy">{{ course.code }}</span>
+                <h4 class="catalog-course-title text-slate-800">{{ course.title }}</h4>
               </div>
-
-              <p-button
-                icon="pi pi-plus"
-                label="Assign to Term"
-                size="small"
-                severity="primary"
-                styleClass="action-btn-primary"
-                [disabled]="store.isSaving()"
-                (onClick)="onAddCourse(course.courseId, +yearSelect.value, semSelect.value)">
-              </p-button>
+              <span class="badge-green font-mono text-xs font-bold">{{ course.creditUnits }} Units</span>
             </div>
-          }
-        </div>
-      } @empty {
-        <div class="empty-state-card flex-col flex-center py-8">
-          <div class="empty-state-icon flex-center">
-            <i class="pi pi-inbox"></i>
+
+            <!-- Course Load Breakdown -->
+            <div class="catalog-load-row flex-row gap-2 text-xs text-slate-600">
+              <span class="load-tag font-mono">Lec: {{ course.lectureUnits }}h</span>
+              <span class="load-tag font-mono">Lab: {{ course.labUnits * 3 }}h</span>
+              <span class="ms-auto font-semibold text-slate-700">Weekly: {{ course.contactHoursLec + course.contactHoursLab }} hrs</span>
+            </div>
+
+            <!-- Quick Target Placement Selector & Action -->
+            @if (store.canEdit()) {
+              <div class="placement-action-row flex-between pt-2 border-t border-slate-200">
+                <div class="term-select-controls flex-row gap-xs">
+                  <select
+                    #yearSelect
+                    aria-label="Target Year Level"
+                    class="term-select font-mono">
+                    <option value="1">Year 1</option>
+                    <option value="2">Year 2</option>
+                    <option value="3">Year 3</option>
+                    <option value="4">Year 4</option>
+                  </select>
+
+                  <select
+                    #semSelect
+                    aria-label="Target Semester"
+                    class="term-select font-mono">
+                    <option value="1ST_SEM">1st Sem</option>
+                    <option value="2ND_SEM">2nd Sem</option>
+                    <option value="SUMMER">Summer</option>
+                  </select>
+                </div>
+
+                <p-button
+                  icon="pi pi-plus"
+                  label="Assign to Term"
+                  size="small"
+                  severity="primary"
+                  styleClass="action-btn-primary"
+                  [disabled]="store.isSaving()"
+                  (onClick)="onAddCourse(course.courseId, +yearSelect.value, semSelect.value)">
+                </p-button>
+              </div>
+            }
           </div>
-          <h4 class="empty-state-title">No Unassigned Courses Found</h4>
-          <p class="empty-state-subtext">
-            All institutional courses are placed in curriculum blocks or no subjects match your query.
-          </p>
-        </div>
-      }
+        } @empty {
+          <div class="empty-state-card flex-col flex-center py-8">
+            <div class="empty-state-icon flex-center">
+              <i class="pi pi-inbox"></i>
+            </div>
+            <h4 class="empty-state-title">No Unassigned Courses Found</h4>
+            <p class="empty-state-subtext">
+              All institutional courses are placed in curriculum blocks or no subjects match your query.
+            </p>
+          </div>
+        }
+      </div>
     </div>
-  </div>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <div class="flex items-center justify-between w-full gap-2">
+      @if (searchQuery()) {
+        <p-button
+          label="Clear Filter"
+          icon="pi pi-filter-slash"
+          severity="secondary"
+          [text]="true"
+          size="small"
+          (onClick)="onSearchChanged('')">
+        </p-button>
+      } @else {
+        <span class="text-xs text-slate-400 font-medium">Search to filter catalog</span>
+      }
+      <p-button
+        label="Close Catalog"
+        icon="pi pi-times"
+        severity="secondary"
+        [outlined]="true"
+        size="small"
+        (onClick)="store.isDrawerOpen.set(false)">
+      </p-button>
+    </div>
+  </ng-template>
 </p-drawer>

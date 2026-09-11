@@ -1,140 +1,357 @@
-:host { display: block; }
+/* department-manager.component.css */
+:host {
+  display: block;
+}
+
+/* Institutional Sub Card Container */
 .institution-sub-card {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 1px 3px 0 rgba(0,0,0,0.04), 0 1px 2px -1px rgba(0,0,0,0.04);
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-border-color, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 1.25rem;
+  box-shadow: var(--chmsu-shadow-card);
 }
+
 .prerequisite-banner {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
 }
+
 .card-header-row {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 1.25rem;
-  gap: 1rem;
+  margin-bottom: 1rem;
+  gap: 0.875rem;
   flex-wrap: wrap;
 }
+
 .card-section-title {
-  font-size: 1.125rem;
+  font-family: var(--font-family-heading);
+  font-size: 1rem;
   font-weight: 700;
-  color: #111827;
+  color: var(--chmsu-navy-900, #0f172a);
   margin: 0;
+  letter-spacing: -0.01em;
 }
+
 .card-section-subtitle {
-  font-size: 0.8125rem;
-  color: #64748b;
-  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  color: var(--chmsu-slate-500, #64748b);
+  margin: 0.2rem 0 0;
+  line-height: 1.35;
 }
+
 .header-actions-group {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.625rem;
   flex-wrap: wrap;
 }
+
 .filter-box {
   min-width: 200px;
 }
-.code-badge {
-  font-family: monospace;
-  font-weight: 600;
-  background: #f1f5f9;
-  color: #0f172a;
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
-  border: 1px solid #e2e8f0;
-  font-size: 0.8125rem;
-}
+
 .campus-tag {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #0369a1;
-  background: #e0f2fe;
-  padding: 0.2rem 0.45rem;
-  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--status-blue-text, #0369a1);
+  background: var(--status-blue-bg, #f0f9ff);
+  border: 1px solid var(--status-blue-border, #bae6fd);
+  padding: 0.15rem 0.4rem;
+  border-radius: var(--chmsu-border-radius-sm, 6px);
+  display: inline-block;
 }
+
 .parent-dept-pill {
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  color: #475569;
-  background: #f8fafc;
-  padding: 0.2rem 0.45rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 4px;
+  color: var(--chmsu-navy-800, #1e293b);
+  background: var(--chmsu-slate-100, #f1f5f9);
+  padding: 0.15rem 0.4rem;
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-sm, 6px);
 }
+
+.parent-dept-pill i {
+  font-size: 0.625rem;
+  color: var(--chmsu-slate-500, #64748b);
+}
+
 .primary-text {
   font-weight: 600;
-  color: #0f172a;
-  font-size: 0.875rem;
+  color: var(--chmsu-navy-900, #0f172a);
+  font-size: 0.8125rem;
+  line-height: 1.3;
 }
+
 .secondary-text {
-  font-size: 0.75rem;
-  color: #64748b;
+  font-size: 0.6875rem;
+  color: var(--chmsu-slate-500, #64748b);
+  margin-top: 0.15rem;
+  line-height: 1.3;
 }
+
 .text-muted {
-  font-size: 0.75rem;
-  color: #94a3b8;
+  font-size: 0.6875rem;
+  color: var(--chmsu-slate-400, #94a3b8);
 }
+
 .action-buttons-cell {
   display: flex;
   justify-content: flex-end;
-  gap: 0.35rem;
+  gap: 0.25rem;
   align-items: center;
 }
-.empty-table-cell {
-  text-align: center;
-  padding: 2.5rem 1rem !important;
-  color: #94a3b8;
-}
-.empty-icon {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
-  display: block;
-  color: #cbd5e1;
-}
+
+/* Dialog Form Layout */
 .dialog-form {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  padding-top: 0.5rem;
+  gap: 0.875rem;
+  padding-top: 0.25rem;
 }
+
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.25rem;
 }
-.form-row-2col {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-}
-.form-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #374151;
-}
+
 .form-control-input {
   width: 100%;
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
+  padding: 0.45rem 0.65rem;
 }
+
 .field-hint {
-  font-size: 0.6875rem;
-  color: #64748b;
+  font-size: 0.625rem;
+  color: var(--chmsu-slate-500, #64748b);
+  line-height: 1.3;
 }
-.error-hint {
-  font-size: 0.6875rem;
-  color: #dc2626;
-  font-weight: 500;
-}
+
 .dialog-actions-footer {
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
-  margin-top: 0.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid #f1f5f9;
+  margin-top: 0.25rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--chmsu-slate-200, #e2e8f0);
+}
+
+/* ==========================================================================
+   DRAWER INTERIOR SIZING & BALANCED TYPOGRAPHY
+   ========================================================================== */
+
+:host ::ng-deep .dept-detail-drawer .p-drawer-header {
+  padding: 0.875rem 1.125rem;
+  background: var(--chmsu-white, #ffffff);
+  border-bottom: 1px solid var(--chmsu-slate-200, #e2e8f0);
+}
+
+:host ::ng-deep .dept-detail-drawer .p-drawer-content {
+  padding: 1.125rem;
+  background: var(--chmsu-slate-50, #f8fafc);
+}
+
+:host ::ng-deep .dept-detail-drawer .p-drawer-footer {
+  padding: 0.875rem 1.125rem;
+  background: var(--chmsu-white, #ffffff);
+  border-top: 1px solid var(--chmsu-slate-200, #e2e8f0);
+}
+
+.drawer-header-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.drawer-header-avatar {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  background: var(--status-emerald-bg, #ecfdf5);
+  border: 1px solid var(--status-emerald-border, #a7f3d0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.drawer-header-avatar i {
+  font-size: 0.9375rem;
+}
+
+.drawer-header-titles {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.drawer-pre-title {
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: var(--chmsu-green-main, #116834);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+.drawer-main-title {
+  font-family: var(--font-family-heading);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+  margin: 0.2rem 0 0 0;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.drawer-scroll-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Summary Profile Card */
+.drawer-summary-card {
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 1rem;
+  box-shadow: var(--chmsu-shadow-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.summary-badge-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.summary-campus-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.625rem;
+  border-top: 1px dashed var(--chmsu-slate-200, #e2e8f0);
+}
+
+.campus-icon {
+  font-size: 0.8125rem;
+  color: var(--chmsu-green-main, #116834);
+  background: var(--chmsu-green-soft, #f0fdf4);
+  padding: 0.35rem;
+  border-radius: var(--chmsu-border-radius-sm, 6px);
+}
+
+.campus-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.meta-label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--chmsu-slate-500, #64748b);
+}
+
+.meta-val {
+  font-size: 0.75rem;
+}
+
+/* Group Sections */
+.drawer-group-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.drawer-group-title {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--chmsu-slate-500, #64748b);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.drawer-group-title i {
+  font-size: 0.6875rem;
+  color: var(--chmsu-green-main, #116834);
+}
+
+/* Info Grid & Refined Font Cards */
+.drawer-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.625rem;
+}
+
+.drawer-info-grid.single-col {
+  grid-template-columns: 1fr;
+}
+
+.drawer-info-card {
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  padding: 0.625rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.2rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02);
+}
+
+.info-card-label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--chmsu-slate-500, #64748b);
+}
+
+.info-card-value {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--chmsu-navy-900, #0f172a);
+  line-height: 1.3;
+}
+
+/* Drawer Footer */
+.drawer-action-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.625rem;
+}
+
+@media (max-width: 640px) {
+  .drawer-action-footer {
+    flex-direction: column-reverse;
+  }
+
+  .drawer-action-footer .p-button {
+    width: 100%;
+  }
+
+  .drawer-info-grid {
+    grid-template-columns: 1fr;
+  }
 }

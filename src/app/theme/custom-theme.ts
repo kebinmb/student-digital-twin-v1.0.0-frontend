@@ -75,17 +75,20 @@ export const CustomTheme = definePreset(Lara, {
         borderRadius: '8px'
       }
     },
-    // Master-Detail Drawer configuration
+    // Master-Detail Drawer configuration (Compact Enterprise Density)
     drawer: {
       root: {
         background: '{surface.0}',
         borderColor: '{surface.200}'
       },
       header: {
-        padding: '1.25rem 1.5rem'
+        padding: '0.75rem 1rem'
       },
       content: {
-        padding: '1.5rem'
+        padding: '1rem'
+      },
+      footer: {
+        padding: '0.75rem 1rem'
       }
     },
 

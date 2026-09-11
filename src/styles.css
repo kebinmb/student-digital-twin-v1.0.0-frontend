@@ -314,38 +314,138 @@ input::placeholder {
   color: var(--chmsu-navy-800);
 }
 
-.institutional-drawer .p-drawer-content {
-  padding: 1.5rem;
-  background-color: var(--chmsu-slate-50);
+.p-drawer.institutional-drawer {
+  background-color: var(--p-surface-0, #ffffff);
+  border-left: 1px solid var(--p-surface-200, #e2e8f0);
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+.p-drawer-mask {
+  background-color: rgba(15, 23, 42, 0.45) !important;
+  backdrop-filter: blur(2px);
+  transition: opacity 0.2s ease-in-out;
 }
 
 .institutional-drawer .p-drawer-header {
-  border-bottom: 1px solid var(--chmsu-border-color);
-  padding: 1.25rem 1.5rem;
-  background-color: var(--chmsu-white);
+  border-bottom: 1px solid var(--p-surface-200, #e2e8f0);
+  padding: 0.75rem 1rem;
+  background-color: var(--p-surface-0, #ffffff);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  gap: 0.75rem;
+}
+
+.institutional-drawer .p-drawer-content {
+  padding: 1rem;
+  background-color: var(--p-surface-50, #f8fafc);
+  overflow-y: auto;
+  flex: 1 1 auto;
+}
+
+.institutional-drawer .p-drawer-footer {
+  border-top: 1px solid var(--p-surface-200, #e2e8f0);
+  padding: 0.75rem 1rem;
+  background-color: var(--p-surface-0, #ffffff);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  gap: 0.5rem;
+}
+
+/* Drawer Categorized Section Dividers & Definition Lists */
+.drawer-section {
+  padding-top: 0.75rem;
+  margin-top: 0.75rem;
+  border-top: 1px solid var(--p-surface-200, #e2e8f0);
+}
+
+.drawer-section-title {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--p-surface-500, #64748b);
+  margin: 0 0 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.drawer-def-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.drawer-def-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  background: var(--p-surface-0, #ffffff);
+  border: 1px solid var(--p-surface-200, #e2e8f0);
+  border-radius: 6px;
+  padding: 0.5rem 0.65rem;
+}
+
+.drawer-def-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--p-surface-500, #64748b);
+}
+
+.drawer-def-val {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--p-surface-900, #0f172a);
+}
+
+/* Visible focus outlines for interactive elements inside drawers against solid surfaces */
+.institutional-drawer button:focus-visible,
+.institutional-drawer input:focus-visible,
+.institutional-drawer select:focus-visible,
+.institutional-drawer textarea:focus-visible,
+.institutional-drawer [tabindex]:focus-visible {
+  outline: 2px solid var(--p-primary-500, #15803d) !important;
+  outline-offset: 1px !important;
+}
+
+/* Responsive mobile drawer behavior: fluid full viewport width on < 768px */
+@media (max-width: 767px) {
+  .p-drawer.institutional-drawer,
+  .p-drawer.institutional-drawer.p-drawer-right,
+  .p-drawer.institutional-drawer.p-drawer-left {
+    width: 100vw !important;
+    max-width: 100vw !important;
+  }
 }
 
 .drawer-profile-card {
-  background: var(--chmsu-white);
-  border: 1px solid var(--chmsu-border-color);
-  border-radius: var(--chmsu-border-radius-lg);
-  padding: 1.25rem;
-  margin-bottom: 1.25rem;
-  box-shadow: var(--chmsu-shadow-subtle);
+  background: var(--p-surface-0, #ffffff);
+  border: 1px solid var(--p-surface-200, #e2e8f0);
+  border-radius: 8px;
+  padding: 0.875rem 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .drawer-stat-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
-  margin-top: 1rem;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
 }
 
 .drawer-stat-box {
-  background: var(--chmsu-slate-50);
-  border: 1px solid var(--chmsu-slate-200);
-  border-radius: var(--chmsu-border-radius-md);
-  padding: 0.75rem;
+  background: var(--p-surface-50, #f8fafc);
+  border: 1px solid var(--p-surface-200, #e2e8f0);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
 }
 
 .drawer-stat-label {
@@ -353,7 +453,7 @@ input::placeholder {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--chmsu-slate-500);
+  color: var(--p-surface-500, #64748b);
 }
 
 .drawer-stat-val {

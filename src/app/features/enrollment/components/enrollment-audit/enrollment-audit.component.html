@@ -117,13 +117,27 @@
 
   <!-- Master-Detail Inspection Drawer -->
   <p-drawer 
-    [header]="'Enrollment Audit & Verification — #' + (selectedEnrollment()?.enrollmentId || '')" 
     [(visible)]="isDrawerOpen"
     position="right"
-    styleClass="institutional-drawer !w-full sm:!w-[500px] md:!w-[640px] max-w-[100vw]"
+    [modal]="true"
+    [blockScroll]="true"
+    ariaLabelledBy="enrollment-audit-drawer-title"
+    styleClass="institutional-drawer w-full md:w-[32rem] lg:w-[36rem]"
     appendTo="body"
     (onHide)="closeDetailsDrawer()">
     
+    <ng-template pTemplate="header">
+      <div class="flex items-center gap-2">
+        <i class="pi pi-file-check text-emerald-800 text-base"></i>
+        <div>
+          <h3 id="enrollment-audit-drawer-title" class="text-sm font-bold text-slate-900 m-0">
+            Enrollment Audit & Verification
+          </h3>
+          <span class="text-xs text-slate-500 font-medium">Record #{{ selectedEnrollment()?.enrollmentId || '—' }}</span>
+        </div>
+      </div>
+    </ng-template>
+
     <ng-template pTemplate="content">
       @if (selectedEnrollment(); as e) {
         <div class="drawer-content-grid">
@@ -217,13 +231,17 @@
     </ng-template>
 
     <ng-template pTemplate="footer">
-      <p-button 
-        label="Close Audit View" 
-        icon="pi pi-times" 
-        severity="secondary" 
-        [text]="true" 
-        (onClick)="closeDetailsDrawer()">
-      </p-button>
+      <div class="flex items-center justify-between w-full gap-2">
+        <span class="text-xs text-slate-500 font-medium">Verified by Office of the University Registrar</span>
+        <p-button 
+          label="Close Audit View" 
+          icon="pi pi-times" 
+          severity="secondary" 
+          [outlined]="true"
+          size="small"
+          (onClick)="closeDetailsDrawer()">
+        </p-button>
+      </div>
     </ng-template>
   </p-drawer>
 </div>

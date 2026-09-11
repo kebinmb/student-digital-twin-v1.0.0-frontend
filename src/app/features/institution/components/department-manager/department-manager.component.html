@@ -1,3 +1,4 @@
+<!-- department-manager.component.html -->
 <div class="institution-sub-card">
   <!-- Prerequisite Warning Banner if No Campuses Exist -->
   @if (!isLoadingCampuses() && campuses().length === 0) {
@@ -28,7 +29,7 @@
           placeholder="Filter by Campus"
           optionLabel="label"
           optionValue="value"
-          styleClass="p-inputtext-sm">
+          styleClass="p-inputtext-sm w-full text-xs">
         </p-select>
       </div>
 
@@ -52,26 +53,34 @@
     styleClass="p-datatable-sm institutional-table">
     <ng-template pTemplate="header">
       <tr>
-        <th>Code</th>
+        <th style="width: 100px;">Code</th>
         <th>Department / College Name</th>
-        <th>Campus</th>
-        <th style="width: 130px;">Type</th>
+        <th style="width: 130px;">Campus</th>
+        <th style="width: 120px;">Type</th>
         <th>Parent Department</th>
         <th style="width: 100px;">Status</th>
         @if (canManage()) {
-          <th style="width: 130px; text-align: right;">Actions</th>
+          <th style="width: 120px; text-align: right;">Actions</th>
         }
       </tr>
     </ng-template>
+
     <ng-template pTemplate="body" let-dept>
-      <tr (click)="openDetailDrawer(dept)" class="hover:bg-slate-100 cursor-pointer">
+      <tr 
+        tabindex="0"
+        role="button"
+        [attr.aria-label]="'View details for ' + dept.name"
+        (click)="openDetailDrawer(dept)"
+        (keydown.enter)="openDetailDrawer(dept)"
+        (keydown.space)="$event.preventDefault(); openDetailDrawer(dept)"
+        class="hover:bg-slate-100 cursor-pointer focus:outline-none focus:bg-slate-100">
         <td>
           <span class="code-badge">{{ dept.code }}</span>
         </td>
         <td>
           <div class="primary-text">{{ dept.name }}</div>
           @if (dept.deanUserId) {
-            <div class="secondary-text">Dean / Head ID: {{ dept.deanUserId }}</div>
+            <div class="secondary-text font-mono">Dean / Head ID: {{ dept.deanUserId }}</div>
           }
         </td>
         <td>
@@ -97,7 +106,7 @@
               {{ dept.parentDepartmentCode || getDeptCode(dept.parentDepartmentId) }}
             </span>
           } @else {
-            <span class="text-muted">Top-level</span>
+            <span class="text-muted">Top-level Unit</span>
           }
         </td>
         <td>
@@ -108,13 +117,14 @@
           }
         </td>
         @if (canManage()) {
-          <td style="text-align: right;" (click)="$event.stopPropagation()">
+          <td style="text-align: right;" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
             <div class="action-buttons-cell">
               <p-button
                 icon="pi pi-pencil"
                 size="small"
                 [text]="true"
                 severity="secondary"
+                aria-label="Edit Department"
                 (onClick)="openEditDialog(dept)">
               </p-button>
               <p-button
@@ -122,6 +132,7 @@
                 size="small"
                 [text]="true"
                 severity="danger"
+                aria-label="Delete Department"
                 (onClick)="confirmDelete(dept)">
               </p-button>
             </div>
@@ -129,82 +140,163 @@
         }
       </tr>
     </ng-template>
+
     <ng-template pTemplate="loadingbody">
       @for (i of [1, 2, 3, 4]; track i) {
         <tr>
-          <td><p-skeleton width="70px"></p-skeleton></td>
-          <td><p-skeleton width="200px"></p-skeleton></td>
-          <td><p-skeleton width="90px"></p-skeleton></td>
-          <td><p-skeleton width="80px"></p-skeleton></td>
-          <td><p-skeleton width="100px"></p-skeleton></td>
           <td><p-skeleton width="60px"></p-skeleton></td>
+          <td><p-skeleton width="180px"></p-skeleton></td>
           <td><p-skeleton width="80px"></p-skeleton></td>
+          <td><p-skeleton width="70px"></p-skeleton></td>
+          <td><p-skeleton width="90px"></p-skeleton></td>
+          <td><p-skeleton width="50px"></p-skeleton></td>
+          @if (canManage()) {
+            <td><p-skeleton width="70px"></p-skeleton></td>
+          }
         </tr>
       }
     </ng-template>
+
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td [attr.colspan]="canManage() ? 7 : 6" class="empty-table-cell">
-          <i class="pi pi-sitemap empty-icon"></i>
-          <p>No departments found for the selected campus scope.</p>
+        <td [attr.colspan]="canManage() ? 7 : 6" class="empty-state-cell">
+          <div class="empty-state-card">
+            <div class="empty-state-icon">
+              <i class="pi pi-sitemap"></i>
+            </div>
+            <h4 class="empty-state-title">No Departments Found</h4>
+            <p class="empty-state-subtext">
+              No academic colleges or administrative units are registered for this campus selection.
+            </p>
+          </div>
         </td>
       </tr>
     </ng-template>
   </p-table>
 
   <!-- Master-Detail Drawer for Department Profile -->
-  <p-drawer [(visible)]="isDetailDrawerOpen" position="right" styleClass="institutional-drawer w-full md:w-28rem">
+  <p-drawer
+    [visible]="isDetailDrawerOpen()"
+    (visibleChange)="isDetailDrawerOpen.set($event)"
+    position="right"
+    [modal]="true"
+    [blockScroll]="true"
+    ariaLabelledBy="dept-drawer-title"
+    styleClass="institutional-drawer dept-detail-drawer w-full sm:w-[28rem]">
     <ng-template pTemplate="header">
-      <div class="drawer-header-title">
-        <span class="text-xs font-bold text-emerald-800 uppercase tracking-wider">Department Details</span>
-        <h3 class="text-base font-bold text-slate-900 m-0 mt-1">{{ selectedDeptForDetail()?.name }}</h3>
+      <div class="drawer-header-content">
+        <div class="drawer-header-avatar">
+          <i class="pi pi-sitemap text-emerald-800"></i>
+        </div>
+        <div class="drawer-header-titles">
+          <span class="drawer-pre-title">Academic & Org Structure</span>
+          <h3 id="dept-drawer-title" class="drawer-main-title">{{ selectedDeptForDetail()?.name }}</h3>
+        </div>
       </div>
     </ng-template>
 
-    @if (selectedDeptForDetail()) {
-      <div class="drawer-content-body">
-        <div class="drawer-profile-card mb-4">
-          <div class="flex items-center justify-between gap-2 mb-2">
-            <span class="code-badge">{{ selectedDeptForDetail()!.code }}</span>
-            <p-tag [severity]="selectedDeptForDetail()!.type === 'COLLEGE' ? 'info' : 'secondary'" [value]="selectedDeptForDetail()!.type"></p-tag>
+    <ng-template pTemplate="content">
+      @if (selectedDeptForDetail(); as dept) {
+        <div class="drawer-scroll-container">
+          <!-- Overview Card -->
+          <div class="drawer-summary-card">
+            <div class="summary-badge-row">
+              <span class="code-badge">{{ dept.code }}</span>
+              <div class="flex items-center gap-1.5">
+                <p-tag 
+                  [severity]="dept.type === 'COLLEGE' ? 'info' : (dept.type === 'DEPARTMENT' ? 'secondary' : 'warn')" 
+                  [value]="dept.type">
+                </p-tag>
+                <p-tag 
+                  [severity]="dept.isActive ? 'success' : 'danger'" 
+                  [value]="dept.isActive ? 'ACTIVE' : 'INACTIVE'">
+                </p-tag>
+              </div>
+            </div>
+            
+            <div class="summary-campus-box">
+              <i class="pi pi-building campus-icon"></i>
+              <div class="campus-meta">
+                <span class="meta-label">Campus Assignment</span>
+                <span class="meta-val font-semibold-navy">
+                  {{ dept.campusCode || getCampusCode(dept.campusId) }}
+                </span>
+              </div>
+            </div>
           </div>
-          <p class="text-xs text-slate-600 m-0">
-            Campus: <strong class="text-slate-800">{{ selectedDeptForDetail()!.campusCode || getCampusCode(selectedDeptForDetail()!.campusId) }}</strong>
-          </p>
-        </div>
 
-        <div class="drawer-stat-grid">
-          <div class="drawer-stat-box">
-            <span class="drawer-stat-label">Parent Unit</span>
-            <span class="drawer-stat-val text-xs">{{ selectedDeptForDetail()!.parentDepartmentCode || getDeptCode(selectedDeptForDetail()!.parentDepartmentId) }}</span>
+          <!-- Section: Hierarchy & Organizational Relationship -->
+          <div class="drawer-group-section">
+            <h4 class="drawer-group-title">
+              <i class="pi pi-folder"></i> Organizational Placement
+            </h4>
+            <div class="drawer-info-grid">
+              <div class="drawer-info-card">
+                <span class="info-card-label">Parent Unit</span>
+                <span class="info-card-value font-mono">
+                  {{ dept.parentDepartmentCode || getDeptCode(dept.parentDepartmentId) || 'None (Top-Level)' }}
+                </span>
+              </div>
+              <div class="drawer-info-card">
+                <span class="info-card-label">Department Type</span>
+                <span class="info-card-value">{{ dept.type }}</span>
+              </div>
+            </div>
           </div>
-          <div class="drawer-stat-box">
-            <span class="drawer-stat-label">Operational Status</span>
-            <span class="drawer-stat-val text-xs text-emerald-700">ACTIVE</span>
-          </div>
-        </div>
 
-        <div class="mt-6 flex flex-col gap-2">
-          @if (canManage()) {
-            <p-button label="Edit Department Information" icon="pi pi-pencil" severity="primary" styleClass="w-full" (onClick)="openEditDialog(selectedDeptForDetail()!); isDetailDrawerOpen.set(false)"></p-button>
-          }
-          <p-button label="Close Profile Drawer" icon="pi pi-times" severity="secondary" [outlined]="true" styleClass="w-full" (onClick)="isDetailDrawerOpen.set(false)"></p-button>
+          <!-- Section: Leadership & Administration -->
+          <div class="drawer-group-section">
+            <h4 class="drawer-group-title">
+              <i class="pi pi-user"></i> Leadership & Administration
+            </h4>
+            <div class="drawer-info-grid single-col">
+              <div class="drawer-info-card">
+                <span class="info-card-label">Assigned Dean / Head Identifier</span>
+                <span class="info-card-value font-mono">
+                  {{ dept.deanUserId || 'No dean or unit head currently designated' }}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
+      }
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      <div class="drawer-action-footer">
+        <p-button 
+          label="Close" 
+          icon="pi pi-times" 
+          severity="secondary" 
+          [outlined]="true" 
+          size="small"
+          (onClick)="isDetailDrawerOpen.set(false)">
+        </p-button>
+        @if (canManage() && selectedDeptForDetail()) {
+          <p-button 
+            label="Edit Department" 
+            icon="pi pi-pencil" 
+            severity="primary" 
+            size="small"
+            (onClick)="openEditDialog(selectedDeptForDetail()!); isDetailDrawerOpen.set(false)">
+          </p-button>
+        }
       </div>
-    }
+    </ng-template>
   </p-drawer>
 
   <!-- Create / Edit Department Dialog -->
   <p-dialog
-    [header]="editingId() ? 'Edit Department' : 'Establish New Academic Department'"
-    [(visible)]="isDialogVisible"
+    [header]="editingId() ? 'Edit Department Record' : 'Establish New Academic Department'"
+    [visible]="isDialogVisible()"
+    (visibleChange)="isDialogVisible.set($event)"
     [modal]="true"
     [breakpoints]="{ '960px': '75vw', '640px': '92vw' }"
-    [style]="{ width: '520px', maxWidth: '95vw' }"
+    [style]="{ width: '500px', maxWidth: '95vw' }"
     [contentStyle]="{ 'overflow-x': 'hidden' }">
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="dialog-form">
       <div class="form-group">
-        <label for="dCampus" class="form-label">Assigned Campus *</label>
+        <label for="dCampus" class="form-label">Assigned Campus <span class="required-star">*</span></label>
         <p-select
           appendTo="body"
           id="dCampus"
@@ -214,31 +306,31 @@
           optionLabel="label"
           optionValue="value"
           [disabled]="!!editingId()"
-          styleClass="w-full">
+          styleClass="w-full text-xs">
         </p-select>
-        @if (form.controls.campusId.touched && form.controls.campusId.invalid) {
-          <span class="error-hint">Target campus is mandatory.</span>
+        @if (form.get('campusId')?.touched && form.get('campusId')?.invalid) {
+          <span class="p-error">Target campus is mandatory.</span>
         }
       </div>
 
       <div class="form-row-2col">
         <div class="form-group">
-          <label for="dCode" class="form-label">Department Code *</label>
+          <label for="dCode" class="form-label">Department Code <span class="required-star">*</span></label>
           <input
             id="dCode"
             pInputText
             type="text"
             formControlName="code"
             placeholder="e.g. CCS"
-            class="form-control-input"
+            class="form-control-input uppercase font-mono"
             [readOnly]="!!editingId()" />
-          @if (form.controls.code.touched && form.controls.code.invalid) {
-            <span class="error-hint">Code is required (max 20 chars).</span>
+          @if (form.get('code')?.touched && form.get('code')?.invalid) {
+            <span class="p-error">Code is required (max 20 chars).</span>
           }
         </div>
 
         <div class="form-group">
-          <label for="dType" class="form-label">Department Type *</label>
+          <label for="dType" class="form-label">Department Type <span class="required-star">*</span></label>
           <p-select
             appendTo="body"
             id="dType"
@@ -247,13 +339,13 @@
             placeholder="Select Type"
             optionLabel="label"
             optionValue="value"
-            styleClass="w-full">
+            styleClass="w-full text-xs">
           </p-select>
         </div>
       </div>
 
       <div class="form-group">
-        <label for="dName" class="form-label">Department Name *</label>
+        <label for="dName" class="form-label">Department Name <span class="required-star">*</span></label>
         <input
           id="dName"
           pInputText
@@ -261,8 +353,8 @@
           formControlName="name"
           placeholder="e.g. College of Computer Studies"
           class="form-control-input" />
-        @if (form.controls.name.touched && form.controls.name.invalid) {
-          <span class="error-hint">Department name is required.</span>
+        @if (form.get('name')?.touched && form.get('name')?.invalid) {
+          <span class="p-error">Department name is required.</span>
         }
       </div>
 
@@ -277,7 +369,7 @@
           optionLabel="label"
           optionValue="value"
           [showClear]="true"
-          styleClass="w-full">
+          styleClass="w-full text-xs">
         </p-select>
         <span class="field-hint">Filtered strictly to units within the selected campus; cyclic self-assignment is excluded.</span>
       </div>
@@ -302,4 +394,6 @@
       </div>
     </form>
   </p-dialog>
+
+  <p-confirmdialog></p-confirmdialog>
 </div>

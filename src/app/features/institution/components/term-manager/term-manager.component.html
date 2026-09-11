@@ -156,74 +156,109 @@
   </p-table>
 
   <!-- Master-Detail Drawer for Term Profile -->
-  <p-drawer [(visible)]="isDetailDrawerOpen" position="right" styleClass="institutional-drawer w-full md:w-28rem">
+  <p-drawer
+    [(visible)]="isDetailDrawerOpen"
+    position="right"
+    [modal]="true"
+    [blockScroll]="true"
+    ariaLabelledBy="term-drawer-title"
+    styleClass="institutional-drawer w-full md:w-[28rem]"
+    (onHide)="isDetailDrawerOpen.set(false)">
     <ng-template pTemplate="header">
-      <div class="drawer-header-title">
-        <span class="text-xs font-bold text-emerald-800 uppercase tracking-wider">Academic Term Details</span>
-        <h3 class="text-base font-bold text-slate-900 m-0 mt-1">{{ formatTermType(selectedTermForDetail()?.termType || '') }}</h3>
+      <div class="flex items-center gap-2">
+        <i class="pi pi-clock text-emerald-800 text-base"></i>
+        <div>
+          <span class="text-xs font-bold text-emerald-800 uppercase tracking-wider block">Academic Term Details</span>
+          <h3 id="term-drawer-title" class="text-base font-bold text-slate-900 m-0 mt-0.5">{{ formatTermType(selectedTermForDetail()?.termType || '') }}</h3>
+        </div>
       </div>
     </ng-template>
 
-    @if (selectedTermForDetail()) {
-      <div class="drawer-content-body">
-        <div class="drawer-profile-card mb-4">
-          <div class="flex items-center justify-between gap-2 mb-2">
-            <span class="code-badge">{{ formatTermType(selectedTermForDetail()!.termType) }}</span>
-            <p-tag [severity]="selectedTermForDetail()!.isActive ? 'success' : 'secondary'" [value]="selectedTermForDetail()!.isActive ? 'ACTIVE OPERATIONAL' : 'INACTIVE'"></p-tag>
+    <ng-template pTemplate="content">
+      @if (selectedTermForDetail()) {
+        <div class="drawer-content-body flex flex-col gap-3">
+          <div class="drawer-profile-card">
+            <div class="flex items-center justify-between gap-2 mb-2">
+              <span class="code-badge">{{ formatTermType(selectedTermForDetail()!.termType) }}</span>
+              <p-tag [severity]="selectedTermForDetail()!.isActive ? 'success' : 'secondary'" [value]="selectedTermForDetail()!.isActive ? 'ACTIVE OPERATIONAL' : 'INACTIVE'"></p-tag>
+            </div>
+            <p class="text-xs text-slate-600 m-0">
+              Term Period: <strong class="text-slate-800">{{ selectedTermForDetail()!.startDate }}</strong> to <strong class="text-slate-800">{{ selectedTermForDetail()!.endDate }}</strong>
+            </p>
           </div>
-          <p class="text-xs text-slate-600 m-0">
-            Term Period: <strong class="text-slate-800">{{ selectedTermForDetail()!.startDate }}</strong> to <strong class="text-slate-800">{{ selectedTermForDetail()!.endDate }}</strong>
-          </p>
-        </div>
 
-        <div class="drawer-stat-grid grid grid-cols-2 gap-3 mb-4">
-          <div class="drawer-stat-box p-3 bg-slate-50 border border-slate-200 rounded-lg flex flex-col justify-between">
-            <span class="drawer-stat-label text-xs font-semibold text-slate-500">Enrollment Window</span>
-            <div class="flex items-center justify-between mt-1">
-              <span class="drawer-stat-val text-xs font-bold" [class.text-emerald-700]="selectedTermForDetail()!.enrollmentOpen" [class.text-slate-600]="!selectedTermForDetail()!.enrollmentOpen">
-                {{ selectedTermForDetail()!.enrollmentOpen ? 'OPEN' : 'CLOSED' }}
-              </span>
-              @if (canManageWindows() && selectedTermForDetail()!.isActive) {
-                <p-button
-                  [label]="selectedTermForDetail()!.enrollmentOpen ? 'Close' : 'Open'"
-                  size="small"
-                  [outlined]="true"
-                  [severity]="selectedTermForDetail()!.enrollmentOpen ? 'warn' : 'success'"
-                  (onClick)="toggleEnrollmentWindow(selectedTermForDetail()!)">
-                </p-button>
-              }
+          <div class="drawer-stat-grid grid grid-cols-2 gap-2">
+            <div class="drawer-stat-box flex flex-col justify-between">
+              <span class="drawer-stat-label">Enrollment Window</span>
+              <div class="flex items-center justify-between mt-1">
+                <span class="drawer-stat-val text-xs font-bold" [class.text-emerald-700]="selectedTermForDetail()!.enrollmentOpen" [class.text-slate-600]="!selectedTermForDetail()!.enrollmentOpen">
+                  {{ selectedTermForDetail()!.enrollmentOpen ? 'OPEN' : 'CLOSED' }}
+                </span>
+                @if (canManageWindows() && selectedTermForDetail()!.isActive) {
+                  <p-button
+                    [label]="selectedTermForDetail()!.enrollmentOpen ? 'Close' : 'Open'"
+                    size="small"
+                    [outlined]="true"
+                    [severity]="selectedTermForDetail()!.enrollmentOpen ? 'warn' : 'success'"
+                    (onClick)="toggleEnrollmentWindow(selectedTermForDetail()!)">
+                  </p-button>
+                }
+              </div>
+            </div>
+            <div class="drawer-stat-box flex flex-col justify-between">
+              <span class="drawer-stat-label">Grading Window</span>
+              <div class="flex items-center justify-between mt-1">
+                <span class="drawer-stat-val text-xs font-bold" [class.text-emerald-700]="selectedTermForDetail()!.gradingOpen" [class.text-slate-600]="!selectedTermForDetail()!.gradingOpen">
+                  {{ selectedTermForDetail()!.gradingOpen ? 'OPEN' : 'CLOSED' }}
+                </span>
+                @if (canManageWindows() && selectedTermForDetail()!.isActive) {
+                  <p-button
+                    [label]="selectedTermForDetail()!.gradingOpen ? 'Close' : 'Open'"
+                    size="small"
+                    [outlined]="true"
+                    [severity]="selectedTermForDetail()!.gradingOpen ? 'warn' : 'success'"
+                    (onClick)="toggleGradingWindow(selectedTermForDetail()!)">
+                  </p-button>
+                }
+              </div>
             </div>
           </div>
-          <div class="drawer-stat-box p-3 bg-slate-50 border border-slate-200 rounded-lg flex flex-col justify-between">
-            <span class="drawer-stat-label text-xs font-semibold text-slate-500">Grading Window</span>
-            <div class="flex items-center justify-between mt-1">
-              <span class="drawer-stat-val text-xs font-bold" [class.text-emerald-700]="selectedTermForDetail()!.gradingOpen" [class.text-slate-600]="!selectedTermForDetail()!.gradingOpen">
-                {{ selectedTermForDetail()!.gradingOpen ? 'OPEN' : 'CLOSED' }}
-              </span>
-              @if (canManageWindows() && selectedTermForDetail()!.isActive) {
-                <p-button
-                  [label]="selectedTermForDetail()!.gradingOpen ? 'Close' : 'Open'"
-                  size="small"
-                  [outlined]="true"
-                  [severity]="selectedTermForDetail()!.gradingOpen ? 'warn' : 'success'"
-                  (onClick)="toggleGradingWindow(selectedTermForDetail()!)">
-                </p-button>
-              }
-            </div>
-          </div>
         </div>
+      }
+    </ng-template>
 
-        <div class="mt-6 flex flex-col gap-2">
-          @if (canManageWindows() && !selectedTermForDetail()!.isActive) {
-            <p-button label="Activate Term" icon="pi pi-play" severity="success" styleClass="w-full" (onClick)="confirmActivate(selectedTermForDetail()!); isDetailDrawerOpen.set(false)"></p-button>
+    <ng-template pTemplate="footer">
+      <div class="flex items-center justify-between w-full gap-2">
+        <p-button 
+          label="Close" 
+          icon="pi pi-times" 
+          severity="secondary" 
+          [outlined]="true" 
+          size="small"
+          (onClick)="isDetailDrawerOpen.set(false)">
+        </p-button>
+        <div class="flex items-center gap-2">
+          @if (canManageWindows() && selectedTermForDetail() && !selectedTermForDetail()!.isActive) {
+            <p-button 
+              label="Activate Term" 
+              icon="pi pi-play" 
+              severity="success" 
+              size="small"
+              (onClick)="confirmActivate(selectedTermForDetail()!); isDetailDrawerOpen.set(false)">
+            </p-button>
           }
-          @if (canManage()) {
-            <p-button label="Update Schedule Dates" icon="pi pi-pencil" severity="primary" styleClass="w-full" (onClick)="openEditDialog(selectedTermForDetail()!); isDetailDrawerOpen.set(false)"></p-button>
+          @if (canManage() && selectedTermForDetail()) {
+            <p-button 
+              label="Update Dates" 
+              icon="pi pi-pencil" 
+              severity="primary" 
+              size="small"
+              (onClick)="openEditDialog(selectedTermForDetail()!); isDetailDrawerOpen.set(false)">
+            </p-button>
           }
-          <p-button label="Close Details" icon="pi pi-times" severity="secondary" [outlined]="true" styleClass="w-full" (onClick)="isDetailDrawerOpen.set(false)"></p-button>
         </div>
       </div>
-    }
+    </ng-template>
   </p-drawer>
 
   <!-- Create / Edit Dialog -->

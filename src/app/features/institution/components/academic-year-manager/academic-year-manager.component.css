@@ -1,11 +1,16 @@
-:host { display: block; }
+/* academic-year-manager.component.css */
+:host {
+  display: block;
+}
+
 .institution-sub-card {
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: 0 1px 3px 0 rgba(0,0,0,0.04), 0 1px 2px -1px rgba(0,0,0,0.04);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
 }
+
 .card-header-row {
   display: flex;
   justify-content: space-between;
@@ -13,74 +18,96 @@
   margin-bottom: 1.25rem;
   gap: 1rem;
 }
+
 .card-section-title {
   font-size: 1.125rem;
   font-weight: 700;
   color: #111827;
   margin: 0;
 }
+
 .card-section-subtitle {
   font-size: 0.8125rem;
   color: #64748b;
   margin: 0.25rem 0 0;
 }
+
 .code-badge {
-  font-family: monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-weight: 600;
   background: #f1f5f9;
   color: #0f172a;
-  padding: 0.25rem 0.5rem;
+  padding: 0.2rem 0.45rem;
   border-radius: 6px;
   border: 1px solid #e2e8f0;
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
+  display: inline-block;
 }
+
 .action-buttons-cell {
   display: flex;
   justify-content: flex-end;
   gap: 0.35rem;
   align-items: center;
 }
-.empty-table-cell {
+
+/* Deep pierce for PrimeNG Table internal styling */
+:host ::ng-deep .empty-table-cell {
   text-align: center;
   padding: 2.5rem 1rem !important;
   color: #94a3b8;
 }
+
 .empty-icon {
   font-size: 2rem;
   margin-bottom: 0.5rem;
   display: block;
   color: #cbd5e1;
 }
+
+/* Dialog & Form Styles */
 .dialog-form {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   padding-top: 0.5rem;
 }
+
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
 }
+
 .form-row-2col {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.75rem;
 }
+
+@media (max-width: 480px) {
+  .form-row-2col {
+    grid-template-columns: 1fr;
+  }
+}
+
 .form-label {
   font-size: 0.75rem;
   font-weight: 600;
   color: #374151;
 }
+
 .form-control-input {
   width: 100%;
   font-size: 0.8125rem;
 }
+
 .error-hint {
   font-size: 0.6875rem;
   color: #dc2626;
   font-weight: 500;
 }
+
 .form-alert-error {
   display: flex;
   align-items: center;
@@ -92,6 +119,7 @@
   border-radius: 6px;
   font-size: 0.75rem;
 }
+
 .toggle-group-row {
   display: flex;
   justify-content: space-between;
@@ -101,19 +129,23 @@
   border: 1px solid #f1f5f9;
   border-radius: 8px;
 }
+
 .toggle-info {
   display: flex;
   flex-direction: column;
 }
+
 .toggle-label {
   font-size: 0.8125rem;
   font-weight: 600;
   color: #1e293b;
 }
+
 .toggle-desc {
   font-size: 0.6875rem;
   color: #64748b;
 }
+
 .dialog-actions-footer {
   display: flex;
   justify-content: flex-end;
@@ -121,4 +153,121 @@
   margin-top: 0.5rem;
   padding-top: 1rem;
   border-top: 1px solid #f1f5f9;
+}
+
+/* Compact Drawer Styles */
+:host ::ng-deep .compact-drawer .p-drawer-header {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+:host ::ng-deep .compact-drawer .p-drawer-content {
+  padding: 1rem;
+}
+
+:host ::ng-deep .compact-drawer .p-drawer-footer {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.drawer-header-compact {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.drawer-header-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 6px;
+  background-color: #ecfdf5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drawer-tag {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #065f46;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: block;
+  line-height: 1;
+}
+
+.drawer-heading {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0.15rem 0 0;
+}
+
+.drawer-content-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.drawer-profile-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+
+.profile-header-inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.profile-duration-text {
+  font-size: 0.75rem;
+  color: #475569;
+  margin: 0;
+}
+
+.profile-duration-text strong {
+  color: #0f172a;
+}
+
+.drawer-stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.drawer-stat-box {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.5rem 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.drawer-stat-label {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.drawer-stat-val {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.drawer-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.5rem;
 }
