@@ -1,17 +1,18 @@
+<!-- course-enlistment.component.html -->
 <div class="enlistment-container">
   <p-confirmdialog key="enrollmentConfirmDialog"></p-confirmdialog>
 
   <!-- Summary Card -->
   <div class="summary-card">
     <div class="summary-header">
-      <div>
+      <div class="summary-title-group">
         <h3 class="summary-title">
           <i class="pi pi-check-square summary-icon"></i>
-          Official Enlistment & Registration Summary
+          Official Enlistment &amp; Registration Summary
         </h3>
         <span class="summary-subtitle">
           Official enrollment records for academic term: 
-          <strong>{{ store.enrollment()?.termName || 'Current Academic Term' }}</strong>
+          <strong class="font-semibold-navy">{{ store.enrollment()?.termName || 'Current Academic Term' }}</strong>
         </span>
       </div>
 
@@ -20,34 +21,36 @@
           <p-tag [value]="enr.status" [severity]="getStatusSeverity(enr.status)"></p-tag>
           
           @if (enr.status !== 'ENROLLED' && enr.items && enr.items.length > 0) {
-            <button 
-              pButton 
-              type="button" 
+            <p-button 
               label="Finalize Enrollment" 
               icon="pi pi-check-circle" 
-              class="p-button-success p-button-sm"
+              size="small"
+              severity="success"
               [loading]="store.isEnlisting()"
-              (click)="confirmFinalizeEnrollment()">
-            </button>
+              (onClick)="confirmFinalizeEnrollment()">
+            </p-button>
           }
         }
       </div>
     </div>
 
-    <!-- Units & Metrics Grid (Bento Style) -->
+    <!-- Units & Metrics Grid (Compact Bento Style) -->
     @if (store.isLoading()) {
       <div class="metrics-grid">
-        <div class="metric-box">
-          <p-skeleton width="60%" height="0.875rem" styleClass="mb-2"></p-skeleton>
-          <p-skeleton width="80%" height="1.5rem"></p-skeleton>
+        <div class="metric-card">
+          <p-skeleton width="50%" height="0.75rem" styleClass="mb-2"></p-skeleton>
+          <p-skeleton width="70%" height="1.25rem" styleClass="mb-1"></p-skeleton>
+          <p-skeleton width="40%" height="0.65rem"></p-skeleton>
         </div>
-        <div class="metric-box">
-          <p-skeleton width="60%" height="0.875rem" styleClass="mb-2"></p-skeleton>
-          <p-skeleton width="80%" height="1.5rem"></p-skeleton>
+        <div class="metric-card">
+          <p-skeleton width="50%" height="0.75rem" styleClass="mb-2"></p-skeleton>
+          <p-skeleton width="70%" height="1.25rem" styleClass="mb-1"></p-skeleton>
+          <p-skeleton width="40%" height="0.65rem"></p-skeleton>
         </div>
-        <div class="metric-box">
-          <p-skeleton width="60%" height="0.875rem" styleClass="mb-2"></p-skeleton>
-          <p-skeleton width="80%" height="1.5rem"></p-skeleton>
+        <div class="metric-card">
+          <p-skeleton width="50%" height="0.75rem" styleClass="mb-2"></p-skeleton>
+          <p-skeleton width="70%" height="1.25rem" styleClass="mb-1"></p-skeleton>
+          <p-skeleton width="40%" height="0.65rem"></p-skeleton>
         </div>
       </div>
     } @else {
@@ -59,14 +62,16 @@
           </span>
           <span class="metric-subtext">Current Academic Term</span>
         </div>
+
         <div class="metric-card">
           <span class="metric-label">Total Credit Units</span>
           <span class="metric-value font-bold-navy font-mono">{{ store.totalUnits() }} / {{ store.maxUnits() }} Units</span>
           <span class="metric-subtext">CHED Term Load Cap</span>
         </div>
+
         <div class="metric-card">
           <span class="metric-label">Registration Status</span>
-          <div class="mt-1">
+          <div class="metric-status-row">
             <p-tag [value]="store.enrollment()?.status || 'NOT_STARTED'" [severity]="getStatusSeverity(store.enrollment()?.status || 'DRAFT')"></p-tag>
           </div>
           <span class="metric-subtext">Enrollment Lifecycle</span>
@@ -75,7 +80,7 @@
     }
   </div>
 
-  <!-- Enlisted Classes Table -->
+  <!-- Enlisted Classes Table Card -->
   <div class="table-card">
     <div class="table-card-header">
       <div>
@@ -93,50 +98,60 @@
       
       <ng-template pTemplate="header">
         <tr>
-          <th>Section</th>
+          <th style="width: 110px;">Section</th>
           <th>Course</th>
-          <th>Units</th>
-          <th>Timetable & Room Schedule</th>
-          <th>Status</th>
-          <th style="width: 100px; text-align: center;">Action</th>
+          <th style="width: 100px; text-align: center;">Units</th>
+          <th>Timetable &amp; Room Schedule</th>
+          <th style="width: 110px; text-align: center;">Status</th>
+          <th style="width: 90px; text-align: right;">Action</th>
         </tr>
       </ng-template>
 
       <ng-template pTemplate="body" let-item>
-        <tr (click)="openItemDrawer(item)" class="table-row-hover">
-          <td><strong class="section-code-badge font-mono font-bold-navy">{{ item.sectionCode }}</strong></td>
+        <tr 
+          tabindex="0"
+          role="button"
+          [attr.aria-label]="'View details for ' + item.courseCode + ' section ' + item.sectionCode"
+          (click)="openItemDrawer(item)"
+          (keydown.enter)="openItemDrawer(item)"
+          (keydown.space)="$event.preventDefault(); openItemDrawer(item)"
+          class="table-row-hover focus:outline-none focus:bg-slate-100">
+          <td>
+            <span class="section-code-badge font-mono">{{ item.sectionCode }}</span>
+          </td>
           <td>
             <div class="course-cell">
               <span class="course-code font-mono font-bold-navy">{{ item.courseCode }}</span>
               <span class="course-title">{{ item.courseTitle }}</span>
             </div>
           </td>
-          <td>
-            <span class="units-text font-mono font-semibold">{{ item.creditUnits }} units</span>
+          <td style="text-align: center;">
+            <span class="units-pill font-mono">{{ item.creditUnits }} Units</span>
           </td>
           <td>
             <div class="table-schedule-list">
               @for (slot of formatScheduleSlots(item.scheduleSummary); track slot.day + '-' + slot.timeRoom + '-' + $index) {
                 <div class="table-schedule-pill">
-                  <span class="table-schedule-day font-mono font-bold">{{ slot.day }}</span>
+                  <span class="table-schedule-day font-mono">{{ slot.day }}</span>
                   <span class="table-schedule-time">{{ slot.timeRoom }}</span>
                 </div>
               }
             </div>
           </td>
-          <td>
+          <td style="text-align: center;">
             <p-tag [value]="item.completionStatus" [severity]="getStatusSeverity(item.completionStatus)"></p-tag>
           </td>
-          <td style="text-align: center;" (click)="$event.stopPropagation()">
-            <button 
-              pButton 
-              type="button" 
+          <td style="text-align: right;" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+            <p-button 
               icon="pi pi-trash" 
-              class="p-button-danger p-button-text p-button-sm"
+              size="small"
+              [text]="true"
+              severity="danger"
+              aria-label="Drop Section"
               title="Drop Section"
               [disabled]="store.enrollment()?.status === 'ENROLLED' || store.isEnlisting()"
-              (click)="confirmDropSection(item)">
-            </button>
+              (onClick)="confirmDropSection(item)">
+            </p-button>
           </td>
         </tr>
       </ng-template>
@@ -144,12 +159,12 @@
       <ng-template pTemplate="loadingbody">
         @for (i of [1, 2, 3]; track i) {
           <tr>
-            <td><p-skeleton width="80px"></p-skeleton></td>
-            <td><p-skeleton width="200px"></p-skeleton></td>
-            <td><p-skeleton width="60px"></p-skeleton></td>
-            <td><p-skeleton width="160px"></p-skeleton></td>
-            <td><p-skeleton width="80px"></p-skeleton></td>
-            <td><p-skeleton width="60px"></p-skeleton></td>
+            <td><p-skeleton width="70px"></p-skeleton></td>
+            <td><p-skeleton width="190px"></p-skeleton></td>
+            <td><p-skeleton width="50px"></p-skeleton></td>
+            <td><p-skeleton width="180px"></p-skeleton></td>
+            <td><p-skeleton width="70px"></p-skeleton></td>
+            <td><p-skeleton width="40px"></p-skeleton></td>
           </tr>
         }
       </ng-template>
@@ -157,8 +172,8 @@
       <ng-template pTemplate="emptymessage">
         <tr>
           <td colspan="6" class="empty-state-cell">
-            <div class="empty-state-card flex-col flex-center py-6">
-              <div class="empty-state-icon flex-center">
+            <div class="empty-state-card">
+              <div class="empty-state-icon">
                 <i class="pi pi-folder-open"></i>
               </div>
               <h4 class="empty-state-title">No Courses Currently Enlisted</h4>
@@ -172,20 +187,22 @@
 
   <!-- Master-Detail Drawer for Enlisted Item Profile -->
   <p-drawer 
-    [(visible)]="isItemDrawerOpen" 
+    [visible]="isItemDrawerOpen()" 
+    (visibleChange)="isItemDrawerOpen.set($event)"
     position="right" 
     [modal]="true"
     [blockScroll]="true"
     ariaLabelledBy="enlisted-item-drawer-title"
-    styleClass="institutional-drawer w-full md:w-[32rem]"
-    (onHide)="isItemDrawerOpen.set(false)">
+    styleClass="institutional-drawer item-detail-drawer w-full sm:w-[28rem]">
     
     <ng-template pTemplate="header">
-      <div class="flex items-center gap-2">
-        <i class="pi pi-book text-emerald-800 text-base"></i>
-        <div>
-          <span class="text-xs font-bold text-emerald-800 uppercase tracking-wider block">Enlisted Section Profile</span>
-          <h3 id="enlisted-item-drawer-title" class="text-sm font-bold text-slate-900 m-0 mt-0.5">
+      <div class="drawer-header-content">
+        <div class="drawer-header-avatar">
+          <i class="pi pi-book text-emerald-800"></i>
+        </div>
+        <div class="drawer-header-titles">
+          <span class="drawer-pre-title">Enlisted Subject Details</span>
+          <h3 id="enlisted-item-drawer-title" class="drawer-main-title">
             {{ selectedEnlistedItem()?.courseCode }} — {{ selectedEnlistedItem()?.courseTitle }}
           </h3>
         </div>
@@ -193,89 +210,69 @@
     </ng-template>
 
     <ng-template pTemplate="content">
-      @if (selectedEnlistedItem()) {
-        <div class="drawer-content-body">
-        <!-- Header Badge Row: Section Tag + Status Tag + Credit Units -->
-        <div class="drawer-badge-row">
-          <div class="drawer-badge-group">
-            <span class="drawer-section-badge">
-              Section {{ selectedEnlistedItem()!.sectionCode }}
-            </span>
-            <p-tag [severity]="getStatusSeverity(selectedEnlistedItem()!.completionStatus)" [value]="selectedEnlistedItem()!.completionStatus"></p-tag>
-          </div>
-          <span class="drawer-units-badge">
-            {{ selectedEnlistedItem()!.creditUnits }} Credit Units
-          </span>
-        </div>
-
-        <!-- Subject Info Block (Dedicated Component Card) -->
-        <div class="subject-info-card">
-          <div class="subject-info-header">
-            <span class="subject-info-badge">
-              <i class="pi pi-book"></i>
-              Subject Information
-            </span>
-            <span class="subject-units-pill">
-              {{ selectedEnlistedItem()!.creditUnits }} Credit Units
-            </span>
-          </div>
-
-          <div class="subject-info-body">
-            <div class="subject-code-row">
-              <span class="subject-code-chip">{{ selectedEnlistedItem()!.courseCode }}</span>
-              <h4 class="subject-title">{{ selectedEnlistedItem()!.courseTitle }}</h4>
+      @if (selectedEnlistedItem(); as item) {
+        <div class="drawer-scroll-container">
+          <!-- Overview Card -->
+          <div class="drawer-summary-card">
+            <div class="summary-badge-row">
+              <div class="flex items-center gap-1.5">
+                <span class="code-badge font-mono">Sec. {{ item.sectionCode }}</span>
+                <p-tag [severity]="getStatusSeverity(item.completionStatus)" [value]="item.completionStatus"></p-tag>
+              </div>
+              <span class="units-pill font-mono">
+                {{ item.creditUnits }} Credit Units
+              </span>
             </div>
 
-            <div class="subject-details-grid">
-              <div class="subject-detail-item">
-                <span class="detail-label">Section Code</span>
-                <span class="detail-value font-mono">{{ selectedEnlistedItem()!.sectionCode }}</span>
+            <div class="course-profile-title-block">
+              <span class="course-profile-code font-mono">{{ item.courseCode }}</span>
+              <h4 class="course-profile-title">{{ item.courseTitle }}</h4>
+            </div>
+          </div>
+
+          <!-- Section: Academic Metrics -->
+          <div class="drawer-group-section">
+            <h5 class="drawer-group-title">
+              <i class="pi pi-id-card"></i> Section Profile &amp; Evaluation
+            </h5>
+            <div class="drawer-info-grid">
+              <div class="drawer-info-card">
+                <span class="info-card-label">Section Identifier</span>
+                <span class="info-card-value font-mono">{{ item.sectionCode }}</span>
               </div>
-              <div class="subject-detail-item">
-                <span class="detail-label">Completion Status</span>
-                <span class="detail-value">
-                  <p-tag [value]="selectedEnlistedItem()!.completionStatus" [severity]="getStatusSeverity(selectedEnlistedItem()!.completionStatus)"></p-tag>
-                </span>
+              <div class="drawer-info-card">
+                <span class="info-card-label">Credit Metric</span>
+                <span class="info-card-value font-mono">{{ item.creditUnits }} Units</span>
               </div>
-              @if (selectedEnlistedItem()!.finalNumericalGrade) {
-                <div class="subject-detail-item">
-                  <span class="detail-label">Final Grade</span>
-                  <span class="detail-value font-bold text-emerald-800">{{ selectedEnlistedItem()!.finalNumericalGrade | number:'1.2-2' }}</span>
+              @if (item.finalNumericalGrade) {
+                <div class="drawer-info-card">
+                  <span class="info-card-label">Evaluated Final Grade</span>
+                  <span class="info-card-value font-mono text-emerald-800">{{ item.finalNumericalGrade | number:'1.2-2' }}</span>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Section: Class Schedule & Venue -->
+          <div class="drawer-group-section">
+            <h5 class="drawer-group-title">
+              <i class="pi pi-calendar"></i> Timetable &amp; Room Allocations
+            </h5>
+            <div class="timetable-slots-list">
+              @for (slot of formatScheduleSlots(item.scheduleSummary); track slot.day + '-' + slot.timeRoom + '-' + $index) {
+                <div class="timetable-slot-row">
+                  <span class="timetable-day-pill font-mono">{{ slot.day }}</span>
+                  <span class="timetable-time-room">{{ slot.timeRoom }}</span>
                 </div>
               }
             </div>
           </div>
         </div>
-
-        <!-- Timetable Slots Block (Dedicated Card) -->
-        <div class="timetable-card">
-          <div class="timetable-card-header">
-            <span class="timetable-header-title">
-              <i class="pi pi-calendar timetable-icon"></i>
-              Timetable & Room Schedule
-            </span>
-            <span class="timetable-header-sub">Class Commitments</span>
-          </div>
-
-          <div class="timetable-slots-list">
-            @for (slot of formatScheduleSlots(selectedEnlistedItem()?.scheduleSummary); track slot.day + '-' + slot.timeRoom + '-' + $index) {
-              <div class="timetable-slot-row">
-                <span class="timetable-day-pill">
-                  {{ slot.day }}
-                </span>
-                <span class="timetable-time-room">
-                  {{ slot.timeRoom }}
-                </span>
-              </div>
-            }
-          </div>
-        </div>
-        </div>
       }
     </ng-template>
 
     <ng-template pTemplate="footer">
-      <div class="flex items-center justify-between w-full gap-2">
+      <div class="drawer-action-footer">
         <p-button 
           label="Close Details" 
           icon="pi pi-times" 
@@ -286,7 +283,7 @@
         </p-button>
         @if (store.enrollment()?.status !== 'ENROLLED' && selectedEnlistedItem()) {
           <p-button 
-            label="Drop Enlisted Section" 
+            label="Drop Section" 
             icon="pi pi-trash" 
             severity="danger" 
             size="small"

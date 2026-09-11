@@ -1,12 +1,13 @@
+<!-- enrollment.component.html -->
 <div class="enrollment-module-container">
   <!-- Institutional Header & Navigation -->
   <header class="enrollment-header">
     <div class="header-branding">
       <div class="institutional-badge">
         <i class="pi pi-briefcase"></i>
-        <span>ACADEMIC AFFAIRS & REGISTRAR</span>
+        <span>Academic Affairs &amp; Registrar</span>
       </div>
-      <h1 class="portal-title">Enrollment & Course Advising Portal</h1>
+      <h1 class="portal-title">Enrollment &amp; Course Advising Portal</h1>
       <p class="portal-description">
         Manage curriculum progress, course enlistments, prerequisite compliance, and administrative enrollment status verification.
       </p>
@@ -14,15 +15,16 @@
 
     <div class="header-controls">
       <div class="global-term-box">
-        <span class="term-box-label">Academic Term</span>
+        <label for="enrollmentTermSelect" class="term-box-label">Academic Term</label>
         <p-select 
+          id="enrollmentTermSelect"
           [options]="store.terms()" 
           [ngModel]="store.selectedTermId()" 
           (ngModelChange)="store.setSelectedTermId($event)"
           optionLabel="termName" 
           optionValue="id" 
           placeholder="Select Term"
-          styleClass="term-select-dropdown">
+          styleClass="p-inputtext-sm term-select-dropdown text-xs">
         </p-select>
       </div>
 
@@ -32,13 +34,14 @@
         (ngModelChange)="setTab($event)" 
         optionLabel="label" 
         optionValue="value"
+        styleClass="selectbutton-chmsu"
         aria-label="Enrollment Module Navigation">
-        <ng-template #item let-item>
+        <ng-template pTemplate="item" let-item>
           <div class="switcher-item">
             <i [class]="item.icon"></i>
             <span class="switcher-label">{{ item.label }}</span>
             @if (item.value === 'enlistment' && store.enrollment()?.items?.length) {
-              <span class="enlistment-badge">
+              <span class="enlistment-badge font-mono">
                 {{ store.enrollment()?.items?.length }}
               </span>
             }

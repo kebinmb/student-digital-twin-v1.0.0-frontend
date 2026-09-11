@@ -1,81 +1,96 @@
+/* enrollment.component.css */
+:host {
+  display: block;
+}
+
 .enrollment-module-container {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
   width: 100%;
 }
+
+/* ==========================================================================
+   COMPACT INSTITUTIONAL HEADER
+   ========================================================================== */
 
 .enrollment-header {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  background: var(--p-surface-0, #ffffff);
-  border: 1px solid var(--p-surface-200, #e5e7eb);
-  border-radius: 0.75rem;
-  padding: 1.5rem 1.75rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  gap: 1rem;
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-border-color, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 1rem 1.25rem;
+  box-shadow: var(--chmsu-shadow-card);
 }
 
-@media (min-width: 768px) {
+@media (min-width: 900px) {
   .enrollment-header {
     flex-direction: row;
-    align-items: center;
+    align-items: flex-end;
     justify-content: space-between;
+    gap: 1.5rem;
   }
 }
 
 .header-branding {
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
-  max-width: 42rem;
+  gap: 0.25rem;
+  max-width: 44rem;
 }
 
 .institutional-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.375rem;
-  font-size: 0.6875rem;
+  gap: 0.35rem;
+  font-size: 0.625rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--p-primary-color, #116834);
-  background: rgba(17, 104, 52, 0.08);
-  padding: 0.25rem 0.625rem;
-  border-radius: 0.375rem;
+  color: var(--chmsu-green-main, #116834);
+  background: var(--chmsu-green-soft, #f0fdf4);
+  border: 1px solid var(--status-emerald-border, #a7f3d0);
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--chmsu-border-radius-sm, 6px);
   width: fit-content;
 }
 
 .institutional-badge i {
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
 }
 
 .portal-title {
+  font-family: var(--font-family-heading);
   margin: 0;
-  font-size: 1.375rem;
+  font-size: 1.0625rem;
   font-weight: 700;
-  color: var(--p-surface-900, #111827);
-  line-height: 1.25;
+  color: var(--chmsu-navy-900, #0f172a);
+  line-height: 1.3;
+  letter-spacing: -0.01em;
 }
 
 .portal-description {
   margin: 0;
-  font-size: 0.84375rem;
-  color: var(--p-surface-600, #4b5563);
+  font-size: 0.75rem;
+  color: var(--chmsu-slate-500, #64748b);
   line-height: 1.4;
 }
 
+/* Header Controls & View Switcher */
 .header-controls {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  align-items: flex-start;
+  gap: 0.625rem;
+  align-items: stretch;
+  flex-shrink: 0;
 }
 
 @media (min-width: 640px) {
   .header-controls {
     flex-direction: row;
-    align-items: center;
+    align-items: flex-end;
   }
 }
 
@@ -89,42 +104,60 @@
   font-size: 0.6875rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--p-surface-600, #4b5563);
+  letter-spacing: 0.04em;
+  color: var(--chmsu-navy-800, #1e293b);
 }
 
 :host ::ng-deep .term-select-dropdown {
-  min-width: 220px;
+  min-width: 200px;
+}
+
+/* PrimeNG SelectButton Customization */
+:host ::ng-deep .selectbutton-chmsu .p-button {
+  font-size: 0.75rem;
+  padding: 0.45rem 0.75rem;
+  border-color: var(--chmsu-slate-300, #cbd5e1);
+}
+
+:host ::ng-deep .selectbutton-chmsu .p-button.p-selectbutton-selected {
+  background: var(--chmsu-green-main, #116834) !important;
+  border-color: var(--chmsu-green-main, #116834) !important;
+  color: #ffffff !important;
 }
 
 .switcher-item {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem 0.5rem;
+  gap: 0.4rem;
 }
 
 .switcher-item i {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
 }
 
 .switcher-label {
   font-weight: 600;
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
 }
 
 .enlistment-badge {
-  background: var(--p-primary-color, #116834);
+  background: var(--chmsu-gold-main, #d97706);
   color: #ffffff;
-  font-size: 0.6875rem;
+  font-size: 0.625rem;
   font-weight: 700;
-  padding: 0.125rem 0.45rem;
+  padding: 0.1rem 0.4rem;
   border-radius: 9999px;
   line-height: 1;
 }
 
+:host ::ng-deep .p-button.p-selectbutton-selected .enlistment-badge {
+  background: #ffffff;
+  color: var(--chmsu-green-main, #116834);
+}
+
+/* Content Area */
 .enrollment-content {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
 }
