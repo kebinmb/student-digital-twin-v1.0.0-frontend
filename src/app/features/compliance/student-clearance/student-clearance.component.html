@@ -1,0 +1,107 @@
+<!-- File: src/app/features/compliance/student-clearance/student-clearance.component.html -->
+<div class="clearance-container p-4">
+  <div class="flex flex-column md:flex-row justify-content-between align-items-start md:align-items-center mb-4 gap-3">
+    <div>
+      <h1 class="text-3xl font-bold text-900 m-0">Student Multi-Department Clearance</h1>
+      <p class="text-500 m-0 mt-1">Track and sign off clearance requests for Library, Accounting, Lab, Student Affairs & Dean</p>
+    </div>
+  </div>
+
+  <!-- Initiate & Search Toolbar -->
+  <div class="card p-4 surface-card border-round shadow-1 mb-4">
+    <div class="grid p-fluid align-items-center">
+      <div class="col-12 md:col-3">
+        <label class="font-semibold text-700 block mb-2">Student Profile ID</label>
+        <p-inputNumber [(ngModel)]="searchStudentId" placeholder="Enter Student Profile ID" [useGrouping]="false" (onKeyDown.enter)="loadClearanceStatus()"></p-inputNumber>
+      </div>
+      <div class="col-12 md:col-3">
+        <label class="font-semibold text-700 block mb-2">Academic Term ID</label>
+        <p-inputNumber [(ngModel)]="searchTermId" placeholder="Term ID (e.g., 1)" [useGrouping]="false"></p-inputNumber>
+      </div>
+      <div class="col-12 md:col-3">
+        <label class="font-semibold text-700 block mb-2">Clearance Purpose</label>
+        <p-select [options]="purposes" [(ngModel)]="initiatePurpose" optionLabel="label" optionValue="value" class="w-full"></p-select>
+      </div>
+      <div class="col-12 md:col-3 flex align-items-end gap-2 mt-2 md:mt-0">
+        <p-button label="Check Clearance" icon="pi pi-search" severity="secondary" [loading]="isLoading()" (onClick)="loadClearanceStatus()"></p-button>
+        <p-button label="Initiate Clearance" icon="pi pi-bolt" severity="success" class="flex-grow-1" [loading]="isInitiating()" (onClick)="initiateClearance()"></p-button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clearance Status Overview -->
+  <div *ngIf="clearanceRequest() as req" class="grid mb-4">
+    <div class="col-12">
+      <div class="card surface-card border-round p-4 shadow-1">
+        <div class="flex justify-content-between align-items-center mb-3">
+          <div>
+            <span class="text-500 text-xs font-semibold">CLEARANCE REQUEST #{{ req.id }}</span>
+            <h2 class="text-2xl font-bold text-primary m-0">{{ req.studentName }} ({{ req.studentNumber }})</h2>
+            <p class="text-500 text-sm m-0 mt-1">Purpose: <span class="font-semibold text-800">{{ req.purpose }}</span> | Term: {{ req.termName }}</p>
+          </div>
+          <p-tag [value]="req.overallStatus" [severity]="getStatusSeverity(req.overallStatus)" styleClass="text-lg px-3 py-2"></p-tag>
+        </div>
+
+        <h3 class="text-lg font-bold text-900 mb-3 border-top-1 surface-border pt-3">Department Sign-off Timeline</h3>
+        <p-table [value]="req.signoffs" responsiveLayout="scroll">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Department</th>
+              <th>Status</th>
+              <th>Remarks</th>
+              <th>Approved By</th>
+              <th>Signed Date</th>
+              <th>Action</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-s>
+            <tr>
+              <td class="font-bold text-700">{{ s.departmentType }}</td>
+              <td><p-tag [value]="s.signoffStatus" [severity]="getStatusSeverity(s.signoffStatus)"></p-tag></td>
+              <td>{{ s.remarks || '-' }}</td>
+              <td>{{ s.signedByUsername || 'Pending Sign-off' }}</td>
+              <td>{{ s.signedAt || '-' }}</td>
+              <td>
+                <p-button label="Process Sign-off" icon="pi pi-pencil" severity="info" size="small" (onClick)="openSignoffModal(s)"></p-button>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Signoff Action Modal -->
+<p-dialog [(visible)]="showSignoffModal" [modal]="true" [style]="{width: '450px'}" header="Process Department Sign-off">
+  <div *ngIf="selectedSignoff() as s" class="p-fluid">
+    <div class="field mb-3">
+      <label class="font-semibold text-700 block mb-2">Department</label>
+      <input type="text" pInputText [value]="s.departmentType" disabled />
+    </div>
+
+    <div class="field mb-3">
+      <label class="font-semibold text-700 block mb-2">Sign-off Decision</label>
+      <div class="flex gap-3">
+        <div class="flex align-items-center">
+          <input type="radio" id="app" name="status" value="APPROVED" [(ngModel)]="signoffActionStatus" />
+          <label for="app" class="ml-2 font-semibold text-green-600">APPROVE CLEARANCE</label>
+        </div>
+        <div class="flex align-items-center">
+          <input type="radio" id="rej" name="status" value="REJECTED" [(ngModel)]="signoffActionStatus" />
+          <label for="rej" class="ml-2 font-semibold text-red-600">HOLD / REJECT</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="field mb-4">
+      <label class="font-semibold text-700 block mb-2">Remarks / Hold Reason</label>
+      <input type="text" pInputText [(ngModel)]="signoffRemarks" placeholder="Enter remarks..." />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Submit Decision" icon="pi pi-check" severity="success" (onClick)="submitSignoff()"></p-button>
+    <p-button label="Cancel" icon="pi pi-times" severity="secondary" (onClick)="showSignoffModal.set(false)"></p-button>
+  </ng-template>
+</p-dialog>

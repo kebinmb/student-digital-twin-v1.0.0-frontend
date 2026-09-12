@@ -1,0 +1,104 @@
+<!-- File: src/app/features/finance/student-account-ledger/student-account-ledger.component.html -->
+<div class="ledger-container p-4">
+  <div class="flex flex-column md:flex-row justify-content-between align-items-start md:align-items-center mb-4 gap-3">
+    <div>
+      <h1 class="text-3xl font-bold text-900 m-0">Student Account Ledger</h1>
+      <p class="text-500 m-0 mt-1">Financial assessment, tuition billing, subsidies, and transaction history</p>
+    </div>
+  </div>
+
+  <!-- Assessment & Search Header Controls -->
+  <div class="grid mb-4">
+    <div class="col-12 md:col-6">
+      <div class="card p-3 surface-card border-round shadow-1 h-full">
+        <h3 class="text-lg font-semibold text-800 mb-3 flex align-items-center gap-2">
+          <i class="pi pi-calculator text-primary"></i> Assess Student Tuition Fee
+        </h3>
+        <div class="p-fluid flex gap-2">
+          <p-inputNumber [(ngModel)]="assessEnrollmentId" placeholder="Enter Student Enrollment ID" [useGrouping]="false" class="flex-grow-1"></p-inputNumber>
+          <p-button label="Assess Tuition" icon="pi pi-bolt" severity="success" [loading]="isAssessing()" (onClick)="assessStudentEnrollment()"></p-button>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 md:col-6">
+      <div class="card p-3 surface-card border-round shadow-1 h-full">
+        <h3 class="text-lg font-semibold text-800 mb-3 flex align-items-center gap-2">
+          <i class="pi pi-search text-primary"></i> Query Student Financial Ledger
+        </h3>
+        <div class="p-fluid flex gap-2">
+          <p-inputNumber [(ngModel)]="searchStudentId" placeholder="Enter Student Profile ID" [useGrouping]="false" class="flex-grow-1" (onKeyDown.enter)="loadLedgerHistory()"></p-inputNumber>
+          <p-button label="Load Ledger" icon="pi pi-history" [loading]="isLoading()" (onClick)="loadLedgerHistory()"></p-button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="grid mb-4" *ngIf="ledgerEntries().length > 0">
+    <div class="col-12 md:col-4">
+      <div class="card surface-card border-round p-3 shadow-1 text-center">
+        <span class="text-500 text-sm font-semibold block">TOTAL BILLED CHARGES (DEBITS)</span>
+        <span class="text-2xl font-bold text-red-600">₱{{ totalDebits() | number:'1.2-2' }}</span>
+      </div>
+    </div>
+    <div class="col-12 md:col-4">
+      <div class="card surface-card border-round p-3 shadow-1 text-center">
+        <span class="text-500 text-sm font-semibold block">TOTAL PAYMENTS & SUBSIDIES (CREDITS)</span>
+        <span class="text-2xl font-bold text-green-600">₱{{ totalCredits() | number:'1.2-2' }}</span>
+      </div>
+    </div>
+    <div class="col-12 md:col-4">
+      <div class="card surface-card border-round p-3 shadow-1 text-center">
+        <span class="text-500 text-sm font-semibold block">CURRENT NET RUNNING BALANCE</span>
+        <span class="text-2xl font-bold" [ngClass]="{'text-orange-600': currentBalance() > 0, 'text-green-600': currentBalance() <= 0}">
+          ₱{{ currentBalance() | number:'1.2-2' }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ledger Transaction History Table -->
+  <div class="card surface-card border-round p-4 shadow-1">
+    <h2 class="text-xl font-bold text-900 mb-3">Transaction History Ledger</h2>
+    <p-table [value]="ledgerEntries()" [rows]="10" [paginator]="true" responsiveLayout="scroll">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Txn #</th>
+          <th>Date</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Debit (₱)</th>
+          <th>Credit (₱)</th>
+          <th>Running Balance (₱)</th>
+          <th>Ref #</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-entry>
+        <tr>
+          <td class="font-semibold text-primary">{{ entry.transactionNumber }}</td>
+          <td>{{ entry.transactionDate }}</td>
+          <td>
+            <p-tag [value]="entry.transactionType" [severity]="getTransactionTypeSeverity(entry.transactionType)"></p-tag>
+          </td>
+          <td>{{ entry.description }}</td>
+          <td class="font-bold text-red-600">
+            {{ entry.debitAmount > 0 ? ('₱' + (entry.debitAmount | number:'1.2-2')) : '-' }}
+          </td>
+          <td class="font-bold text-green-600">
+            {{ entry.creditAmount > 0 ? ('₱' + (entry.creditAmount | number:'1.2-2')) : '-' }}
+          </td>
+          <td class="font-bold" [ngClass]="{'text-orange-600': entry.runningBalance > 0, 'text-green-600': entry.runningBalance <= 0}">
+            ₱{{ entry.runningBalance | number:'1.2-2' }}
+          </td>
+          <td class="text-500 text-sm">{{ entry.referenceNumber || '-' }}</td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8" class="text-center p-4 text-500">No ledger transactions recorded yet. Search for a student profile above.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

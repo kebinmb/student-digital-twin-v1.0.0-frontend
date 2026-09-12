@@ -3,6 +3,15 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import { AuthService } from './auth-service';
 
+let store: Record<string, string> = {};
+const mockLocalStorage = {
+  getItem: (key: string) => store[key] || null,
+  setItem: (key: string, value: string) => { store[key] = value ? value.toString() : ''; },
+  removeItem: (key: string) => { delete store[key]; },
+  clear: () => { store = {}; }
+};
+Object.defineProperty(globalThis, 'localStorage', { value: mockLocalStorage, writable: true, configurable: true });
+
 describe('AuthService', () => {
   let service: AuthService;
 

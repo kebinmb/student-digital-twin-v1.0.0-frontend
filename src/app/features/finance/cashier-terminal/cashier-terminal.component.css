@@ -1,0 +1,22 @@
+/* File: src/app/features/finance/cashier-terminal/cashier-terminal.component.css */
+
+.cashier-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .p-dialog, .p-dialog * {
+    visibility: visible;
+  }
+  .p-dialog {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    box-shadow: none !important;
+  }
+}

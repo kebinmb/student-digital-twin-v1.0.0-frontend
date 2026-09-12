@@ -1,0 +1,108 @@
+<!-- File: src/app/features/compliance/degree-audit/degree-audit.component.html -->
+<div class="audit-container p-4">
+  <div class="flex flex-column md:flex-row justify-content-between align-items-start md:align-items-center mb-4 gap-3">
+    <div>
+      <h1 class="text-3xl font-bold text-900 m-0">Automated Degree Audit & Graduation</h1>
+      <p class="text-500 m-0 mt-1">Evaluate curriculum completion, residency, GPA, honors eligibility & CHED Special Orders</p>
+    </div>
+  </div>
+
+  <!-- Search & Action Header Controls -->
+  <div class="card p-4 surface-card border-round shadow-1 mb-4">
+    <div class="grid p-fluid align-items-center">
+      <div class="col-12 md:col-4">
+        <label class="font-semibold text-700 block mb-2">Student Profile ID</label>
+        <p-inputNumber [(ngModel)]="searchStudentId" placeholder="Enter Student Profile ID" [useGrouping]="false" (onKeyDown.enter)="runDegreeAudit()"></p-inputNumber>
+      </div>
+      <div class="col-12 md:col-4">
+        <label class="font-semibold text-700 block mb-2">Graduation Term ID</label>
+        <p-inputNumber [(ngModel)]="applyTermId" placeholder="Term ID" [useGrouping]="false"></p-inputNumber>
+      </div>
+      <div class="col-12 md:col-4 flex align-items-end gap-2 mt-2 md:mt-0">
+        <p-button label="Run Degree Audit" icon="pi pi-shield" [loading]="isLoading()" (onClick)="runDegreeAudit()"></p-button>
+        <p-button label="Apply for Graduation" icon="pi pi-send" severity="success" class="flex-grow-1" [loading]="isApplying()" (onClick)="applyForGraduation()"></p-button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audit Summary Metrics -->
+  <div *ngIf="auditResult() as audit" class="grid mb-4">
+    <div class="col-12">
+      <div class="card surface-card border-round p-4 shadow-1">
+        <div class="flex justify-content-between align-items-center mb-4">
+          <div>
+            <span class="text-500 text-xs font-semibold">STUDENT AUDIT PROFILE</span>
+            <h2 class="text-2xl font-bold text-primary m-0">{{ audit.studentName }} ({{ audit.studentNumber }})</h2>
+            <p class="text-500 text-sm m-0 mt-1">Program: <span class="font-semibold text-800">{{ audit.programCode }}</span> | Curriculum: {{ audit.curriculumCode }}</p>
+          </div>
+          <div class="flex gap-2">
+            <p-tag [value]="audit.qualifiedForGraduation ? 'QUALIFIED FOR GRADUATION' : 'INCOMPLETE CURRICULUM'" [severity]="audit.qualifiedForGraduation ? 'success' : 'danger'" styleClass="text-lg px-3 py-2"></p-tag>
+            <p-tag *ngIf="audit.honorsEligible !== 'NONE'" [value]="audit.honorsEligible" [severity]="getHonorsSeverity(audit.honorsEligible)" styleClass="text-lg px-3 py-2"></p-tag>
+          </div>
+        </div>
+
+        <div class="grid text-center mb-4">
+          <div class="col-12 md:col-3">
+            <div class="surface-100 p-3 border-round">
+              <span class="text-500 text-xs font-semibold block">TOTAL CURRICULUM UNITS</span>
+              <span class="text-2xl font-bold text-900">{{ audit.totalCurriculumUnits }} Units</span>
+            </div>
+          </div>
+          <div class="col-12 md:col-3">
+            <div class="surface-100 p-3 border-round">
+              <span class="text-500 text-xs font-semibold block">TOTAL UNITS EARNED</span>
+              <span class="text-2xl font-bold text-green-600">{{ audit.totalUnitsEarned }} Units</span>
+            </div>
+          </div>
+          <div class="col-12 md:col-3">
+            <div class="surface-100 p-3 border-round">
+              <span class="text-500 text-xs font-semibold block">CUMULATIVE GPA</span>
+              <span class="text-2xl font-bold text-blue-600">{{ audit.cumulativeGpa | number:'1.2-2' }}</span>
+            </div>
+          </div>
+          <div class="col-12 md:col-3">
+            <div class="surface-100 p-3 border-round">
+              <span class="text-500 text-xs font-semibold block">CHMSU RESIDENCY</span>
+              <p-tag [value]="audit.residencyRequirementMet ? 'SATISFIED (>= 50%)' : 'NOT MET'" [severity]="audit.residencyRequirementMet ? 'success' : 'danger'"></p-tag>
+            </div>
+          </div>
+        </div>
+
+        <!-- Special Order Issuance Section -->
+        <div class="surface-hover p-3 border-round mb-4 flex flex-column md:flex-row justify-content-between align-items-center gap-3" *ngIf="audit.qualifiedForGraduation">
+          <div class="flex-grow-1">
+            <h4 class="m-0 text-900 font-bold">CHED Special Order (SO) Issuance</h4>
+            <p class="m-0 text-500 text-sm">Assign CHED SO clearance tracking number for verified graduate.</p>
+          </div>
+          <div class="flex gap-2 w-full md:w-auto">
+            <input type="text" pInputText placeholder="e.g. CHED-SO-2026-0891" [(ngModel)]="specialOrderNumber" />
+            <p-button label="Assign SO" icon="pi pi-check-square" severity="success" [loading]="isIssuingSo()" (onClick)="issueSpecialOrder()"></p-button>
+          </div>
+        </div>
+
+        <!-- Audited Courses Table -->
+        <h3 class="text-lg font-bold text-900 mb-3 border-top-1 surface-border pt-3">Curriculum Audit Matrix</h3>
+        <p-table [value]="audit.auditedCourses" [rows]="10" [paginator]="true" responsiveLayout="scroll">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Course Code</th>
+              <th>Course Title</th>
+              <th>Credit Units</th>
+              <th>Grade Earned</th>
+              <th>Completion Status</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-c>
+            <tr>
+              <td class="font-bold text-primary">{{ c.courseCode }}</td>
+              <td>{{ c.courseTitle }}</td>
+              <td class="text-center font-semibold">{{ c.creditUnits }}</td>
+              <td class="font-bold text-blue-600">{{ c.gradeEarned !== null ? (c.gradeEarned | number:'1.2-2') : '-' }}</td>
+              <td><p-tag [value]="c.status" [severity]="getCourseStatusSeverity(c.status)"></p-tag></td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+  </div>
+</div>

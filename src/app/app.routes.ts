@@ -76,6 +76,18 @@ export const routes: Routes = [
           import('./features/gradebook/faculty-gradebook.component').then(m => m.FacultyGradebookComponent)
       },
       {
+        path: 'finance',
+        canActivate: [roleGuard(['ADMIN', 'ACCOUNTANT', 'CASHIER', 'REGISTRAR', 'STUDENT'])],
+        loadChildren: () =>
+          import('./features/finance/finance.routes').then(m => m.FINANCE_ROUTES)
+      },
+      {
+        path: 'compliance',
+        canActivate: [roleGuard(['ADMIN', 'REGISTRAR', 'DEAN', 'ACCOUNTANT', 'STUDENT'])],
+        loadChildren: () =>
+          import('./features/compliance/compliance.routes').then(m => m.COMPLIANCE_ROUTES)
+      },
+      {
         path: 'users',
         canActivate: [roleGuard(['ADMIN', 'REGISTRAR'])],
         loadComponent: () =>

@@ -4,6 +4,15 @@ import { provideRouter, Router, ActivatedRouteSnapshot, RouterStateSnapshot, Url
 import { roleGuard } from './role.guard';
 import { AuthService } from '../../service/authentication/auth-service';
 
+let store: Record<string, string> = {};
+const mockLocalStorage = {
+  getItem: (key: string) => store[key] || null,
+  setItem: (key: string, value: string) => { store[key] = value ? value.toString() : ''; },
+  removeItem: (key: string) => { delete store[key]; },
+  clear: () => { store = {}; }
+};
+Object.defineProperty(globalThis, 'localStorage', { value: mockLocalStorage, writable: true, configurable: true });
+
 describe('roleGuard', () => {
   let authService: AuthService;
   let router: Router;
