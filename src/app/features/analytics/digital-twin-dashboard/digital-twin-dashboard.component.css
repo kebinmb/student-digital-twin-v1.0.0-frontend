@@ -1,0 +1,197 @@
+.dt-dashboard-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.dt-toolbar-card {
+  background: var(--p-surface-0, #ffffff);
+  border: 1px solid var(--p-surface-200, #e2e8f0);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.header-badge-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.module-badge {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #116834;
+  background-color: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.engine-badge {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #0369a1;
+  background-color: #f0f9ff;
+  border: 1px solid #bae6fd;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.highlight-student {
+  font-weight: 600;
+  color: var(--p-surface-900, #0f172a);
+}
+
+.risk-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .risk-cards-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.risk-overview-card,
+.vector-scores-card,
+.interventions-card {
+  background: #ffffff;
+  border: 1px solid var(--p-surface-200, #e2e8f0);
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.card-section-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--p-surface-500, #64748b);
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+.risk-level-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+:host ::ng-deep .risk-tag {
+  font-size: 0.875rem !important;
+  padding: 0.25rem 0.75rem !important;
+  font-weight: 700 !important;
+}
+
+.evaluation-date {
+  font-size: 0.75rem;
+  color: var(--p-surface-400, #94a3b8);
+}
+
+.dropout-risk-box {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--p-surface-100, #f1f5f9);
+}
+
+.progress-bar-wrapper {
+  display: flex;
+  align-items: center;
+  margin-top: 0.25rem;
+}
+
+:host ::ng-deep .dropout-progress-bar {
+  width: 100% !important;
+  height: 12px !important;
+  border-radius: 9999px !important;
+}
+
+.card-section-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--p-surface-900, #0f172a);
+  margin: 0 0 1rem 0;
+}
+
+.flex-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.icon-interventions {
+  color: #059669;
+}
+
+.vector-scores-card {
+  gap: 0.875rem;
+}
+
+.vector-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.vector-label-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.vector-name {
+  color: var(--p-surface-600, #475569);
+}
+
+.vector-score-val {
+  color: var(--p-surface-900, #0f172a);
+  font-family: var(--font-mono, monospace);
+}
+
+:host ::ng-deep .vector-progress-bar {
+  height: 8px !important;
+  border-radius: 9999px !important;
+}
+
+.interventions-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.intervention-item {
+  font-size: 0.75rem;
+  color: var(--p-surface-700, #334155);
+  background-color: var(--p-surface-50, #f8fafc);
+  padding: 0.625rem;
+  border-radius: 8px;
+  border: 1px solid var(--p-surface-200, #e2e8f0);
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.icon-check {
+  color: #059669;
+  margin-top: 0.1rem;
+  flex-shrink: 0;
+}

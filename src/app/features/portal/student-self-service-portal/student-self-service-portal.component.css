@@ -1,0 +1,439 @@
+/* File: src/app/features/portal/student-self-service-portal/student-self-service-portal.component.css */
+
+.portal-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Institutional Sticky Header Toolbar */
+.portal-toolbar-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 1.25rem 1.5rem;
+  box-shadow: var(--chmsu-shadow-card, 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1));
+}
+
+.header-branding {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.header-icon-box {
+  width: 3.5rem;
+  height: 3.5rem;
+  background: var(--status-emerald-bg, #ecfdf5);
+  border: 1px solid var(--status-emerald-border, #a7f3d0);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--chmsu-green-main, #116834);
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.header-text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.badge-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.badge-tag.green {
+  background: var(--status-emerald-bg, #ecfdf5);
+  border: 1px solid var(--status-emerald-border, #a7f3d0);
+  color: var(--status-emerald-text, #047857);
+  padding: 0.2rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.pulse-dot {
+  font-size: 0.5rem;
+  color: var(--chmsu-green-main, #116834);
+  animation: pulseGreen 2s infinite;
+}
+
+@keyframes pulseGreen {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.2); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.header-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--chmsu-navy-900, #0f172a);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.header-subtitle {
+  font-size: 0.8125rem;
+  color: var(--chmsu-slate-500, #64748b);
+  margin: 0;
+}
+
+.font-mono-bold {
+  font-family: var(--font-family-mono, monospace);
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+}
+
+.font-semibold-navy {
+  font-weight: 600;
+  color: var(--chmsu-navy-900, #0f172a);
+}
+
+/* Bento Stat Summary Cards */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.25rem;
+  width: 100%;
+}
+
+@media (max-width: 1024px) {
+  .stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .stat-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stat-card {
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 1.25rem;
+  box-shadow: var(--chmsu-shadow-card, 0 1px 3px 0 rgba(0, 0, 0, 0.1));
+  display: flex;
+  align-items: flex-start;
+  gap: 1.15rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+  border-color: var(--chmsu-slate-300, #cbd5e1);
+}
+
+.stat-icon-box {
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  flex-shrink: 0;
+}
+
+.stat-icon-box.green {
+  background: var(--status-emerald-bg, #ecfdf5);
+  color: var(--status-emerald-text, #047857);
+}
+
+.stat-icon-box.blue {
+  background: var(--status-blue-bg, #f0f9ff);
+  color: #0284c7;
+}
+
+.stat-icon-box.amber {
+  background: var(--status-amber-bg, #fffbeb);
+  color: var(--status-amber-text, #b45309);
+}
+
+.stat-icon-box.purple {
+  background: #f3e8ff;
+  color: #7c3aed;
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--chmsu-slate-500, #64748b);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.stat-val {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--chmsu-navy-900, #0f172a);
+  line-height: 1.2;
+}
+
+.stat-subtext {
+  font-size: 0.725rem;
+  color: var(--chmsu-slate-500, #64748b);
+}
+
+.green-text {
+  color: var(--status-emerald-text, #047857);
+  font-weight: 600;
+}
+
+.tag-wrapper {
+  margin-top: 0.2rem;
+}
+
+/* Master-Detail Table Card */
+.table-card {
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 1.5rem;
+  box-shadow: var(--chmsu-shadow-card);
+}
+
+.table-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.table-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.icon-green {
+  color: var(--chmsu-green-main, #116834);
+}
+
+.subject-count-badge {
+  font-size: 0.775rem;
+  color: var(--chmsu-slate-500, #64748b);
+}
+
+.toolbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Search Box Control */
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 280px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.75rem;
+  color: var(--chmsu-slate-400, #94a3b8);
+  font-size: 0.875rem;
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  padding-left: 2.25rem !important;
+  padding-right: 2rem !important;
+  font-size: 0.85rem;
+  border-radius: 8px;
+}
+
+.clear-btn {
+  position: absolute;
+  right: 0.5rem;
+  background: transparent;
+  border: none;
+  color: var(--chmsu-slate-400, #94a3b8);
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: color 0.2s ease;
+}
+
+.clear-btn:hover {
+  color: var(--chmsu-navy-900, #0f172a);
+}
+
+/* Table Typography & Cells */
+.font-bold-green {
+  font-weight: 700;
+  color: var(--chmsu-green-main, #116834);
+}
+
+.font-bold-navy {
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+}
+
+.schedule-text {
+  font-size: 0.8125rem;
+  color: var(--chmsu-slate-600, #475569);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.schedule-icon {
+  color: var(--chmsu-slate-400, #94a3b8);
+  font-size: 0.75rem;
+}
+
+/* Custom Grade Chips */
+.grade-chip {
+  display: inline-block;
+  padding: 0.3rem 0.75rem;
+  border-radius: 6px;
+  font-family: var(--font-family-mono, monospace);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.grade-chip-success {
+  background: var(--status-emerald-bg, #ecfdf5);
+  border: 1px solid var(--status-emerald-border, #a7f3d0);
+  color: var(--status-emerald-text, #047857);
+}
+
+.grade-chip-info {
+  background: var(--status-blue-bg, #f0f9ff);
+  border: 1px solid #bae6fd;
+  color: #0284c7;
+}
+
+.grade-chip-danger {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+}
+
+.grade-chip-secondary {
+  background: var(--chmsu-slate-100, #f1f5f9);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  color: var(--chmsu-slate-600, #475569);
+}
+
+/* Expandable Detail Panel */
+.expanded-row {
+  background: var(--chmsu-slate-50, #f8fafc) !important;
+}
+
+.detail-panel-row td {
+  padding: 0 !important;
+  background: var(--chmsu-slate-50, #f8fafc);
+  border-bottom: 1px solid var(--chmsu-slate-200, #e2e8f0);
+}
+
+.expand-detail-container {
+  padding: 1.15rem 1.5rem;
+  animation: expandFade 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes expandFade {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.25rem;
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+}
+
+@media (max-width: 768px) {
+  .detail-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.detail-label {
+  font-size: 0.725rem;
+  font-weight: 700;
+  color: var(--chmsu-slate-500, #64748b);
+  text-transform: uppercase;
+}
+
+.detail-val {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--chmsu-navy-900, #0f172a);
+}
+
+.empty-state-cell {
+  padding: 2.5rem 1.5rem !important;
+  text-align: center;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.font-mono {
+  font-family: var(--font-family-mono, monospace);
+}
+
+.font-bold {
+  font-weight: 700;
+}

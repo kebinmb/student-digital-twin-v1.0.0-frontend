@@ -74,7 +74,12 @@ export class UserManagementComponent implements OnInit {
   readonly isDialogVisible = signal<boolean>(false);
   readonly editingUser = signal<UserDetail | null>(null);
 
+  readonly isAuditDialogVisible = signal<boolean>(false);
+  readonly isAuditLoading = signal<boolean>(false);
+  readonly auditLogs = signal<import('../../../core/models/user-management.model').AuditLogEntry[]>([]);
+
   readonly availableRoles = AVAILABLE_ROLES;
+
   readonly selectedRoles = signal<string[]>([]);
 
   readonly userForm = new FormGroup({
@@ -118,7 +123,27 @@ export class UserManagementComponent implements OnInit {
     });
   }
 
+  openAuditLogs(): void {
+    this.isAuditDialogVisible.set(true);
+    this.isAuditLoading.set(true);
+    this.userApiService.getAuditLogs().subscribe({
+      next: (logs) => {
+        this.auditLogs.set(logs);
+        this.isAuditLoading.set(false);
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Audit Logs Error',
+          detail: 'Failed to retrieve system security audit logs.'
+        });
+        this.isAuditLoading.set(false);
+      }
+    });
+  }
+
   isDeanSelected(): boolean {
+
     return this.selectedRoles().includes('DEAN');
   }
 

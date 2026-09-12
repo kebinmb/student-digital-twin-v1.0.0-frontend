@@ -5,15 +5,15 @@
   [modal]="true"
   [blockScroll]="true"
   ariaLabelledBy="course-palette-drawer-title"
-  styleClass="institutional-drawer w-full md:w-[30rem]"
+  styleClass="course-palette-drawer"
   (onHide)="store.isDrawerOpen.set(false)">
 
   <ng-template pTemplate="header">
-    <div class="flex items-center gap-2">
-      <i class="pi pi-book text-emerald-800 text-base"></i>
+    <div class="drawer-header-row">
+      <i class="pi pi-book palette-book-icon"></i>
       <div>
-        <h3 id="course-palette-drawer-title" class="text-sm font-bold text-slate-900 m-0">Available Course Catalog</h3>
-        <span class="text-xs text-slate-500 font-medium">Approved Curricular Course Pool</span>
+        <h3 id="course-palette-drawer-title" class="palette-title">Available Course Catalog</h3>
+        <span class="palette-subtitle">Approved Curricular Course Pool</span>
       </div>
     </div>
   </ng-template>
@@ -36,12 +36,12 @@
       <!-- Search Input with PrimeNG IconField -->
       <div class="catalog-search-wrapper">
         <p-iconfield style="width: 100%;">
-          <p-inputicon class="pi pi-search text-slate-400"></p-inputicon>
+          <p-inputicon class="pi pi-search search-icon"></p-inputicon>
           <input
             pInputText
             type="text"
             placeholder="Search course code or title..."
-            class="w-full text-xs"
+            class="search-input"
             [ngModel]="searchQuery()"
             (ngModelChange)="onSearchChanged($event)" />
         </p-iconfield>
@@ -49,12 +49,12 @@
 
       <!-- Catalog Status Counter -->
       <div class="catalog-status-bar flex-between">
-        <span class="catalog-status-tag flex-row gap-xs text-xs text-slate-500 font-semibold">
+        <span class="status-counter-text">
           <span class="status-dot"></span>
           {{ store.availableCourses().length }} course(s) eligible for placement
         </span>
         @if (store.isSearching()) {
-          <span class="text-xs font-bold text-emerald-700 flex-row gap-xs">
+          <span class="searching-indicator">
             <i class="pi pi-spin pi-spinner"></i> Searching...
           </span>
         }
@@ -69,16 +69,16 @@
             <div class="catalog-card-header flex-between">
               <div>
                 <span class="catalog-course-code font-mono font-bold-navy">{{ course.code }}</span>
-                <h4 class="catalog-course-title text-slate-800">{{ course.title }}</h4>
+                <h4 class="catalog-course-title">{{ course.title }}</h4>
               </div>
               <span class="badge-green font-mono text-xs font-bold">{{ course.creditUnits }} Units</span>
             </div>
 
             <!-- Course Load Breakdown -->
-            <div class="catalog-load-row flex-row gap-2 text-xs text-slate-600">
+            <div class="catalog-load-row flex-row gap-2">
               <span class="load-tag font-mono">Lec: {{ course.lectureUnits }}h</span>
               <span class="load-tag font-mono">Lab: {{ course.labUnits * 3 }}h</span>
-              <span class="ms-auto font-semibold text-slate-700">Weekly: {{ course.contactHoursLec + course.contactHoursLab }} hrs</span>
+              <span class="weekly-load-text">Weekly: {{ course.contactHoursLec + course.contactHoursLab }} hrs</span>
             </div>
 
             <!-- Quick Target Placement Selector & Action -->
@@ -133,7 +133,7 @@
   </ng-template>
 
   <ng-template pTemplate="footer">
-    <div class="flex items-center justify-between w-full gap-2">
+    <div class="drawer-footer-actions">
       @if (searchQuery()) {
         <p-button
           label="Clear Filter"
@@ -144,7 +144,7 @@
           (onClick)="onSearchChanged('')">
         </p-button>
       } @else {
-        <span class="text-xs text-slate-400 font-medium">Search to filter catalog</span>
+        <span class="footer-hint-text">Search to filter catalog</span>
       }
       <p-button
         label="Close Catalog"

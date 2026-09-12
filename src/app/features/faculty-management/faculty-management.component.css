@@ -1,56 +1,19 @@
 .faculty-mgmt-container {
-  padding: 1.5rem;
-  max-width: 1400px;
-  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
-.header-section {
+.faculty-mgmt-toolbar-card {
+  background: var(--p-surface-0, #ffffff);
+  border: 1px solid var(--p-surface-200, #e2e8f0);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 1.5rem;
+  align-items: center;
   gap: 1rem;
-}
-
-.badge-row {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.module-badge {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  color: #15803d;
-  background-color: #ecfdf5;
-  border: 1px solid #a7f3d0;
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-}
-
-.role-badge {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  color: #1d4ed8;
-  background-color: #eff6ff;
-  border: 1px solid #bfdbfe;
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-}
-
-.page-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #0f172a;
-  margin: 0 0 0.25rem 0;
-}
-
-.page-subtitle {
-  font-size: 0.875rem;
-  color: #64748b;
-  margin: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .card-table-wrapper {
@@ -59,6 +22,13 @@
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.faculty-id-badge {
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+  color: var(--p-surface-800, #1e293b);
+  font-size: 0.875rem;
 }
 
 .faculty-identity {
@@ -71,11 +41,15 @@
   width: 32px;
   height: 32px;
   border-radius: 6px;
-  background-color: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  background-color: var(--p-surface-100, #f1f5f9);
+  border: 1px solid var(--p-surface-200, #e2e8f0);
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.avatar-icon {
+  color: var(--p-surface-500, #64748b);
 }
 
 .faculty-meta {
@@ -83,14 +57,113 @@
   flex-direction: column;
 }
 
+.faculty-name {
+  font-weight: 600;
+  color: var(--p-surface-900, #0f172a);
+}
+
+.prc-license-sub {
+  font-size: 0.75rem;
+  color: var(--p-surface-400, #94a3b8);
+}
+
+.faculty-email-text {
+  color: var(--p-surface-700, #334155);
+  font-size: 0.875rem;
+  font-family: var(--font-mono, monospace);
+}
+
+.affiliation-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.affiliation-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.775rem;
+  color: #334155;
+}
+
+.icon-college {
+  font-size: 0.75rem;
+  color: #0284c7;
+}
+
+.college-code-text {
+  font-weight: 600;
+  color: var(--p-surface-800, #1e293b);
+}
+
+.college-name-text {
+  font-size: 0.75rem;
+  color: var(--p-surface-500, #64748b);
+}
+
+.icon-program {
+  font-size: 0.75rem;
+  color: #059669;
+}
+
+.program-code-text {
+  font-weight: 600;
+  color: var(--p-surface-700, #334155);
+}
+
+.unassigned-badge {
+  font-size: 0.75rem;
+  color: var(--p-surface-400, #94a3b8);
+  font-style: italic;
+}
+
+:host ::ng-deep .degree-tag {
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+}
+
 .rank-tenure-cell {
   display: flex;
   flex-direction: column;
 }
 
+.rank-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--p-surface-800, #1e293b);
+}
+
+.tenure-tags-row {
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+:host ::ng-deep .status-tag {
+  font-size: 0.75rem !important;
+}
+
+:host ::ng-deep .tenured-tag {
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+}
+
 .empty-state {
   text-align: center;
   padding: 3rem 1rem;
+}
+
+.empty-icon {
+  font-size: 2.25rem;
+  color: var(--p-surface-300, #cbd5e1);
+  margin-bottom: 0.5rem;
+}
+
+.empty-text {
+  color: var(--p-surface-500, #64748b);
+  font-weight: 500;
+  margin: 0;
 }
 
 /* Dialog styling */
@@ -99,6 +172,10 @@
   flex-direction: column;
   gap: 1rem;
   padding-top: 0.5rem;
+}
+
+.dialog-input {
+  width: 100%;
 }
 
 .form-row-2 {
@@ -165,18 +242,3 @@
   padding-top: 1rem;
   border-top: 1px solid #f1f5f9;
 }
-
-.affiliation-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.affiliation-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.775rem;
-  color: #334155;
-}
-

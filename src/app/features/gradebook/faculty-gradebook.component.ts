@@ -43,6 +43,8 @@ export interface EditableRosterRow extends RosterStudentDto {
   gradeError?: string | null;
 }
 
+import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
+
 @Component({
   selector: 'app-faculty-gradebook',
   standalone: true,
@@ -60,7 +62,8 @@ export interface EditableRosterRow extends RosterStudentDto {
     SkeletonModule,
     TooltipModule,
     DialogModule,
-    InputTextModule
+    InputTextModule,
+    EmptyStateComponent
   ],
   templateUrl: './faculty-gradebook.component.html',
   styleUrls: ['./faculty-gradebook.component.css'],
@@ -111,6 +114,13 @@ export class FacultyGradebookComponent implements OnInit {
   readonly newItemTitle = signal<string>('');
   readonly newItemMaxPoints = signal<number>(50);
   readonly manualRosterOverride = signal<boolean>(false);
+
+  // Post-Seal Grade Change Request State
+  readonly isGradeChangeModalOpen = signal<boolean>(false);
+  readonly selectedGradeChangeStudent = signal<EditableRosterRow | null>(null);
+  readonly gradeChangeNewGrade = signal<number>(1.75);
+  readonly gradeChangeReason = signal<string>('');
+
 
   // Computed states
   readonly currentGradeStatus = computed(() => this.roster()?.gradeStatus || 'DRAFT');
@@ -1044,7 +1054,92 @@ export class FacultyGradebookComponent implements OnInit {
     });
   }
 
+  openGradeChangeModal(student: EditableRosterRow): void {
+    this.selectedGradeChangeStudent.set(student);
+    this.gradeChangeNewGrade.set(student.finalNumericalGrade || 1.75);
+    this.gradeChangeReason.set('');
+    this.isGradeChangeModalOpen.set(true);
+  }
+
+  submitGradeChangeRequest(): void {
+    const student = this.selectedGradeChangeStudent();
+    const ros = this.roster();
+    const reason = this.gradeChangeReason().trim();
+    if (!student || !ros || !reason) {
+      this.messageService.add({ severity: 'warn', summary: 'Validation Error', detail: 'Please specify a reason for the grade change request.' });
+      return;
+    }
+
+    this.isSaving.set(true);
+    this.enrollmentApi.submitGradeChangeRequest({
+      studentId: student.studentId,
+      courseId: ros.courseId,
+      termId: ros.termId,
+      previousGrade: student.finalNumericalGrade || 3.00,
+      newGrade: this.gradeChangeNewGrade(),
+      reason: reason
+    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Request Submitted',
+          detail: `Grade change request for ${student.studentName} submitted for Dean/Registrar approval.`
+        });
+        this.isGradeChangeModalOpen.set(false);
+        this.isSaving.set(false);
+      },
+      error: (err) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Request Failed',
+          detail: err.error?.detail || 'Failed to submit grade change request.'
+        });
+        this.isSaving.set(false);
+      }
+    });
+  }
+
+  exportChedGradeSheet(): void {
+    const ros = this.roster();
+    const students = this.editableStudents();
+    if (!ros || students.length === 0) {
+      this.messageService.add({ severity: 'warn', summary: 'Export Unavailable', detail: 'No student roster records to export.' });
+      return;
+    }
+
+    let csvContent = 'CHED OFFICIAL GRADE REPORT SHEET\n';
+    csvContent += `Course Code,${ros.courseCode}\n`;
+    csvContent += `Course Title,${ros.courseTitle}\n`;
+    csvContent += `Section,${ros.sectionCode}\n`;
+    csvContent += `Instructor,${ros.primaryInstructorName || 'Unassigned'}\n`;
+
+    csvContent += `Grade Status,${ros.gradeStatus}\n\n`;
+    csvContent += 'STUDENT NUMBER,STUDENT NAME,PROGRAM,NUMERICAL GRADE,STATUS\n';
+
+    for (const s of students) {
+      const g = s.finalNumericalGrade !== null && s.finalNumericalGrade !== undefined ? s.finalNumericalGrade.toFixed(2) : 'N/A';
+      csvContent += `"${s.studentNumber}","${s.studentName}","${s.programCode}","${g}","${s.completionStatus}"\n`;
+    }
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `CHED_GradeSheet_${ros.courseCode}_${ros.sectionCode}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Grade Sheet Exported',
+      detail: `Official CHED grade sheet exported for section ${ros.sectionCode}.`
+    });
+  }
+
   formatTermType(type: string): string {
+
     if (!type) return '';
     if (type === '1ST_SEM' || type === 'FIRST_SEM') return '1st Sem';
     if (type === '2ND_SEM' || type === 'SECOND_SEM') return '2nd Sem';

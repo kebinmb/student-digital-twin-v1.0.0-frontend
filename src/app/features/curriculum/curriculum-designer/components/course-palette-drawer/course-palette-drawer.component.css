@@ -84,3 +84,79 @@
   background: var(--p-surface-0, #ffffff);
 }
 
+:host ::ng-deep .course-palette-drawer {
+  width: 100% !important;
+  max-width: 30rem !important;
+}
+
+.drawer-header-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.palette-book-icon {
+  color: var(--p-primary-800, #0c5027);
+  font-size: 1rem;
+}
+
+.palette-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--p-surface-900, #0f172a);
+  margin: 0;
+}
+
+.palette-subtitle {
+  font-size: 0.75rem;
+  color: var(--p-surface-500, #64748b);
+  font-weight: 500;
+}
+
+.search-input {
+  width: 100%;
+  font-size: 0.75rem;
+}
+
+.search-icon {
+  color: var(--p-surface-400, #94a3b8);
+}
+
+.status-counter-text {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--p-surface-500, #64748b);
+  font-weight: 600;
+}
+
+.searching-indicator {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--p-primary-700, #116834);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.weekly-load-text {
+  margin-left: auto;
+  font-weight: 600;
+  color: var(--p-surface-700, #334155);
+}
+
+.drawer-footer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.5rem;
+}
+
+.footer-hint-text {
+  font-size: 0.75rem;
+  color: var(--p-surface-400, #94a3b8);
+  font-weight: 500;
+}
+

@@ -177,6 +177,30 @@ export class EnrollmentApiService {
       {}
     );
   }
+
+  submitGradeChangeRequest(request: {
+    studentId: number;
+    courseId: number;
+    termId: number;
+    previousGrade: number;
+    newGrade: number;
+    reason: string;
+  }): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/v1/grades/change-requests`, request);
+  }
+
+  getPendingGradeChangeRequests(): Observable<any[]> {
+    return this.http.get<any[]>(`${environment.apiUrl}/v1/grades/change-requests/pending`);
+  }
+
+  approveGradeChangeRequest(id: number): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/v1/grades/change-requests/${id}/approve`, {});
+  }
+
+  rejectGradeChangeRequest(id: number): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/v1/grades/change-requests/${id}/reject`, {});
+  }
 }
+
 
 

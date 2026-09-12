@@ -219,27 +219,27 @@
     [modal]="true"
     [blockScroll]="true"
     ariaLabelledBy="notice-drawer-title"
-    styleClass="institutional-drawer w-full md:w-[28rem]"
+    styleClass="notice-drawer"
     (onHide)="isNoticeDrawerOpen.set(false)">
     <ng-template pTemplate="header">
-      <div class="flex items-center gap-2">
-        <i class="pi pi-bell text-emerald-800 text-base"></i>
+      <div class="notice-drawer-header">
+        <i class="pi pi-bell notice-bell-icon"></i>
         <div>
-          <span class="text-xs font-bold text-emerald-800 uppercase tracking-wider block">CHMSU Official Advisory</span>
-          <h3 id="notice-drawer-title" class="text-base font-bold text-slate-900 m-0 mt-0.5">{{ selectedNotice()?.title }}</h3>
+          <span class="notice-drawer-title-sub">CHMSU Official Advisory</span>
+          <h3 id="notice-drawer-title" class="notice-drawer-title-text">{{ selectedNotice()?.title }}</h3>
         </div>
       </div>
     </ng-template>
 
     <ng-template pTemplate="content">
       @if (selectedNotice()) {
-        <div class="drawer-content-body flex flex-col gap-3">
+        <div class="drawer-content-body">
           <div class="drawer-profile-card">
-            <div class="flex items-center gap-2 mb-2">
+            <div class="drawer-meta-row">
               <p-tag severity="info" [value]="selectedNotice()!.category"></p-tag>
-              <span class="text-xs text-slate-500 font-medium">{{ selectedNotice()!.date }}</span>
+              <span class="notice-date">{{ selectedNotice()!.date }}</span>
             </div>
-            <p class="text-sm text-slate-700 leading-relaxed m-0">
+            <p class="drawer-notice-text">
               This official notice was issued by the {{ selectedNotice()!.category }} for student records and academic schedule adherence. Please verify any prerequisites or clearances required before the end of the term.
             </p>
           </div>
@@ -253,11 +253,11 @@
             <div class="drawer-def-grid">
               <div class="drawer-def-item">
                 <span class="drawer-def-label">Issuing Office</span>
-                <span class="drawer-def-val text-sm">{{ selectedNotice()!.category }}</span>
+                <span class="drawer-def-val">{{ selectedNotice()!.category }}</span>
               </div>
               <div class="drawer-def-item">
                 <span class="drawer-def-label">Priority Level</span>
-                <span class="drawer-def-val text-sm text-amber-600">High Advisory</span>
+                <span class="drawer-def-val amber-val">High Advisory</span>
               </div>
             </div>
           </div>
@@ -266,7 +266,7 @@
     </ng-template>
 
     <ng-template pTemplate="footer">
-      <div class="flex items-center justify-between w-full gap-2">
+      <div class="drawer-footer-row">
         <p-button
           label="Dismiss"
           icon="pi pi-times"

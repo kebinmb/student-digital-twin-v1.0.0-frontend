@@ -1,104 +1,116 @@
 <!-- File: src/app/features/finance/student-account-ledger/student-account-ledger.component.html -->
-<div class="ledger-container p-4">
-  <div class="flex flex-column md:flex-row justify-content-between align-items-start md:align-items-center mb-4 gap-3">
-    <div>
-      <h1 class="text-3xl font-bold text-900 m-0">Student Account Ledger</h1>
-      <p class="text-500 m-0 mt-1">Financial assessment, tuition billing, subsidies, and transaction history</p>
+<div class="ledger-container">
+  <!-- Institutional Sticky Header Toolbar -->
+  <div class="ledger-toolbar-card">
+    <div class="header-branding">
+      <div class="header-icon-box">
+        <i class="pi pi-wallet header-icon"></i>
+      </div>
+      <div class="header-text-group">
+        <h1 class="header-title">Student Account Ledger</h1>
+        <p class="header-subtitle">Financial assessment, tuition billing, subsidies, and transaction history</p>
+      </div>
     </div>
   </div>
 
   <!-- Assessment & Search Header Controls -->
-  <div class="grid mb-4">
-    <div class="col-12 md:col-6">
-      <div class="card p-3 surface-card border-round shadow-1 h-full">
-        <h3 class="text-lg font-semibold text-800 mb-3 flex align-items-center gap-2">
-          <i class="pi pi-calculator text-primary"></i> Assess Student Tuition Fee
-        </h3>
-        <div class="p-fluid flex gap-2">
-          <p-inputNumber [(ngModel)]="assessEnrollmentId" placeholder="Enter Student Enrollment ID" [useGrouping]="false" class="flex-grow-1"></p-inputNumber>
-          <p-button label="Assess Tuition" icon="pi pi-bolt" severity="success" [loading]="isAssessing()" (onClick)="assessStudentEnrollment()"></p-button>
-        </div>
+  <div class="ledger-action-grid">
+    <div class="action-card" *hasRole="['ADMIN', 'ACCOUNTANT', 'REGISTRAR']">
+      <h3 class="action-card-title">
+        <i class="pi pi-calculator icon-green"></i> Assess Student Tuition Fee
+      </h3>
+      <div class="action-input-row">
+        <p-inputNumber [(ngModel)]="assessEnrollmentId" placeholder="Enter Student Enrollment ID" [useGrouping]="false" styleClass="full-width-input"></p-inputNumber>
+        <p-button label="Assess Tuition" icon="pi pi-bolt" severity="success" [loading]="isAssessing()" (onClick)="assessStudentEnrollment()"></p-button>
       </div>
     </div>
 
-    <div class="col-12 md:col-6">
-      <div class="card p-3 surface-card border-round shadow-1 h-full">
-        <h3 class="text-lg font-semibold text-800 mb-3 flex align-items-center gap-2">
-          <i class="pi pi-search text-primary"></i> Query Student Financial Ledger
-        </h3>
-        <div class="p-fluid flex gap-2">
-          <p-inputNumber [(ngModel)]="searchStudentId" placeholder="Enter Student Profile ID" [useGrouping]="false" class="flex-grow-1" (onKeyDown.enter)="loadLedgerHistory()"></p-inputNumber>
-          <p-button label="Load Ledger" icon="pi pi-history" [loading]="isLoading()" (onClick)="loadLedgerHistory()"></p-button>
-        </div>
+    <div class="action-card">
+      <h3 class="action-card-title">
+        <i class="pi pi-search icon-green"></i> Query Student Financial Ledger
+      </h3>
+      <div class="action-input-row">
+        <p-inputNumber [(ngModel)]="searchStudentId" placeholder="Enter Student Profile ID" [useGrouping]="false" styleClass="full-width-input" (onKeyDown.enter)="loadLedgerHistory()"></p-inputNumber>
+        <p-button label="Load Ledger" icon="pi pi-history" [loading]="isLoading()" (onClick)="loadLedgerHistory()"></p-button>
       </div>
     </div>
   </div>
 
+  <!-- Skeleton Loading -->
+  <div *ngIf="isLoading()" class="ledger-loading-card">
+    <p-skeleton width="30%" height="2rem" styleClass="mb-3"></p-skeleton>
+    <p-skeleton width="100%" height="10rem"></p-skeleton>
+  </div>
+
+  <!-- Contextual Empty State -->
+  <app-empty-state
+    *ngIf="!isLoading() && ledgerEntries().length === 0"
+    icon="pi pi-wallet"
+    title="No Billing Statements Found"
+    description="Your account is in good standing. Qualified expenses are fully covered under UniFAST RA 10931 FHE."
+    severity="success">
+  </app-empty-state>
+
   <!-- Summary Cards -->
-  <div class="grid mb-4" *ngIf="ledgerEntries().length > 0">
-    <div class="col-12 md:col-4">
-      <div class="card surface-card border-round p-3 shadow-1 text-center">
-        <span class="text-500 text-sm font-semibold block">TOTAL BILLED CHARGES (DEBITS)</span>
-        <span class="text-2xl font-bold text-red-600">₱{{ totalDebits() | number:'1.2-2' }}</span>
-      </div>
+  <div class="summary-metric-grid" *ngIf="!isLoading() && ledgerEntries().length > 0">
+    <div class="metric-card border-red">
+      <span class="metric-label">TOTAL BILLED CHARGES (DEBITS)</span>
+      <span class="metric-val text-red">₱{{ totalDebits() | number:'1.2-2' }}</span>
     </div>
-    <div class="col-12 md:col-4">
-      <div class="card surface-card border-round p-3 shadow-1 text-center">
-        <span class="text-500 text-sm font-semibold block">TOTAL PAYMENTS & SUBSIDIES (CREDITS)</span>
-        <span class="text-2xl font-bold text-green-600">₱{{ totalCredits() | number:'1.2-2' }}</span>
-      </div>
+    <div class="metric-card border-green">
+      <span class="metric-label">TOTAL PAYMENTS & SUBSIDIES (CREDITS)</span>
+      <span class="metric-val text-green">₱{{ totalCredits() | number:'1.2-2' }}</span>
     </div>
-    <div class="col-12 md:col-4">
-      <div class="card surface-card border-round p-3 shadow-1 text-center">
-        <span class="text-500 text-sm font-semibold block">CURRENT NET RUNNING BALANCE</span>
-        <span class="text-2xl font-bold" [ngClass]="{'text-orange-600': currentBalance() > 0, 'text-green-600': currentBalance() <= 0}">
-          ₱{{ currentBalance() | number:'1.2-2' }}
-        </span>
-      </div>
+    <div class="metric-card border-blue">
+      <span class="metric-label">CURRENT NET RUNNING BALANCE</span>
+      <span class="metric-val" [ngClass]="{'text-orange': currentBalance() > 0, 'text-green': currentBalance() <= 0}">
+        ₱{{ currentBalance() | number:'1.2-2' }}
+      </span>
     </div>
   </div>
 
   <!-- Ledger Transaction History Table -->
-  <div class="card surface-card border-round p-4 shadow-1">
-    <h2 class="text-xl font-bold text-900 mb-3">Transaction History Ledger</h2>
-    <p-table [value]="ledgerEntries()" [rows]="10" [paginator]="true" responsiveLayout="scroll">
+  <div class="table-card">
+    <h2 class="table-card-title">Transaction History Ledger</h2>
+    <p-table [value]="ledgerEntries()" [rows]="10" [paginator]="true" responsiveLayout="scroll" styleClass="institutional-table">
       <ng-template pTemplate="header">
         <tr>
           <th>Txn #</th>
           <th>Date</th>
           <th>Type</th>
           <th>Description</th>
-          <th>Debit (₱)</th>
-          <th>Credit (₱)</th>
-          <th>Running Balance (₱)</th>
+          <th class="text-right">Debit (₱)</th>
+          <th class="text-right">Credit (₱)</th>
+          <th class="text-right">Running Balance (₱)</th>
           <th>Ref #</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-entry>
         <tr>
-          <td class="font-semibold text-primary">{{ entry.transactionNumber }}</td>
+          <td class="font-bold-green">{{ entry.transactionNumber }}</td>
           <td>{{ entry.transactionDate }}</td>
           <td>
             <p-tag [value]="entry.transactionType" [severity]="getTransactionTypeSeverity(entry.transactionType)"></p-tag>
           </td>
           <td>{{ entry.description }}</td>
-          <td class="font-bold text-red-600">
+          <td class="font-bold-red text-right">
             {{ entry.debitAmount > 0 ? ('₱' + (entry.debitAmount | number:'1.2-2')) : '-' }}
           </td>
-          <td class="font-bold text-green-600">
+          <td class="font-bold-green text-right">
             {{ entry.creditAmount > 0 ? ('₱' + (entry.creditAmount | number:'1.2-2')) : '-' }}
           </td>
-          <td class="font-bold" [ngClass]="{'text-orange-600': entry.runningBalance > 0, 'text-green-600': entry.runningBalance <= 0}">
+          <td class="font-bold text-right" [ngClass]="{'text-orange': entry.runningBalance > 0, 'text-green': entry.runningBalance <= 0}">
             ₱{{ entry.runningBalance | number:'1.2-2' }}
           </td>
-          <td class="text-500 text-sm">{{ entry.referenceNumber || '-' }}</td>
+          <td class="ref-num-text">{{ entry.referenceNumber || '-' }}</td>
         </tr>
       </ng-template>
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="8" class="text-center p-4 text-500">No ledger transactions recorded yet. Search for a student profile above.</td>
+          <td colspan="8" class="empty-cell">No ledger transactions recorded yet. Search for a student profile above.</td>
         </tr>
       </ng-template>
     </p-table>
   </div>
 </div>
+

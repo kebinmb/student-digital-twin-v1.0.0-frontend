@@ -22,6 +22,9 @@ import {
   ChedFormE5FacultyDto
 } from '../../../core/models/compliance.model';
 
+import { SkeletonModule } from 'primeng/skeleton';
+import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+
 @Component({
   selector: 'app-ched-reporting',
   standalone: true,
@@ -33,7 +36,9 @@ import {
     InputTextModule,
     InputNumberModule,
     TagModule,
-    CardModule
+    CardModule,
+    SkeletonModule,
+    EmptyStateComponent
   ],
   templateUrl: './ched-reporting.component.html',
   styleUrl: './ched-reporting.component.css',

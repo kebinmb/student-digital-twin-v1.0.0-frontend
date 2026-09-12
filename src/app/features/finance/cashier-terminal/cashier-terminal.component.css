@@ -1,8 +1,377 @@
 /* File: src/app/features/finance/cashier-terminal/cashier-terminal.component.css */
 
 .cashier-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem;
   max-width: 1400px;
   margin: 0 auto;
+  width: 100%;
+}
+
+.cashier-toolbar-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 1rem 1.25rem;
+  box-shadow: var(--chmsu-shadow-card);
+}
+
+.lookup-card {
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  padding: 1.25rem;
+  box-shadow: var(--chmsu-shadow-card);
+}
+
+.lookup-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.2fr;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+@media (max-width: 768px) {
+  .lookup-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.lookup-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.actions-col {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.pos-grid {
+  display: grid;
+  grid-template-columns: 7fr 5fr;
+  gap: 1.25rem;
+  width: 100%;
+}
+
+@media (max-width: 1024px) {
+  .pos-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pos-main-col,
+.pos-side-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.card-box {
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 1.5rem;
+  box-shadow: var(--chmsu-shadow-card);
+}
+
+.sticky-card {
+  position: sticky;
+  top: 1rem;
+}
+
+.card-box-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.sub-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--chmsu-slate-500, #64748b);
+  letter-spacing: 0.04em;
+}
+
+.invoice-num-title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--chmsu-green-main, #116834);
+}
+
+.meta-box {
+  background: var(--chmsu-slate-100, #f1f5f9);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  padding: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.meta-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.meta-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--chmsu-slate-500, #64748b);
+}
+
+.meta-val {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--chmsu-navy-900, #0f172a);
+}
+
+.section-subtitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+  margin: 0 0 0.875rem 0;
+}
+
+.fee-table {
+  border-top: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-bottom: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  padding: 0.5rem 0;
+  margin-bottom: 0.875rem;
+}
+
+.fee-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+  font-size: 0.8125rem;
+  color: var(--chmsu-slate-600, #475569);
+}
+
+.fee-name {
+  color: var(--chmsu-navy-800, #1e293b);
+}
+
+.fee-amount {
+  font-weight: 600;
+  color: var(--chmsu-navy-900, #0f172a);
+}
+
+.total-row {
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+  border-top: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  margin-top: 0.35rem;
+  padding-top: 0.5rem;
+}
+
+.subsidy-section {
+  border-bottom: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  padding-bottom: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.fee-row.text-green {
+  color: var(--status-emerald-text, #047857);
+  font-weight: 600;
+}
+
+.net-row {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--chmsu-green-main, #116834);
+  margin-top: 0.5rem;
+}
+
+.kpi-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.875rem;
+  text-align: center;
+}
+
+.kpi-mini-card {
+  background: var(--chmsu-slate-100, #f1f5f9);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  padding: 0.875rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.kpi-mini-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--chmsu-slate-500, #64748b);
+  letter-spacing: 0.04em;
+}
+
+.kpi-mini-val {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-top: 0.25rem;
+}
+
+.kpi-mini-val.text-green { color: var(--status-emerald-text, #047857); }
+.kpi-mini-val.text-orange { color: #ea580c; }
+
+.empty-cell {
+  text-align: center;
+  padding: 1.5rem !important;
+  color: var(--chmsu-slate-500, #64748b);
+}
+
+.form-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+  margin: 0 0 1.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.icon-primary {
+  color: var(--chmsu-green-main, #116834);
+  font-size: 1.35rem;
+}
+
+.tender-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.change-box {
+  background: var(--chmsu-slate-100, #f1f5f9);
+  border: 1px solid var(--chmsu-slate-300, #cbd5e1);
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  padding: 1rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.change-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--chmsu-slate-600, #475569);
+  letter-spacing: 0.04em;
+}
+
+.change-val {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #0284c7;
+  margin-top: 0.25rem;
+}
+
+.settled-notice {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--status-emerald-text, #047857);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+.receipt-preview-box {
+  padding: 1rem;
+  background: #ffffff;
+  color: var(--chmsu-navy-900, #0f172a);
+  border-radius: 8px;
+}
+
+.receipt-header {
+  text-align: center;
+}
+
+.univ-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: var(--chmsu-green-main, #116834);
+}
+
+.univ-sub {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--chmsu-slate-500, #64748b);
+}
+
+.or-title {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--chmsu-slate-500, #64748b);
+}
+
+.or-number {
+  margin: 0.35rem 0 0 0;
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: var(--chmsu-navy-900, #0f172a);
+}
+
+.receipt-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+  padding: 0.25rem 0;
+}
+
+.line-label {
+  color: var(--chmsu-slate-500, #64748b);
+}
+
+.line-val {
+  font-weight: 600;
+  color: var(--chmsu-navy-900, #0f172a);
+}
+
+.receipt-line.total-line {
+  font-size: 1.125rem;
+  font-weight: 800;
+}
+
+.receipt-line.sub-line {
+  font-size: 0.8125rem;
+  color: var(--chmsu-slate-600, #475569);
+}
+
+.receipt-footer {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--chmsu-slate-500, #64748b);
+  margin-top: 0.75rem;
+}
+
+.thank-you {
+  font-weight: 700;
+  color: var(--chmsu-navy-800, #1e293b);
+  margin-top: 0.25rem;
+}
+
+.full-width-input,
+::ng-deep .full-width-select {
+  width: 100% !important;
 }
 
 @media print {

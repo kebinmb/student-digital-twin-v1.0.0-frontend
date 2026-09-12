@@ -153,17 +153,17 @@
     styleClass="institutional-dialog">
     
     @if (allCurriculumCourses().length < 2) {
-      <div class="empty-prereq-alert flex-row gap-md p-4 surface-slate border border-amber-300 rounded-lg">
-        <div class="alert-icon-box flex-center text-amber-600 text-xl">
+      <div class="empty-prereq-alert">
+        <div class="alert-icon-box">
           <i class="pi pi-info-circle"></i>
         </div>
-        <div class="alert-content flex-col gap-xs">
-          <h4 class="alert-title text-sm font-bold text-amber-900 m-0">Insufficient Subjects in Curriculum</h4>
-          <p class="alert-text text-xs text-amber-800 m-0 leading-relaxed">
+        <div class="alert-content">
+          <h4 class="alert-title">Insufficient Subjects in Curriculum</h4>
+          <p class="alert-text">
             At least <strong>two subjects</strong> must be placed on the Year / Semester Board before creating prerequisite dependencies.
             Currently, this curriculum has <strong>{{ allCurriculumCourses().length }}</strong> subject(s) allocated.
           </p>
-          <div class="mt-2">
+          <div>
             <p-button
               label="Go to Year / Semester Board"
               icon="pi pi-table"
@@ -176,7 +176,7 @@
         </div>
       </div>
     } @else {
-      <div class="flex-col gap-md py-1">
+      <div class="dialog-content-body">
         <!-- Context Bar -->
         <div class="modal-context-bar flex-between surface-slate">
           <div class="context-item flex-row gap-xs">
@@ -194,7 +194,7 @@
           <label for="targetSelect" class="form-label">Target Subject (requires prerequisite) <span class="required-star">*</span></label>
           <select
             id="targetSelect"
-            class="dialog-select-control w-full font-mono text-xs p-2 rounded border border-slate-300 bg-white"
+            class="dialog-select-control font-mono"
             [ngModel]="targetCourseId()"
             (ngModelChange)="targetCourseId.set($event ? +$event : null)">
             <option [ngValue]="null" disabled selected>-- Select target subject --</option>
@@ -208,7 +208,7 @@
           <label for="prereqSelect" class="form-label">Prerequisite Subject (must be passed first) <span class="required-star">*</span></label>
           <select
             id="prereqSelect"
-            class="dialog-select-control w-full font-mono text-xs p-2 rounded border border-slate-300 bg-white"
+            class="dialog-select-control font-mono"
             [ngModel]="prereqCourseId()"
             (ngModelChange)="prereqCourseId.set($event ? +$event : null)">
             <option [ngValue]="null" disabled selected>-- Select prerequisite subject --</option>
@@ -219,8 +219,8 @@
         </div>
 
         @if (isSelfReferential()) {
-          <div class="self-ref-warning p-2.5 rounded bg-rose-50 border border-rose-200 text-rose-800 text-xs flex-row gap-xs font-semibold">
-            <i class="pi pi-exclamation-triangle text-rose-600"></i>
+          <div class="self-ref-warning">
+            <i class="pi pi-exclamation-triangle"></i>
             A subject cannot be a prerequisite of itself.
           </div>
         }
@@ -229,7 +229,7 @@
           <label for="ruleSelect" class="form-label">Rule Type <span class="required-star">*</span></label>
           <select
             id="ruleSelect"
-            class="dialog-select-control w-full text-xs p-2 rounded border border-slate-300 bg-white"
+            class="dialog-select-control"
             [ngModel]="ruleType()"
             (ngModelChange)="ruleType.set($event)">
             <option value="HARD">HARD (Mandatory passing grade)</option>

@@ -1,0 +1,252 @@
+/* File: src/app/features/compliance/institutional-equity-portal/institutional-equity-portal.component.css */
+
+.institutional-equity-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.institutional-equity-toolbar-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 1rem 1.25rem;
+  box-shadow: var(--chmsu-shadow-card);
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  width: 100%;
+}
+
+@media (max-width: 1024px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.kpi-card {
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  padding: 1rem 1.15rem;
+  box-shadow: var(--chmsu-shadow-card);
+  display: flex;
+  flex-direction: column;
+}
+
+.kpi-card.border-green {
+  border-left: 4px solid var(--chmsu-green-main, #116834);
+}
+
+.kpi-card.border-blue {
+  border-left: 4px solid #0284c7;
+}
+
+.kpi-card.border-purple {
+  border-left: 4px solid #7c3aed;
+}
+
+.kpi-card.border-orange {
+  border-left: 4px solid #ea580c;
+}
+
+.kpi-title {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--chmsu-slate-500, #64748b);
+}
+
+.kpi-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+  margin-top: 0.25rem;
+}
+
+.kpi-value.text-blue { color: #0284c7; }
+.kpi-value.text-purple { color: #7c3aed; }
+.kpi-value.text-orange { color: #ea580c; }
+
+.kpi-subtext {
+  font-size: 0.75rem;
+  color: var(--chmsu-slate-500, #64748b);
+  margin-top: 0.25rem;
+}
+
+.kpi-subtext.text-green {
+  color: var(--status-emerald-text, #047857);
+  font-weight: 600;
+}
+
+.filter-card {
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  padding: 1rem 1.25rem;
+  box-shadow: var(--chmsu-shadow-card);
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+  gap: 0.875rem;
+  align-items: flex-end;
+}
+
+@media (max-width: 1024px) {
+  .filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .search-col {
+    grid-column: span 2 / span 2;
+  }
+}
+
+@media (max-width: 640px) {
+  .filter-grid {
+    grid-template-columns: 1fr;
+  }
+  .search-col {
+    grid-column: span 1 / span 1;
+  }
+}
+
+.filter-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.filter-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--chmsu-slate-500, #64748b);
+  margin-bottom: 0.25rem;
+}
+
+.table-card {
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  padding: 1rem;
+  box-shadow: var(--chmsu-shadow-card);
+}
+
+.student-name-text {
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+  display: block;
+}
+
+.student-id-text {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--chmsu-green-main, #116834);
+}
+
+.program-code-text {
+  font-weight: 600;
+  color: var(--chmsu-navy-800, #1e293b);
+}
+
+.tag-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.dash-text {
+  color: var(--chmsu-slate-400, #94a3b8);
+  font-size: 0.75rem;
+}
+
+.income-text {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--chmsu-navy-800, #1e293b);
+}
+
+.dialog-form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-top: 0.5rem;
+}
+
+.student-summary-box {
+  background: var(--chmsu-slate-100, #f1f5f9);
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  padding: 0.875rem 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.summary-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--chmsu-slate-500, #64748b);
+}
+
+.summary-name {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+}
+
+.summary-id {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--chmsu-green-main, #116834);
+}
+
+.dialog-section {
+  display: flex;
+  flex-direction: column;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--chmsu-slate-200, #e2e8f0);
+}
+
+.dialog-section-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--chmsu-slate-500, #64748b);
+  margin-bottom: 0.5rem;
+}
+
+.decl-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--chmsu-navy-800, #1e293b);
+}
+
+.full-width-input,
+.full-width-textarea,
+::ng-deep .full-width-select {
+  width: 100% !important;
+}

@@ -847,3 +847,49 @@
   color: var(--p-surface-500, #64748b);
   margin: 0.2rem 0 0;
 }
+
+/* Post-Seal Grade Correction Dialog */
+.post-seal-notice-box {
+  padding: 0.75rem;
+  background-color: var(--p-amber-50, #fffbeb);
+  border: 1px solid var(--p-amber-200, #fde68a);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  color: var(--p-amber-900, #78350f);
+}
+
+.grade-change-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.grade-change-label {
+  font-size: 0.75rem;
+  color: var(--p-surface-500, #64748b);
+  font-weight: 600;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.grade-change-label-sub {
+  font-size: 0.6875rem;
+  color: var(--p-surface-400, #94a3b8);
+  display: block;
+  text-transform: uppercase;
+}
+
+.grade-change-target-name {
+  font-weight: 600;
+  color: var(--p-surface-800, #1e293b);
+  font-size: 0.875rem;
+}
+
+.grade-change-reason-textarea {
+  width: 100%;
+  font-size: 0.75rem;
+  padding: 0.5rem;
+  border: 1px solid var(--p-surface-300, #cbd5e1);
+  border-radius: 6px;
+  resize: vertical;
+}

@@ -1,61 +1,67 @@
 <!-- File: src/app/features/finance/unifast-billing-claim/unifast-billing-claim.component.html -->
-<div class="unifast-container p-4">
-  <div class="flex flex-column md:flex-row justify-content-between align-items-start md:align-items-center mb-4 gap-3">
-    <div>
-      <h1 class="text-3xl font-bold text-900 m-0">CHED UniFAST FHE Billing Claims</h1>
-      <p class="text-500 m-0 mt-1">Republic Act 10931 Free Higher Education claim batch generation & reporting</p>
+<div class="unifast-container">
+  <!-- Institutional Sticky Header Toolbar -->
+  <div class="unifast-toolbar-card">
+    <div class="header-branding">
+      <div class="header-icon-box">
+        <i class="pi pi-file-export header-icon"></i>
+      </div>
+      <div class="header-text-group">
+        <h1 class="header-title">CHED UniFAST FHE Billing Claims</h1>
+        <p class="header-subtitle">Republic Act 10931 Free Higher Education claim batch generation & reporting</p>
+      </div>
     </div>
   </div>
 
   <!-- Action Controls -->
-  <div class="card p-4 surface-card border-round shadow-1 mb-4">
-    <h2 class="text-xl font-bold text-900 mb-3 flex align-items-center gap-2">
-      <i class="pi pi-file-export text-primary"></i> Generate UniFAST Claim Batch
+  <div class="unifast-filter-card">
+    <h2 class="filter-card-title">
+      <i class="pi pi-file-export icon-green"></i> Generate UniFAST Claim Batch
     </h2>
-    <div class="grid p-fluid align-items-center">
-      <div class="col-12 md:col-4">
-        <label class="font-semibold text-700 block mb-2">Academic Term ID</label>
+    <div class="unifast-filter-grid">
+      <div class="filter-col">
+        <label class="form-label">Academic Term ID</label>
         <p-inputNumber [(ngModel)]="searchTermId" placeholder="Term ID" [useGrouping]="false" (onKeyDown.enter)="loadClaimBatches()"></p-inputNumber>
       </div>
-      <div class="col-12 md:col-4">
-        <label class="font-semibold text-700 block mb-2">Campus ID</label>
+      <div class="filter-col">
+        <label class="form-label">Campus ID</label>
         <p-inputNumber [(ngModel)]="createCampusId" placeholder="Campus ID" [useGrouping]="false"></p-inputNumber>
       </div>
-      <div class="col-12 md:col-4 flex align-items-end gap-2 mt-2 md:mt-0">
+      <div class="filter-col actions-col">
         <p-button label="Load Term Batches" icon="pi pi-refresh" severity="secondary" [loading]="isLoading()" (onClick)="loadClaimBatches()"></p-button>
-        <p-button label="Generate New Batch" icon="pi pi-bolt" severity="success" class="flex-grow-1" [loading]="isGenerating()" (onClick)="generateClaimBatch()"></p-button>
+        <p-button label="Generate New Batch" icon="pi pi-bolt" severity="success" [loading]="isGenerating()" (onClick)="generateClaimBatch()"></p-button>
       </div>
     </div>
   </div>
 
   <!-- Claim Batches Table -->
-  <div class="card surface-card border-round p-4 shadow-1 mb-4">
-    <h2 class="text-xl font-bold text-900 mb-3">Submitted UniFAST Claim Batches</h2>
-    <p-table [value]="claimBatches()" [rows]="10" [paginator]="true" responsiveLayout="scroll">
+  <div class="table-card">
+    <h2 class="table-card-title">Submitted UniFAST Claim Batches</h2>
+    <p-table [value]="claimBatches()" [stripedRows]="true" [rows]="10" [paginator]="true" responsiveLayout="scroll" styleClass="institutional-table">
       <ng-template pTemplate="header">
         <tr>
           <th>Batch Number</th>
           <th>Campus</th>
           <th>Term</th>
-          <th>Beneficiaries</th>
-          <th>Total Tuition (₱)</th>
-          <th>Total TOSF (₱)</th>
-          <th>Total Claim (₱)</th>
+          <th class="text-center">Beneficiaries</th>
+          <th class="text-right">Total Tuition (₱)</th>
+          <th class="text-right">Total TOSF (₱)</th>
+          <th class="text-right">Total Claim (₱)</th>
           <th>Status</th>
-          <th>Actions</th>
+          <th class="text-center">Actions</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-b>
         <tr>
-          <td class="font-semibold text-primary">{{ b.claimBatchNumber }}</td>
+          <td class="font-bold-green">{{ b.claimBatchNumber }}</td>
           <td>{{ b.campusName }}</td>
           <td>{{ b.termName }}</td>
-          <td class="font-bold text-center">{{ b.totalBeneficiaries }}</td>
-          <td>₱{{ b.totalTuitionClaimed | number:'1.2-2' }}</td>
-          <td>₱{{ b.totalTosfClaimed | number:'1.2-2' }}</td>
-          <td class="font-extrabold text-green-600">₱{{ b.totalClaimAmount | number:'1.2-2' }}</td>
+          <td class="text-center font-bold">{{ b.totalBeneficiaries }}</td>
+          <td class="text-right">₱{{ b.totalTuitionClaimed | number:'1.2-2' }}</td>
+          <td class="text-right">₱{{ b.totalTosfClaimed | number:'1.2-2' }}</td>
+          <td class="font-bold-green text-right">₱{{ b.totalClaimAmount | number:'1.2-2' }}</td>
           <td><p-tag [value]="b.status" [severity]="getStatusSeverity(b.status)"></p-tag></td>
-          <td class="flex gap-2">
+          <td class="text-center action-buttons">
             <p-button icon="pi pi-eye" severity="info" [rounded]="true" [text]="true" (onClick)="viewBatchDetails(b.id)"></p-button>
             <p-button icon="pi pi-download" severity="success" [rounded]="true" [text]="true" (onClick)="exportToCsv(b)"></p-button>
           </td>
@@ -63,7 +69,16 @@
       </ng-template>
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="9" class="text-center p-4 text-500">No claim batches generated yet for this term.</td>
+          <td colspan="9" class="p-0">
+            <app-empty-state
+              icon="pi pi-file-export"
+              title="No Claim Batches Generated"
+              description="No UniFAST FHE claim batches generated yet for this term. Select a term and campus above to generate."
+              actionLabel="Generate Claim Batch"
+              actionIcon="pi pi-bolt"
+              (actionClick)="generateClaimBatch()">
+            </app-empty-state>
+          </td>
         </tr>
       </ng-template>
     </p-table>
@@ -72,74 +87,65 @@
 
 <!-- Claim Batch Detail Modal -->
 <p-dialog [(visible)]="showDetailModal" [modal]="true" [style]="{width: '90vw', maxWidth: '1200px'}" header="UniFAST Claim Batch Breakdown">
-  <div *ngIf="selectedBatch() as b" class="p-3">
-    <div class="flex justify-content-between align-items-center mb-4">
+  <div *ngIf="selectedBatch() as b" class="detail-modal-box">
+    <div class="modal-header-row">
       <div>
-        <span class="text-500 text-xs font-semibold">BATCH NUMBER</span>
-        <h2 class="text-2xl font-bold text-primary m-0">{{ b.claimBatchNumber }}</h2>
+        <span class="sub-label">BATCH NUMBER</span>
+        <h2 class="batch-num-title">{{ b.claimBatchNumber }}</h2>
       </div>
-      <div class="flex gap-2">
-        <p-button label="Export CHED CSV" icon="pi pi-download" severity="success" (onClick)="exportToCsv(b)"></p-button>
-      </div>
+      <p-button label="Export CHED CSV" icon="pi pi-download" severity="success" (onClick)="exportToCsv(b)"></p-button>
     </div>
 
     <!-- Summary Metrics -->
-    <div class="grid mb-4 text-center">
-      <div class="col-12 md:col-3">
-        <div class="surface-100 p-3 border-round">
-          <span class="text-500 text-xs font-semibold block">BENEFICIARIES</span>
-          <span class="text-2xl font-bold text-900">{{ b.totalBeneficiaries }} Students</span>
-        </div>
+    <div class="metric-grid">
+      <div class="metric-card">
+        <span class="metric-label">BENEFICIARIES</span>
+        <span class="metric-val">{{ b.totalBeneficiaries }} Students</span>
       </div>
-      <div class="col-12 md:col-3">
-        <div class="surface-100 p-3 border-round">
-          <span class="text-500 text-xs font-semibold block">TUITION CLAIMED</span>
-          <span class="text-2xl font-bold text-blue-600">₱{{ b.totalTuitionClaimed | number:'1.2-2' }}</span>
-        </div>
+      <div class="metric-card">
+        <span class="metric-label">TUITION CLAIMED</span>
+        <span class="metric-val text-blue">₱{{ b.totalTuitionClaimed | number:'1.2-2' }}</span>
       </div>
-      <div class="col-12 md:col-3">
-        <div class="surface-100 p-3 border-round">
-          <span class="text-500 text-xs font-semibold block">TOSF / MISC CLAIMED</span>
-          <span class="text-2xl font-bold text-orange-600">₱{{ b.totalTosfClaimed | number:'1.2-2' }}</span>
-        </div>
+      <div class="metric-card">
+        <span class="metric-label">TOSF / MISC CLAIMED</span>
+        <span class="metric-val text-orange">₱{{ b.totalTosfClaimed | number:'1.2-2' }}</span>
       </div>
-      <div class="col-12 md:col-3">
-        <div class="surface-100 p-3 border-round">
-          <span class="text-500 text-xs font-semibold block">TOTAL CLAIM AMOUNT</span>
-          <span class="text-2xl font-black text-green-600">₱{{ b.totalClaimAmount | number:'1.2-2' }}</span>
-        </div>
+      <div class="metric-card">
+        <span class="metric-label">TOTAL CLAIM AMOUNT</span>
+        <span class="metric-val text-green">₱{{ b.totalClaimAmount | number:'1.2-2' }}</span>
       </div>
     </div>
 
     <!-- Beneficiary Student Table -->
-    <h3 class="text-lg font-bold text-900 mb-3">Beneficiary Student Roster</h3>
-    <p-table [value]="b.items" [rows]="10" [paginator]="true" responsiveLayout="scroll">
+    <h3 class="section-subtitle">Beneficiary Student Roster</h3>
+    <p-table [value]="b.items" [rows]="10" [paginator]="true" responsiveLayout="scroll" styleClass="institutional-table">
       <ng-template pTemplate="header">
         <tr>
           <th>Student ID</th>
           <th>Student Name</th>
           <th>Program</th>
-          <th>Units</th>
-          <th>Tuition (₱)</th>
-          <th>Misc/TOSF (₱)</th>
-          <th>Lab (₱)</th>
-          <th>Total Claim (₱)</th>
+          <th class="text-center">Units</th>
+          <th class="text-right">Tuition (₱)</th>
+          <th class="text-right">Misc/TOSF (₱)</th>
+          <th class="text-right">Lab (₱)</th>
+          <th class="text-right">Total Claim (₱)</th>
           <th>Status</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-item>
         <tr>
-          <td class="font-semibold text-primary">{{ item.studentNumber }}</td>
+          <td class="font-bold-green">{{ item.studentNumber }}</td>
           <td>{{ item.studentName }}</td>
           <td><p-tag [value]="item.programCode" severity="info"></p-tag></td>
           <td class="text-center font-bold">{{ item.enrolledUnits }}</td>
-          <td>₱{{ item.tuitionAmount | number:'1.2-2' }}</td>
-          <td>₱{{ item.miscAmount | number:'1.2-2' }}</td>
-          <td>₱{{ item.labAmount | number:'1.2-2' }}</td>
-          <td class="font-bold text-green-600">₱{{ item.totalClaimedAmount | number:'1.2-2' }}</td>
+          <td class="text-right">₱{{ item.tuitionAmount | number:'1.2-2' }}</td>
+          <td class="text-right">₱{{ item.miscAmount | number:'1.2-2' }}</td>
+          <td class="text-right">₱{{ item.labAmount | number:'1.2-2' }}</td>
+          <td class="font-bold-green text-right">₱{{ item.totalClaimedAmount | number:'1.2-2' }}</td>
           <td><p-tag [value]="item.verificationStatus" [severity]="getStatusSeverity(item.verificationStatus)"></p-tag></td>
         </tr>
       </ng-template>
     </p-table>
   </div>
 </p-dialog>
+

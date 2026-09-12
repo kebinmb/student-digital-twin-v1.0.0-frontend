@@ -1,6 +1,225 @@
 /* File: src/app/features/compliance/degree-audit/degree-audit.component.css */
 
 .audit-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem;
   max-width: 1400px;
   margin: 0 auto;
+  width: 100%;
+}
+
+.audit-toolbar-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 1rem 1.25rem;
+  box-shadow: var(--chmsu-shadow-card);
+}
+
+.audit-filter-card {
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  padding: 1.25rem;
+  box-shadow: var(--chmsu-shadow-card);
+}
+
+.audit-filter-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.5fr;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+@media (max-width: 768px) {
+  .audit-filter-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.actions-col {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.audit-summary-section {
+  width: 100%;
+}
+
+.audit-summary-card {
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 1.5rem;
+  box-shadow: var(--chmsu-shadow-card);
+}
+
+.overview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.student-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--chmsu-slate-500, #64748b);
+  letter-spacing: 0.04em;
+}
+
+.student-name {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--chmsu-green-main, #116834);
+  margin: 0.15rem 0 0 0;
+}
+
+.program-subtext {
+  font-size: 0.8125rem;
+  color: var(--chmsu-slate-500, #64748b);
+  margin: 0.25rem 0 0 0;
+}
+
+.highlight-text {
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+}
+
+.tag-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+::ng-deep .status-badge-lg {
+  font-size: 0.9375rem !important;
+  padding: 0.35rem 0.85rem !important;
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+@media (max-width: 992px) {
+  .metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .metric-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.metric-card {
+  background: var(--chmsu-slate-100, #f1f5f9);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.metric-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--chmsu-slate-500, #64748b);
+  letter-spacing: 0.04em;
+}
+
+.metric-val {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+  margin-top: 0.25rem;
+}
+
+.metric-val.text-green { color: var(--status-emerald-text, #047857); }
+.metric-val.text-blue { color: #0284c7; }
+
+.so-issuance-bar {
+  background: var(--chmsu-green-soft, #f0fdf4);
+  border: 1px solid var(--status-emerald-border, #a7f3d0);
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.so-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.so-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+}
+
+.so-subtext {
+  margin: 0.15rem 0 0 0;
+  font-size: 0.8125rem;
+  color: var(--chmsu-slate-600, #475569);
+}
+
+.so-action-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.matrix-section {
+  padding-top: 1rem;
+  border-top: 1px solid var(--chmsu-slate-200, #e2e8f0);
+}
+
+.section-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+  margin: 0 0 1rem 0;
+}
+
+.font-bold-green {
+  font-weight: 700;
+  color: var(--chmsu-green-main, #116834);
+}
+
+.font-bold-blue {
+  font-weight: 700;
+  color: #0284c7;
+}
+
+.full-width-input {
+  width: 100%;
 }

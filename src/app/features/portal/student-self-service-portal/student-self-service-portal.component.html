@@ -1,0 +1,273 @@
+<!-- File: src/app/features/portal/student-self-service-portal/student-self-service-portal.component.html -->
+<p-toast></p-toast>
+
+<div class="portal-container">
+  <!-- Institutional Header & Toolbar -->
+  <div class="portal-toolbar-card">
+    <div class="header-branding">
+      <div class="header-icon-box">
+        <i class="pi pi-user header-icon"></i>
+      </div>
+      <div class="header-text-group">
+        <div class="badge-row">
+          <span class="badge-tag green">
+            <i class="pi pi-circle-fill pulse-dot"></i> Student Academic Portal
+          </span>
+          @if (portalData(); as data) {
+            <p-tag
+              [value]="academicStanding().label"
+              [severity]="academicStanding().severity"
+              [icon]="'pi ' + academicStanding().icon"
+              styleClass="standing-tag"
+            ></p-tag>
+          }
+        </div>
+        <h1 class="header-title">Welcome Back, {{ portalData()?.studentName || 'Student' }}</h1>
+        <p class="header-subtitle">
+          Student ID: <span class="font-mono-bold">{{ portalData()?.studentNumber || '—' }}</span> &middot;
+          Program: <span class="font-semibold-navy">{{ portalData()?.programCode || '—' }}</span> &middot;
+          Year Level: <span class="font-semibold-navy">Year {{ portalData()?.yearLevel || '1' }}</span>
+        </p>
+      </div>
+    </div>
+    <div class="header-actions-group">
+      <p-button
+        label="Refresh Portal"
+        icon="pi pi-refresh"
+        severity="secondary"
+        [outlined]="true"
+        size="small"
+        [loading]="isLoading()"
+        (onClick)="loadPortalSummary()"
+        pTooltip="Synchronize latest academic and ledger records"
+        tooltipPosition="bottom"
+      ></p-button>
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <!-- Loading Skeletons -->
+    <div class="stat-grid mb-4">
+      <p-skeleton height="110px" borderRadius="12px"></p-skeleton>
+      <p-skeleton height="110px" borderRadius="12px"></p-skeleton>
+      <p-skeleton height="110px" borderRadius="12px"></p-skeleton>
+      <p-skeleton height="110px" borderRadius="12px"></p-skeleton>
+    </div>
+    <div class="table-card">
+      <p-skeleton height="40px" styleClass="mb-3" borderRadius="8px"></p-skeleton>
+      <p-skeleton height="200px" borderRadius="8px"></p-skeleton>
+    </div>
+  } @else if (portalData(); as data) {
+    <!-- Academic Snapshot Metrics Bento Grid -->
+    <div class="stat-grid">
+      <!-- Cumulative GPA Card -->
+      <div class="stat-card hover-lift">
+        <div class="stat-icon-box green">
+          <i class="pi pi-graduation-cap"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Cumulative GPA</span>
+          <span class="stat-val font-mono">{{ data.cumulativeGpa }}</span>
+          <span class="stat-subtext">Scale: 1.00 (Highest) - 3.00 (Passing)</span>
+        </div>
+      </div>
+
+      <!-- Total Units Earned Card -->
+      <div class="stat-card hover-lift">
+        <div class="stat-icon-box blue">
+          <i class="pi pi-book"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Units Earned</span>
+          <span class="stat-val font-mono">{{ data.totalUnitsEarned }} Units</span>
+          <span class="stat-subtext green-text">
+            <i class="pi pi-check-circle"></i> {{ totalActiveUnits() }} Active Units Enrolled
+          </span>
+        </div>
+      </div>
+
+      <!-- Financial Status Clearance Card -->
+      <div class="stat-card hover-lift">
+        <div class="stat-icon-box amber">
+          <i class="pi pi-wallet"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Financial Clearance</span>
+          <div class="tag-wrapper">
+            <p-tag
+              [value]="data.financialClearance"
+              [severity]="getClearanceSeverity(data.financialClearance)"
+              [icon]="data.financialClearance === 'CLEARED' ? 'pi pi-check' : 'pi pi-exclamation-triangle'"
+            ></p-tag>
+          </div>
+          <span class="stat-subtext">Cashier & Assessment Ledger Audit</span>
+        </div>
+      </div>
+
+      <!-- Departmental Clearance Card -->
+      <div class="stat-card hover-lift">
+        <div class="stat-icon-box purple">
+          <i class="pi pi-shield"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Dept. Clearance</span>
+          <div class="tag-wrapper">
+            <p-tag
+              [value]="data.departmentalClearance"
+              [severity]="getClearanceSeverity(data.departmentalClearance)"
+              [icon]="data.departmentalClearance === 'CLEARED' ? 'pi pi-check' : 'pi pi-info-circle'"
+            ></p-tag>
+          </div>
+          <span class="stat-subtext">Dean & Library Sign-off</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Enrolled Courses Master-Detail Card -->
+    <div class="table-card">
+      <div class="table-card-header">
+        <div class="title-group">
+          <h2 class="table-title">
+            <i class="pi pi-calendar icon-green"></i> Active Term Enrolled Subjects
+          </h2>
+          <span class="subject-count-badge">
+            Showing {{ filteredCourses().length }} of {{ data.currentCourses.length }} Subjects Enrolled
+          </span>
+        </div>
+
+        <div class="toolbar-controls">
+          <!-- Search Filter Control -->
+          <div class="search-box">
+            <i class="pi pi-search search-icon"></i>
+            <input
+              type="text"
+              pInputText
+              placeholder="Search code, title, schedule..."
+              [ngModel]="searchQuery()"
+              (ngModelChange)="searchQuery.set($event)"
+              class="search-input"
+            />
+            @if (searchQuery()) {
+              <button class="clear-btn" (click)="clearSearch()" pTooltip="Clear Search" tooltipPosition="top">
+                <i class="pi pi-times"></i>
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- PrimeNG Subject Table -->
+      <p-table
+        [value]="filteredCourses()"
+        styleClass="institutional-table"
+        responsiveLayout="scroll"
+        [rowHover]="true"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width: 3rem;"></th>
+            <th>Course Code</th>
+            <th>Course Title</th>
+            <th class="text-center">Units</th>
+            <th>Schedule & Room</th>
+            <th class="text-center">Grade Status</th>
+            <th class="text-center">Current Grade</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-course>
+          <tr [class.expanded-row]="expandedSectionId() === course.sectionId">
+            <td class="text-center">
+              <p-button
+                [icon]="expandedSectionId() === course.sectionId ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+                [text]="true"
+                [rounded]="true"
+                size="small"
+                severity="secondary"
+                (onClick)="toggleCourseExpand(course.sectionId)"
+                pTooltip="Toggle subject details"
+                tooltipPosition="right"
+              ></p-button>
+            </td>
+            <td class="font-bold-green font-mono">{{ course.courseCode }}</td>
+            <td class="font-bold-navy">{{ course.courseTitle }}</td>
+            <td class="text-center font-mono font-bold">{{ course.creditUnits }}</td>
+            <td class="schedule-text">
+              <i class="pi pi-clock schedule-icon"></i> {{ course.scheduleText }}
+            </td>
+            <td class="text-center">
+              <p-tag
+                [value]="course.gradeStatus || 'DRAFT'"
+                severity="secondary"
+                styleClass="status-sub-tag"
+              ></p-tag>
+            </td>
+            <td class="text-center">
+              <span class="grade-chip" [class]="'grade-chip-' + getGradeSeverity(course.currentGrade)">
+                {{ course.currentGrade || '—' }}
+              </span>
+            </td>
+          </tr>
+
+          <!-- Expandable Detail Row Panel -->
+          @if (expandedSectionId() === course.sectionId) {
+            <tr class="detail-panel-row">
+              <td colspan="7">
+                <div class="expand-detail-container">
+                  <div class="detail-grid">
+                    <div class="detail-item">
+                      <span class="detail-label">Class Section Code</span>
+                      <span class="detail-val font-mono-bold">{{ course.sectionCode }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Section Reference ID</span>
+                      <span class="detail-val font-mono">#SEC-{{ course.sectionId }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Assigned Schedule</span>
+                      <span class="detail-val">{{ course.scheduleText }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Grading Verification</span>
+                      <span class="detail-val">
+                        <p-tag
+                          [value]="course.gradeStatus === 'VERIFIED' ? 'Verified by Registrar' : (course.gradeStatus || 'Draft Enlistment')"
+                          [severity]="course.gradeStatus === 'VERIFIED' ? 'success' : 'info'"
+                        ></p-tag>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          }
+        </ng-template>
+
+        <!-- Integrated Shared Empty State Primitive -->
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="7" class="empty-state-cell">
+              @if (searchQuery()) {
+                <app-empty-state
+                  icon="pi pi-search"
+                  title="No Matching Subjects Found"
+                  [description]="'No enrolled courses match your query \'' + searchQuery() + '\'. Try adjusting search terms.'"
+                  actionLabel="Clear Search"
+                  actionIcon="pi pi-filter-slash"
+                  (actionClick)="clearSearch()"
+                ></app-empty-state>
+              } @else {
+                <app-empty-state
+                  icon="pi pi-book"
+                  title="No Active Enrolled Subjects"
+                  description="You currently have no active subject enrollments recorded for this academic term."
+                  severity="info"
+                ></app-empty-state>
+              }
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+</div>

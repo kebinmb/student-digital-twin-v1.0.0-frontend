@@ -19,6 +19,11 @@ import {
   StudentAssessmentInvoiceDto
 } from '../../../core/models/financial.model';
 
+import { SkeletonModule } from 'primeng/skeleton';
+import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+import { HasRoleDirective } from '../../../core/directives/has-role.directive';
+import { AuthService } from '../../../core/service/authentication/auth-service';
+
 @Component({
   selector: 'app-student-account-ledger',
   standalone: true,
@@ -30,7 +35,10 @@ import {
     InputTextModule,
     InputNumberModule,
     TagModule,
-    CardModule
+    CardModule,
+    HasRoleDirective,
+    SkeletonModule,
+    EmptyStateComponent
   ],
   templateUrl: './student-account-ledger.component.html',
   styleUrl: './student-account-ledger.component.css',
@@ -38,6 +46,7 @@ import {
 })
 export class StudentAccountLedgerComponent implements OnInit {
   private readonly financialApi = inject(FinancialApiService);
+  private readonly authService = inject(AuthService);
   private readonly messageService = inject(MessageService);
 
   // Search Fields
@@ -64,7 +73,13 @@ export class StudentAccountLedgerComponent implements OnInit {
     return entries[entries.length - 1].runningBalance;
   });
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    const userId = this.authService.getUserId();
+    if (userId && this.authService.hasRole('STUDENT')) {
+      this.searchStudentId = userId;
+      this.loadLedgerHistory();
+    }
+  }
 
   loadLedgerHistory(): void {
     if (!this.searchStudentId) {

@@ -40,7 +40,7 @@ export interface StudentAssessmentInvoiceDto {
   netAssessedAmount: number;
   totalPaidAmount: number;
   outstandingBalance: number;
-  status: string; // "PENDING" | "PARTIALLY_PAID" | "FULLY_PAID" | "FHE_COVERED"
+  status: 'UNPAID' | 'PARTIALLY_PAID' | 'PAID' | 'CANCELLED' | string;
   fheEligible: boolean;
 }
 
@@ -50,7 +50,7 @@ export interface StudentAccountLedgerDto {
   studentProfileId: number;
   termId: number;
   assessmentInvoiceId?: number | null;
-  transactionType: string; // "GROSS_ASSESSMENT" | "FHE_SUBSIDY_CREDIT" | "SCHOLARSHIP_CREDIT" | "CASHIER_PAYMENT" | "ADJUSTMENT_DEBIT" | "ADJUSTMENT_CREDIT"
+  transactionType: 'ASSESSMENT' | 'PAYMENT' | 'REFUND' | 'ADJUSTMENT' | 'UNIFAST_SUBSIDY' | 'SCHOLARSHIP' | string;
   transactionDate: string;
   description: string;
   debitAmount: number;
@@ -64,7 +64,7 @@ export interface ProcessPaymentRequest {
   assessmentInvoiceId?: number | null;
   amountTendered: number;
   amountPaid: number;
-  paymentMethod: string; // "CASH" | "GCASH" | "MAYA" | "BANK_TRANSFER" | "CHECK"
+  paymentMethod: 'CASH' | 'GCASH' | 'MAYA' | 'BANK_TRANSFER' | 'CHECK' | string;
   referenceNumber?: string | null;
   remarks?: string | null;
 }
@@ -82,7 +82,7 @@ export interface CashierReceiptDto {
   paymentMethod: string;
   referenceNumber?: string | null;
   remarks?: string | null;
-  status: string; // "ISSUED" | "VOIDED"
+  status: 'VALID' | 'VOIDED' | string;
   cashierUserId: number;
   cashierUsername: string;
   issuedAt: string;

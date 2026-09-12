@@ -1,17 +1,24 @@
 <div class="user-mgmt-container">
-  <!-- Header Section -->
-  <div class="header-section">
-    <div class="header-content">
-      <div class="badge-row">
-        <span class="module-badge">SYSTEM ADMINISTRATION</span>
-        <span class="role-badge">ADMIN & REGISTRAR</span>
+  <!-- Sticky Header Toolbar -->
+  <div class="user-mgmt-toolbar-card">
+    <div class="header-branding">
+      <div class="header-icon-box">
+        <i class="pi pi-users header-icon"></i>
       </div>
-      <h1 class="page-title">User Accounts Directory</h1>
-      <p class="page-subtitle">
-        Institutional user provisioning, role assignments, and authentication credential management.
-      </p>
+      <div class="header-text-group">
+        <h1 class="header-title">User Accounts Directory</h1>
+        <p class="header-subtitle">
+          Institutional user provisioning, role assignments, and authentication credential management.
+        </p>
+      </div>
     </div>
-    <div class="header-actions">
+    <div class="header-actions-group">
+      <p-button
+        label="Security Audit Logs"
+        icon="pi pi-shield"
+        styleClass="p-button-outlined p-button-secondary"
+        (onClick)="openAuditLogs()"
+      />
       <p-button
         label="Provision New User"
         icon="pi pi-user-plus"
@@ -48,16 +55,16 @@
           <td>
             <div class="user-identity">
               <div class="user-avatar-small">
-                <i class="pi pi-user text-slate-500"></i>
+                <i class="pi pi-user icon-user-avatar"></i>
               </div>
               <div class="user-meta">
-                <span class="font-semibold text-slate-900">{{ u.username }}</span>
-                <span class="text-xs text-slate-400">ID: #{{ u.id }}</span>
+                <span class="user-username">{{ u.username }}</span>
+                <span class="user-id-sub">ID: #{{ u.id }}</span>
               </div>
             </div>
           </td>
           <td>
-            <span class="text-slate-700 text-sm font-mono">{{ u.email }}</span>
+            <span class="user-email-text">{{ u.email }}</span>
           </td>
           <td>
             <div class="roles-cell">
@@ -71,20 +78,20 @@
           <td>
             <div class="affiliation-cell">
               @if (u.collegeCode) {
-                <div class="affiliation-badge">
-                  <i class="pi pi-building text-xs text-sky-600"></i>
-                  <span class="font-semibold text-slate-800">{{ u.collegeCode }}</span>
-                  <span class="text-xs text-slate-500">({{ u.collegeName }})</span>
+                <div class="affiliation-badge college-badge">
+                  <i class="pi pi-building icon-college"></i>
+                  <span class="college-code-text">{{ u.collegeCode }}</span>
+                  <span class="college-name-text">({{ u.collegeName }})</span>
                 </div>
               }
               @if (u.programCode) {
-                <div class="affiliation-badge">
-                  <i class="pi pi-book text-xs text-emerald-600"></i>
-                  <span class="font-semibold text-slate-700">{{ u.programCode }}</span>
+                <div class="affiliation-badge program-badge">
+                  <i class="pi pi-book icon-program"></i>
+                  <span class="program-code-text">{{ u.programCode }}</span>
                 </div>
               }
               @if (!u.collegeCode && !u.programCode) {
-                <span class="text-xs text-slate-400 italic">Institutional (Unrestricted)</span>
+                <span class="unrestricted-badge">Institutional (Unrestricted)</span>
               }
             </div>
           </td>
@@ -92,7 +99,7 @@
             <p-tag
               [value]="u.enabled ? 'ACTIVE' : 'DISABLED'"
               [severity]="u.enabled ? 'success' : 'danger'"
-              styleClass="text-xs font-semibold uppercase tracking-wider"
+              styleClass="user-status-tag"
             />
           </td>
           <td style="text-align: right;">
@@ -119,8 +126,8 @@
       <ng-template pTemplate="emptymessage">
         <tr>
           <td colspan="6" class="empty-state">
-            <i class="pi pi-users text-4xl text-slate-300 mb-2"></i>
-            <p class="text-slate-500 font-medium">No user accounts found.</p>
+            <i class="pi pi-users empty-icon"></i>
+            <p class="empty-text">No user accounts found.</p>
           </td>
         </tr>
       </ng-template>
@@ -146,7 +153,7 @@
           pInputText
           formControlName="username"
           placeholder="e.g. jdelacruz"
-          class="w-full"
+          class="dialog-input"
         />
         @if (userForm.controls.username.invalid && userForm.controls.username.touched) {
           <small class="p-error">Valid username (min 3 chars) is required.</small>
@@ -161,7 +168,7 @@
           pInputText
           formControlName="email"
           placeholder="e.g. user@chmsu.edu.ph"
-          class="w-full"
+          class="dialog-input"
         />
         @if (userForm.controls.email.invalid && userForm.controls.email.touched) {
           <small class="p-error">Valid email address is required.</small>
@@ -178,7 +185,7 @@
           pInputText
           formControlName="password"
           placeholder="Minimum 6 characters"
-          class="w-full"
+          class="dialog-input"
         />
         @if (userForm.controls.password.invalid && userForm.controls.password.touched) {
           <small class="p-error">Password must be at least 6 characters.</small>
@@ -223,7 +230,7 @@
           <label for="userCollege" class="field-label">
             Assigned College
             @if (isDeanSelected() || isChairpersonSelected()) {
-              <span class="text-red-500">*</span>
+              <span class="required-star">*</span>
             }
           </label>
           <select
@@ -243,7 +250,7 @@
           <label for="userProgram" class="field-label">
             Assigned Program
             @if (isChairpersonSelected()) {
-              <span class="text-red-500">*</span>
+              <span class="required-star">*</span>
             }
           </label>
           <select
@@ -259,7 +266,7 @@
             }
           </select>
           @if (isDeanSelected()) {
-            <small class="field-hint text-amber-600">Deans operate college-wide across all programs.</small>
+            <small class="field-hint hint-warning">Deans operate college-wide across all programs.</small>
           }
         </div>
       </div>
@@ -288,6 +295,74 @@
         />
       </div>
     </form>
+  </p-dialog>
+
+  <!-- Security Audit Logs Dialog -->
+  <p-dialog
+    header="System Security & Access Audit Trail"
+    [(visible)]="isAuditDialogVisible"
+    [modal]="true"
+    [style]="{ width: '85vw', maxWidth: '1100px' }"
+    styleClass="audit-log-dialog"
+  >
+    <div style="padding-bottom: 1rem;">
+      <p class="audit-subtext">
+        Immutably recorded authentication, privilege elevation, and user profile administrative actions.
+      </p>
+
+      <p-table
+        [value]="auditLogs()"
+        [loading]="isAuditLoading()"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        styleClass="p-datatable-striped"
+        responsiveLayout="scroll"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width: 15%;">Timestamp</th>
+            <th style="width: 18%;">Action</th>
+            <th style="width: 15%;">Target Entity</th>
+            <th style="width: 15%;">Performed By</th>
+            <th style="width: 12%;">IP Address</th>
+            <th style="width: 25%;">Details</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-log>
+          <tr>
+            <td class="audit-ts-cell">{{ log.createdAt | date:'short' }}</td>
+            <td>
+              <span class="audit-action-badge">
+                {{ log.action }}
+              </span>
+            </td>
+            <td class="audit-entity-cell">{{ log.entityName }} #{{ log.entityId }}</td>
+            <td class="audit-user-cell">{{ log.performedBy || 'SYSTEM' }}</td>
+            <td class="audit-ip-cell">{{ log.ipAddress || '127.0.0.1' }}</td>
+            <td class="audit-details-cell" [title]="log.details">{{ log.details || '-' }}</td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6" class="audit-empty-cell">
+              No audit log entries recorded in system context.
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <div class="dialog-footer">
+      <p-button
+        label="Close"
+        icon="pi pi-times"
+        styleClass="p-button-secondary"
+        (onClick)="isAuditDialogVisible.set(false)"
+      />
+    </div>
   </p-dialog>
 
   <p-confirmDialog />

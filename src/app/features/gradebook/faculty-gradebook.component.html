@@ -150,8 +150,22 @@
               styleClass="gb-btn-compact">
             </p-button>
           }
+
+          <p-button 
+            label="Export CHED Sheet" 
+            icon="pi pi-file-excel" 
+            severity="secondary" 
+            size="small"
+            [outlined]="true"
+            (onClick)="exportChedGradeSheet()"
+            pTooltip="Export official CHED grade sheet layout (CSV format)"
+            tooltipPosition="bottom"
+            styleClass="gb-btn-compact">
+          </p-button>
         </div>
       </div>
+
+
 
       <!-- 3. Workspace Underline Navigation Tabs -->
       <nav class="gb-workspace-tabs" aria-label="Gradebook Navigation">
@@ -357,6 +371,7 @@
             <th style="width: 180px; text-align: center;">Numerical Grade</th>
             <th style="width: 180px;">Completion Status</th>
             <th style="width: 130px; text-align: center;">Credit Status</th>
+            <th style="width: 120px; text-align: center;">Actions</th>
           </tr>
         </ng-template>
 
@@ -370,6 +385,7 @@
               <td><p-skeleton width="6rem" height="1.6rem"></p-skeleton></td>
               <td><p-skeleton width="7rem" height="1.6rem"></p-skeleton></td>
               <td style="text-align: center;"><p-skeleton width="5rem" height="1.2rem"></p-skeleton></td>
+              <td style="text-align: center;"><p-skeleton width="4rem" height="1.2rem"></p-skeleton></td>
             </tr>
           } @else {
             <tr [class.row-dirty]="student.isDirty">
@@ -441,8 +457,25 @@
                   <span class="status-pill status-pending">PENDING</span>
                 }
               </td>
+              <td style="text-align: center;">
+                @if (isSealed()) {
+                  <p-button
+                    icon="pi pi-file-edit"
+                    label="Req. Change"
+                    size="small"
+                    severity="warn"
+                    [text]="true"
+                    (onClick)="openGradeChangeModal(student)"
+                    pTooltip="Submit post-seal Grade Change Request"
+                    tooltipPosition="top">
+                  </p-button>
+                } @else {
+                  <span class="text-xs text-slate-400">—</span>
+                }
+              </td>
             </tr>
           }
+
         </ng-template>
 
         <ng-template pTemplate="emptymessage">
@@ -599,12 +632,16 @@
 
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td [attr.colspan]="4 + allAssessmentItems().length">
-              <div class="gb-empty-wrapper">
-                <div class="gb-empty-icon-circle"><i class="pi pi-table"></i></div>
-                <h3 class="gb-empty-heading">No Assessment Tasks Configured</h3>
-                <p class="gb-empty-subtext">Click "Add Activity" to configure assessments, quizzes, or major examinations for this section.</p>
-              </div>
+            <td [attr.colspan]="6 + allAssessmentItems().length">
+              <app-empty-state
+                icon="pi pi-file-edit"
+                title="Class Record Not Initialized"
+                description="Add an assessment item (Quiz, Exam, Seatwork) to populate the dynamic matrix."
+                actionLabel="Add First Assessment Item"
+                actionIcon="pi pi-plus"
+                [actionDisabled]="!canEditGrades()"
+                (actionClick)="openAddItemModal()">
+              </app-empty-state>
             </td>
           </tr>
         </ng-template>
@@ -641,7 +678,7 @@
             [ngModel]="newItemTitle()" 
             (ngModelChange)="newItemTitle.set($event)"
             placeholder="e.g., Preliminary Exam, Quiz 1" 
-            class="gb-input-text w-full" />
+            class="gb-input-text" style="width: 100%;" />
         </div>
 
         <div class="gb-selector-field" style="margin-top: 0.75rem;">
@@ -658,7 +695,72 @@
 
       <ng-template pTemplate="footer">
         <p-button label="Cancel" severity="secondary" size="small" (onClick)="showAddItemModal.set(false)"></p-button>
-        <p-button label="Save Activity" severity="primary" size="small" (onClick)="submitAddItem()"></p-button>
+        <p-button label="Add Activity" severity="primary" size="small" (onClick)="submitAddItem()"></p-button>
+
+      </ng-template>
+    </p-dialog>
+
+    <!-- Post-Seal Grade Change Request Dialog -->
+    <p-dialog
+      header="Submit Post-Seal Grade Change Request"
+      [(visible)]="isGradeChangeModalOpen"
+      [modal]="true"
+      [style]="{ width: '480px' }"
+    >
+      @if (selectedGradeChangeStudent(); as st) {
+        <div style="display: flex; flex-direction: column; gap: 1rem; padding-top: 0.5rem;">
+          <div class="post-seal-notice-box">
+            <strong>Post-Seal Grade Correction:</strong> This section gradebook is officially sealed. Correcting a grade requires formal submission for Dean and Registrar compliance verification.
+          </div>
+
+          <div class="grade-change-field-group">
+            <span class="grade-change-label-sub">Target Student</span>
+            <span class="grade-change-target-name">{{ st.studentName }} ({{ st.studentNumber }})</span>
+          </div>
+
+          <div style="display: flex; gap: 1rem;">
+            <div style="flex: 1;">
+              <label class="grade-change-label">Previous Sealed Grade</label>
+              <input pInputText [value]="st.finalNumericalGrade ? (st.finalNumericalGrade | number:'1.2-2') : '3.00'" [disabled]="true" style="width: 100%; text-align: center; font-weight: 700;" />
+            </div>
+            <div style="flex: 1;">
+              <label class="grade-change-label">New Corrected Grade</label>
+              <p-inputnumber
+                [ngModel]="gradeChangeNewGrade()"
+                (ngModelChange)="gradeChangeNewGrade.set($event)"
+                [min]="1.00"
+                [max]="5.00"
+                [minFractionDigits]="2"
+                [maxFractionDigits]="2"
+                styleClass="gb-table-inputnumber"
+              />
+            </div>
+          </div>
+
+          <div class="grade-change-field-group">
+            <label class="grade-change-label">Reason for Post-Seal Correction *</label>
+            <textarea
+              rows="3"
+              pInputText
+              [ngModel]="gradeChangeReason()"
+              (ngModelChange)="gradeChangeReason.set($event)"
+              placeholder="Provide clear justification for grade adjustment (e.g., miscalculated final exam weight, encoding error)..."
+              class="grade-change-reason-textarea"
+            ></textarea>
+          </div>
+        </div>
+      }
+
+      <ng-template pTemplate="footer">
+        <p-button label="Cancel" severity="secondary" size="small" (onClick)="isGradeChangeModalOpen.set(false)" />
+        <p-button
+          label="Submit Request"
+          severity="warn"
+          size="small"
+          icon="pi pi-send"
+          [loading]="isSaving()"
+          (onClick)="submitGradeChangeRequest()"
+        />
       </ng-template>
     </p-dialog>
   }

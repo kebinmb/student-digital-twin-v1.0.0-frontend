@@ -14,8 +14,6 @@ import { TagModule } from 'primeng/tag';
 import { CardModule } from 'primeng/card';
 import { DialogModule } from 'primeng/dialog';
 import { TimelineModule } from 'primeng/timeline';
-import { MessageService } from 'primeng/api';
-
 import { ComplianceApiService } from '../../../core/service/compliance/compliance-api.service';
 import {
   ClearanceRequestDto,
@@ -23,6 +21,14 @@ import {
   InitiateClearanceRequest,
   ProcessSignoffRequest
 } from '../../../core/models/compliance.model';
+
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService, MessageService } from 'primeng/api';
+
+import { SkeletonModule } from 'primeng/skeleton';
+import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+import { HasRoleDirective } from '../../../core/directives/has-role.directive';
+import { AuthService } from '../../../core/service/authentication/auth-service';
 
 @Component({
   selector: 'app-student-clearance',
@@ -38,14 +44,21 @@ import {
     TagModule,
     CardModule,
     DialogModule,
-    TimelineModule
+    TimelineModule,
+    ConfirmDialogModule,
+    HasRoleDirective,
+    SkeletonModule,
+    EmptyStateComponent
   ],
+  providers: [ConfirmationService],
   templateUrl: './student-clearance.component.html',
   styleUrl: './student-clearance.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class StudentClearanceComponent implements OnInit {
   private readonly complianceApi = inject(ComplianceApiService);
+  private readonly authService = inject(AuthService);
+  private readonly confirmationService = inject(ConfirmationService);
   private readonly messageService = inject(MessageService);
 
   // Search & Form Fields
@@ -71,7 +84,13 @@ export class StudentClearanceComponent implements OnInit {
   signoffActionStatus: string = 'APPROVED';
   signoffRemarks: string = '';
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    const userId = this.authService.getUserId();
+    if (userId && this.authService.hasRole('STUDENT')) {
+      this.searchStudentId = userId;
+      this.loadClearanceStatus();
+    }
+  }
 
   loadClearanceStatus(): void {
     if (!this.searchStudentId || !this.searchTermId) {
@@ -130,12 +149,26 @@ export class StudentClearanceComponent implements OnInit {
     const signoff = this.selectedSignoff();
     if (!signoff) return;
 
+    if (this.signoffActionStatus === 'REJECTED') {
+      this.confirmationService.confirm({
+        message: `Are you sure you want to REJECT / HOLD clearance for ${this.clearanceRequest()?.studentName}?`,
+        header: 'Confirm Clearance Hold',
+        icon: 'pi pi-exclamation-triangle',
+        acceptButtonStyleClass: 'p-button-danger',
+        accept: () => this.executeSignoffSubmit(signoff.id)
+      });
+    } else {
+      this.executeSignoffSubmit(signoff.id);
+    }
+  }
+
+  private executeSignoffSubmit(signoffId: number): void {
     const req: ProcessSignoffRequest = {
       signoffStatus: this.signoffActionStatus,
       remarks: this.signoffRemarks.trim() || undefined
     };
 
-    this.complianceApi.processSignoff(signoff.id, req).subscribe({
+    this.complianceApi.processSignoff(signoffId, req).subscribe({
       next: () => {
         this.showSignoffModal.set(false);
         this.messageService.add({ severity: 'success', summary: 'Sign-off Processed', detail: `Department status updated to ${this.signoffActionStatus}` });

@@ -1,0 +1,47 @@
+.empty-state-card {
+  background: var(--p-surface-0, #ffffff);
+  border: 1px solid var(--p-surface-200, #e2e8f0);
+  border-radius: 12px;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  margin: 0.75rem 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.empty-icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--p-surface-200, #e2e8f0);
+}
+
+.empty-icon {
+  font-size: 2.25rem;
+}
+
+.empty-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--p-surface-900, #0f172a);
+  margin: 0 0 0.5rem 0;
+}
+
+.empty-description {
+  color: var(--p-surface-600, #475569);
+  margin: 0 0 1rem 0;
+  max-width: 26rem;
+  line-height: 1.5;
+  font-size: 0.875rem;
+}
+
+.empty-action-wrapper {
+  display: flex;
+  justify-content: center;
+}

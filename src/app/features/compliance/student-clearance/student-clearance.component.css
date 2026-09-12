@@ -1,6 +1,165 @@
 /* File: src/app/features/compliance/student-clearance/student-clearance.component.css */
 
 .clearance-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem;
   max-width: 1400px;
   margin: 0 auto;
+  width: 100%;
+}
+
+.clearance-toolbar-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 1rem 1.25rem;
+  box-shadow: var(--chmsu-shadow-card);
+}
+
+.clearance-filter-card {
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  padding: 1.25rem;
+  box-shadow: var(--chmsu-shadow-card);
+}
+
+.clearance-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+@media (max-width: 992px) {
+  .clearance-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .clearance-filter-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.actions-col {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.clearance-loading-card {
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  padding: 1.5rem;
+}
+
+.clearance-overview-section {
+  width: 100%;
+}
+
+.clearance-overview-card {
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 1.5rem;
+  box-shadow: var(--chmsu-shadow-card);
+}
+
+.overview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.student-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.req-id-tag {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--chmsu-slate-500, #64748b);
+  letter-spacing: 0.04em;
+}
+
+.req-student-name {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--chmsu-green-main, #116834);
+  margin: 0.15rem 0 0 0;
+}
+
+.req-sub-info {
+  font-size: 0.8125rem;
+  color: var(--chmsu-slate-500, #64748b);
+  margin: 0.25rem 0 0 0;
+}
+
+.highlight-text {
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+}
+
+::ng-deep .status-badge-lg {
+  font-size: 0.9375rem !important;
+  padding: 0.35rem 0.85rem !important;
+}
+
+.timeline-section {
+  padding-top: 1rem;
+  border-top: 1px solid var(--chmsu-slate-200, #e2e8f0);
+}
+
+.section-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+  margin: 0 0 1rem 0;
+}
+
+.view-only-text {
+  font-size: 0.8125rem;
+  color: var(--chmsu-slate-500, #64748b);
+  font-style: italic;
+}
+
+.radio-option-group {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-top: 0.25rem;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.radio-label {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.radio-label.text-green { color: var(--status-emerald-text, #047857); }
+.radio-label.text-red { color: #dc2626; }
+
+.full-width-input,
+::ng-deep .full-width-select {
+  width: 100% !important;
 }

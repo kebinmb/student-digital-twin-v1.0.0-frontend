@@ -5,7 +5,7 @@
     <div class="header-main flex-between flex-wrap gap-md">
       <div class="header-title-area flex-1 min-w-[280px]">
         <h2 class="module-title font-bold-navy">
-          <i class="pi pi-user-edit text-emerald-700"></i>
+          <i class="pi pi-user-edit header-icon-emerald"></i>
           Academic Advising & Subject Enlistment
         </h2>
         <p class="module-subtitle">
@@ -33,13 +33,25 @@
           </p-button>
         }
         @if (canCreditTransferee()) {
-          <p-button 
-            label="Credit Transferee" 
-            icon="pi pi-file-edit" 
-            severity="warn" 
+          <p-button
+            label="Credit Transferee Subject"
+            icon="pi pi-file-check"
+            severity="secondary"
+            [outlined]="true"
             size="small"
             [disabled]="!store.studentId()"
             (onClick)="openCreditingDialog()">
+          </p-button>
+          <p-button
+            label="Approve Overload Permit"
+            icon="pi pi-angle-double-up"
+            severity="warn"
+            [outlined]="true"
+            size="small"
+            [disabled]="!store.studentId()"
+            (onClick)="requestOverloadApproval()"
+            pTooltip="Expand credit unit ceiling for graduating senior"
+            tooltipPosition="bottom">
           </p-button>
         }
       </div>
@@ -57,11 +69,11 @@
         </div>
         <div class="meta-item">
           <span class="meta-label">Program & Year</span>
-          <span class="meta-val font-medium text-slate-800">{{ adv.programCode }} — Year {{ adv.yearLevel }}</span>
+          <span class="meta-val">{{ adv.programCode }} — Year {{ adv.yearLevel }}</span>
         </div>
         <div class="meta-item">
           <span class="meta-label">Curriculum</span>
-          <span class="meta-val font-mono font-medium text-slate-800">{{ adv.curriculumCode }}</span>
+          <span class="meta-val font-mono">{{ adv.curriculumCode }}</span>
         </div>
         <div class="meta-item">
           <span class="meta-label">Academic Standing</span>
@@ -97,11 +109,11 @@
       </div>
 
       @if (adv.isClearedForEnrollment === false || (adv.financialClearance && adv.financialClearance !== 'CLEARED') || (adv.departmentalClearance && adv.departmentalClearance !== 'CLEARED')) {
-        <div class="clearance-lock-alert p-3 mt-3 border rounded-lg bg-amber-50 border-amber-300 text-amber-900 flex items-center gap-3">
-          <i class="pi pi-lock text-amber-700 text-xl"></i>
+        <div class="clearance-lock-alert">
+          <i class="pi pi-lock lock-icon"></i>
           <div>
-            <strong class="font-bold">Self-Enrollment Gate Locked:</strong>
-            <span class="text-sm ml-1">
+            <strong>Self-Enrollment Gate Locked:</strong>
+            <span class="lock-text">
               Student account has active administrative holds (Financial: {{ adv.financialClearance || 'CLEARED' }}, Departmental: {{ adv.departmentalClearance || 'CLEARED' }}). Course enlistment and confirmation are restricted until all clearances are verified as CLEARED.
             </span>
           </div>

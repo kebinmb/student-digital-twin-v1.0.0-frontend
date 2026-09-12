@@ -100,9 +100,40 @@ export const routes: Routes = [
           import('./features/faculty-management/faculty-management.component').then(m => m.FacultyManagementComponent)
       },
       {
+        path: 'portal/student',
+        canActivate: [roleGuard(['ADMIN', 'STUDENT', 'REGISTRAR'])],
+        loadComponent: () =>
+          import('./features/portal/student-self-service-portal/student-self-service-portal.component').then(m => m.StudentSelfServicePortalComponent)
+      },
+      {
+        path: 'admin/lms-config',
+        canActivate: [roleGuard(['ADMIN'])],
+        loadComponent: () =>
+          import('./features/admin/lms-config/lms-config.component').then(m => m.LmsConfigComponent)
+      },
+      {
+        path: 'analytics/digital-twin',
+        canActivate: [roleGuard(['ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE', 'STUDENT'])],
+        loadComponent: () =>
+          import('./features/analytics/digital-twin-dashboard/digital-twin-dashboard.component').then(m => m.DigitalTwinAnalyticsDashboardComponent)
+      },
+      {
+        path: 'analytics/early-warning',
+        canActivate: [roleGuard(['ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE'])],
+        loadComponent: () =>
+          import('./features/analytics/early-warning-radar/early-warning-radar.component').then(m => m.EarlyWarningRadarComponent)
+      },
+      {
+        path: 'analytics/qr-attendance',
+        canActivate: [roleGuard(['ADMIN', 'FACULTY', 'STUDENT'])],
+        loadComponent: () =>
+          import('./features/analytics/qr-attendance/qr-attendance.component').then(m => m.QrAttendanceScannerComponent)
+      },
+      {
         path: '**',
         redirectTo: ''
       }
+
     ]
   },
   {

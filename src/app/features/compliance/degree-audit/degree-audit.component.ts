@@ -22,6 +22,9 @@ import {
   ApplyForGraduationRequest
 } from '../../../core/models/compliance.model';
 
+import { HasRoleDirective } from '../../../core/directives/has-role.directive';
+import { AuthService } from '../../../core/service/authentication/auth-service';
+
 @Component({
   selector: 'app-degree-audit',
   standalone: true,
@@ -35,7 +38,8 @@ import {
     TagModule,
     CardModule,
     DialogModule,
-    ProgressBarModule
+    ProgressBarModule,
+    HasRoleDirective
   ],
   templateUrl: './degree-audit.component.html',
   styleUrl: './degree-audit.component.css',
@@ -43,6 +47,7 @@ import {
 })
 export class DegreeAuditComponent implements OnInit {
   private readonly complianceApi = inject(ComplianceApiService);
+  private readonly authService = inject(AuthService);
   private readonly messageService = inject(MessageService);
 
   // Search Fields
@@ -57,7 +62,13 @@ export class DegreeAuditComponent implements OnInit {
   readonly isApplying = signal<boolean>(false);
   readonly isIssuingSo = signal<boolean>(false);
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    const userId = this.authService.getUserId();
+    if (userId && this.authService.hasRole('STUDENT')) {
+      this.searchStudentId = userId;
+      this.runDegreeAudit();
+    }
+  }
 
   runDegreeAudit(): void {
     if (!this.searchStudentId) {

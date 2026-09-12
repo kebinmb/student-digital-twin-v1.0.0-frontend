@@ -22,6 +22,8 @@ import { ProgramService } from '../../../../core/services/institution.service';
 import { CurriculumApiService } from '../../../../core/service/curriculum/curriculum-api.service';
 
 import { AuthService } from '../../../../core/service/authentication/auth-service';
+import { EnrollmentApiService } from '../../../../core/service/enrollment/enrollment-api.service';
+
 
 @Component({
   selector: 'app-student-advising',
@@ -54,6 +56,8 @@ export class StudentAdvisingComponent implements OnInit {
   private readonly messageService = inject(MessageService);
   private readonly programService = inject(ProgramService);
   private readonly curriculumApi = inject(CurriculumApiService);
+  private readonly enrollmentApi = inject(EnrollmentApiService);
+
 
   readonly canAdmitStudent = computed(() => this.authService.hasAnyRole(['ADMIN', 'REGISTRAR']));
   readonly canCreditTransferee = computed(() => this.authService.hasAnyRole(['ADMIN', 'DEAN', 'REGISTRAR']));
@@ -617,4 +621,30 @@ export class StudentAdvisingComponent implements OnInit {
       }
     );
   }
+
+  requestOverloadApproval(): void {
+    const advising = this.store.advising();
+    if (!advising) return;
+    const enrollment = this.store.enrollment();
+    if (!enrollment) {
+      this.messageService.add({ severity: 'warn', summary: 'Enrollment Record Missing', detail: 'Student must enlist in at least one section before requesting overload approval.' });
+      return;
+    }
+
+    this.enrollmentApi.updateEnrollmentStatus(enrollment.enrollmentId, { isOverloadApproved: true }).subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Overload Approved',
+          detail: 'Unit overload permit approved for graduating student. Unit ceiling expanded!'
+        });
+        this.store.loadStudentAdvising(advising.studentId, this.store.selectedTermId() || 1);
+      },
+      error: (err: any) => {
+        this.messageService.add({ severity: 'error', summary: 'Overload Approval Failed', detail: err.error?.detail || 'Failed to approve overload.' });
+      }
+    });
+  }
+
 }
+

@@ -20,6 +20,9 @@ import {
   CreateUnifastClaimRequest
 } from '../../../core/models/financial.model';
 
+import { SkeletonModule } from 'primeng/skeleton';
+import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+
 @Component({
   selector: 'app-unifast-billing-claim',
   standalone: true,
@@ -32,7 +35,9 @@ import {
     InputNumberModule,
     TagModule,
     CardModule,
-    DialogModule
+    DialogModule,
+    SkeletonModule,
+    EmptyStateComponent
   ],
   templateUrl: './unifast-billing-claim.component.html',
   styleUrl: './unifast-billing-claim.component.css',

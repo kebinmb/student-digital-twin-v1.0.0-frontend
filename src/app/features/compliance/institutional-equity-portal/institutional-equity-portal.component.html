@@ -1,0 +1,195 @@
+<!-- File: src/app/features/compliance/institutional-equity-portal/institutional-equity-portal.component.html -->
+<div class="institutional-equity-container">
+  <!-- Institutional Sticky Header Toolbar -->
+  <div class="institutional-equity-toolbar-card">
+    <div class="header-branding">
+      <div class="header-icon-box">
+        <i class="pi pi-building-columns header-icon"></i>
+      </div>
+      <div class="header-text-group">
+        <h1 class="header-title">Institutional Statutory Equity & OSAS Audit Portal</h1>
+        <p class="header-subtitle">Compliance auditing & verification for Philippine equity target groups (RA 10931, RA 8371, RA 7277, RA 11861)</p>
+      </div>
+    </div>
+    <div class="header-actions-group">
+      <p-button label="Refresh Data" icon="pi pi-refresh" severity="secondary" (onClick)="loadStats(); loadProfiles();"></p-button>
+    </div>
+  </div>
+
+  <!-- Real-time Statutory Equity Metric KPI Cards -->
+  <div class="kpi-grid" *ngIf="stats() as s">
+    <div class="kpi-card border-green">
+      <span class="kpi-title">Total Equity Profiles</span>
+      <span class="kpi-value">{{ s.totalProfilesCount }} Students</span>
+      <span class="kpi-subtext text-green">
+        <i class="pi pi-check-circle"></i> {{ s.countVerified }} Verified | {{ s.countDocumented }} Documented
+      </span>
+    </div>
+    <div class="kpi-card border-blue">
+      <span class="kpi-title">4Ps / Listahanan / TES</span>
+      <span class="kpi-value text-blue">{{ s.count4psBeneficiaries }} / {{ s.countListahananNhts }} / {{ s.countUnifastTesAwardees }}</span>
+      <span class="kpi-subtext">RA 10931 UniFAST & DSWD Target Groups</span>
+    </div>
+    <div class="kpi-card border-purple">
+      <span class="kpi-title">Indigenous Peoples & PWD</span>
+      <span class="kpi-value text-purple">{{ s.countIndigenousPeoples }} IP | {{ s.countPersonsWithDisabilities }} PWD</span>
+      <span class="kpi-subtext">RA 8371 NCIP / RA 7277 PDAO</span>
+    </div>
+    <div class="kpi-card border-orange">
+      <span class="kpi-title">Solo Parents & First-Gen</span>
+      <span class="kpi-value text-orange">{{ s.countSoloParents }} Solo | {{ s.countFirstGenerationCollege }} First-Gen</span>
+      <span class="kpi-subtext">RA 11861 & {{ s.countGidaResidents }} GIDA Residents</span>
+    </div>
+  </div>
+
+  <!-- Filter Toolbar -->
+  <div class="filter-card">
+    <div class="filter-grid">
+      <div class="filter-col search-col">
+        <p-iconfield>
+          <p-inputicon class="pi pi-search"></p-inputicon>
+          <input pInputText type="text" [(ngModel)]="searchQuery" (ngModelChange)="onFilterChange()" placeholder="Search Student # or Name..." class="full-width-input" />
+        </p-iconfield>
+      </div>
+      <div class="filter-col">
+        <p-select [options]="statusOptions" [(ngModel)]="selectedStatus" (onChange)="onFilterChange()" placeholder="Filter Status" optionLabel="label" optionValue="value" styleClass="full-width-select"></p-select>
+      </div>
+      <div class="filter-col">
+        <label class="filter-label">4Ps Filter</label>
+        <p-select [options]="flagOptions" [(ngModel)]="is4psFilter" (onChange)="onFilterChange()" optionLabel="label" optionValue="value" styleClass="full-width-select"></p-select>
+      </div>
+      <div class="filter-col">
+        <label class="filter-label">IP Filter</label>
+        <p-select [options]="flagOptions" [(ngModel)]="isIpFilter" (onChange)="onFilterChange()" optionLabel="label" optionValue="value" styleClass="full-width-select"></p-select>
+      </div>
+      <div class="filter-col">
+        <label class="filter-label">PWD Filter</label>
+        <p-select [options]="flagOptions" [(ngModel)]="isPwdFilter" (onChange)="onFilterChange()" optionLabel="label" optionValue="value" styleClass="full-width-select"></p-select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Table -->
+  <div class="table-card">
+    <p-table
+      [value]="profiles()"
+      [loading]="isLoading()"
+      [rows]="size()"
+      [totalRecords]="totalElements()"
+      [paginator]="true"
+      [stripedRows]="true"
+      responsiveLayout="scroll"
+      styleClass="institutional-table p-datatable-sm p-datatable-gridlines">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Student Info</th>
+          <th>Program</th>
+          <th>4Ps / TES</th>
+          <th>IP / PWD</th>
+          <th>Solo / First-Gen</th>
+          <th>Income Bracket</th>
+          <th>Status</th>
+          <th class="text-center">Action</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-row>
+        <tr>
+          <td>
+            <span class="student-name-text">{{ row.studentName }}</span>
+            <span class="student-id-text">#{{ row.studentNumber }}</span>
+          </td>
+          <td>
+            <span class="program-code-text">{{ row.programCode }}</span>
+          </td>
+          <td>
+            <div class="tag-stack">
+              <p-tag *ngIf="row.is4psBeneficiary" value="4Ps" severity="success" pTooltip="ID: {{ row.household4psIdNumber || 'N/A' }}"></p-tag>
+              <p-tag *ngIf="row.unifastTesAwardee" value="TES" severity="info" pTooltip="TES: {{ row.unifastTesAwardNumber || 'N/A' }}"></p-tag>
+              <p-tag *ngIf="row.isListahananNhts" value="Listahanan" severity="secondary"></p-tag>
+              <span *ngIf="!row.is4psBeneficiary && !row.unifastTesAwardee && !row.isListahananNhts" class="dash-text">-</span>
+            </div>
+          </td>
+          <td>
+            <div class="tag-stack">
+              <p-tag *ngIf="row.isIndigenousPeople" [value]="row.ipEthnicGroup || 'IP'" severity="warn" pTooltip="NCIP: {{ row.ncipCertificateNumber || 'N/A' }}"></p-tag>
+              <p-tag *ngIf="row.isPersonWithDisability" [value]="row.disabilityType || 'PWD'" severity="info" pTooltip="PWD ID: {{ row.pwdIdNumber || 'N/A' }}"></p-tag>
+              <span *ngIf="!row.isIndigenousPeople && !row.isPersonWithDisability" class="dash-text">-</span>
+            </div>
+          </td>
+          <td>
+            <div class="tag-stack">
+              <p-tag *ngIf="row.isSoloParentOrDependent" value="Solo Parent" severity="secondary" pTooltip="ID: {{ row.soloParentIdNumber || 'N/A' }}"></p-tag>
+              <p-tag *ngIf="row.isFirstGenerationCollege" value="First-Gen" severity="info"></p-tag>
+              <p-tag *ngIf="row.isGidaResident" value="GIDA" severity="danger"></p-tag>
+              <span *ngIf="!row.isSoloParentOrDependent && !row.isFirstGenerationCollege && !row.isGidaResident" class="dash-text">-</span>
+            </div>
+          </td>
+          <td>
+            <span class="income-text">{{ formatIncome(row.monthlyHouseholdIncomeBracket) }}</span>
+          </td>
+          <td>
+            <p-tag [value]="row.verificationStatus" [severity]="getStatusSeverity(row.verificationStatus)"></p-tag>
+          </td>
+          <td class="text-center">
+            <p-button icon="pi pi-check-square" severity="success" size="small" [text]="true" pTooltip="Verify & Audit Profile" (onClick)="openVerifyDialog(row)"></p-button>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8" class="p-0">
+            <app-empty-state
+              icon="pi pi-filter-slash"
+              title="No Equity Profiles Found"
+              description="No student equity profiles matched your search and statutory filter parameters.">
+            </app-empty-state>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- Verification Dialog Modal -->
+  <p-dialog
+    header="Audit & Verify Student Equity Declaration"
+    [(visible)]="showVerifyDialog"
+    [modal]="true"
+    [style]="{ width: '90vw', maxWidth: '600px' }">
+    <div *ngIf="selectedProfile() as p" class="dialog-form-grid">
+      <div class="student-summary-box">
+        <span class="summary-label">Student Identification</span>
+        <span class="summary-name">{{ p.studentName }}</span>
+        <span class="summary-id">Student ID: #{{ p.studentNumber }} ({{ p.programCode }})</span>
+      </div>
+
+      <div class="dialog-section">
+        <span class="dialog-section-label">Declared Statutory References & Certificates</span>
+        <ul class="decl-list">
+          <li *ngIf="p.is4psBeneficiary"><strong>4Ps Household ID:</strong> {{ p.household4psIdNumber || 'Self-Declared (No ID)' }}</li>
+          <li *ngIf="p.unifastTesAwardee"><strong>UniFAST TES Control #:</strong> {{ p.unifastTesAwardNumber || 'Self-Declared (No ID)' }}</li>
+          <li *ngIf="p.isIndigenousPeople"><strong>IP Group & NCIP Cert:</strong> {{ p.ipEthnicGroup }} - {{ p.ncipCertificateNumber || 'No Cert #' }}</li>
+          <li *ngIf="p.isPersonWithDisability"><strong>PWD ID & Type:</strong> {{ p.pwdIdNumber || 'No ID #' }} ({{ p.disabilityType || 'General' }})</li>
+          <li *ngIf="p.isSoloParentOrDependent"><strong>Solo Parent ID #:</strong> {{ p.soloParentIdNumber || 'Self-Declared (No ID)' }}</li>
+        </ul>
+      </div>
+
+      <div class="dialog-section">
+        <label class="form-label">Set Verification Status</label>
+        <p-select [options]="verifyStatusOptions" [(ngModel)]="verificationStatus" optionLabel="label" optionValue="value" styleClass="full-width-select"></p-select>
+      </div>
+
+      <div class="dialog-section">
+        <label class="form-label">Compliance Audit Remarks</label>
+        <textarea pTextarea [(ngModel)]="verificationRemarks" rows="3" placeholder="Enter verification notes, validated NCIP/PDAO certificate remarks..." class="full-width-textarea"></textarea>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <div class="dialog-footer-actions">
+        <p-button label="Cancel" severity="secondary" (onClick)="showVerifyDialog.set(false)"></p-button>
+        <p-button label="Save Verification" icon="pi pi-check" severity="success" [loading]="isSavingVerification()" (onClick)="saveVerification()"></p-button>
+      </div>
+    </ng-template>
+  </p-dialog>
+</div>
+

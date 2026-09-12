@@ -1,0 +1,96 @@
+<!-- File: src/app/features/analytics/qr-attendance/qr-attendance.component.html -->
+<div class="qr-container">
+  <!-- Institutional Sticky Header Toolbar -->
+  <div class="qr-toolbar-card">
+    <div class="header-branding">
+      <div class="header-icon-box">
+        <i class="pi pi-qrcode header-icon"></i>
+      </div>
+      <div class="header-text-group">
+        <div class="badge-row">
+          <span class="badge-tag green">CLASSROOM TELEMETRY</span>
+          <span class="badge-tag blue">DYNAMIC QR & GEOFENCING</span>
+        </div>
+        <h1 class="header-title">Dynamic QR Attendance & GPS Geofence Terminal</h1>
+        <p class="header-subtitle">
+          Time-decaying QR code generation for instructors and GPS proximity-verified scanning for students.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="qr-grid">
+    <!-- Instructor Panel -->
+    <div class="qr-panel-card">
+      <div class="panel-content">
+        <h2 class="panel-title">
+          <i class="pi pi-qrcode icon-green"></i> Instructor QR Generator Panel
+        </h2>
+        <p class="panel-subtext">
+          Generates dynamic 15-minute time-decaying QR code with 50-meter classroom GPS geofence bounds.
+        </p>
+
+        @if (activeSession(); as sess) {
+          <div class="qr-active-box">
+            <span class="active-label">Active Dynamic Session QR</span>
+            <div class="qr-code-wrapper">
+              <div class="qr-display-box">
+                <i class="pi pi-qrcode qr-icon-large"></i>
+                <span class="qr-seed-text">{{ sess.qrSeed }}</span>
+              </div>
+            </div>
+            <p class="qr-meta-text">
+              Expires: <span class="font-mono-bold text-green">{{ sess.expiresAt | date:'shortTime' }}</span> &middot;
+              Geofence Radius: <span class="font-mono-bold">{{ sess.allowedRadiusMeters }}m</span>
+            </p>
+          </div>
+        } @else {
+          <app-empty-state
+            icon="pi pi-qrcode"
+            title="No Active Attendance Session"
+            description="Generate a 15-minute dynamic QR token window with GPS geofencing."
+            actionLabel="Start Attendance Window"
+            actionIcon="pi pi-bolt"
+            (actionClick)="startClassSession(1)">
+          </app-empty-state>
+        }
+      </div>
+
+      <p-button label="Generate Dynamic Class QR" icon="pi pi-bolt" severity="success" styleClass="full-width-btn" [loading]="isGenerating()" (onClick)="startClassSession(1)"></p-button>
+    </div>
+
+    <!-- Student Panel -->
+    <div class="qr-panel-card">
+      <div class="panel-content">
+        <h2 class="panel-title">
+          <i class="pi pi-mobile icon-blue"></i> Student Geofenced Attendance Scanner
+        </h2>
+        <p class="panel-subtext">
+          Validates device GPS location against classroom coordinates before recording attendance.
+        </p>
+
+        <div class="input-section">
+          <div class="form-field">
+            <label class="form-label">Scanned QR Seed Code</label>
+            <input pInputText [ngModel]="qrSeedInput()" (ngModelChange)="qrSeedInput.set($event)" placeholder="Paste or scan QR seed code..." class="full-width-input font-mono" />
+          </div>
+
+          @if (scanResult(); as res) {
+            <div class="verification-success-box">
+              <div class="success-header">
+                <span class="success-title">Attendance Verified</span>
+                <p-tag [value]="res.attendanceStatus" severity="success"></p-tag>
+              </div>
+              <p class="success-text font-mono">
+                Student: {{ res.studentName }} ({{ res.studentNumber }}) &middot; Geofence GPS Validated!
+              </p>
+            </div>
+          }
+        </div>
+      </div>
+
+      <p-button label="Verify Geofenced Attendance Scan" icon="pi pi-check-circle" severity="primary" styleClass="full-width-btn" [loading]="isScanning()" (onClick)="scanAttendance()"></p-button>
+    </div>
+  </div>
+</div>
+

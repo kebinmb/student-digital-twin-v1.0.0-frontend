@@ -75,35 +75,49 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
   // Base master navigation sections with RBAC role requirements
   readonly allNavSections: NavSection[] = [
     {
-      title: 'Overview',
+      title: 'Overview & Portals',
       items: [
-        { label: 'Dashboard', icon: 'pi pi-home', routerLink: '/dashboard', exact: true },
-        { label: 'Academic Twin', icon: 'pi pi-sparkles', routerLink: '/dashboard', badge: 'AI', roles: ['ADMIN', 'STUDENT', 'FACULTY', 'GUIDANCE'] }
+        { label: 'Dashboard Overview', icon: 'pi pi-home', routerLink: '/dashboard', exact: true },
+        { label: 'Student Self-Service', icon: 'pi pi-user-edit', routerLink: '/dashboard/portal/student', roles: ['ADMIN', 'STUDENT', 'REGISTRAR'] },
+        { label: 'Digital Twin Telemetry', icon: 'pi pi-sparkles', routerLink: '/dashboard/analytics/digital-twin', badge: 'AI', roles: ['ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE', 'STUDENT'] },
+        { label: 'QR Attendance Check-In', icon: 'pi pi-qrcode', routerLink: '/dashboard/analytics/qr-attendance', roles: ['ADMIN', 'FACULTY', 'STUDENT'] }
       ]
     },
     {
-      title: 'Academics',
+      title: 'Academic Operations',
       items: [
         { label: 'Institutional Registry', icon: 'pi pi-building', routerLink: '/dashboard/institution', roles: ['ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON'] },
         { label: 'Curriculum Designer', icon: 'pi pi-sitemap', routerLink: '/dashboard/curriculum/designer/1', roles: ['ADMIN', 'DEAN', 'CHAIRPERSON'] },
-        { label: 'Class Scheduling', icon: 'pi pi-calendar-plus', routerLink: '/dashboard/scheduling', roles: ['ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON'] },
+        { label: 'Section & Scheduling', icon: 'pi pi-calendar-plus', routerLink: '/dashboard/scheduling', roles: ['ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON'] },
         { label: 'Enrollment & Advising', icon: 'pi pi-user-plus', routerLink: '/dashboard/enrollment', roles: ['ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'STUDENT'] },
         { label: 'Faculty Gradebook', icon: 'pi pi-chart-line', routerLink: '/dashboard/grades', roles: ['ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'FACULTY'] }
       ]
     },
     {
-      title: 'Administration',
+      title: 'Financial & Billing',
       items: [
-        { label: 'User Accounts', icon: 'pi pi-users', routerLink: '/dashboard/users', roles: ['ADMIN', 'REGISTRAR'] },
-        { label: 'Faculty Accounts', icon: 'pi pi-briefcase', routerLink: '/dashboard/faculty-accounts', roles: ['ADMIN', 'REGISTRAR'] }
+        { label: 'Cashier POS Terminal', icon: 'pi pi-credit-card', routerLink: '/dashboard/finance/cashier', roles: ['ADMIN', 'CASHIER'] },
+        { label: 'Student Account Ledger', icon: 'pi pi-history', routerLink: '/dashboard/finance/ledger', roles: ['ADMIN', 'ACCOUNTANT', 'CASHIER', 'REGISTRAR', 'STUDENT'] },
+        { label: 'UniFAST FHE Claims', icon: 'pi pi-file-export', routerLink: '/dashboard/finance/unifast', roles: ['ADMIN', 'ACCOUNTANT', 'REGISTRAR'] }
       ]
     },
     {
-      title: 'Student Services',
+      title: 'Clearance & Compliance',
       items: [
-        { label: 'Clearance & Billing', icon: 'pi pi-receipt', routerLink: '/dashboard', roles: ['STUDENT', 'CASHIER', 'ADMIN'] },
-        { label: 'Digital Student ID', icon: 'pi pi-id-card', routerLink: '/dashboard', roles: ['STUDENT', 'ADMIN'] },
-        { label: 'ICT Helpdesk', icon: 'pi pi-question-circle', routerLink: '/dashboard' }
+        { label: 'Department Clearance', icon: 'pi pi-verified', routerLink: '/dashboard/compliance/clearance', roles: ['ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'ACCOUNTANT', 'STUDENT'] },
+        { label: 'Degree Audit & TOR', icon: 'pi pi-graduation-cap', routerLink: '/dashboard/compliance/audit', roles: ['ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'STUDENT'] },
+        { label: 'CHED HEMIS Reports', icon: 'pi pi-file-pdf', routerLink: '/dashboard/compliance/ched', roles: ['ADMIN', 'REGISTRAR', 'DEAN'] },
+        { label: 'My Equity Profiling', icon: 'pi pi-id-card', routerLink: '/dashboard/compliance/equity-my-profile', roles: ['ADMIN', 'REGISTRAR', 'STUDENT'] },
+        { label: 'Statutory Equity Portal', icon: 'pi pi-chart-bar', routerLink: '/dashboard/compliance/equity-portal', roles: ['ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'ACCOUNTANT'] }
+      ]
+    },
+    {
+      title: 'Administration & Intelligence',
+      items: [
+        { label: 'Early Warning Radar', icon: 'pi pi-radar', routerLink: '/dashboard/analytics/early-warning', badge: 'ALERT', badgeSeverity: 'warn', roles: ['ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE'] },
+        { label: 'User Management', icon: 'pi pi-users', routerLink: '/dashboard/users', roles: ['ADMIN', 'REGISTRAR'] },
+        { label: 'Faculty Profiles', icon: 'pi pi-briefcase', routerLink: '/dashboard/faculty-accounts', roles: ['ADMIN', 'REGISTRAR'] },
+        { label: 'LMS LTI Integration', icon: 'pi pi-desktop', routerLink: '/dashboard/admin/lms-config', roles: ['ADMIN'] }
       ]
     }
   ];

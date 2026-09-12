@@ -39,4 +39,13 @@ describe('DashboardLayoutComponent', () => {
     expect(component.userInitials()).toBeTruthy();
     expect(component.userInitials().length).toBeLessThanOrEqual(2);
   });
+
+  it('should compute filtered nav sections reactively for active role', () => {
+    const sections = component.filteredNavSections();
+    expect(sections.length).toBeGreaterThan(0);
+    for (const section of sections) {
+      expect(section.items.length).toBeGreaterThan(0);
+    }
+  });
 });
+

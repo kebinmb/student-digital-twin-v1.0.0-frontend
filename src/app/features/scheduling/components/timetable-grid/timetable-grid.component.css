@@ -192,3 +192,35 @@
   text-align: center;
 }
 
+::ng-deep .room-select-filter {
+  width: 18rem !important;
+}
+
+.select-room-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.room-subtext {
+  font-size: 0.75rem;
+  color: var(--chmsu-slate-500, #64748b);
+}
+
+.skeleton-card {
+  padding: 0.5rem;
+}
+
+.icon-sub {
+  font-size: 0.75rem;
+}
+
+.empty-day-icon {
+  color: var(--chmsu-slate-300, #cbd5e1);
+  font-size: 1.25rem;
+  margin-bottom: 0.25rem;
+}
+
+

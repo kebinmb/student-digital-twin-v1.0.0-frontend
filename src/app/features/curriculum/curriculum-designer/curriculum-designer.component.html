@@ -554,9 +554,9 @@
         </div>
 
         @if (store.isLoading()) {
-          <div class="text-center py-8">
-            <i class="pi pi-spin pi-spinner text-2xl text-emerald-700 mb-2"></i>
-            <p class="text-xs text-slate-500">Auditing curriculum against CHED CMO rules and graph cycle detection...</p>
+          <div class="audit-loading-box">
+            <i class="pi pi-spin pi-spinner audit-spinner-icon"></i>
+            <p class="audit-loading-sub">Auditing curriculum against CHED CMO rules and graph cycle detection...</p>
           </div>
         } @else if (store.validationReport(); as report) {
           
@@ -576,7 +576,7 @@
               <span class="metric-label">Unit Deficit</span>
               <span
                 class="metric-value font-mono font-bold"
-                [ngClass]="report.summary.unitDeficit === 0 ? 'text-emerald-700' : 'text-rose-600'">
+                [ngClass]="report.summary.unitDeficit === 0 ? 'deficit-zero' : 'deficit-error'">
                 {{ report.summary.unitDeficit }}
               </span>
               <span class="metric-subtext">{{ report.summary.unitDeficit === 0 ? 'Fully Met' : 'Units Remaining' }}</span>
@@ -586,15 +586,15 @@
           <!-- Blocking Errors with p-message -->
           @if (report.errors.length > 0) {
             <div class="flex-col gap-sm">
-              <h4 class="val-section-title errors flex-row gap-xs text-xs font-bold text-rose-800">
-                <i class="pi pi-times-circle text-rose-600"></i> Blocking Errors ({{ report.errors.length }})
+              <h4 class="val-section-title errors">
+                <i class="pi pi-times-circle"></i> Blocking Errors ({{ report.errors.length }})
               </h4>
               <div class="flex-col gap-xs">
                 @for (err of report.errors; track err.code + err.message) {
-                  <p-message severity="error" styleClass="w-full">
-                    <div class="flex items-center gap-2">
-                      <span class="font-mono font-bold text-[10px] px-1.5 py-0.5 rounded bg-rose-200 text-rose-900">{{ err.code }}</span>
-                      <span class="text-xs">{{ err.message }}</span>
+                  <p-message severity="error" styleClass="dialog-input">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                      <span class="err-code-badge">{{ err.code }}</span>
+                      <span class="audit-loading-sub">{{ err.message }}</span>
                     </div>
                   </p-message>
                 }
@@ -605,15 +605,15 @@
           <!-- Advisory Warnings with p-message -->
           @if (report.warnings.length > 0) {
             <div class="flex-col gap-sm">
-              <h4 class="val-section-title warnings flex-row gap-xs text-xs font-bold text-amber-800">
-                <i class="pi pi-exclamation-triangle text-amber-600"></i> Advisory Warnings ({{ report.warnings.length }})
+              <h4 class="val-section-title warnings">
+                <i class="pi pi-exclamation-triangle"></i> Advisory Warnings ({{ report.warnings.length }})
               </h4>
               <div class="flex-col gap-xs">
                 @for (w of report.warnings; track w.code + w.message) {
-                  <p-message severity="warn" styleClass="w-full">
-                    <div class="flex items-center gap-2">
-                      <span class="font-mono font-bold text-[10px] px-1.5 py-0.5 rounded bg-amber-200 text-amber-900">{{ w.code }}</span>
-                      <span class="text-xs">{{ w.message }}</span>
+                  <p-message severity="warn" styleClass="dialog-input">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                      <span class="warn-code-badge">{{ w.code }}</span>
+                      <span class="audit-loading-sub">{{ w.message }}</span>
                     </div>
                   </p-message>
                 }
@@ -622,10 +622,10 @@
           }
 
           @if (report.valid && report.warnings.length === 0) {
-            <p-message severity="success" styleClass="w-full">
-              <div class="flex flex-col gap-0.5">
-                <span class="font-bold text-xs text-emerald-900">Curriculum is Fully Compliant</span>
-                <span class="text-xs text-emerald-800">Meets all program unit thresholds, semester load limits, and DAG prerequisite acyclicity.</span>
+            <p-message severity="success" styleClass="dialog-input">
+              <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                <span class="opt-title">Curriculum is Fully Compliant</span>
+                <span class="audit-loading-sub">Meets all program unit thresholds, semester load limits, and DAG prerequisite acyclicity.</span>
               </div>
             </p-message>
           }
@@ -681,54 +681,54 @@
           </div>
         </div>
 
-        <p class="text-xs text-slate-600 m-0">
-          State changes follow institutional governance gates. Transitioning to <span class="font-bold text-sky-800">APPROVED</span> or <span class="font-bold text-emerald-800">ACTIVE</span> requires passing all validation checks.
+        <p class="state-desc-text">
+          State changes follow institutional governance gates. Transitioning to <span class="sky-bold">APPROVED</span> or <span class="emerald-bold">ACTIVE</span> requires passing all validation checks.
         </p>
 
         <div class="transition-options-list flex-col gap-sm">
           <div
             (click)="confirmTransition('UNDER_REVIEW')"
-            class="transition-option-card institutional-card flex-between p-3 cursor-pointer hover:border-emerald-600 transition-colors">
+            class="transition-option-card institutional-card">
             <div class="flex-col gap-xs">
               <p-tag value="UNDER_REVIEW" severity="info"></p-tag>
-              <div class="text-xs font-semibold text-slate-800">Submit for Academic Head / Dean Review</div>
+              <div class="opt-title">Submit for Academic Head / Dean Review</div>
             </div>
-            <i class="pi pi-chevron-right text-slate-400"></i>
+            <i class="pi pi-chevron-right chevron-icon"></i>
           </div>
 
           <div
             (click)="confirmTransition('APPROVED')"
-            class="transition-option-card institutional-card flex-between p-3 cursor-pointer hover:border-emerald-600 transition-colors">
+            class="transition-option-card institutional-card">
             <div class="flex-col gap-xs">
               <p-tag value="APPROVED" severity="success"></p-tag>
-              <div class="text-xs font-semibold text-slate-800">Approved by Registrar / Dean (Locks mutations)</div>
+              <div class="opt-title">Approved by Registrar / Dean (Locks mutations)</div>
             </div>
-            <i class="pi pi-chevron-right text-slate-400"></i>
+            <i class="pi pi-chevron-right chevron-icon"></i>
           </div>
 
           <div
             (click)="confirmTransition('ACTIVE')"
-            class="transition-option-card institutional-card active-target flex-between p-3 cursor-pointer hover:border-emerald-600 transition-colors">
+            class="transition-option-card institutional-card active-target">
             <div class="flex-col gap-xs">
               <p-tag value="ACTIVE" severity="success"></p-tag>
-              <div class="text-xs font-semibold text-slate-800">Active for Student Enrolment Cohorts</div>
+              <div class="opt-title">Active for Student Enrolment Cohorts</div>
             </div>
-            <i class="pi pi-chevron-right text-slate-400"></i>
+            <i class="pi pi-chevron-right chevron-icon"></i>
           </div>
 
           <div
             (click)="confirmTransition('ARCHIVED')"
-            class="transition-option-card institutional-card flex-between p-3 cursor-pointer hover:border-emerald-600 transition-colors">
+            class="transition-option-card institutional-card">
             <div class="flex-col gap-xs">
               <p-tag value="ARCHIVED" severity="secondary"></p-tag>
-              <div class="text-xs font-semibold text-slate-800">Retire curriculum from active advising</div>
+              <div class="opt-title">Retire curriculum from active advising</div>
             </div>
-            <i class="pi pi-chevron-right text-slate-400"></i>
+            <i class="pi pi-chevron-right chevron-icon"></i>
           </div>
         </div>
 
         <div class="dialog-footer-content flex-between w-full">
-          <span class="text-xs text-slate-400">Select target state to proceed</span>
+          <span class="muted-subtext">Select target state to proceed</span>
           <div class="dialog-footer-actions">
             <p-button
               label="Cancel"
@@ -770,7 +770,7 @@
           </div>
         </div>
 
-        <p class="text-xs text-slate-500 m-0">
+        <p class="state-desc-text">
           Creates a new draft revision deep-copying all semester term blocks, course allocations, and prerequisite DAG mappings.
         </p>
 
@@ -781,7 +781,7 @@
               id="cloneCodeInput"
               pInputText
               type="text"
-              class="w-full font-mono font-bold-navy"
+              class="mono-bold-input"
               [ngModel]="cloneCode()"
               (ngModelChange)="cloneCode.set($event)" />
           </div>
@@ -792,7 +792,7 @@
               id="cloneAyInput"
               pInputText
               type="text"
-              class="w-full font-mono"
+              class="mono-input"
               [ngModel]="cloneAy()"
               (ngModelChange)="cloneAy.set($event)" />
           </div>
@@ -804,7 +804,7 @@
             id="cloneNameInput"
             pInputText
             type="text"
-            class="w-full font-semibold-navy"
+            class="semibold-input"
             [ngModel]="cloneName()"
             (ngModelChange)="cloneName.set($event)" />
         </div>

@@ -14,7 +14,10 @@ import { TagModule } from 'primeng/tag';
 import { CardModule } from 'primeng/card';
 import { DialogModule } from 'primeng/dialog';
 import { DividerModule } from 'primeng/divider';
-import { MessageService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { IconField } from 'primeng/iconfield';
+import { InputIcon } from 'primeng/inputicon';
 
 import { FinancialApiService } from '../../../core/service/financial/financial-api.service';
 import {
@@ -23,9 +26,13 @@ import {
   ProcessPaymentRequest
 } from '../../../core/models/financial.model';
 
+import { SkeletonModule } from 'primeng/skeleton';
+import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+
 @Component({
   selector: 'app-cashier-terminal',
   standalone: true,
+  providers: [ConfirmationService],
   imports: [
     CommonModule,
     FormsModule,
@@ -37,7 +44,12 @@ import {
     TagModule,
     CardModule,
     DialogModule,
-    DividerModule
+    DividerModule,
+    SkeletonModule,
+    ConfirmDialogModule,
+    IconField,
+    InputIcon,
+    EmptyStateComponent
   ],
   templateUrl: './cashier-terminal.component.html',
   styleUrl: './cashier-terminal.component.css',
@@ -130,6 +142,12 @@ export class CashierTerminalComponent implements OnInit {
     });
   }
 
+  clearSearch(): void {
+    this.searchStudentId = null;
+    this.activeInvoice.set(null);
+    this.studentReceipts.set([]);
+  }
+
   processPayment(): void {
     const inv = this.activeInvoice();
     if (!inv || !this.searchStudentId) {
@@ -144,6 +162,11 @@ export class CashierTerminalComponent implements OnInit {
 
     if (this.amountTendered < this.amountPaid) {
       this.messageService.add({ severity: 'error', summary: 'Insufficient Tender', detail: 'Amount tendered cannot be less than amount paid.' });
+      return;
+    }
+
+    if (this.paymentMethod !== 'CASH' && !this.referenceNumber.trim()) {
+      this.messageService.add({ severity: 'error', summary: 'Reference Required', detail: `Reference Number / Transaction ID is required for ${this.paymentMethod} payments.` });
       return;
     }
 

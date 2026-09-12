@@ -2,7 +2,6 @@
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  padding: 1.5rem;
 }
 
 .scheduling-toolbar-card {
@@ -35,6 +34,11 @@
   border: 1px solid var(--p-primary-200, #c8e6c9);
 }
 
+.header-icon {
+  font-size: 1.25rem;
+  color: var(--p-primary-700, #116834);
+}
+
 .header-title {
   font-size: 1.25rem;
   font-weight: 700;
@@ -55,12 +59,23 @@
   align-items: center;
 }
 
+.switcher-item-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.25rem;
+}
+
+.switcher-item-label {
+  font-weight: 500;
+  font-size: 0.75rem;
+}
+
 .tab-content {
   padding: 0;
 }
 
-::ng-deep .scheduling-view-switcher .p-togglebutton {
+:host ::ng-deep .scheduling-view-switcher .p-togglebutton {
   padding: 0.5rem 0.875rem;
   border-radius: 6px;
 }
-

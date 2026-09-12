@@ -1,0 +1,219 @@
+<!-- File: src/app/features/compliance/student-equity-profiling/student-equity-profiling.component.html -->
+<div class="equity-profiling-container">
+  <!-- Institutional Sticky Header Toolbar -->
+  <div class="equity-profiling-toolbar-card">
+    <div class="header-branding">
+      <div class="header-icon-box">
+        <i class="pi pi-id-card header-icon"></i>
+      </div>
+      <div class="header-text-group">
+        <div class="header-title-badge-row">
+          <h1 class="header-title">Philippine Statutory Equity Target Profiling</h1>
+          <p-tag *ngIf="profile()" [value]="profile()?.verificationStatus" [severity]="statusTagSeverity()"></p-tag>
+        </div>
+        <p class="header-subtitle">Institutional demographic & equity target declaration (RA 10931 UniFAST, RA 8371 IPRA, RA 7277 PWD, RA 11861 Solo Parents, GIDA & First-Gen)</p>
+      </div>
+    </div>
+    <div class="header-actions-group">
+      <p-button
+        label="Save Equity Profile"
+        icon="pi pi-save"
+        severity="success"
+        [loading]="isSaving()"
+        [disabled]="isLoading()"
+        (onClick)="saveProfile()">
+      </p-button>
+    </div>
+  </div>
+
+  <!-- Statutory Legal Framework Alert Banner -->
+  <div class="equity-notice-card">
+    <i class="pi pi-shield notice-icon"></i>
+    <div class="notice-body">
+      <h2 class="notice-title">Statutory Legal Framework & Privacy Compliance Notice</h2>
+      <p class="notice-text">
+        This equity target profiling system captures priority student demographics pursuant to Philippine national laws and CHED HEMIS requirements. Declarations enable institutional scholarship eligibility, UniFAST Tertiary Education Subsidy (TES) prioritization, OSAS student assistance, and accessible campus accommodations under Republic Acts 10931, 8371, 7277/9442, and 11861. All submitted data is strictly protected under the Data Privacy Act of 2012 (RA 10173).
+      </p>
+    </div>
+  </div>
+
+  <!-- Skeleton Loading State -->
+  <div *ngIf="isLoading()" class="equity-loading-card">
+    <p-skeleton width="40%" height="2rem" styleClass="mb-3"></p-skeleton>
+    <p-skeleton width="100%" height="10rem" styleClass="mb-3"></p-skeleton>
+    <p-skeleton width="100%" height="10rem"></p-skeleton>
+  </div>
+
+  <!-- Verification Audit Remarks Banner -->
+  <div *ngIf="!isLoading() && profile()?.verificationRemarks" class="audit-remarks-card" [ngClass]="profile()?.verificationStatus === 'REJECTED' ? 'rejected' : 'verified'">
+    <i [ngClass]="profile()?.verificationStatus === 'REJECTED' ? 'pi pi-exclamation-triangle remarks-icon-rejected' : 'pi pi-check-circle remarks-icon-verified'"></i>
+    <div class="remarks-body">
+      <span class="remarks-header">Institutional OSAS / Registrar Verification Remarks:</span>
+      <p class="remarks-text">{{ profile()?.verificationRemarks }}</p>
+      <span *ngIf="profile()?.verifiedByUsername" class="remarks-audit-info">Audited by: {{ profile()?.verifiedByUsername }} on {{ profile()?.verifiedAt | date:'medium' }}</span>
+    </div>
+  </div>
+
+  <!-- Form Body Grid -->
+  <div *ngIf="!isLoading()" class="equity-grid">
+    <!-- Column 1: RA 10931 & DSWD 4Ps / UniFAST TES -->
+    <div class="equity-col">
+      <div class="equity-card">
+        <div class="equity-card-header">
+          <i class="pi pi-verified card-header-icon"></i>
+          <h2 class="card-header-title">RA 10931 / DSWD 4Ps & UniFAST TES</h2>
+        </div>
+
+        <div class="equity-card-body">
+          <!-- 4Ps Beneficiary -->
+          <div class="equity-toggle-row">
+            <div class="toggle-info">
+              <label class="toggle-label">DSWD 4Ps Beneficiary</label>
+              <span class="toggle-subtext">Household listed under Pantawid Pamilyang Pilipino Program</span>
+            </div>
+            <p-toggleswitch [(ngModel)]="is4psBeneficiary"></p-toggleswitch>
+          </div>
+          <div *ngIf="is4psBeneficiary()" class="equity-nested-field">
+            <label class="input-label">Household 4Ps ID / Case Number</label>
+            <input pInputText type="text" [(ngModel)]="household4psIdNumber" placeholder="e.g. 4PS-2023-XXXXX" class="full-width-input" />
+          </div>
+
+          <!-- Listahanan / NHTS-PR -->
+          <div class="equity-toggle-row border-top">
+            <div class="toggle-info">
+              <label class="toggle-label">DSWD Listahanan (NHTS-PR)</label>
+              <span class="toggle-subtext">National Household Targeting System for Poverty Reduction</span>
+            </div>
+            <p-toggleswitch [(ngModel)]="isListahananNhts"></p-toggleswitch>
+          </div>
+
+          <!-- UniFAST TES Awardee -->
+          <div class="equity-toggle-row border-top">
+            <div class="toggle-info">
+              <label class="toggle-label">UniFAST TES Awardee</label>
+              <span class="toggle-subtext">Recipient of Tertiary Education Subsidy under RA 10931</span>
+            </div>
+            <p-toggleswitch [(ngModel)]="unifastTesAwardee"></p-toggleswitch>
+          </div>
+          <div *ngIf="unifastTesAwardee()" class="equity-nested-field">
+            <label class="input-label">UniFAST TES Award / Control Number</label>
+            <input pInputText type="text" [(ngModel)]="unifastTesAwardNumber" placeholder="e.g. TES-2024-REG6-XXXX" class="full-width-input" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Column 2: RA 8371 Indigenous Peoples & RA 7277 PWD -->
+    <div class="equity-col">
+      <div class="equity-card">
+        <div class="equity-card-header">
+          <i class="pi pi-heart card-header-icon"></i>
+          <h2 class="card-header-title">RA 8371 Indigenous Peoples & RA 7277 PWD</h2>
+        </div>
+
+        <div class="equity-card-body">
+          <!-- Indigenous Peoples -->
+          <div class="equity-toggle-row">
+            <div class="toggle-info">
+              <label class="toggle-label">Indigenous Cultural Community (IP)</label>
+              <span class="toggle-subtext">Accredited member of an IP Ethnic Group (RA 8371)</span>
+            </div>
+            <p-toggleswitch [(ngModel)]="isIndigenousPeople"></p-toggleswitch>
+          </div>
+          <div *ngIf="isIndigenousPeople()" class="equity-nested-grid">
+            <div class="nested-col">
+              <label class="input-label">IP Ethnic Group Name</label>
+              <input pInputText type="text" [(ngModel)]="ipEthnicGroup" placeholder="e.g. Ati, Bukidnon, Tagbanwa" class="full-width-input" />
+            </div>
+            <div class="nested-col">
+              <label class="input-label">NCIP Certificate Number</label>
+              <input pInputText type="text" [(ngModel)]="ncipCertificateNumber" placeholder="e.g. NCIP-CNO-XXXX" class="full-width-input" />
+            </div>
+          </div>
+
+          <!-- Person with Disability (PWD) -->
+          <div class="equity-toggle-row border-top">
+            <div class="toggle-info">
+              <label class="toggle-label">Person with Disability (PWD)</label>
+              <span class="toggle-subtext">Holder of PWD Card issued by PDAO / CWS (RA 7277 / 9442)</span>
+            </div>
+            <p-toggleswitch [(ngModel)]="isPersonWithDisability"></p-toggleswitch>
+          </div>
+          <div *ngIf="isPersonWithDisability()" class="equity-nested-grid">
+            <div class="nested-col">
+              <label class="input-label">PWD ID Card Number</label>
+              <input pInputText type="text" [(ngModel)]="pwdIdNumber" placeholder="e.g. PWD-06-2024-XXXX" class="full-width-input" />
+            </div>
+            <div class="nested-col">
+              <label class="input-label">Disability Classification</label>
+              <p-select [options]="disabilityTypeOptions" [(ngModel)]="disabilityType" placeholder="Select Disability Type" optionLabel="label" optionValue="value" styleClass="full-width-select"></p-select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Column 3: RA 11861 Solo Parents & Household Equity -->
+    <div class="equity-col">
+      <div class="equity-card">
+        <div class="equity-card-header">
+          <i class="pi pi-user card-header-icon"></i>
+          <h2 class="card-header-title">RA 11861 Solo Parents & Household Equity</h2>
+        </div>
+
+        <div class="equity-card-body">
+          <!-- Solo Parents -->
+          <div class="equity-toggle-row">
+            <div class="toggle-info">
+              <label class="toggle-label">Solo Parent or Dependent</label>
+              <span class="toggle-subtext">Registered Solo Parent or child dependent (RA 11861)</span>
+            </div>
+            <p-toggleswitch [(ngModel)]="isSoloParentOrDependent"></p-toggleswitch>
+          </div>
+          <div *ngIf="isSoloParentOrDependent()" class="equity-nested-field">
+            <label class="input-label">Solo Parent ID Card Number</label>
+            <input pInputText type="text" [(ngModel)]="soloParentIdNumber" placeholder="e.g. SP-2024-XXXX" class="full-width-input" />
+          </div>
+
+          <!-- Monthly Household Income Bracket -->
+          <div class="equity-field-row border-top">
+            <label class="toggle-label">Monthly Gross Household Income Bracket</label>
+            <span class="toggle-subtext">Used for institutional financial aid prioritization and CHED HEMIS equity profiling</span>
+            <p-select [options]="incomeBracketOptions" [(ngModel)]="monthlyHouseholdIncomeBracket" placeholder="Select Income Bracket" optionLabel="label" optionValue="value" styleClass="full-width-select"></p-select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Column 4: First-Generation & GIDA Resident -->
+    <div class="equity-col">
+      <div class="equity-card">
+        <div class="equity-card-header">
+          <i class="pi pi-compass card-header-icon"></i>
+          <h2 class="card-header-title">First-Generation & GIDA Indicators</h2>
+        </div>
+
+        <div class="equity-card-body">
+          <!-- First-Gen Learner -->
+          <div class="equity-toggle-row">
+            <div class="toggle-info">
+              <label class="toggle-label">First-Generation College Student</label>
+              <span class="toggle-subtext">Neither parent/guardian completed a 4-year tertiary degree</span>
+            </div>
+            <p-toggleswitch [(ngModel)]="isFirstGenerationCollege"></p-toggleswitch>
+          </div>
+
+          <!-- GIDA Resident -->
+          <div class="equity-toggle-row border-top">
+            <div class="toggle-info">
+              <label class="toggle-label">GIDA Resident</label>
+              <span class="toggle-subtext">Permanent residence in Geographically Isolated and Disadvantaged Area</span>
+            </div>
+            <p-toggleswitch [(ngModel)]="isGidaResident"></p-toggleswitch>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

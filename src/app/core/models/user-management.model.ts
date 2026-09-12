@@ -33,3 +33,15 @@ export interface UpdateUserRequest {
   clearCollege?: boolean;
   clearProgram?: boolean;
 }
+
+export interface AuditLogEntry {
+  id: number;
+  action: string;
+  entityName: string;
+  entityId?: string | number | null;
+  details?: string | null;
+  performedBy?: string | null;
+  createdAt: string;
+  ipAddress?: string | null;
+}
+

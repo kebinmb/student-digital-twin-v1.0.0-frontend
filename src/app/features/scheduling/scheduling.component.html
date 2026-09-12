@@ -3,7 +3,7 @@
   <div class="scheduling-toolbar-card">
     <div class="header-branding">
       <div class="header-icon-box">
-        <i class="pi pi-calendar-plus text-xl text-emerald-700"></i>
+        <i class="pi pi-calendar-plus header-icon"></i>
       </div>
       <div>
         <h1 class="header-title">Scheduling & Timetable Management</h1>
@@ -21,9 +21,9 @@
         optionValue="value"
         styleClass="scheduling-view-switcher">
         <ng-template let-item pTemplate="item">
-          <div class="flex items-center gap-2 px-1">
+          <div class="switcher-item-wrapper">
             <i [class]="item.icon"></i>
-            <span class="font-medium text-xs">{{ item.label }}</span>
+            <span class="switcher-item-label">{{ item.label }}</span>
           </div>
         </ng-template>
       </p-selectbutton>
@@ -39,4 +39,3 @@
     }
   </div>
 </div>
-

@@ -1,17 +1,18 @@
 <div class="faculty-mgmt-container">
-  <!-- Header Section -->
-  <div class="header-section">
-    <div class="header-content">
-      <div class="badge-row">
-        <span class="module-badge">INSTITUTIONAL ROSTER</span>
-        <span class="role-badge">REGISTRAR & ADMIN</span>
+  <!-- Sticky Header Toolbar -->
+  <div class="faculty-mgmt-toolbar-card">
+    <div class="header-branding">
+      <div class="header-icon-box">
+        <i class="pi pi-briefcase header-icon"></i>
       </div>
-      <h1 class="page-title">Faculty Roster & Workload Registry</h1>
-      <p class="page-subtitle">
-        Provision institutional faculty appointments, academic credentials, and teaching profiles.
-      </p>
+      <div class="header-text-group">
+        <h1 class="header-title">Faculty Roster & Workload Registry</h1>
+        <p class="header-subtitle">
+          Provision institutional faculty appointments, academic credentials, and teaching profiles.
+        </p>
+      </div>
     </div>
-    <div class="header-actions">
+    <div class="header-actions-group">
       @if (authService.hasAnyRole(['ADMIN', 'REGISTRAR'])) {
         <p-button
           label="Provision Faculty Member"
@@ -48,41 +49,41 @@
       <ng-template pTemplate="body" let-f>
         <tr>
           <td>
-            <span class="font-mono font-bold text-slate-800 text-sm">{{ f.facultyIdNumber }}</span>
+            <span class="faculty-id-badge">{{ f.facultyIdNumber }}</span>
           </td>
           <td>
             <div class="faculty-identity">
               <div class="faculty-avatar">
-                <i class="pi pi-briefcase text-slate-500"></i>
+                <i class="pi pi-briefcase avatar-icon"></i>
               </div>
               <div class="faculty-meta">
-                <span class="font-semibold text-slate-900">{{ f.username }}</span>
+                <span class="faculty-name">{{ f.username }}</span>
                 @if (f.prcLicenseNo) {
-                  <span class="text-xs text-slate-400">PRC: {{ f.prcLicenseNo }}</span>
+                  <span class="prc-license-sub">PRC: {{ f.prcLicenseNo }}</span>
                 }
               </div>
             </div>
           </td>
           <td>
-            <span class="text-slate-700 text-sm font-mono">{{ f.email }}</span>
+            <span class="faculty-email-text">{{ f.email }}</span>
           </td>
           <td>
             <div class="affiliation-cell">
               @if (f.collegeCode) {
-                <div class="affiliation-badge">
-                  <i class="pi pi-building text-xs text-sky-600"></i>
-                  <span class="font-semibold text-slate-800">{{ f.collegeCode }}</span>
-                  <span class="text-xs text-slate-500">({{ f.collegeName }})</span>
+                <div class="affiliation-badge college-badge">
+                  <i class="pi pi-building icon-college"></i>
+                  <span class="college-code-text">{{ f.collegeCode }}</span>
+                  <span class="college-name-text">({{ f.collegeName }})</span>
                 </div>
               }
               @if (f.programCode) {
-                <div class="affiliation-badge">
-                  <i class="pi pi-book text-xs text-emerald-600"></i>
-                  <span class="font-semibold text-slate-700">{{ f.programCode }}</span>
+                <div class="affiliation-badge program-badge">
+                  <i class="pi pi-book icon-program"></i>
+                  <span class="program-code-text">{{ f.programCode }}</span>
                 </div>
               }
               @if (!f.collegeCode && !f.programCode) {
-                <span class="text-xs text-slate-400 italic">Unassigned</span>
+                <span class="unassigned-badge">Unassigned</span>
               }
             </div>
           </td>
@@ -90,23 +91,23 @@
             <p-tag
               [value]="f.highestDegree"
               severity="info"
-              styleClass="text-xs font-semibold"
+              styleClass="degree-tag"
             />
           </td>
           <td>
             <div class="rank-tenure-cell">
-              <span class="text-sm font-medium text-slate-800">{{ f.academicRank }}</span>
-              <div class="flex gap-1 mt-1">
+              <span class="rank-title">{{ f.academicRank }}</span>
+              <div class="tenure-tags-row">
                 <p-tag
                   [value]="f.employmentStatus"
                   severity="secondary"
-                  styleClass="text-xs"
+                  styleClass="status-tag"
                 />
                 @if (f.isTenured) {
                   <p-tag
                     value="TENURED"
                     severity="success"
-                    styleClass="text-xs font-bold"
+                    styleClass="tenured-tag"
                   />
                 }
               </div>
@@ -118,8 +119,8 @@
       <ng-template pTemplate="emptymessage">
         <tr>
           <td colspan="6" class="empty-state">
-            <i class="pi pi-briefcase text-4xl text-slate-300 mb-2"></i>
-            <p class="text-slate-500 font-medium">No faculty members found in the institutional roster.</p>
+            <i class="pi pi-briefcase empty-icon"></i>
+            <p class="empty-text">No faculty members found in the institutional roster.</p>
           </td>
         </tr>
       </ng-template>
@@ -146,7 +147,7 @@
             pInputText
             formControlName="username"
             placeholder="e.g. prof_delacruz"
-            class="w-full"
+            class="dialog-input"
           />
           @if (facultyForm.controls.username.invalid && facultyForm.controls.username.touched) {
             <small class="p-error">Username is required (min 3 chars).</small>
@@ -161,7 +162,7 @@
             pInputText
             formControlName="email"
             placeholder="e.g. faculty@chmsu.edu.ph"
-            class="w-full"
+            class="dialog-input"
           />
           @if (facultyForm.controls.email.invalid && facultyForm.controls.email.touched) {
             <small class="p-error">Valid email is required.</small>
@@ -178,7 +179,7 @@
             pInputText
             formControlName="facultyIdNumber"
             placeholder="e.g. FAC-2026-010"
-            class="w-full"
+            class="dialog-input"
           />
           @if (facultyForm.controls.facultyIdNumber.invalid && facultyForm.controls.facultyIdNumber.touched) {
             <small class="p-error">Faculty ID is required.</small>
@@ -193,7 +194,7 @@
             pInputText
             formControlName="password"
             placeholder="Default: Faculty123!"
-            class="w-full"
+            class="dialog-input"
           />
         </div>
       </div>
@@ -270,7 +271,7 @@
             pInputText
             formControlName="prcLicenseNo"
             placeholder="e.g. 0123456"
-            class="w-full"
+            class="dialog-input"
           />
         </div>
       </div>

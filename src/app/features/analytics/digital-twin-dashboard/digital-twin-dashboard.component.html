@@ -1,0 +1,91 @@
+<div class="dt-dashboard-container">
+  <!-- Sticky Header Toolbar Card -->
+  <div class="dt-toolbar-card">
+    <div class="header-branding">
+      <div class="header-icon-box">
+        <i class="pi pi-compass header-icon"></i>
+      </div>
+      <div class="header-text-group">
+        <div class="header-badge-row">
+          <span class="module-badge">STUDENT DIGITAL TWIN ENGINE</span>
+          <span class="engine-badge">ML PREDICTIVE ANALYTICS</span>
+        </div>
+        <h1 class="header-title">Visual Digital Twin & Risk Radar</h1>
+        <p class="header-subtitle">
+          Multi-vector academic, attendance, and socioeconomic risk profile for <span class="highlight-student">{{ riskProfile()?.studentName || 'Student #1' }}</span>
+        </p>
+      </div>
+    </div>
+    <div class="header-actions-group">
+      <p-button label="Recalculate ML Model" icon="pi pi-bolt" severity="success" size="small" (onClick)="loadRiskProfile(1)" />
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <div class="risk-cards-grid">
+      <p-skeleton height="200px" borderRadius="16px"></p-skeleton>
+      <p-skeleton height="200px" borderRadius="16px"></p-skeleton>
+      <p-skeleton height="200px" borderRadius="16px"></p-skeleton>
+    </div>
+  } @else if (riskProfile(); as rp) {
+    <!-- Top Row Risk Overview -->
+    <div class="risk-cards-grid">
+      <div class="risk-overview-card">
+        <div>
+          <span class="card-section-label">Composite Risk Level</span>
+          <div class="risk-level-row">
+            <p-tag [value]="rp.compositeRiskLevel" [severity]="getRiskSeverity(rp.compositeRiskLevel)" styleClass="risk-tag"></p-tag>
+            <span class="evaluation-date">Evaluated {{ rp.evaluatedAt | date:'short' }}</span>
+          </div>
+        </div>
+        <div class="dropout-risk-box">
+          <span class="card-section-label">Predicted Failure / Dropout Risk</span>
+          <div class="progress-bar-wrapper">
+            <p-progressBar [value]="rp.predictedDropoutProbability * 100" [showValue]="true" styleClass="dropout-progress-bar"></p-progressBar>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vector Scores -->
+      <div class="vector-scores-card">
+        <h3 class="card-section-title">Multi-Vector Risk Diagnostics</h3>
+        <div class="vector-item">
+          <div class="vector-label-row">
+            <span class="vector-name">Academic Deficit Risk</span>
+            <span class="vector-score-val">{{ rp.academicRiskScore }} / 100</span>
+          </div>
+          <p-progressBar [value]="rp.academicRiskScore" [showValue]="false" styleClass="vector-progress-bar"></p-progressBar>
+        </div>
+        <div class="vector-item">
+          <div class="vector-label-row">
+            <span class="vector-name">Attendance Absenteeism Risk</span>
+            <span class="vector-score-val">{{ rp.attendanceRiskScore }} / 100</span>
+          </div>
+          <p-progressBar [value]="rp.attendanceRiskScore" [showValue]="false" styleClass="vector-progress-bar"></p-progressBar>
+        </div>
+        <div class="vector-item">
+          <div class="vector-label-row">
+            <span class="vector-name">Socioeconomic Vulnerability (RA 10931)</span>
+            <span class="vector-score-val">{{ rp.socioeconomicRiskScore }} / 100</span>
+          </div>
+          <p-progressBar [value]="rp.socioeconomicRiskScore" [showValue]="false" styleClass="vector-progress-bar"></p-progressBar>
+        </div>
+      </div>
+
+      <!-- Recommended Interventions -->
+      <div class="interventions-card">
+        <h3 class="card-section-title flex-title">
+          <i class="pi pi-compass icon-interventions"></i> Dispatched AI Interventions
+        </h3>
+        <ul class="interventions-list">
+          @for (rec of rp.recommendedInterventions; track rec) {
+            <li class="intervention-item">
+              <i class="pi pi-check-circle icon-check"></i>
+              <span>{{ rec }}</span>
+            </li>
+          }
+        </ul>
+      </div>
+    </div>
+  }
+</div>

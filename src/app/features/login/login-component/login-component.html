@@ -92,7 +92,7 @@
               formControlName="usernameOrEmail" 
               autocomplete="username"
               placeholder="e.g., 2024-1234 or student@chmsu.edu.ph" 
-              class="w-full text-input"
+              class="text-input"
               [invalid]="isFieldInvalid('usernameOrEmail')" />
 
             @if (isFieldInvalid('usernameOrEmail')) {
@@ -124,7 +124,6 @@
               [autocomplete]="'current-password'" 
               placeholder="Enter your portal password" 
               [fluid]="true" 
-              class="w-full"
               [invalid]="isFieldInvalid('password')">
             </p-password>
 
@@ -176,7 +175,7 @@
 
         <div class="support-footer">
           <span>Need technical assistance?</span>
-          <a routerLink="/support" class="inline-link font-medium">Contact ICT Helpdesk</a>
+          <a routerLink="/support" class="inline-link">Contact ICT Helpdesk</a>
         </div>
 
       </div>

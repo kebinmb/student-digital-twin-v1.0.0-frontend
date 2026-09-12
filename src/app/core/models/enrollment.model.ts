@@ -89,9 +89,10 @@ export interface EnrollmentConfirmationDto {
 }
 
 export interface UpdateEnrollmentStatusRequest {
-  status: string;
+  status?: string;
   isOverloadApproved?: boolean;
 }
+
 
 export interface StudentSearchResultDto {
   id: number;
@@ -109,7 +110,7 @@ export interface CreateStudentRequest {
   password?: string;
   programId: number;
   curriculumId: number;
-  classification: 'INCOMING_FIRST_YEAR' | 'TRANSFEREE' | 'RETURNEE' | 'CONTINUING';
+  classification: 'FRESHMAN' | 'INCOMING_FIRST_YEAR' | 'TRANSFEREE' | 'RETURNEE' | 'CONTINUING' | 'SECOND_DEGREE';
   yearLevel?: number;
 }
 

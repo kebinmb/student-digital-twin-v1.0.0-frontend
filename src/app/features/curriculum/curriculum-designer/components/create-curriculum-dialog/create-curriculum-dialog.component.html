@@ -31,7 +31,7 @@
         <p-message
           severity="warn"
           text="Notice: No operational Academic Year is currently active. You may specify the effective year manually or set one in the Institutional Registry."
-          styleClass="w-full text-xs">
+          styleClass="dialog-input">
         </p-message>
       </div>
     }
@@ -67,7 +67,7 @@
         optionValue="value"
         [filter]="true"
         filterBy="label"
-        styleClass="w-full"
+        styleClass="dialog-input"
         [invalid]="isControlInvalid('programId')">
       </p-select>
       @if (isControlInvalid('programId')) {
@@ -85,7 +85,7 @@
           type="text"
           formControlName="code"
           placeholder="e.g. BSIT-2026"
-          class="w-full font-mono font-bold-navy"
+          class="dialog-input font-mono font-bold-navy"
           [class.ng-invalid]="isControlInvalid('code')" />
         @if (isControlInvalid('code')) {
           <small class="p-error">Curriculum code is required (max 30 chars).</small>
@@ -100,7 +100,7 @@
           type="text"
           formControlName="effectiveAcademicYear"
           placeholder="e.g. 2026-2027"
-          class="w-full font-mono"
+          class="dialog-input font-mono"
           [class.ng-invalid]="isControlInvalid('effectiveAcademicYear')" />
         @if (isControlInvalid('effectiveAcademicYear')) {
           <small class="p-error">Effective academic year is required.</small>
@@ -117,7 +117,7 @@
         type="text"
         formControlName="name"
         placeholder="e.g. Bachelor of Science in Information Technology (2026 Revision)"
-        class="w-full font-semibold-navy"
+        class="dialog-input font-semibold-navy"
         [class.ng-invalid]="isControlInvalid('name')" />
       @if (isControlInvalid('name')) {
         <small class="p-error">Curriculum title is required (max 150 characters).</small>

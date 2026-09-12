@@ -1,6 +1,163 @@
 /* File: src/app/features/finance/student-account-ledger/student-account-ledger.component.css */
 
 .ledger-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem;
   max-width: 1400px;
   margin: 0 auto;
+  width: 100%;
+}
+
+.ledger-toolbar-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 1rem 1.25rem;
+  box-shadow: var(--chmsu-shadow-card);
+}
+
+.ledger-action-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .ledger-action-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.action-card {
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 1.25rem;
+  box-shadow: var(--chmsu-shadow-card);
+  display: flex;
+  flex-direction: column;
+}
+
+.action-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+  margin: 0 0 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.icon-green {
+  color: var(--chmsu-green-main, #116834);
+}
+
+.action-input-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.ledger-loading-card {
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  padding: 1.5rem;
+}
+
+.summary-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .summary-metric-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.metric-card {
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  padding: 1rem;
+  box-shadow: var(--chmsu-shadow-card);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.metric-card.border-red { border-left: 4px solid #dc2626; }
+.metric-card.border-green { border-left: 4px solid var(--chmsu-green-main, #116834); }
+.metric-card.border-blue { border-left: 4px solid #0284c7; }
+
+.metric-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--chmsu-slate-500, #64748b);
+  letter-spacing: 0.04em;
+}
+
+.metric-val {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin-top: 0.25rem;
+}
+
+.metric-val.text-red { color: #dc2626; }
+.metric-val.text-green { color: var(--status-emerald-text, #047857); }
+.metric-val.text-orange { color: #ea580c; }
+
+.table-card {
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 1.5rem;
+  box-shadow: var(--chmsu-shadow-card);
+}
+
+.table-card-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+  margin: 0 0 1rem 0;
+}
+
+.font-bold-green {
+  font-weight: 700;
+  color: var(--chmsu-green-main, #116834);
+}
+
+.font-bold-red {
+  font-weight: 700;
+  color: #dc2626;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.ref-num-text {
+  font-size: 0.75rem;
+  color: var(--chmsu-slate-500, #64748b);
+}
+
+.empty-cell {
+  text-align: center;
+  padding: 1.5rem !important;
+  color: var(--chmsu-slate-500, #64748b);
+}
+
+.full-width-input {
+  width: 100%;
 }

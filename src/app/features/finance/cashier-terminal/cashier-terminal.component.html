@@ -1,124 +1,154 @@
 <!-- File: src/app/features/finance/cashier-terminal/cashier-terminal.component.html -->
-<div class="cashier-container p-4">
-  <div class="flex flex-column md:flex-row justify-content-between align-items-start md:align-items-center mb-4 gap-3">
-    <div>
-      <h1 class="text-3xl font-bold text-900 m-0">Cashier POS Terminal</h1>
-      <p class="text-500 m-0 mt-1">Process tuition payments, view invoices, and issue official receipts</p>
+<div class="cashier-container">
+  <!-- Institutional Sticky Header Toolbar -->
+  <div class="cashier-toolbar-card">
+    <div class="header-branding">
+      <div class="header-icon-box">
+        <i class="pi pi-calculator header-icon"></i>
+      </div>
+      <div class="header-text-group">
+        <h1 class="header-title">Cashier POS Terminal</h1>
+        <p class="header-subtitle">Process tuition payments, view invoices, and issue official receipts</p>
+      </div>
     </div>
-    <div class="flex gap-2">
-      <span class="p-input-icon-left">
-        <i class="pi pi-search"></i>
-        <input type="text" pInputText placeholder="Lookup OR Number..." [(ngModel)]="searchOrNumber" (keyup.enter)="lookupReceiptByOr()" />
-      </span>
+    <div class="header-actions-group">
+      <p-iconfield>
+        <p-inputicon class="pi pi-search"></p-inputicon>
+        <input type="text" pInputText placeholder="Lookup OR Number..." [(ngModel)]="searchOrNumber" (keyup.enter)="lookupReceiptByOr()" class="full-width-input" />
+      </p-iconfield>
       <p-button label="Verify OR" icon="pi pi-check-circle" severity="secondary" (onClick)="lookupReceiptByOr()"></p-button>
     </div>
   </div>
 
   <!-- Student Lookup Toolbar -->
-  <div class="card p-3 mb-4 surface-card border-round shadow-1">
-    <div class="grid p-fluid align-items-center">
-      <div class="col-12 md:col-4">
-        <label class="font-semibold text-700 block mb-2">Student Profile ID</label>
+  <div class="lookup-card">
+    <div class="lookup-grid">
+      <div class="lookup-col">
+        <label class="form-label">Student Profile ID</label>
         <p-inputNumber [(ngModel)]="searchStudentId" placeholder="Enter Student Profile ID" [useGrouping]="false" (onKeyDown.enter)="lookupStudentInvoice()"></p-inputNumber>
       </div>
-      <div class="col-12 md:col-4">
-        <label class="font-semibold text-700 block mb-2">Academic Term ID</label>
+      <div class="lookup-col">
+        <label class="form-label">Academic Term ID</label>
         <p-inputNumber [(ngModel)]="searchTermId" placeholder="Term ID (e.g., 1)" [useGrouping]="false"></p-inputNumber>
       </div>
-      <div class="col-12 md:col-4 flex align-items-end mt-2 md:mt-0">
-        <p-button label="Lookup Assessment Invoice" icon="pi pi-search" class="w-full" [loading]="isLoading()" (onClick)="lookupStudentInvoice()"></p-button>
+      <div class="lookup-col actions-col">
+        <p-button label="Lookup Assessment Invoice" icon="pi pi-search" [loading]="isLoading()" (onClick)="lookupStudentInvoice()"></p-button>
       </div>
     </div>
   </div>
 
-  <div class="grid" *ngIf="activeInvoice() as inv">
+  <!-- Skeleton Loading Placeholder -->
+  <div *ngIf="isLoading()" class="pos-grid">
+    <div class="pos-main-col">
+      <div class="card-box">
+        <p-skeleton width="40%" height="2rem" styleClass="mb-3"></p-skeleton>
+        <p-skeleton width="100%" height="5rem" styleClass="mb-3"></p-skeleton>
+        <p-skeleton width="100%" height="10rem"></p-skeleton>
+      </div>
+    </div>
+    <div class="pos-side-col">
+      <div class="card-box">
+        <p-skeleton width="60%" height="2rem" styleClass="mb-3"></p-skeleton>
+        <p-skeleton width="100%" height="12rem"></p-skeleton>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contextual Empty State -->
+  <app-empty-state
+    *ngIf="!isLoading() && !activeInvoice()"
+    icon="pi pi-search"
+    title="No Student Account Selected"
+    description="Scan student barcode or enter a Student Profile ID to retrieve fee assessments and payment history."
+    actionLabel="Clear Search Filter"
+    actionIcon="pi pi-refresh"
+    (actionClick)="clearSearch()">
+  </app-empty-state>
+
+  <div class="pos-grid" *ngIf="!isLoading() && activeInvoice() as inv">
     <!-- Invoice Breakdown Column -->
-    <div class="col-12 lg:col-7">
-      <div class="card surface-card border-round p-4 shadow-1 mb-4">
-        <div class="flex justify-content-between align-items-center mb-3">
+    <div class="pos-main-col">
+      <div class="card-box">
+        <div class="card-box-header">
           <div>
-            <span class="text-sm font-semibold text-500">INVOICE #</span>
-            <h2 class="text-2xl font-bold text-primary m-0">{{ inv.invoiceNumber }}</h2>
+            <span class="sub-label">INVOICE #</span>
+            <h2 class="invoice-num-title">{{ inv.invoiceNumber }}</h2>
           </div>
           <p-tag [value]="inv.status" [severity]="getStatusSeverity(inv.status)"></p-tag>
         </div>
 
-        <div class="surface-hover p-3 border-round mb-4">
-          <div class="grid">
-            <div class="col-6">
-              <span class="text-500 block text-xs">STUDENT NAME</span>
-              <span class="font-semibold text-900">{{ inv.studentName }}</span>
+        <div class="meta-box">
+          <div class="meta-grid">
+            <div class="meta-item">
+              <span class="meta-label">STUDENT NAME</span>
+              <span class="meta-val">{{ inv.studentName }}</span>
             </div>
-            <div class="col-6">
-              <span class="text-500 block text-xs">STUDENT NUMBER</span>
-              <span class="font-semibold text-900">{{ inv.studentNumber }}</span>
+            <div class="meta-item">
+              <span class="meta-label">STUDENT NUMBER</span>
+              <span class="meta-val">{{ inv.studentNumber }}</span>
             </div>
-            <div class="col-6 mt-2">
-              <span class="text-500 block text-xs">ACADEMIC TERM</span>
-              <span class="font-semibold text-900">{{ inv.termName }}</span>
+            <div class="meta-item">
+              <span class="meta-label">ACADEMIC TERM</span>
+              <span class="meta-val">{{ inv.termName }}</span>
             </div>
-            <div class="col-6 mt-2">
-              <span class="text-500 block text-xs">UNIFAST ELIGIBILITY</span>
+            <div class="meta-item">
+              <span class="meta-label">UNIFAST ELIGIBILITY</span>
               <p-tag [value]="inv.fheEligible ? 'FHE COVERED' : 'SELF-PAY / REGULAR'" [severity]="inv.fheEligible ? 'success' : 'info'"></p-tag>
             </div>
           </div>
         </div>
 
-        <h3 class="text-lg font-semibold text-800 mb-3">Fee Breakdown</h3>
-        <div class="border-top-1 border-bottom-1 surface-border py-2 mb-3">
-          <div class="flex justify-content-between py-2">
-            <span class="text-600">Total Tuition Fee</span>
-            <span class="font-medium text-900">₱{{ inv.totalTuitionFee | number:'1.2-2' }}</span>
+        <h3 class="section-subtitle">Fee Breakdown</h3>
+        <div class="fee-table">
+          <div class="fee-row">
+            <span class="fee-name">Total Tuition Fee</span>
+            <span class="fee-amount">₱{{ inv.totalTuitionFee | number:'1.2-2' }}</span>
           </div>
-          <div class="flex justify-content-between py-2">
-            <span class="text-600">Total Laboratory Fee</span>
-            <span class="font-medium text-900">₱{{ inv.totalLabFee | number:'1.2-2' }}</span>
+          <div class="fee-row">
+            <span class="fee-name">Total Laboratory Fee</span>
+            <span class="fee-amount">₱{{ inv.totalLabFee | number:'1.2-2' }}</span>
           </div>
-          <div class="flex justify-content-between py-2">
-            <span class="text-600">Total Miscellaneous Fee</span>
-            <span class="font-medium text-900">₱{{ inv.totalMiscFee | number:'1.2-2' }}</span>
+          <div class="fee-row">
+            <span class="fee-name">Total Miscellaneous Fee</span>
+            <span class="fee-amount">₱{{ inv.totalMiscFee | number:'1.2-2' }}</span>
           </div>
-          <div class="flex justify-content-between py-2 font-bold text-900 border-top-1 surface-border mt-2 pt-2">
+          <div class="fee-row total-row">
             <span>Gross Assessment</span>
             <span>₱{{ inv.totalGrossAssessment | number:'1.2-2' }}</span>
           </div>
         </div>
 
-        <div class="border-bottom-1 surface-border pb-3 mb-3">
-          <div class="flex justify-content-between py-1 text-green-700" *ngIf="inv.fheSubsidyAmount > 0">
+        <div class="subsidy-section">
+          <div class="fee-row text-green" *ngIf="inv.fheSubsidyAmount > 0">
             <span>UniFAST FHE Subsidy</span>
             <span>-₱{{ inv.fheSubsidyAmount | number:'1.2-2' }}</span>
           </div>
-          <div class="flex justify-content-between py-1 text-green-700" *ngIf="inv.scholarshipDiscountAmount > 0">
+          <div class="fee-row text-green" *ngIf="inv.scholarshipDiscountAmount > 0">
             <span>Scholarship Discount</span>
             <span>-₱{{ inv.scholarshipDiscountAmount | number:'1.2-2' }}</span>
           </div>
-          <div class="flex justify-content-between py-2 font-bold text-xl text-primary mt-2">
+          <div class="fee-row net-row">
             <span>Net Assessed Amount</span>
             <span>₱{{ inv.netAssessedAmount | number:'1.2-2' }}</span>
           </div>
         </div>
 
-        <div class="grid text-center">
-          <div class="col-6">
-            <div class="surface-100 p-3 border-round">
-              <span class="text-500 text-xs font-semibold block">TOTAL PAID</span>
-              <span class="text-xl font-bold text-green-600">₱{{ inv.totalPaidAmount | number:'1.2-2' }}</span>
-            </div>
+        <div class="kpi-pair">
+          <div class="kpi-mini-card">
+            <span class="kpi-mini-label">TOTAL PAID</span>
+            <span class="kpi-mini-val text-green">₱{{ inv.totalPaidAmount | number:'1.2-2' }}</span>
           </div>
-          <div class="col-6">
-            <div class="surface-100 p-3 border-round">
-              <span class="text-500 text-xs font-semibold block">OUTSTANDING BALANCE</span>
-              <span class="text-xl font-bold text-orange-600">₱{{ inv.outstandingBalance | number:'1.2-2' }}</span>
-            </div>
+          <div class="kpi-mini-card">
+            <span class="kpi-mini-label">OUTSTANDING BALANCE</span>
+            <span class="kpi-mini-val text-orange">₱{{ inv.outstandingBalance | number:'1.2-2' }}</span>
           </div>
         </div>
       </div>
 
       <!-- Receipt History Card -->
-      <div class="card surface-card border-round p-4 shadow-1">
-        <h3 class="text-lg font-semibold text-800 mb-3">Payment Receipts History</h3>
-        <p-table [value]="studentReceipts()" [rows]="5" [paginator]="true" responsiveLayout="scroll">
+      <div class="card-box">
+        <h3 class="section-subtitle">Payment Receipts History</h3>
+        <p-table [value]="studentReceipts()" [rows]="5" [paginator]="true" responsiveLayout="scroll" styleClass="institutional-table">
           <ng-template pTemplate="header">
             <tr>
               <th>OR Number</th>
@@ -130,16 +160,16 @@
           </ng-template>
           <ng-template pTemplate="body" let-r>
             <tr>
-              <td class="font-semibold text-primary">{{ r.orNumber }}</td>
+              <td class="font-bold-green">{{ r.orNumber }}</td>
               <td>{{ r.issuedAt }}</td>
               <td><p-tag [value]="r.paymentMethod" severity="info"></p-tag></td>
-              <td class="font-bold text-green-600">₱{{ r.amountPaid | number:'1.2-2' }}</td>
+              <td class="font-bold-green">₱{{ r.amountPaid | number:'1.2-2' }}</td>
               <td>{{ r.cashierUsername }}</td>
             </tr>
           </ng-template>
           <ng-template pTemplate="emptymessage">
             <tr>
-              <td colspan="5" class="text-center p-3 text-500">No payment receipts found for this student.</td>
+              <td colspan="5" class="empty-cell">No payment receipts found for this student.</td>
             </tr>
           </ng-template>
         </p-table>
@@ -147,45 +177,48 @@
     </div>
 
     <!-- Tender & Payment Form Column -->
-    <div class="col-12 lg:col-5">
-      <div class="card surface-card border-round p-4 shadow-1 sticky top-0">
-        <h2 class="text-xl font-bold text-900 mb-4 flex align-items-center gap-2">
-          <i class="pi pi-credit-card text-primary text-2xl"></i> Process Payment Tender
+    <div class="pos-side-col">
+      <div class="card-box sticky-card">
+        <h2 class="form-title">
+          <i class="pi pi-credit-card icon-primary"></i> Process Payment Tender
         </h2>
 
-        <div class="p-fluid">
-          <div class="field mb-3">
-            <label class="font-semibold text-700 block mb-2">Payment Method</label>
-            <p-select [options]="paymentMethods" [(ngModel)]="paymentMethod" optionLabel="label" optionValue="value" class="w-full"></p-select>
+        <div class="tender-form">
+          <div class="form-field">
+            <label class="form-label">Payment Method</label>
+            <p-select [options]="paymentMethods" [(ngModel)]="paymentMethod" optionLabel="label" optionValue="value" styleClass="full-width-select"></p-select>
           </div>
 
-          <div class="field mb-3">
-            <label class="font-semibold text-700 block mb-2">Amount Paid (₱)</label>
-            <p-inputNumber [(ngModel)]="amountPaid" mode="currency" currency="PHP" locale="en-PH" class="w-full"></p-inputNumber>
+          <div class="form-field">
+            <label class="form-label">Amount Paid (₱)</label>
+            <p-inputNumber [(ngModel)]="amountPaid" mode="currency" currency="PHP" locale="en-PH" styleClass="full-width-input"></p-inputNumber>
           </div>
 
-          <div class="field mb-3">
-            <label class="font-semibold text-700 block mb-2">Amount Tendered (₱)</label>
-            <p-inputNumber [(ngModel)]="amountTendered" mode="currency" currency="PHP" locale="en-PH" class="w-full"></p-inputNumber>
+          <div class="form-field">
+            <label class="form-label">Amount Tendered (₱)</label>
+            <p-inputNumber [(ngModel)]="amountTendered" mode="currency" currency="PHP" locale="en-PH" styleClass="full-width-input"></p-inputNumber>
           </div>
 
           <!-- Change Box -->
-          <div class="surface-200 p-3 border-round mb-4 text-center">
-            <span class="text-600 font-semibold text-sm block">CHANGE DUE</span>
-            <span class="text-3xl font-extrabold text-blue-600">₱{{ changeAmount() | number:'1.2-2' }}</span>
+          <div class="change-box">
+            <span class="change-label">CHANGE DUE</span>
+            <span class="change-val">₱{{ changeAmount() | number:'1.2-2' }}</span>
           </div>
 
-          <div class="field mb-3" *ngIf="paymentMethod !== 'CASH'">
-            <label class="font-semibold text-700 block mb-2">Reference Number / Transaction ID</label>
-            <input type="text" pInputText [(ngModel)]="referenceNumber" placeholder="e.g., GCASH-98726152" />
+          <div class="form-field" *ngIf="paymentMethod !== 'CASH'">
+            <label class="form-label">Reference Number / Transaction ID</label>
+            <input type="text" pInputText [(ngModel)]="referenceNumber" placeholder="e.g., GCASH-98726152" class="full-width-input" />
           </div>
 
-          <div class="field mb-4">
-            <label class="font-semibold text-700 block mb-2">Remarks / Notes</label>
-            <input type="text" pInputText [(ngModel)]="remarks" placeholder="Optional notes..." />
+          <div class="form-field">
+            <label class="form-label">Remarks / Notes</label>
+            <input type="text" pInputText [(ngModel)]="remarks" placeholder="Optional notes..." class="full-width-input" />
           </div>
 
-          <p-button label="Submit Payment & Print OR" icon="pi pi-print" severity="success" class="w-full" size="large" [loading]="isProcessing()" (onClick)="processPayment()"></p-button>
+          <p-button label="Submit Payment & Print OR" icon="pi pi-print" severity="success" size="large" [disabled]="inv.outstandingBalance <= 0 || amountPaid <= 0 || amountTendered < amountPaid || isProcessing()" [loading]="isProcessing()" (onClick)="processPayment()"></p-button>
+          <div *ngIf="inv.outstandingBalance <= 0" class="settled-notice">
+            <i class="pi pi-check-circle"></i> Assessment Invoice is fully settled. No payment required.
+          </div>
         </div>
       </div>
     </div>
@@ -194,62 +227,65 @@
 
 <!-- Official Receipt Printable Dialog -->
 <p-dialog [(visible)]="showReceiptModal" [modal]="true" [style]="{width: '500px'}" header="Official Receipt Preview">
-  <div *ngIf="issuedReceipt() as r" class="p-3 surface-0 text-900 border-round">
-    <div class="text-center mb-4">
-      <h3 class="font-bold text-xl m-0 text-primary">CENTRAL HIGH STATE UNIVERSITY</h3>
-      <p class="text-sm text-500 m-0">Office of the University Cashier</p>
-      <p class="text-xs text-500 m-0 mt-1">OFFICIAL RECEIPT</p>
-      <h2 class="text-2xl font-black text-900 mt-2">OR # {{ r.orNumber }}</h2>
+  <div *ngIf="issuedReceipt() as r" class="receipt-preview-box">
+    <div class="receipt-header">
+      <h3 class="univ-title">CENTRAL HIGH STATE UNIVERSITY</h3>
+      <p class="univ-sub">Office of the University Cashier</p>
+      <p class="or-title">OFFICIAL RECEIPT</p>
+      <h2 class="or-number">OR # {{ r.orNumber }}</h2>
     </div>
 
     <p-divider></p-divider>
 
-    <div class="flex justify-content-between my-2 text-sm">
-      <span class="text-600">Date Issued:</span>
-      <span class="font-semibold">{{ r.issuedAt }}</span>
+    <div class="receipt-line">
+      <span class="line-label">Date Issued:</span>
+      <span class="line-val">{{ r.issuedAt }}</span>
     </div>
-    <div class="flex justify-content-between my-2 text-sm">
-      <span class="text-600">Student Name:</span>
-      <span class="font-semibold">{{ r.studentName }}</span>
+    <div class="receipt-line">
+      <span class="line-label">Student Name:</span>
+      <span class="line-val">{{ r.studentName }}</span>
     </div>
-    <div class="flex justify-content-between my-2 text-sm">
-      <span class="text-600">Student ID:</span>
-      <span class="font-semibold">{{ r.studentNumber }}</span>
+    <div class="receipt-line">
+      <span class="line-label">Student ID:</span>
+      <span class="line-val">{{ r.studentNumber }}</span>
     </div>
-    <div class="flex justify-content-between my-2 text-sm">
-      <span class="text-600">Payment Method:</span>
-      <span class="font-semibold">{{ r.paymentMethod }}</span>
+    <div class="receipt-line">
+      <span class="line-label">Payment Method:</span>
+      <span class="line-val">{{ r.paymentMethod }}</span>
     </div>
-    <div class="flex justify-content-between my-2 text-sm" *ngIf="r.referenceNumber">
-      <span class="text-600">Reference #:</span>
-      <span class="font-semibold">{{ r.referenceNumber }}</span>
+    <div class="receipt-line" *ngIf="r.referenceNumber">
+      <span class="line-label">Reference #:</span>
+      <span class="line-val">{{ r.referenceNumber }}</span>
     </div>
 
     <p-divider></p-divider>
 
-    <div class="flex justify-content-between my-2 font-bold text-lg">
+    <div class="receipt-line total-line">
       <span>Amount Paid:</span>
-      <span class="text-green-600">₱{{ r.amountPaid | number:'1.2-2' }}</span>
+      <span class="text-green">₱{{ r.amountPaid | number:'1.2-2' }}</span>
     </div>
-    <div class="flex justify-content-between my-1 text-sm text-600">
+    <div class="receipt-line sub-line">
       <span>Amount Tendered:</span>
       <span>₱{{ r.amountTendered | number:'1.2-2' }}</span>
     </div>
-    <div class="flex justify-content-between my-1 text-sm text-600">
+    <div class="receipt-line sub-line">
       <span>Change:</span>
       <span>₱{{ r.changeAmount | number:'1.2-2' }}</span>
     </div>
 
     <p-divider></p-divider>
 
-    <div class="text-center text-xs text-500 mt-3">
-      <p class="m-0">Issued by: {{ r.cashierUsername }}</p>
-      <p class="m-0 mt-1 font-semibold text-600">Thank you for your payment!</p>
+    <div class="receipt-footer">
+      <p>Issued by: {{ r.cashierUsername }}</p>
+      <p class="thank-you">Thank you for your payment!</p>
     </div>
   </div>
 
   <ng-template pTemplate="footer">
-    <p-button label="Print OR" icon="pi pi-print" (onClick)="printReceipt()"></p-button>
-    <p-button label="Close" icon="pi pi-times" severity="secondary" (onClick)="showReceiptModal.set(false)"></p-button>
+    <div class="dialog-footer-actions">
+      <p-button label="Print OR" icon="pi pi-print" (onClick)="printReceipt()"></p-button>
+      <p-button label="Close" icon="pi pi-times" severity="secondary" (onClick)="showReceiptModal.set(false)"></p-button>
+    </div>
   </ng-template>
 </p-dialog>
+
