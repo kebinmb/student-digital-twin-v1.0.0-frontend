@@ -3,134 +3,397 @@
   <p-confirmDialog></p-confirmDialog>
 
   <!-- Institutional Sticky Header Toolbar -->
-  <div class="clearance-toolbar-card">
+  <div class="page-toolbar-card">
     <div class="header-branding">
       <div class="header-icon-box">
-        <i class="pi pi-check-square header-icon"></i>
+        <i class="pi pi-verified"></i>
       </div>
       <div class="header-text-group">
         <h1 class="header-title">Student Multi-Department Clearance</h1>
-        <p class="header-subtitle">Track and sign off clearance requests for Library, Accounting, Lab, Student Affairs & Dean</p>
+        <p class="header-subtitle">
+          Track, audit, and sign off student clearance workflows across Academic, Finance, and Student Affairs
+        </p>
       </div>
     </div>
   </div>
 
-  <!-- Initiate & Search Toolbar -->
-  <div class="clearance-filter-card">
-    <div class="clearance-filter-grid">
-      <div class="filter-col">
-        <label class="form-label">Student Profile ID</label>
-        <p-inputNumber [(ngModel)]="searchStudentId" placeholder="Enter Student Profile ID" [useGrouping]="false" (onKeyDown.enter)="loadClearanceStatus()"></p-inputNumber>
+  <!-- Unified Filter & Query Surface -->
+  <div class="filter-surface">
+    <div class="filter-header">
+      <div class="filter-header-title-group">
+        <span class="filter-eyebrow">Clearance Query & Initialization</span>
+        <h3 class="filter-title">Lookup Student Record</h3>
       </div>
-      <div class="filter-col">
-        <label class="form-label">Academic Term ID</label>
-        <p-inputNumber [(ngModel)]="searchTermId" placeholder="Term ID (e.g., 1)" [useGrouping]="false"></p-inputNumber>
+      <div class="active-term-pill">
+        <i class="pi pi-calendar-clock text-emerald-700"></i>
+        <span class="term-pill-label">Active Term:</span>
+        <span class="term-pill-val font-mono">{{ activeTermDisplay() }}</span>
+        <span class="term-pill-lock" pTooltip="Term configuration locked by institutional policy" tooltipPosition="bottom">
+          <i class="pi pi-lock text-xs"></i>
+        </span>
       </div>
-      <div class="filter-col">
-        <label class="form-label">Clearance Purpose</label>
-        <p-select [options]="purposes" [(ngModel)]="initiatePurpose" optionLabel="label" optionValue="value" styleClass="full-width-select"></p-select>
+    </div>
+
+    <div class="filter-grid-layout">
+      <!-- Student Identifier Field -->
+      <div class="filter-field-cell student-cell">
+        <label class="field-label" for="student-selector">
+          Student Identifier
+          <span class="required-star">*</span>
+        </label>
+
+        @if (isStudentUser()) {
+          <div class="identity-card-readonly">
+            <div class="identity-avatar">
+              <i class="pi pi-user text-emerald-800"></i>
+            </div>
+            <div class="identity-details">
+              <span class="identity-name font-mono">{{ searchStudentNumber }}</span>
+              <span class="identity-meta">
+                <i class="pi pi-shield text-xs mr-1 text-emerald-700"></i>Authenticated Student Session
+              </span>
+            </div>
+          </div>
+        } @else {
+          <p-select
+            id="student-selector"
+            [options]="suggestionOptions()"
+            [(ngModel)]="searchStudentNumber"
+            optionLabel="label"
+            optionValue="value"
+            [filter]="true"
+            filterBy="label"
+            filterPlaceholder="Search applicant name or number..."
+            placeholder="Select applicant by name or ID number..."
+            (onChange)="onSuggestionChange($event)"
+            styleClass="custom-select-trigger">
+            <ng-template pTemplate="selectedItem" let-selected>
+              @if (selected) {
+                <div class="select-item-selected">
+                  <i class="pi pi-user text-emerald-700 mr-2 text-sm"></i>
+                  <span class="font-semibold-navy">{{ selected.suggestion?.studentName || selected.label }}</span>
+                  <span class="code-badge ml-2 font-mono">{{ selected.value }}</span>
+                </div>
+              }
+            </ng-template>
+
+            <ng-template pTemplate="item" let-item>
+              <div class="suggestion-item-row">
+                <div class="suggestion-avatar">
+                  <i class="pi pi-id-card text-slate-500"></i>
+                </div>
+                <div class="suggestion-text">
+                  <span class="suggestion-name">{{ item.suggestion.studentName }}</span>
+                  <span class="suggestion-id font-mono">{{ item.suggestion.studentNumber }}</span>
+                </div>
+                <div class="suggestion-meta">
+                  <span class="code-badge">{{ item.suggestion.programCode }}</span>
+                  <p-tag
+                    [value]="item.suggestion.clearanceStatus"
+                    [severity]="getStatusSeverity(item.suggestion.clearanceStatus)"
+                    styleClass="status-tag-compact">
+                  </p-tag>
+                </div>
+              </div>
+            </ng-template>
+          </p-select>
+        }
       </div>
-      <div class="filter-col actions-col">
-        <p-button label="Check Clearance" icon="pi pi-search" severity="secondary" [loading]="isLoading()" (onClick)="loadClearanceStatus()"></p-button>
-        <p-button label="Initiate Clearance" icon="pi pi-bolt" severity="success" [loading]="isInitiating()" (onClick)="initiateClearance()"></p-button>
+
+      <!-- Clearance Purpose Field -->
+      <div class="filter-field-cell purpose-cell">
+        <label class="field-label" for="purpose-selector">
+          Clearance Purpose
+          <span class="required-star">*</span>
+        </label>
+        <p-select
+          id="purpose-selector"
+          [options]="purposes"
+          [(ngModel)]="initiatePurpose"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Select clearance purpose..."
+          styleClass="custom-select-trigger">
+          <ng-template pTemplate="selectedItem" let-selected>
+            @if (selected) {
+              <div class="purpose-pill">
+                <i [class]="selected.icon + ' text-emerald-700 mr-2 text-sm'"></i>
+                <span class="font-semibold-navy">{{ selected.label }}</span>
+              </div>
+            }
+          </ng-template>
+          <ng-template pTemplate="item" let-item>
+            <div class="purpose-option-row">
+              <i [class]="item.icon + ' text-emerald-700 text-sm'"></i>
+              <span class="purpose-option-text">{{ item.label }}</span>
+            </div>
+          </ng-template>
+        </p-select>
+      </div>
+
+      <!-- Actions -->
+      <div class="filter-actions-cell">
+        <p-button
+          label="Lookup Status"
+          icon="pi pi-search"
+          severity="primary"
+          [loading]="isLoading()"
+          (onClick)="loadClearanceStatus()"
+          styleClass="query-btn action-btn-primary">
+        </p-button>
+
+        <p-button
+          label="Initiate Clearance"
+          icon="pi pi-bolt"
+          severity="secondary"
+          [loading]="isInitiating()"
+          (onClick)="initiateClearance()"
+          styleClass="query-btn action-btn-secondary">
+        </p-button>
       </div>
     </div>
   </div>
 
-  <!-- Skeleton Loading -->
-  <div *ngIf="isLoading()" class="clearance-loading-card">
-    <p-skeleton width="40%" height="2rem" styleClass="mb-3"></p-skeleton>
-    <p-skeleton width="100%" height="10rem"></p-skeleton>
-  </div>
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="clearance-loading-card">
+      <div class="flex-between">
+        <p-skeleton width="30%" height="2rem"></p-skeleton>
+        <p-skeleton width="15%" height="2rem"></p-skeleton>
+      </div>
+      <p-skeleton width="100%" height="16rem" styleClass="mt-4"></p-skeleton>
+    </div>
+  }
 
-  <!-- Contextual Empty State -->
-  <app-empty-state
-    *ngIf="!isLoading() && !clearanceRequest()"
-    icon="pi pi-check-circle"
-    title="No Active Clearance Request"
-    description="Term clearances open 2 weeks prior to final exams."
-    actionLabel="Submit Clearance Application"
-    actionIcon="pi pi-bolt"
-    (actionClick)="initiateClearance()">
-  </app-empty-state>
+  <!-- Empty State -->
+  @if (!isLoading() && !clearanceRequest()) {
+    <app-empty-state
+      icon="pi pi-check-circle"
+      title="No Active Clearance Record Found"
+      description="No clearance application has been initiated for this student and academic term. Click below to initiate an application."
+      actionLabel="Initiate Clearance Application"
+      actionIcon="pi pi-bolt"
+      (actionClick)="initiateClearance()">
+    </app-empty-state>
+  }
 
-  <!-- Clearance Status Overview -->
-  <div *ngIf="!isLoading() && clearanceRequest() as req" class="clearance-overview-section">
-    <div class="clearance-overview-card">
-      <div class="overview-header">
-        <div class="student-meta">
-          <span class="req-id-tag">CLEARANCE REQUEST #{{ req.id }}</span>
-          <h2 class="req-student-name">{{ req.studentName }} ({{ req.studentNumber }})</h2>
-          <p class="req-sub-info">Purpose: <span class="highlight-text">{{ req.purpose }}</span> | Term: {{ req.termName }}</p>
+  <!-- Active Clearance Record -->
+  @if (!isLoading() && clearanceRequest(); as req) {
+    <div class="clearance-overview-section">
+      <div class="clearance-overview-card">
+        <!-- Overview Header -->
+        <div class="overview-header">
+          <div class="student-meta">
+            <div class="flex-row gap-xs mb-1">
+              <span class="req-id-tag">CLEARANCE APPLICATION</span>
+              <span class="code-badge">#{{ req.id }}</span>
+            </div>
+            <h2 class="req-student-name">
+              {{ req.studentName }}
+              <span class="font-mono text-slate-500 font-normal">({{ req.studentNumber }})</span>
+            </h2>
+            <p class="req-sub-info">
+              Purpose: <span class="highlight-text">{{ req.purpose }}</span> &bull; Academic Term:
+              <span class="highlight-text">{{ req.termName }}</span>
+            </p>
+          </div>
+
+          <div class="overview-badge-wrapper">
+            <p-tag
+              [value]="req.overallStatus"
+              [severity]="getStatusSeverity(req.overallStatus)"
+              styleClass="status-badge-lg">
+            </p-tag>
+          </div>
         </div>
-        <p-tag [value]="req.overallStatus" [severity]="getStatusSeverity(req.overallStatus)" styleClass="status-badge-lg"></p-tag>
-      </div>
 
-      <div class="timeline-section">
-        <h3 class="section-title">Department Sign-off Timeline</h3>
-        <p-table [value]="req.signoffs" [stripedRows]="true" responsiveLayout="scroll" styleClass="institutional-table">
-          <ng-template pTemplate="header">
-            <tr>
-              <th>Department</th>
-              <th>Status</th>
-              <th>Remarks</th>
-              <th>Approved By</th>
-              <th>Signed Date</th>
-              <th>Action</th>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="body" let-s>
-            <tr>
-              <td class="font-bold-navy">{{ s.departmentType }}</td>
-              <td><p-tag [value]="s.signoffStatus" [severity]="getStatusSeverity(s.signoffStatus)"></p-tag></td>
-              <td>{{ s.remarks || '-' }}</td>
-              <td>{{ s.signedByUsername || 'Pending Sign-off' }}</td>
-              <td>{{ s.signedAt || '-' }}</td>
-              <td>
-                <p-button *hasRole="['ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'ACCOUNTANT']" label="Process Sign-off" icon="pi pi-pencil" severity="info" size="small" (onClick)="openSignoffModal(s)"></p-button>
-                <span *hasRole="['STUDENT']" class="view-only-text">View Only</span>
-              </td>
-            </tr>
-          </ng-template>
-        </p-table>
+        <!-- Metric KPI Cards & Progress Bar -->
+        <div class="clearance-metric-grid">
+          <div class="metric-card">
+            <span class="metric-label">Completed Sign-offs</span>
+            <div class="metric-value-row">
+              <span class="metric-number">{{ clearedCount() }} / {{ totalSignoffs() }}</span>
+              <span class="metric-badge">{{ progressPercentage() }}%</span>
+            </div>
+            <p-progressbar [value]="progressPercentage()" [showValue]="false" styleClass="clearance-progress-bar"></p-progressbar>
+          </div>
+
+          <div class="metric-card">
+            <span class="metric-label">Institutional Clearance Readiness</span>
+            <div class="metric-value-row mt-1">
+              @if (clearedCount() === totalSignoffs() && totalSignoffs() > 0) {
+                <span class="status-indicator text-emerald-700 font-bold">
+                  <i class="pi pi-check-circle mr-1"></i>All Department Requirements Satisfied
+                </span>
+              } @else {
+                <span class="status-indicator text-amber-700 font-bold">
+                  <i class="pi pi-hourglass mr-1"></i>Awaiting Department Verification
+                </span>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Department Sign-off Ledger Table -->
+        <div class="timeline-section">
+          <div class="table-header-row">
+            <div>
+              <h3 class="section-title">Department Sign-off Ledger</h3>
+              <p class="section-subtitle">Real-time status updates from authorized campus signatories</p>
+            </div>
+          </div>
+
+          <p-table
+            [value]="req.signoffs"
+            [stripedRows]="true"
+            responsiveLayout="scroll"
+            styleClass="institutional-table">
+            <ng-template pTemplate="header">
+              <tr>
+                <th style="width: 25%;">Department</th>
+                <th style="width: 14%;">Status</th>
+                <th style="width: 25%;">Remarks</th>
+                <th style="width: 16%;">Authorized Signatory</th>
+                <th style="width: 10%;">Signed Date</th>
+                <th style="width: 10%; text-align: right;">Action</th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-s>
+              <tr>
+                <td>
+                  <div class="dept-cell">
+                    <div class="dept-icon-box">
+                      <i [class]="getDepartmentIcon(s.departmentType)"></i>
+                    </div>
+                    <div class="dept-name-block">
+                      <span class="dept-title">{{ getDepartmentDisplayName(s.departmentType) }}</span>
+                      <span class="dept-role-subtext">{{ getDepartmentRoleLabel(s.departmentType) }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <p-tag [value]="s.signoffStatus" [severity]="getStatusSeverity(s.signoffStatus)"></p-tag>
+                </td>
+                <td>
+                  @if (s.remarks) {
+                    <span class="remarks-text">{{ s.remarks }}</span>
+                  } @else {
+                    <span class="text-slate-400 italic">No notes provided</span>
+                  }
+                </td>
+                <td>
+                  <span class="signatory-text">{{ s.signedByUsername || 'Pending Sign-off' }}</span>
+                </td>
+                <td>
+                  <span class="date-text font-mono">{{ s.signedAt || '—' }}</span>
+                </td>
+                <td style="text-align: right;">
+                  @if (canUserProcessSignoff(s)) {
+                    <p-button
+                      label="Sign Off"
+                      icon="pi pi-pencil"
+                      severity="success"
+                      size="small"
+                      (onClick)="openSignoffModal(s)"
+                      styleClass="action-btn-primary">
+                    </p-button>
+                  } @else {
+                    <span class="view-only-tag" pTooltip="Restricted to {{ getDepartmentRoleLabel(s.departmentType) }}">
+                      <i class="pi pi-lock mr-1"></i>Locked
+                    </span>
+                  }
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
       </div>
     </div>
-  </div>
+  }
 </div>
 
-<!-- Signoff Action Modal -->
-<p-dialog [(visible)]="showSignoffModal" [modal]="true" [style]="{width: '450px'}" header="Process Department Sign-off">
-  <div *ngIf="selectedSignoff() as s" class="dialog-form-grid">
-    <div class="form-field">
-      <label class="form-label">Department</label>
-      <input type="text" pInputText [value]="s.departmentType" disabled class="full-width-input" />
-    </div>
+<!-- Signoff Action Dialog -->
+<p-dialog
+  [(visible)]="showSignoffModal"
+  [modal]="true"
+  [style]="{ width: '480px' }"
+  header="Department Clearance Sign-off"
+  [draggable]="false"
+  [resizable]="false">
 
-    <div class="form-field">
-      <label class="form-label">Sign-off Decision</label>
-      <div class="radio-option-group">
-        <div class="radio-option">
-          <input type="radio" id="app" name="status" value="APPROVED" [(ngModel)]="signoffActionStatus" />
-          <label for="app" class="radio-label text-green">APPROVE CLEARANCE</label>
+  @if (selectedSignoff(); as s) {
+    <div class="dialog-content-wrapper">
+      <div class="modal-context-bar">
+        <div class="context-item">
+          <i class="pi pi-building context-icon"></i>
+          <span class="context-label">Department:</span>
+          <span class="context-val">{{ getDepartmentDisplayName(s.departmentType) }}</span>
         </div>
-        <div class="radio-option">
-          <input type="radio" id="rej" name="status" value="REJECTED" [(ngModel)]="signoffActionStatus" />
-          <label for="rej" class="radio-label text-red">HOLD / REJECT</label>
+        <div class="context-item">
+          <p-tag [value]="s.signoffStatus" [severity]="getStatusSeverity(s.signoffStatus)" styleClass="context-tag"></p-tag>
+        </div>
+      </div>
+
+      <div class="dialog-form-grid">
+        <div class="form-field">
+          <label class="form-label">
+            Sign-off Decision
+            <span class="required-star">*</span>
+          </label>
+          <p-selectbutton
+            [options]="signoffOptions"
+            [(ngModel)]="signoffActionStatus"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full">
+            <ng-template pTemplate="item" let-item>
+              <div class="flex-row gap-xs">
+                <i [class]="item.icon"></i>
+                <span class="font-bold text-xs uppercase">{{ item.label }}</span>
+              </div>
+            </ng-template>
+          </p-selectbutton>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">
+            Remarks & Deficiencies
+            @if (signoffActionStatus === 'REJECTED') {
+              <span class="required-star">*</span>
+            }
+          </label>
+          <textarea
+            pTextarea
+            [(ngModel)]="signoffRemarks"
+            rows="3"
+            placeholder="Document deficiency reasons, official receipts, or clearance conditions..."
+            class="p-inputtext full-width-input">
+          </textarea>
+          <span class="help-text">Visible to the student and academic department heads.</span>
         </div>
       </div>
     </div>
-
-    <div class="form-field">
-      <label class="form-label">Remarks / Hold Reason</label>
-      <input type="text" pInputText [(ngModel)]="signoffRemarks" placeholder="Enter remarks..." class="full-width-input" />
-    </div>
-  </div>
+  }
 
   <ng-template pTemplate="footer">
     <div class="dialog-footer-actions">
-      <p-button label="Submit Decision" icon="pi pi-check" severity="success" (onClick)="submitSignoff()"></p-button>
-      <p-button label="Cancel" icon="pi pi-times" severity="secondary" (onClick)="showSignoffModal.set(false)"></p-button>
+      <p-button
+        label="Cancel"
+        icon="pi pi-times"
+        severity="secondary"
+        (onClick)="showSignoffModal.set(false)"
+        styleClass="action-btn-secondary">
+      </p-button>
+      <p-button
+        label="Submit Decision"
+        icon="pi pi-check"
+        severity="primary"
+        [loading]="isSubmittingSignoff()"
+        [disabled]="signoffActionStatus === 'REJECTED' && !signoffRemarks.trim()"
+        (onClick)="submitSignoff()"
+        styleClass="action-btn-primary">
+      </p-button>
     </div>
   </ng-template>
 </p-dialog>
-

@@ -1,0 +1,699 @@
+<main class="admission-mgmt-container" aria-label="Student Admission & Exam Reservation Management">
+  <p-toast></p-toast>
+
+  <!-- Module Header Card -->
+  <header class="page-toolbar-card header-card">
+    <div class="header-branding">
+      <div class="header-icon-box" aria-hidden="true">
+        <i class="pi pi-user-plus"></i>
+      </div>
+      <div class="header-text-group">
+        <h1 class="header-title">Student Admission & Entrance Exam Reservation Management</h1>
+        <p class="header-subtitle">
+          CHED CMO No. 09 s. 2013, CMO No. 13 s. 2025, and RA 10931 Admission Pipeline & Program Chair Interview Gatekeeper
+        </p>
+      </div>
+    </div>
+
+    <div class="header-actions-group">
+      <p-button 
+        label="Refresh Data" 
+        icon="pi pi-refresh" 
+        severity="secondary" 
+        size="small" 
+        [loading]="loading()" 
+        (onClick)="refreshAllData()">
+      </p-button>
+    </div>
+  </header>
+
+  <!-- Segmented Navigation Toolbar -->
+  <nav class="tab-toolbar" aria-label="Admission Modules">
+    @if (isAdminOrGuidance()) {
+      <button 
+        pButton 
+        type="button" 
+        label="Admission Period & Slot Config" 
+        icon="pi pi-sliders-h"
+        [severity]="activeTab() === 'config' ? 'primary' : 'secondary'"
+        [outlined]="activeTab() !== 'config'"
+        (click)="activeTab.set('config')" 
+        size="small">
+      </button>
+
+      <button 
+        pButton 
+        type="button" 
+        label="Exam Slot Schedules" 
+        icon="pi pi-calendar-plus"
+        [severity]="activeTab() === 'slots' ? 'primary' : 'secondary'"
+        [outlined]="activeTab() !== 'slots'"
+        (click)="activeTab.set('slots')" 
+        size="small">
+        <span class="tab-badge info-badge">{{ adminExamSlots().length }}</span>
+      </button>
+
+      <button 
+        pButton 
+        type="button" 
+        label="Guidance Exam Grading" 
+        icon="pi pi-check-square"
+        [severity]="activeTab() === 'exam' ? 'primary' : 'secondary'"
+        [outlined]="activeTab() !== 'exam'"
+        (click)="activeTab.set('exam')" 
+        size="small">
+        <span class="tab-badge warning-badge">{{ pendingExamApps().length }}</span>
+      </button>
+    }
+
+    @if (isProgramChair()) {
+      <button 
+        pButton 
+        type="button" 
+        label="Program Chair Interview Queue" 
+        icon="pi pi-users"
+        [severity]="activeTab() === 'interview' ? 'primary' : 'secondary'"
+        [outlined]="activeTab() !== 'interview'"
+        (click)="activeTab.set('interview')" 
+        size="small">
+        <span class="tab-badge success-badge">{{ chairInterviewApps().length }}</span>
+      </button>
+
+      <button 
+        pButton 
+        type="button" 
+        label="Admitted Applicants for Enrollment" 
+        icon="pi pi-graduation-cap"
+        [severity]="activeTab() === 'handoff' ? 'primary' : 'secondary'"
+        [outlined]="activeTab() !== 'handoff'"
+        (click)="activeTab.set('handoff')" 
+        size="small">
+      </button>
+    }
+  </nav>
+
+  <!-- TAB 1: Slot Configuration -->
+  @if (activeTab() === 'config' && isAdminOrGuidance()) {
+    <section class="section-card">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Daily Slot Allocation & Operational Window</h2>
+          <p class="section-subtitle">Configure daily transaction limits and auto-computed operational windows for CHED admissions</p>
+        </div>
+        <p-tag 
+          [value]="configForm.get('isActive')?.value ? 'ADMISSION OPEN' : 'MODULE LOCKED'"
+          [severity]="configForm.get('isActive')?.value ? 'success' : 'warn'">
+        </p-tag>
+      </div>
+
+      <form [formGroup]="configForm" (ngSubmit)="saveConfig()" class="config-grid">
+        <div class="form-field">
+          <label for="termId" class="form-label">Academic Term Target <span class="required-star">*</span></label>
+          <p-select 
+            id="termId"
+            [options]="termOptions()" 
+            formControlName="termId" 
+            (onChange)="refreshAllData($event.value)"
+            optionLabel="label" 
+            optionValue="value" 
+            styleClass="w-full">
+          </p-select>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">Admission Module Public Status</label>
+          <div class="toggle-container">
+            <label class="toggle-switch">
+              <input type="checkbox" formControlName="isActive" id="isActiveToggle" />
+              <span class="toggle-slider"></span>
+            </label>
+            <label for="isActiveToggle" class="toggle-label">
+              Enable Public Guest Admission Portal & Queue Token Generation
+            </label>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="dailySlotLimit" class="form-label">Daily Slot Limit (Slots / Day) <span class="required-star">*</span></label>
+          <p-inputnumber 
+            id="dailySlotLimit"
+            formControlName="dailySlotLimit" 
+            [min]="1" 
+            [step]="100" 
+            placeholder="e.g. 1000"
+            styleClass="w-full">
+          </p-inputnumber>
+          <span class="help-text">Max examinees admitted per calendar date</span>
+        </div>
+
+        <div class="form-field">
+          <label for="totalOpenedSlots" class="form-label">Total Opened Slots <span class="required-star">*</span></label>
+          <p-inputnumber 
+            id="totalOpenedSlots"
+            formControlName="totalOpenedSlots" 
+            [min]="1" 
+            [step]="1000" 
+            placeholder="e.g. 20000"
+            styleClass="w-full">
+          </p-inputnumber>
+          <span class="help-text">Total quota authorized for the entire intake</span>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">Computed Operational Window</label>
+          <div class="computed-stat-card">
+            <span class="computed-number">{{ daysOpenCalculated() }} Days</span>
+            <span class="computed-formula">Days Open = Total Slots ÷ Daily Limit</span>
+          </div>
+        </div>
+
+        <div class="grid-actions-full">
+          <p-button 
+            label="Save Admission Config" 
+            icon="pi pi-check" 
+            severity="success" 
+            type="submit">
+          </p-button>
+        </div>
+      </form>
+    </section>
+  }
+
+  <!-- TAB: Exam Slot Schedule Manager -->
+  @if (activeTab() === 'slots' && isAdminOrGuidance()) {
+    <section class="section-card">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Entrance Examination Schedule Slot Management</h2>
+          <p class="section-subtitle">Manage examination testing hall dates, venue rooms, time slots, and seat quotas for applicant reservations</p>
+        </div>
+        <p-button 
+          label="Create New Exam Slot" 
+          icon="pi pi-plus" 
+          severity="success" 
+          size="small" 
+          (onClick)="openCreateSlotModal()">
+        </p-button>
+      </div>
+
+      <p-table 
+        [value]="adminExamSlots()" 
+        [loading]="loading()" 
+        [paginator]="true" 
+        [rows]="10" 
+        styleClass="institutional-table">
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width: 15%">Exam Date</th>
+            <th style="width: 22%">Time Slot</th>
+            <th>Venue / Testing Hall</th>
+            <th style="width: 18%">Capacity & Bookings</th>
+            <th style="width: 15%">Available Seats</th>
+            <th style="width: 12%">Status</th>
+            <th style="width: 14%" class="text-center">Actions</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-slot>
+          <tr>
+            <td><span class="font-bold-navy">{{ slot.examDate }}</span></td>
+            <td>
+              <div class="schedule-cell">
+                <i class="pi pi-clock schedule-icon"></i>
+                <span>{{ slot.startTime }} - {{ slot.endTime }}</span>
+              </div>
+            </td>
+            <td><span class="font-semibold text-slate-800">{{ slot.venueRoom }}</span></td>
+            <td>
+              <div class="capacity-cell">
+                <span class="text-xs text-slate-600">{{ slot.reservedCount }} / {{ slot.maxCapacity }} Booked</span>
+              </div>
+            </td>
+            <td>
+              <p-tag 
+                [value]="slot.availableSeats + ' seats left'" 
+                [severity]="slot.availableSeats > 20 ? 'success' : (slot.availableSeats > 0 ? 'warn' : 'danger')" 
+                [rounded]="true">
+              </p-tag>
+            </td>
+            <td>
+              <p-tag 
+                [value]="slot.status" 
+                [severity]="slot.status === 'OPEN' ? 'success' : (slot.status === 'FULL' ? 'warn' : 'danger')">
+              </p-tag>
+            </td>
+            <td class="text-center">
+              <div class="flex align-items-center justify-content-center gap-1">
+                <p-button 
+                  [icon]="slot.status === 'CANCELLED' ? 'pi pi-check-circle' : 'pi pi-ban'" 
+                  [severity]="slot.status === 'CANCELLED' ? 'success' : 'warn'" 
+                  [text]="true" 
+                  size="small" 
+                  [pTooltip]="slot.status === 'CANCELLED' ? 'Re-open Slot' : 'Cancel Slot'" 
+                  (onClick)="toggleExamSlotStatus(slot)">
+                </p-button>
+
+                <p-button 
+                  icon="pi pi-trash" 
+                  severity="danger" 
+                  [text]="true" 
+                  size="small" 
+                  pTooltip="Delete Schedule Slot" 
+                  [disabled]="slot.reservedCount > 0"
+                  (onClick)="deleteExamSlot(slot.id)">
+                </p-button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="7" class="text-center p-4 text-slate-500">
+              No entrance exam schedule slots found for this term. Click "Create New Exam Slot" above to schedule a testing session.
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </section>
+  }
+
+  <!-- TAB 2: Guidance Exam Grading -->
+  @if (activeTab() === 'exam' && isAdminOrGuidance()) {
+    <section class="section-card">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Guidance Counselor Exam Evaluation Queue</h2>
+          <p class="section-subtitle">Record applicant entrance scores to qualify them for Program Chair interview evaluation</p>
+        </div>
+        <span class="code-badge">{{ pendingExamApps().length }} Pending In Queue</span>
+      </div>
+
+      <p-table 
+        [value]="pendingExamApps()" 
+        [loading]="loading()" 
+        [paginator]="true" 
+        [rows]="10" 
+        styleClass="institutional-table">
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width: 14%">Application No.</th>
+            <th>Applicant Name</th>
+            <th style="width: 15%">Target Program</th>
+            <th style="width: 22%">Exam Schedule</th>
+            <th style="width: 14%">Status</th>
+            <th style="width: 12%" class="text-center">Action</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-app>
+          <tr>
+            <td><span class="font-mono font-bold-navy">{{ app.applicationNumber }}</span></td>
+            <td class="font-bold-navy">{{ app.fullName }}</td>
+            <td><span class="badge-green">{{ app.targetProgramCode }}</span></td>
+            <td>
+              <div class="schedule-cell">
+                <i class="pi pi-calendar schedule-icon"></i>
+                <span>{{ app.examDate }} ({{ app.examStartTime }} - {{ app.examEndTime }})</span>
+              </div>
+            </td>
+            <td><p-tag [value]="app.applicationStatus" [severity]="getStatusSeverity(app.applicationStatus)"></p-tag></td>
+            <td class="text-center">
+              <p-button 
+                label="Grade Exam" 
+                icon="pi pi-file-edit" 
+                severity="success" 
+                size="small" 
+                (onClick)="openExamModal(app)">
+              </p-button>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6" class="empty-state-cell">
+              <div class="empty-state-card">
+                <div class="empty-state-icon">
+                  <i class="pi pi-check-circle"></i>
+                </div>
+                <h3 class="empty-state-title">No Pending Exam Evaluations</h3>
+                <p class="empty-state-subtext">All submitted applicant exams have been graded for this session.</p>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </section>
+  }
+
+  <!-- TAB 3: Program Chair Interview Queue -->
+  @if (activeTab() === 'interview' && isProgramChair()) {
+    <section class="section-card">
+      <div class="section-header-wrap">
+        <div>
+          <h2 class="section-title">Program Chairperson Interview Queue</h2>
+          <p class="section-subtitle">Applicants qualified through examination (EXAM_PASSED) tagged for your academic program</p>
+        </div>
+
+        <div class="filter-dropdown-container">
+          <p-select 
+            [options]="programOptions()" 
+            [ngModel]="selectedProgramId()" 
+            (onChange)="selectedProgramId.set($event.value)"
+            optionLabel="label" 
+            optionValue="value" 
+            placeholder="Filter by Program" 
+            styleClass="w-full">
+          </p-select>
+        </div>
+      </div>
+
+      <p-table 
+        [value]="chairInterviewApps()" 
+        [loading]="loading()" 
+        [paginator]="true" 
+        [rows]="10" 
+        styleClass="institutional-table">
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width: 15%">App Ref #</th>
+            <th>Applicant Name</th>
+            <th style="width: 14%">Target Program</th>
+            <th style="width: 14%">Exam Score</th>
+            <th style="width: 14%">SHS GWA</th>
+            <th style="width: 15%" class="text-center">Action</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-app>
+          <tr>
+            <td><span class="font-mono font-bold-navy">{{ app.applicationNumber }}</span></td>
+            <td class="font-bold-navy">{{ app.fullName }}</td>
+            <td><span class="badge-green">{{ app.targetProgramCode }}</span></td>
+            <td><span class="font-mono score-passed">{{ app.examScore }} / 100</span></td>
+            <td><span class="font-mono">{{ app.highSchoolGwa || 'N/A' }}</span></td>
+            <td class="text-center">
+              <p-button 
+                label="Interview Rubric" 
+                icon="pi pi-comments" 
+                severity="warn" 
+                size="small" 
+                (onClick)="openInterviewModal(app)">
+              </p-button>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6" class="empty-state-cell">
+              <div class="empty-state-card">
+                <div class="empty-state-icon">
+                  <i class="pi pi-inbox"></i>
+                </div>
+                <h3 class="empty-state-title">No Qualified Candidates Waiting</h3>
+                <p class="empty-state-subtext">No applicants are currently waiting for department interview evaluations.</p>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </section>
+  }
+
+  <!-- TAB 4: Admitted Applicants & Enrollment Hand-off -->
+  @if (activeTab() === 'handoff' && isProgramChair()) {
+    <section class="section-card">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Admitted Applicants — Enrollment Hand-off</h2>
+          <p class="section-subtitle">Applicants marked INTERVIEW_ACCEPTED are seeded directly into Student Enrollment & Advising</p>
+        </div>
+        <span class="badge-green">{{ eligibleEnrollmentApps().length }} Admitted</span>
+      </div>
+
+      <p-table 
+        [value]="eligibleEnrollmentApps()" 
+        [loading]="loading()" 
+        [paginator]="true" 
+        [rows]="10" 
+        styleClass="institutional-table">
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width: 16%">Application No.</th>
+            <th>Applicant Name</th>
+            <th style="width: 14%">Program</th>
+            <th style="width: 12%">Exam Score</th>
+            <th style="width: 14%">Interview Score</th>
+            <th style="width: 20%">Admission Status</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-app>
+          <tr>
+            <td><span class="font-mono font-bold-navy">{{ app.applicationNumber }}</span></td>
+            <td class="font-bold-navy">{{ app.fullName }}</td>
+            <td><span class="badge-green">{{ app.targetProgramCode }}</span></td>
+            <td><span class="font-mono">{{ app.examScore || 'N/A' }}</span></td>
+            <td><span class="font-mono">{{ app.interviewScore || 'N/A' }}</span></td>
+            <td>
+              <p-tag 
+                [value]="app.applicationStatus === 'INTERVIEW_ACCEPTED' ? 'ELIGIBLE FOR ENROLLMENT' : app.applicationStatus" 
+                severity="success">
+              </p-tag>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6" class="empty-state-cell">
+              <div class="empty-state-card">
+                <div class="empty-state-icon">
+                  <i class="pi pi-folder-open"></i>
+                </div>
+                <h3 class="empty-state-title">No Admitted Applicants Found</h3>
+                <p class="empty-state-subtext">No candidates have completed the full interview acceptance gate for enrollment.</p>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </section>
+  }
+
+  <!-- MODAL 1: Guidance Exam Grading Dialog -->
+  <p-dialog 
+    [visible]="isExamModalVisible()" 
+    (visibleChange)="isExamModalVisible.set($event)" 
+    [modal]="true"
+    [style]="{ width: '32rem', maxWidth: '95vw' }" 
+    header="Guidance Entrance Exam Evaluation">
+    @if (selectedApp(); as app) {
+      <form [formGroup]="examForm" (ngSubmit)="submitExamEvaluation()" class="dialog-form-layout">
+        <div class="applicant-context-box">
+          <div class="context-avatar-badge">
+            <i class="pi pi-user"></i>
+          </div>
+          <div class="context-details">
+            <span class="context-label">Applicant Details</span>
+            <span class="context-name">{{ app.fullName }}</span>
+            <span class="context-meta">App No: <code>{{ app.applicationNumber }}</code> • Program: <strong>{{ app.targetProgramCode }}</strong></span>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="examScore" class="form-label">Exam Score (0 - 100) <span class="required-star">*</span></label>
+          <p-inputnumber 
+            id="examScore"
+            formControlName="examScore" 
+            [min]="0" 
+            [max]="100" 
+            [step]="1" 
+            placeholder="Enter score 0 - 100"
+            styleClass="w-full">
+          </p-inputnumber>
+        </div>
+
+        <div class="form-field">
+          <label for="examStatus" class="form-label">Guidance Decision <span class="required-star">*</span></label>
+          <p-select 
+            id="examStatus"
+            [options]="[
+              { label: 'EXAM PASSED (Proceed to Interview)', value: 'EXAM_PASSED' },
+              { label: 'EXAM FAILED', value: 'EXAM_FAILED' }
+            ]" 
+            formControlName="status" 
+            optionLabel="label" 
+            optionValue="value" 
+            styleClass="w-full">
+          </p-select>
+        </div>
+
+        <div class="form-field">
+          <label for="examRemarks" class="form-label">Guidance Counselor Remarks</label>
+          <input 
+            pInputText 
+            id="examRemarks"
+            formControlName="examRemarks" 
+            placeholder="Enter evaluation notes..." 
+            class="w-full" />
+        </div>
+
+        <div class="dialog-action-bar">
+          <p-button label="Cancel" severity="secondary" [outlined]="true" (onClick)="closeExamModal()"></p-button>
+          <p-button label="Submit Exam Grade" severity="success" type="submit"></p-button>
+        </div>
+      </form>
+    }
+  </p-dialog>
+
+  <!-- MODAL 2: Program Chair Interview Dialog -->
+  <p-dialog 
+    [visible]="isInterviewModalVisible()" 
+    (visibleChange)="isInterviewModalVisible.set($event)" 
+    [modal]="true"
+    [style]="{ width: '34rem', maxWidth: '95vw' }" 
+    header="Program Chairperson Interview Evaluation">
+    @if (selectedApp(); as app) {
+      <form [formGroup]="interviewForm" (ngSubmit)="submitInterviewEvaluation()" class="dialog-form-layout">
+        <div class="applicant-context-box applicant-context-interview">
+          <div class="context-avatar-badge success">
+            <i class="pi pi-check"></i>
+          </div>
+          <div class="context-details">
+            <span class="context-label">Qualified Applicant</span>
+            <span class="context-name">{{ app.fullName }}</span>
+            <span class="context-meta">App: <code>{{ app.applicationNumber }}</code> • Program: <strong>{{ app.targetProgramCode }}</strong></span>
+            <span class="context-highlight">Exam Score: <strong>{{ app.examScore }} / 100</strong></span>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="interviewScore" class="form-label">Interview Score (0 - 100) <span class="required-star">*</span></label>
+          <p-inputnumber 
+            id="interviewScore"
+            formControlName="interviewScore" 
+            [min]="0" 
+            [max]="100" 
+            [step]="1" 
+            placeholder="Enter interview rubric score"
+            styleClass="w-full">
+          </p-inputnumber>
+        </div>
+
+        <div class="form-field">
+          <label for="interviewStatus" class="form-label">Chairperson Decision <span class="required-star">*</span></label>
+          <p-select 
+            id="interviewStatus"
+            [options]="[
+              { label: 'INTERVIEW ACCEPTED (Eligible for Enrollment)', value: 'INTERVIEW_ACCEPTED' },
+              { label: 'REJECTED', value: 'REJECTED' }
+            ]" 
+            formControlName="status" 
+            optionLabel="label" 
+            optionValue="value" 
+            styleClass="w-full">
+          </p-select>
+        </div>
+
+        <div class="form-field">
+          <label for="interviewRemarks" class="form-label">Interview Rubric Remarks</label>
+          <input 
+            pInputText 
+            id="interviewRemarks"
+            formControlName="interviewRemarks" 
+            placeholder="Enter interview feedback..." 
+            class="w-full" />
+        </div>
+
+        <div class="dialog-action-bar">
+          <p-button label="Cancel" severity="secondary" [outlined]="true" (onClick)="closeInterviewModal()"></p-button>
+          <p-button label="Submit Evaluation" severity="success" type="submit"></p-button>
+        </div>
+      </form>
+    }
+  </p-dialog>
+
+  <!-- MODAL 3: Create Entrance Exam Slot Dialog -->
+  <p-dialog 
+    [visible]="isCreateSlotModalVisible()" 
+    (visibleChange)="isCreateSlotModalVisible.set($event)" 
+    [modal]="true"
+    [style]="{ width: '32rem', maxWidth: '95vw' }" 
+    header="Create Entrance Examination Schedule Slot">
+    <form [formGroup]="createSlotForm" (ngSubmit)="submitCreateSlot()" class="dialog-form-layout">
+      <div class="form-field">
+        <label for="slotTermId" class="form-label">Academic Term Target <span class="required-star">*</span></label>
+        <p-select 
+          id="slotTermId"
+          [options]="termOptions()" 
+          formControlName="termId" 
+          optionLabel="label" 
+          optionValue="value" 
+          styleClass="w-full">
+        </p-select>
+      </div>
+
+      <div class="form-field">
+        <label for="examDate" class="form-label">Exam Date (YYYY-MM-DD) <span class="required-star">*</span></label>
+        <input 
+          pInputText 
+          id="examDate" 
+          type="date"
+          formControlName="examDate" 
+          class="w-full" />
+      </div>
+
+      <div class="form-row-2 gap-3 flex">
+        <div class="form-field flex-1">
+          <label for="startTime" class="form-label">Start Time <span class="required-star">*</span></label>
+          <input 
+            pInputText 
+            id="startTime" 
+            formControlName="startTime" 
+            placeholder="08:00 AM" 
+            class="w-full" />
+        </div>
+
+        <div class="form-field flex-1">
+          <label for="endTime" class="form-label">End Time <span class="required-star">*</span></label>
+          <input 
+            pInputText 
+            id="endTime" 
+            formControlName="endTime" 
+            placeholder="11:00 AM" 
+            class="w-full" />
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label for="venueRoom" class="form-label">Venue / Testing Hall Room <span class="required-star">*</span></label>
+        <input 
+          pInputText 
+          id="venueRoom" 
+          formControlName="venueRoom" 
+          placeholder="e.g. Testing Hall A - Room 101" 
+          class="w-full" />
+      </div>
+
+      <div class="form-field">
+        <label for="maxCapacity" class="form-label">Max Seating Capacity <span class="required-star">*</span></label>
+        <p-inputnumber 
+          id="maxCapacity" 
+          formControlName="maxCapacity" 
+          [min]="1" 
+          [step]="5" 
+          placeholder="e.g. 50" 
+          styleClass="w-full">
+        </p-inputnumber>
+      </div>
+
+      <div class="dialog-action-bar">
+        <p-button label="Cancel" severity="secondary" [outlined]="true" (onClick)="closeCreateSlotModal()"></p-button>
+        <p-button label="Create Exam Slot" severity="success" type="submit"></p-button>
+      </div>
+    </form>
+  </p-dialog>
+</main>

@@ -29,6 +29,12 @@ export const routes: Routes = [
     canActivate: [guestGuard]
   },
   {
+    path: 'admission',
+    loadComponent: () =>
+      import('./features/admission/guest-admission/guest-admission.component').then(m => m.GuestAdmissionComponent),
+    title: 'Public Guest Admission & Entrance Exam Reservation'
+  },
+  {
     path: 'forbidden',
     loadComponent: () =>
       import('./features/forbidden/forbidden.component').then(m => m.ForbiddenComponent),
@@ -110,6 +116,12 @@ export const routes: Routes = [
         canActivate: [roleGuard(['ADMIN'])],
         loadComponent: () =>
           import('./features/admin/lms-config/lms-config.component').then(m => m.LmsConfigComponent)
+      },
+      {
+        path: 'admission-management',
+        canActivate: [roleGuard(['ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'GUIDANCE'])],
+        loadComponent: () =>
+          import('./features/admission/admission-management/admission-management.component').then(m => m.AdmissionManagementComponent)
       },
       {
         path: 'analytics/digital-twin',

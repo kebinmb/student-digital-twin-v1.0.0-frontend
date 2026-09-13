@@ -24,8 +24,18 @@ export interface ClearanceRequestDto {
   signoffs: ClearanceSignoffDto[];
 }
 
-export interface InitiateClearanceRequest {
+export interface ClearanceStudentSuggestionDto {
   studentProfileId: number;
+  studentNumber: string;
+  studentName: string;
+  programCode: string;
+  clearanceStatus: string;
+  purpose: string;
+}
+
+export interface InitiateClearanceRequest {
+  studentProfileId?: number;
+  studentNumber?: string;
   termId: number;
   purpose: string;
 }

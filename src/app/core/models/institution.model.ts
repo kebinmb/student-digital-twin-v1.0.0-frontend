@@ -386,3 +386,13 @@ export interface Page<T> {
   size: number;
   number: number;
 }
+
+export interface SliceResponse<T> {
+  content: T[];
+  page: number;
+  size: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+  isFirst: boolean;
+  isLast: boolean;
+}

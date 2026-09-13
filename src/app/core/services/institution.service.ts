@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, shareReplay, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   AcademicYear,
@@ -33,6 +33,7 @@ import {
   Program,
   ProgramOutcome,
   ScholarshipDiscount,
+  SliceResponse,
   Term,
   UpdateAcademicYearRequest,
   UpdateCampusRequest,
@@ -47,16 +48,93 @@ import {
 @Injectable({
   providedIn: 'root'
 })
+export class CampusService {
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = `${environment.apiUrl}/v1/campuses`;
+
+  private activeCampuses$?: Observable<Campus[]>;
+  private allCampuses$?: Observable<Campus[]>;
+
+  getAll(): Observable<Campus[]> {
+    if (!this.allCampuses$) {
+      this.allCampuses$ = this.http.get<Campus[]>(this.baseUrl).pipe(
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
+    }
+    return this.allCampuses$;
+  }
+
+  getActive(): Observable<Campus[]> {
+    if (!this.activeCampuses$) {
+      this.activeCampuses$ = this.http.get<Campus[]>(`${this.baseUrl}/active`).pipe(
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
+    }
+    return this.activeCampuses$;
+  }
+
+  getById(id: number): Observable<Campus> {
+    return this.http.get<Campus>(`${this.baseUrl}/${id}`);
+  }
+
+  create(request: CreateCampusRequest): Observable<Campus> {
+    return this.http.post<Campus>(this.baseUrl, request).pipe(
+      tap(() => this.invalidateCache())
+    );
+  }
+
+  update(id: number, request: UpdateCampusRequest): Observable<Campus> {
+    return this.http.put<Campus>(`${this.baseUrl}/${id}`, request).pipe(
+      tap(() => this.invalidateCache())
+    );
+  }
+
+  toggleStatus(id: number, active: boolean): Observable<Campus> {
+    return this.http.patch<Campus>(`${this.baseUrl}/${id}/status`, null, {
+      params: new HttpParams().set('active', active)
+    }).pipe(
+      tap(() => this.invalidateCache())
+    );
+  }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`).pipe(
+      tap(() => this.invalidateCache())
+    );
+  }
+
+  invalidateCache(): void {
+    this.activeCampuses$ = undefined;
+    this.allCampuses$ = undefined;
+  }
+}
+
+@Injectable({
+  providedIn: 'root'
+})
 export class AcademicYearService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/v1/academic-years`;
 
+  private allAcademicYears$?: Observable<AcademicYear[]>;
+  private currentAcademicYear$?: Observable<AcademicYear>;
+
   getAll(): Observable<AcademicYear[]> {
-    return this.http.get<AcademicYear[]>(this.baseUrl);
+    if (!this.allAcademicYears$) {
+      this.allAcademicYears$ = this.http.get<AcademicYear[]>(this.baseUrl).pipe(
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
+    }
+    return this.allAcademicYears$;
   }
 
   getCurrent(): Observable<AcademicYear> {
-    return this.http.get<AcademicYear>(`${this.baseUrl}/current`);
+    if (!this.currentAcademicYear$) {
+      this.currentAcademicYear$ = this.http.get<AcademicYear>(`${this.baseUrl}/current`).pipe(
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
+    }
+    return this.currentAcademicYear$;
   }
 
   getById(id: number): Observable<AcademicYear> {
@@ -64,19 +142,32 @@ export class AcademicYearService {
   }
 
   create(request: CreateAcademicYearRequest): Observable<AcademicYear> {
-    return this.http.post<AcademicYear>(this.baseUrl, request);
+    return this.http.post<AcademicYear>(this.baseUrl, request).pipe(
+      tap(() => this.invalidateCache())
+    );
   }
 
   update(id: number, request: UpdateAcademicYearRequest): Observable<AcademicYear> {
-    return this.http.put<AcademicYear>(`${this.baseUrl}/${id}`, request);
+    return this.http.put<AcademicYear>(`${this.baseUrl}/${id}`, request).pipe(
+      tap(() => this.invalidateCache())
+    );
   }
 
   setCurrent(id: number): Observable<AcademicYear> {
-    return this.http.put<AcademicYear>(`${this.baseUrl}/${id}/set-current`, {});
+    return this.http.put<AcademicYear>(`${this.baseUrl}/${id}/set-current`, {}).pipe(
+      tap(() => this.invalidateCache())
+    );
   }
 
   delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+    return this.http.delete<void>(`${this.baseUrl}/${id}`).pipe(
+      tap(() => this.invalidateCache())
+    );
+  }
+
+  invalidateCache(): void {
+    this.allAcademicYears$ = undefined;
+    this.currentAcademicYear$ = undefined;
   }
 }
 
@@ -87,8 +178,25 @@ export class TermService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/v1/terms`;
 
+  private activeTerm$?: Observable<Term>;
+  private allTerms$?: Observable<Term[]>;
+
+  getActive(): Observable<Term> {
+    if (!this.activeTerm$) {
+      this.activeTerm$ = this.http.get<Term>(`${this.baseUrl}/active`).pipe(
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
+    }
+    return this.activeTerm$;
+  }
+
   getAll(): Observable<Term[]> {
-    return this.http.get<Term[]>(this.baseUrl);
+    if (!this.allTerms$) {
+      this.allTerms$ = this.http.get<Term[]>(this.baseUrl).pipe(
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
+    }
+    return this.allTerms$;
   }
 
   getByAcademicYear(academicYearId: number): Observable<Term[]> {
@@ -100,69 +208,50 @@ export class TermService {
   }
 
   create(request: CreateTermRequest): Observable<Term> {
-    return this.http.post<Term>(this.baseUrl, request);
+    return this.http.post<Term>(this.baseUrl, request).pipe(
+      tap(() => this.invalidateCache())
+    );
   }
 
   updateSchedule(id: number, request: UpdateTermScheduleRequest): Observable<Term> {
-    return this.http.put<Term>(`${this.baseUrl}/${id}/schedule`, request);
+    return this.http.put<Term>(`${this.baseUrl}/${id}/schedule`, request).pipe(
+      tap(() => this.invalidateCache())
+    );
   }
 
   activate(id: number): Observable<Term> {
-    return this.http.put<Term>(`${this.baseUrl}/${id}/activate`, {});
+    return this.http.put<Term>(`${this.baseUrl}/${id}/activate`, {}).pipe(
+      tap(() => this.invalidateCache())
+    );
   }
 
   toggleEnrollmentWindow(id: number, open: boolean): Observable<Term> {
-    return this.http.put<Term>(`${this.baseUrl}/${id}/enrollment-window?open=${open}`, {});
+    return this.http.put<Term>(`${this.baseUrl}/${id}/enrollment-window?open=${open}`, {}).pipe(
+      tap(() => this.invalidateCache())
+    );
   }
 
   toggleGradingWindow(id: number, open: boolean): Observable<Term> {
-    return this.http.put<Term>(`${this.baseUrl}/${id}/grading-window?open=${open}`, {});
+    return this.http.put<Term>(`${this.baseUrl}/${id}/grading-window?open=${open}`, {}).pipe(
+      tap(() => this.invalidateCache())
+    );
   }
 
   toggleAddDropWindow(id: number, open: boolean): Observable<Term> {
-    return this.http.put<Term>(`${this.baseUrl}/${id}/add-drop-window?open=${open}`, {});
+    return this.http.put<Term>(`${this.baseUrl}/${id}/add-drop-window?open=${open}`, {}).pipe(
+      tap(() => this.invalidateCache())
+    );
   }
 
   delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${id}`);
-  }
-}
-
-@Injectable({
-  providedIn: 'root'
-})
-export class CampusService {
-  private readonly http = inject(HttpClient);
-  private readonly baseUrl = `${environment.apiUrl}/v1/campuses`;
-
-  getAll(): Observable<Campus[]> {
-    return this.http.get<Campus[]>(this.baseUrl);
+    return this.http.delete<void>(`${this.baseUrl}/${id}`).pipe(
+      tap(() => this.invalidateCache())
+    );
   }
 
-  getActive(): Observable<Campus[]> {
-    return this.http.get<Campus[]>(`${this.baseUrl}/active`);
-  }
-
-  getById(id: number): Observable<Campus> {
-    return this.http.get<Campus>(`${this.baseUrl}/${id}`);
-  }
-
-  create(request: CreateCampusRequest): Observable<Campus> {
-    return this.http.post<Campus>(this.baseUrl, request);
-  }
-
-  update(id: number, request: UpdateCampusRequest): Observable<Campus> {
-    return this.http.put<Campus>(`${this.baseUrl}/${id}`, request);
-  }
-
-  toggleStatus(id: number, active: boolean): Observable<Campus> {
-    return this.http.patch<Campus>(`${this.baseUrl}/${id}/status`, null, {
-      params: new HttpParams().set('active', active)
-    });
-  }
-
-  delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  invalidateCache(): void {
+    this.activeTerm$ = undefined;
+    this.allTerms$ = undefined;
   }
 }
 
@@ -173,8 +262,15 @@ export class DepartmentService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/v1/departments`;
 
+  private allDepartments$?: Observable<Department[]>;
+
   getAll(): Observable<Department[]> {
-    return this.http.get<Department[]>(this.baseUrl);
+    if (!this.allDepartments$) {
+      this.allDepartments$ = this.http.get<Department[]>(this.baseUrl).pipe(
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
+    }
+    return this.allDepartments$;
   }
 
   getByCampus(campusId: number): Observable<Department[]> {
@@ -186,15 +282,25 @@ export class DepartmentService {
   }
 
   create(request: CreateDepartmentRequest): Observable<Department> {
-    return this.http.post<Department>(this.baseUrl, request);
+    return this.http.post<Department>(this.baseUrl, request).pipe(
+      tap(() => this.invalidateCache())
+    );
   }
 
   update(id: number, request: UpdateDepartmentRequest): Observable<Department> {
-    return this.http.put<Department>(`${this.baseUrl}/${id}`, request);
+    return this.http.put<Department>(`${this.baseUrl}/${id}`, request).pipe(
+      tap(() => this.invalidateCache())
+    );
   }
 
   delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+    return this.http.delete<void>(`${this.baseUrl}/${id}`).pipe(
+      tap(() => this.invalidateCache())
+    );
+  }
+
+  invalidateCache(): void {
+    this.allDepartments$ = undefined;
   }
 }
 
@@ -205,8 +311,15 @@ export class ProgramService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/v1/programs`;
 
+  private allPrograms$?: Observable<Program[]>;
+
   getAll(): Observable<Program[]> {
-    return this.http.get<Program[]>(this.baseUrl);
+    if (!this.allPrograms$) {
+      this.allPrograms$ = this.http.get<Program[]>(this.baseUrl).pipe(
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
+    }
+    return this.allPrograms$;
   }
 
   getById(id: number): Observable<Program> {
@@ -218,15 +331,21 @@ export class ProgramService {
   }
 
   create(request: CreateProgramRequest): Observable<Program> {
-    return this.http.post<Program>(this.baseUrl, request);
+    return this.http.post<Program>(this.baseUrl, request).pipe(
+      tap(() => this.invalidateCache())
+    );
   }
 
   update(id: number, request: UpdateProgramRequest): Observable<Program> {
-    return this.http.put<Program>(`${this.baseUrl}/${id}`, request);
+    return this.http.put<Program>(`${this.baseUrl}/${id}`, request).pipe(
+      tap(() => this.invalidateCache())
+    );
   }
 
   delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+    return this.http.delete<void>(`${this.baseUrl}/${id}`).pipe(
+      tap(() => this.invalidateCache())
+    );
   }
 
   getOutcomes(programId: number): Observable<ProgramOutcome[]> {
@@ -240,6 +359,10 @@ export class ProgramService {
   deleteOutcome(id: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/outcomes/${id}`);
   }
+
+  invalidateCache(): void {
+    this.allPrograms$ = undefined;
+  }
 }
 
 @Injectable({
@@ -248,6 +371,8 @@ export class ProgramService {
 export class CourseService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/v1/courses`;
+
+  private activeCourses$?: Observable<Course[]>;
 
   search(search?: string, page = 0, size = 20): Observable<Page<Course>> {
     let params = new HttpParams()
@@ -259,8 +384,23 @@ export class CourseService {
     return this.http.get<Page<Course>>(`${this.baseUrl}/search`, { params });
   }
 
+  searchSlice(search?: string, page = 0, size = 20): Observable<SliceResponse<Course>> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+    if (search && search.trim()) {
+      params = params.set('search', search.trim());
+    }
+    return this.http.get<SliceResponse<Course>>(`${this.baseUrl}/search-slice`, { params });
+  }
+
   getAllActive(): Observable<Course[]> {
-    return this.http.get<Course[]>(`${this.baseUrl}/active`);
+    if (!this.activeCourses$) {
+      this.activeCourses$ = this.http.get<Course[]>(`${this.baseUrl}/active`).pipe(
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
+    }
+    return this.activeCourses$;
   }
 
   getById(id: number): Observable<Course> {
@@ -268,21 +408,33 @@ export class CourseService {
   }
 
   create(request: CreateCourseRequest): Observable<Course> {
-    return this.http.post<Course>(this.baseUrl, request);
+    return this.http.post<Course>(this.baseUrl, request).pipe(
+      tap(() => this.invalidateCache())
+    );
   }
 
   update(id: number, request: UpdateCourseRequest): Observable<Course> {
-    return this.http.put<Course>(`${this.baseUrl}/${id}`, request);
+    return this.http.put<Course>(`${this.baseUrl}/${id}`, request).pipe(
+      tap(() => this.invalidateCache())
+    );
   }
 
   toggleStatus(id: number, active: boolean): Observable<Course> {
     return this.http.patch<Course>(`${this.baseUrl}/${id}/status`, null, {
       params: new HttpParams().set('active', active)
-    });
+    }).pipe(
+      tap(() => this.invalidateCache())
+    );
   }
 
   delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+    return this.http.delete<void>(`${this.baseUrl}/${id}`).pipe(
+      tap(() => this.invalidateCache())
+    );
+  }
+
+  invalidateCache(): void {
+    this.activeCourses$ = undefined;
   }
 }
 
@@ -383,8 +535,15 @@ export class GradingScaleService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/v1/grading-scales`;
 
+  private allGradingScales$?: Observable<GradingScale[]>;
+
   getAll(): Observable<GradingScale[]> {
-    return this.http.get<GradingScale[]>(this.baseUrl);
+    if (!this.allGradingScales$) {
+      this.allGradingScales$ = this.http.get<GradingScale[]>(this.baseUrl).pipe(
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
+    }
+    return this.allGradingScales$;
   }
 
   getById(id: number): Observable<GradingScale> {
@@ -392,15 +551,25 @@ export class GradingScaleService {
   }
 
   create(request: CreateGradingScaleRequest): Observable<GradingScale> {
-    return this.http.post<GradingScale>(this.baseUrl, request);
+    return this.http.post<GradingScale>(this.baseUrl, request).pipe(
+      tap(() => this.invalidateCache())
+    );
   }
 
   update(id: number, request: UpdateGradingScaleRequest): Observable<GradingScale> {
-    return this.http.put<GradingScale>(`${this.baseUrl}/${id}`, request);
+    return this.http.put<GradingScale>(`${this.baseUrl}/${id}`, request).pipe(
+      tap(() => this.invalidateCache())
+    );
   }
 
   delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+    return this.http.delete<void>(`${this.baseUrl}/${id}`).pipe(
+      tap(() => this.invalidateCache())
+    );
+  }
+
+  invalidateCache(): void {
+    this.allGradingScales$ = undefined;
   }
 }
 
@@ -411,26 +580,47 @@ export class FinancialService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/v1`;
 
+  private feeCategories$?: Observable<FeeCategory[]>;
+  private feeCatalog$?: Observable<FeeCatalog[]>;
+  private paymentTermTemplates$?: Observable<PaymentTermTemplate[]>;
+  private scholarships$?: Observable<ScholarshipDiscount[]>;
+
   // Fee Categories
   getFeeCategories(): Observable<FeeCategory[]> {
-    return this.http.get<FeeCategory[]>(`${this.baseUrl}/fee-categories`);
+    if (!this.feeCategories$) {
+      this.feeCategories$ = this.http.get<FeeCategory[]>(`${this.baseUrl}/fee-categories`).pipe(
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
+    }
+    return this.feeCategories$;
   }
 
   createFeeCategory(request: CreateFeeCategoryRequest): Observable<FeeCategory> {
-    return this.http.post<FeeCategory>(`${this.baseUrl}/fee-categories`, request);
+    return this.http.post<FeeCategory>(`${this.baseUrl}/fee-categories`, request).pipe(
+      tap(() => this.invalidateFeeCategoriesCache())
+    );
   }
 
   updateFeeCategory(id: number, request: { name: string }): Observable<FeeCategory> {
-    return this.http.put<FeeCategory>(`${this.baseUrl}/fee-categories/${id}`, request);
+    return this.http.put<FeeCategory>(`${this.baseUrl}/fee-categories/${id}`, request).pipe(
+      tap(() => this.invalidateFeeCategoriesCache())
+    );
   }
 
   deleteFeeCategory(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/fee-categories/${id}`);
+    return this.http.delete<void>(`${this.baseUrl}/fee-categories/${id}`).pipe(
+      tap(() => this.invalidateFeeCategoriesCache())
+    );
   }
 
   // Fee Catalog
   getFeeCatalog(): Observable<FeeCatalog[]> {
-    return this.http.get<FeeCatalog[]>(`${this.baseUrl}/fee-catalog`);
+    if (!this.feeCatalog$) {
+      this.feeCatalog$ = this.http.get<FeeCatalog[]>(`${this.baseUrl}/fee-catalog`).pipe(
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
+    }
+    return this.feeCatalog$;
   }
 
   getFeeCatalogByCategory(categoryId: number): Observable<FeeCatalog[]> {
@@ -438,40 +628,80 @@ export class FinancialService {
   }
 
   createFeeCatalog(request: CreateFeeCatalogRequest): Observable<FeeCatalog> {
-    return this.http.post<FeeCatalog>(`${this.baseUrl}/fee-catalog`, request);
+    return this.http.post<FeeCatalog>(`${this.baseUrl}/fee-catalog`, request).pipe(
+      tap(() => this.invalidateFeeCatalogCache())
+    );
   }
 
   updateFeeCatalog(id: number, request: { name: string; defaultAmount: number; isPerUnit: boolean }): Observable<FeeCatalog> {
-    return this.http.put<FeeCatalog>(`${this.baseUrl}/fee-catalog/${id}`, request);
+    return this.http.put<FeeCatalog>(`${this.baseUrl}/fee-catalog/${id}`, request).pipe(
+      tap(() => this.invalidateFeeCatalogCache())
+    );
   }
 
   deleteFeeCatalog(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/fee-catalog/${id}`);
+    return this.http.delete<void>(`${this.baseUrl}/fee-catalog/${id}`).pipe(
+      tap(() => this.invalidateFeeCatalogCache())
+    );
   }
 
   // Payment Term Templates
   getPaymentTermTemplates(): Observable<PaymentTermTemplate[]> {
-    return this.http.get<PaymentTermTemplate[]>(`${this.baseUrl}/payment-term-templates`);
+    if (!this.paymentTermTemplates$) {
+      this.paymentTermTemplates$ = this.http.get<PaymentTermTemplate[]>(`${this.baseUrl}/payment-term-templates`).pipe(
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
+    }
+    return this.paymentTermTemplates$;
   }
 
   createPaymentTermTemplate(request: CreatePaymentTermTemplateRequest): Observable<PaymentTermTemplate> {
-    return this.http.post<PaymentTermTemplate>(`${this.baseUrl}/payment-term-templates`, request);
+    return this.http.post<PaymentTermTemplate>(`${this.baseUrl}/payment-term-templates`, request).pipe(
+      tap(() => this.invalidatePaymentTemplatesCache())
+    );
   }
 
   deletePaymentTermTemplate(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/payment-term-templates/${id}`);
+    return this.http.delete<void>(`${this.baseUrl}/payment-term-templates/${id}`).pipe(
+      tap(() => this.invalidatePaymentTemplatesCache())
+    );
   }
 
   // Scholarship Discounts
   getScholarships(): Observable<ScholarshipDiscount[]> {
-    return this.http.get<ScholarshipDiscount[]>(`${this.baseUrl}/scholarship-discounts`);
+    if (!this.scholarships$) {
+      this.scholarships$ = this.http.get<ScholarshipDiscount[]>(`${this.baseUrl}/scholarship-discounts`).pipe(
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
+    }
+    return this.scholarships$;
   }
 
   createScholarship(request: CreateScholarshipDiscountRequest): Observable<ScholarshipDiscount> {
-    return this.http.post<ScholarshipDiscount>(`${this.baseUrl}/scholarship-discounts`, request);
+    return this.http.post<ScholarshipDiscount>(`${this.baseUrl}/scholarship-discounts`, request).pipe(
+      tap(() => this.invalidateScholarshipsCache())
+    );
   }
 
   deleteScholarship(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/scholarship-discounts/${id}`);
+    return this.http.delete<void>(`${this.baseUrl}/scholarship-discounts/${id}`).pipe(
+      tap(() => this.invalidateScholarshipsCache())
+    );
+  }
+
+  invalidateFeeCategoriesCache(): void {
+    this.feeCategories$ = undefined;
+  }
+
+  invalidateFeeCatalogCache(): void {
+    this.feeCatalog$ = undefined;
+  }
+
+  invalidatePaymentTemplatesCache(): void {
+    this.paymentTermTemplates$ = undefined;
+  }
+
+  invalidateScholarshipsCache(): void {
+    this.scholarships$ = undefined;
   }
 }

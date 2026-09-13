@@ -1,9 +1,10 @@
 // File: src/app/core/service/financial/financial-api.service.ts
 
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { SliceResponse } from '../../models/institution.model';
 import {
   FeeTemplateDto,
   CreateFeeTemplateRequest,
@@ -60,6 +61,21 @@ export class FinancialApiService {
 
   getReceiptsByStudentProfile(studentProfileId: number): Observable<CashierReceiptDto[]> {
     return this.http.get<CashierReceiptDto[]>(`${this.baseUrl}/receipts/student/${studentProfileId}`);
+  }
+
+  getReceiptsByStudentProfileSlice(
+    studentProfileId: number,
+    page = 0,
+    size = 20,
+    sortBy?: string,
+    sortDir = 'DESC'
+  ): Observable<SliceResponse<CashierReceiptDto>> {
+    let params = new HttpParams().set('page', page.toString()).set('size', size.toString()).set('sortDir', sortDir);
+    if (sortBy) params = params.set('sortBy', sortBy);
+    return this.http.get<SliceResponse<CashierReceiptDto>>(
+      `${this.baseUrl}/receipts/student/${studentProfileId}/slice`,
+      { params }
+    );
   }
 
   generateUnifastClaimBatch(request: CreateUnifastClaimRequest): Observable<UnifastFheClaimDto> {

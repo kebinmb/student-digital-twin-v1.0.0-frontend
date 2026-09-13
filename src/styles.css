@@ -854,7 +854,7 @@ input::placeholder {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  padding: 1.5rem;
+
 }
 
 .page-toolbar-card,
@@ -921,4 +921,4 @@ input::placeholder {
   align-items: center;
   gap: 0.75rem;
   flex-wrap: wrap;
-}
+}

@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, shareReplay, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
   AddCourseToCurriculumRequest,
@@ -21,6 +21,8 @@ import {
 export class CurriculumApiService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/v1/curricula`;
+
+  private lookupOptions$?: Observable<CurriculumLookupOption[]>;
 
   getDesignerView(curriculumId: number): Observable<DesignerViewResponse> {
     return this.http.get<DesignerViewResponse>(`${this.baseUrl}/${curriculumId}/designer`);
@@ -64,15 +66,21 @@ export class CurriculumApiService {
 
   transitionState(curriculumId: number, status: string): Observable<void> {
     const params = new HttpParams().set('status', status);
-    return this.http.post<void>(`${this.baseUrl}/${curriculumId}/transition-state`, {}, { params });
+    return this.http.post<void>(`${this.baseUrl}/${curriculumId}/transition-state`, {}, { params }).pipe(
+      tap(() => this.invalidateCache())
+    );
   }
 
   cloneCurriculum(curriculumId: number, request: CloneCurriculumRequest): Observable<CurriculumSummaryResponse> {
-    return this.http.post<CurriculumSummaryResponse>(`${this.baseUrl}/${curriculumId}/clone`, request);
+    return this.http.post<CurriculumSummaryResponse>(`${this.baseUrl}/${curriculumId}/clone`, request).pipe(
+      tap(() => this.invalidateCache())
+    );
   }
 
   createCurriculum(request: CreateCurriculumRequest): Observable<CurriculumSummaryResponse> {
-    return this.http.post<CurriculumSummaryResponse>(this.baseUrl, request);
+    return this.http.post<CurriculumSummaryResponse>(this.baseUrl, request).pipe(
+      tap(() => this.invalidateCache())
+    );
   }
 
   getCurriculaByProgram(programId: number): Observable<CurriculumSummaryResponse[]> {
@@ -84,7 +92,9 @@ export class CurriculumApiService {
   }
 
   updateCurriculum(id: number, request: { name: string; effectiveAcademicYear: string }): Observable<CurriculumSummaryResponse> {
-    return this.http.put<CurriculumSummaryResponse>(`${this.baseUrl}/${id}`, request);
+    return this.http.put<CurriculumSummaryResponse>(`${this.baseUrl}/${id}`, request).pipe(
+      tap(() => this.invalidateCache())
+    );
   }
 
   getCurriculumCourses(id: number): Observable<any[]> {
@@ -92,10 +102,21 @@ export class CurriculumApiService {
   }
 
   getCurriculumLookupOptions(): Observable<CurriculumLookupOption[]> {
-    return this.http.get<CurriculumLookupOption[]>(`${this.baseUrl}/lookup`);
+    if (!this.lookupOptions$) {
+      this.lookupOptions$ = this.http.get<CurriculumLookupOption[]>(`${this.baseUrl}/lookup`).pipe(
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
+    }
+    return this.lookupOptions$;
   }
 
   deleteCurriculum(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+    return this.http.delete<void>(`${this.baseUrl}/${id}`).pipe(
+      tap(() => this.invalidateCache())
+    );
+  }
+
+  invalidateCache(): void {
+    this.lookupOptions$ = undefined;
   }
 }

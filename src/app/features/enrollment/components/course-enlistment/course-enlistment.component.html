@@ -27,6 +27,7 @@
               size="small"
               severity="success"
               [loading]="store.isEnlisting()"
+              [disabled]="store.advising()?.isClearedForEnrollment === false"
               (onClick)="confirmFinalizeEnrollment()">
             </p-button>
           }

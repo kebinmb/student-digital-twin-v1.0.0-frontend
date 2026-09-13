@@ -23,6 +23,8 @@ import { CurriculumApiService } from '../../../../core/service/curriculum/curric
 
 import { AuthService } from '../../../../core/service/authentication/auth-service';
 import { EnrollmentApiService } from '../../../../core/service/enrollment/enrollment-api.service';
+import { AdmissionApiService } from '../../../../core/service/admission/admission-api.service';
+import { AdmissionApplicationResponse } from '../../../../core/models/admission.model';
 
 
 @Component({
@@ -57,8 +59,10 @@ export class StudentAdvisingComponent implements OnInit {
   private readonly programService = inject(ProgramService);
   private readonly curriculumApi = inject(CurriculumApiService);
   private readonly enrollmentApi = inject(EnrollmentApiService);
+  private readonly admissionApi = inject(AdmissionApiService);
 
 
+  readonly isStudentUser = computed(() => this.authService.hasRole('STUDENT'));
   readonly canAdmitStudent = computed(() => this.authService.hasAnyRole(['ADMIN', 'REGISTRAR']));
   readonly canCreditTransferee = computed(() => this.authService.hasAnyRole(['ADMIN', 'DEAN', 'REGISTRAR']));
 
@@ -74,6 +78,15 @@ export class StudentAdvisingComponent implements OnInit {
   readonly isAdmissionsSubmitted = signal<boolean>(false);
   readonly programOptions = signal<{ label: string; value: number }[]>([]);
   readonly curriculumOptions = signal<{ label: string; value: number }[]>([]);
+  readonly pendingApplications = signal<AdmissionApplicationResponse[]>([]);
+  readonly selectedAdmissionAppId = signal<number | null>(null);
+
+  readonly admissionAppOptions = computed(() => {
+    return this.pendingApplications().map(app => ({
+      label: `${app.applicationNumber} — ${app.fullName} (${app.targetProgramCode || 'Program'})`,
+      value: app.id
+    }));
+  });
 
   readonly admissionsForm = new FormGroup({
     studentNumber: new FormControl<string>('', {
@@ -408,6 +421,7 @@ export class StudentAdvisingComponent implements OnInit {
     const defaultEmail = `${genStudentNumber.toLowerCase().replace('-', '')}@student.university.edu.ph`;
 
     this.isAdmissionsSubmitted.set(false);
+    this.selectedAdmissionAppId.set(null);
     this.admissionsForm.reset({
       studentNumber: genStudentNumber,
       firstName: '',
@@ -421,6 +435,11 @@ export class StudentAdvisingComponent implements OnInit {
     });
 
     this.curriculumOptions.set([]);
+
+    this.admissionApi.getAllApplications().subscribe({
+      next: apps => this.pendingApplications.set(apps || []),
+      error: () => this.pendingApplications.set([])
+    });
 
     this.programService.getAll().subscribe({
       next: programs => {
@@ -436,6 +455,30 @@ export class StudentAdvisingComponent implements OnInit {
     });
 
     this.isAdmissionsDialogVisible.set(true);
+  }
+
+  onImportAdmissionAppChange(appId: number | { value: number } | null): void {
+    const id = typeof appId === 'object' && appId !== null ? appId.value : Number(appId);
+    if (!id) return;
+    this.selectedAdmissionAppId.set(id);
+
+    const app = this.pendingApplications().find(a => a.id === id);
+    if (!app) return;
+
+    this.admissionsForm.patchValue({
+      firstName: app.firstName,
+      lastName: app.lastName,
+      email: app.email || `${app.applicationNumber.toLowerCase().replace(/[^a-z0-9]/g, '')}@student.university.edu.ph`,
+      classification: 'INCOMING_FIRST_YEAR',
+      yearLevel: 1
+    });
+
+    if (app.targetProgramId) {
+      this.admissionsForm.patchValue({ programId: app.targetProgramId });
+      this.onAdmitProgramChange(app.targetProgramId);
+    }
+
+    this.onAdmitNameOrIdChange();
   }
 
   closeAdmissionsDialog(): void {

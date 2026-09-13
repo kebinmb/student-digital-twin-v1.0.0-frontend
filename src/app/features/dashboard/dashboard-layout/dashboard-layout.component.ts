@@ -87,6 +87,7 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
       title: 'Academic Operations',
       items: [
         { label: 'Institutional Registry', icon: 'pi pi-building', routerLink: '/dashboard/institution', roles: ['ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON'] },
+        { label: 'Admission Management', icon: 'pi pi-id-card', routerLink: '/dashboard/admission-management', roles: ['ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'GUIDANCE'] },
         { label: 'Curriculum Designer', icon: 'pi pi-sitemap', routerLink: '/dashboard/curriculum/designer/1', roles: ['ADMIN', 'DEAN', 'CHAIRPERSON'] },
         { label: 'Section & Scheduling', icon: 'pi pi-calendar-plus', routerLink: '/dashboard/scheduling', roles: ['ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON'] },
         { label: 'Enrollment & Advising', icon: 'pi pi-user-plus', routerLink: '/dashboard/enrollment', roles: ['ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'STUDENT'] },

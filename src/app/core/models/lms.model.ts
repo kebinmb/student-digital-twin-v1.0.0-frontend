@@ -20,6 +20,20 @@ export interface LtiDeploymentRequest {
   active?: boolean;
 }
 
+export interface LtiLaunchRequest {
+  clientId: string;
+  deploymentId: string;
+  subClaim: string;
+  idToken: string;
+}
+
+export interface LtiLaunchResponse {
+  redirectUrl: string;
+  token: string;
+  username: string;
+  role: string;
+}
+
 export interface LmsRosterSyncResponse {
   sectionId: number;
   sectionCode: string;

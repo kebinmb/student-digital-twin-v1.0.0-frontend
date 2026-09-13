@@ -1,0 +1,895 @@
+/* ==========================================================================
+   CHMSU INSTITUTIONAL DESIGN SYSTEM - GUEST ADMISSION MODULE STYLES
+   Light Brand Theme aligned with custom-theme.ts & styles.css tokens
+   ========================================================================== */
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+.admission-portal {
+  min-height: 100vh;
+  background-color: var(--chmsu-slate-50, #f8fafc);
+  color: var(--chmsu-navy-900, #0f172a);
+  font-family: var(--font-family-body, Arial, sans-serif);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Institutional Clean Header Bar */
+.portal-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background-color: var(--chmsu-white, #ffffff);
+  border-bottom: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  padding: 0.875rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--chmsu-shadow-subtle, 0 1px 3px rgba(15, 23, 42, 0.04));
+}
+
+.brand-section {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.brand-logo {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  background-color: var(--chmsu-green-main, #116834);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--chmsu-white, #ffffff);
+  font-size: 1.25rem;
+  box-shadow: 0 2px 8px rgba(17, 104, 52, 0.2);
+  border: 1px solid var(--chmsu-green-deep, #0c5027);
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.brand-title {
+  font-family: var(--font-family-heading);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+  margin: 0;
+  letter-spacing: -0.015em;
+}
+
+.brand-subtitle {
+  font-size: 0.75rem;
+  color: var(--chmsu-slate-500, #64748b);
+  margin: 0.15rem 0 0 0;
+}
+
+.portal-tag {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.65rem;
+  border-radius: var(--chmsu-border-radius-sm, 6px);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.login-link {
+  text-decoration: none;
+}
+
+/* Main Content Container */
+.portal-main {
+  flex: 1;
+  max-width: 72rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 2.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Virtual Waiting Room Modal (PrimeNG Dialog) */
+:host ::ng-deep .queue-modal-dialog {
+  width: 100%;
+  max-width: 28rem;
+  border: 1px solid var(--chmsu-slate-300, #cbd5e1);
+  border-radius: var(--chmsu-border-radius-xl, 16px);
+  box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.05);
+  background-color: var(--chmsu-white, #ffffff) !important;
+  color: var(--chmsu-navy-900, #0f172a) !important;
+}
+
+.queue-modal-content {
+  padding: 1rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1.25rem;
+}
+
+.queue-spinner-ring {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 5rem;
+  height: 5rem;
+  border-radius: 9999px;
+  background-color: var(--status-emerald-bg, #ecfdf5);
+  color: var(--chmsu-green-main, #116834);
+  box-shadow: 0 0 0 8px rgba(17, 104, 52, 0.1);
+}
+
+.queue-icon {
+  font-size: 2rem;
+}
+
+.queue-modal-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.queue-modal-title {
+  font-family: var(--font-family-heading);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--chmsu-navy-900, #0f172a);
+  margin: 0;
+}
+
+.queue-modal-subtitle {
+  font-size: 0.8125rem;
+  color: var(--chmsu-slate-600, #475569);
+  margin: 0;
+}
+
+.queue-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  width: 100%;
+  background-color: var(--chmsu-slate-50, #f8fafc);
+  padding: 1rem;
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+}
+
+.queue-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.border-left {
+  border-left: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  padding-left: 1rem;
+}
+
+.stat-label {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--chmsu-slate-500, #64748b);
+}
+
+.stat-value {
+  font-size: 1.875rem;
+  font-weight: 900;
+  font-family: var(--font-family-mono, monospace);
+  margin-top: 0.25rem;
+}
+
+.position-value {
+  color: var(--chmsu-green-main, #116834);
+}
+
+.wait-value {
+  color: var(--chmsu-gold-deep, #b45309);
+}
+
+.queue-progress-bar {
+  width: 100%;
+  height: 0.5rem !important;
+  border-radius: 9999px;
+}
+
+.queue-modal-footer-note {
+  font-size: 0.75rem;
+  color: var(--chmsu-slate-500, #64748b);
+  margin: 0;
+}
+
+/* Card Styling for Wizard, Ticket, and Track Views */
+:host ::ng-deep .shadow-card {
+  box-shadow: var(--chmsu-shadow-card, 0 1px 3px rgba(0, 0, 0, 0.05));
+}
+
+:host ::ng-deep .wizard-card,
+:host ::ng-deep .ticket-card,
+:host ::ng-deep .track-card {
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  background-color: var(--chmsu-white, #ffffff);
+  border-radius: var(--chmsu-border-radius-xl, 16px);
+  overflow: hidden;
+}
+
+.wizard-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  background-color: var(--chmsu-white, #ffffff);
+}
+
+.wizard-header-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.wizard-main-title {
+  font-family: var(--font-family-heading);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--chmsu-navy-900, #0f172a);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.wizard-main-subtitle {
+  font-size: 0.8125rem;
+  color: var(--chmsu-slate-500, #64748b);
+  margin: 0.25rem 0 0 0;
+}
+
+.step-counter-tag {
+  font-size: 0.8125rem;
+  font-weight: 800;
+  padding: 0.35rem 0.85rem;
+  border-radius: var(--chmsu-border-radius-md, 8px);
+}
+
+/* Custom PrimeNG Steps Component Styling Override */
+:host ::ng-deep .custom-steps .p-steps {
+  background: transparent;
+}
+
+:host ::ng-deep .custom-steps .p-steps-item .p-menuitem-link {
+  background: transparent !important;
+  padding: 0.5rem 0;
+}
+
+:host ::ng-deep .custom-steps .p-steps-item .p-steps-number {
+  border-radius: 9999px;
+  font-weight: 800;
+}
+
+/* Wizard Form Body */
+.wizard-form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 0.5rem;
+}
+
+.step-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.step-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  padding-bottom: 0.75rem;
+}
+
+.step-section-title {
+  font-family: var(--font-family-heading);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--chmsu-green-main, #116834);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.required-notice {
+  font-size: 0.75rem;
+  color: var(--chmsu-slate-500, #64748b);
+}
+
+/* Form Controls & Grids */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.form-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-800, #1e293b);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.full-width-input {
+  width: 100%;
+}
+
+.medium-width-input {
+  width: 100%;
+  max-width: 24rem;
+}
+
+.form-row-2 {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .form-row-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.form-row-3 {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .form-row-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.form-row-4 {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .form-row-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .form-row-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-sub-section {
+  border-top: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  padding-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sub-section-title {
+  font-family: var(--font-family-heading);
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+  margin: 0;
+}
+
+/* Statutory Philippine Equity Section */
+.equity-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.equity-box {
+  background-color: var(--chmsu-slate-50, #f8fafc);
+  padding: 1rem;
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.checkbox-label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+  cursor: pointer;
+}
+
+.nested-field {
+  padding-left: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+/* Entrance Exam Slot Booking Grid */
+.slots-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .slots-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.slot-card {
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  background-color: var(--chmsu-slate-50, #f8fafc);
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.slot-card:hover {
+  border-color: var(--chmsu-green-main, #116834);
+  background-color: var(--chmsu-white, #ffffff);
+}
+
+.slot-card-selected {
+  border-color: var(--chmsu-green-main, #116834);
+  background-color: var(--chmsu-green-soft, #f0fdf4);
+  box-shadow: 0 0 0 2px rgba(17, 104, 52, 0.2);
+}
+
+.slot-card-selected .slot-venue-name {
+  color: var(--chmsu-green-deep, #0c5027);
+}
+
+.slot-card-selected .slot-card-footer {
+  color: var(--chmsu-navy-800, #1e293b);
+  border-top-color: var(--chmsu-slate-300, #cbd5e1);
+}
+
+.slot-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.slot-radio-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.slot-venue-name {
+  font-family: var(--font-family-heading);
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--chmsu-navy-900, #0f172a);
+  display: block;
+}
+
+.slot-date-text {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--chmsu-green-main, #116834);
+}
+
+.seats-tag {
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: var(--chmsu-border-radius-sm, 6px);
+}
+
+.slot-card-footer {
+  font-size: 0.75rem;
+  color: var(--chmsu-slate-600, #475569);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  padding-top: 0.75rem;
+}
+
+.time-highlight {
+  font-weight: 700;
+}
+
+/* Wizard Footer Navigation Actions */
+.wizard-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  padding-top: 1.5rem;
+}
+
+.action-btn {
+  padding: 0.65rem 1.5rem;
+  border-radius: var(--chmsu-border-radius-md, 8px) !important;
+}
+
+.submit-btn {
+  background-color: var(--chmsu-green-main, #116834) !important;
+  border-color: var(--chmsu-green-main, #116834) !important;
+  box-shadow: 0 4px 12px rgba(17, 104, 52, 0.25) !important;
+  color: #ffffff !important;
+}
+
+.submit-btn:hover {
+  background-color: var(--chmsu-green-deep, #0c5027) !important;
+  border-color: var(--chmsu-green-deep, #0c5027) !important;
+}
+
+/* Ticket Pass Summary Card */
+.ticket-card-header {
+  background-color: var(--chmsu-green-soft, #f0fdf4);
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--chmsu-green-light, #15803d);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-status-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.status-icon-circle {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 9999px;
+  background-color: var(--chmsu-white, #ffffff);
+  color: var(--chmsu-green-main, #116834);
+  border: 1px solid var(--status-emerald-border, #a7f3d0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.ticket-header-title {
+  font-family: var(--font-family-heading);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--chmsu-green-deep, #0c5027);
+  margin: 0;
+}
+
+.ticket-header-subtitle {
+  font-size: 0.75rem;
+  color: var(--chmsu-slate-600, #475569);
+  margin: 0.25rem 0 0 0;
+}
+
+.verified-pass-tag {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.35rem 0.85rem;
+}
+
+.ticket-card-body {
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.ticket-details-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1.5rem;
+  background-color: var(--chmsu-slate-50, #f8fafc);
+  padding: 1.5rem;
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+}
+
+@media (min-width: 768px) {
+  .ticket-details-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.detail-cell {
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--chmsu-slate-500, #64748b);
+  letter-spacing: 0.05em;
+}
+
+.detail-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--chmsu-navy-900, #0f172a);
+  margin: 0.25rem 0 0 0;
+}
+
+.reference-number {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: var(--chmsu-green-main, #116834);
+  font-family: var(--font-family-mono, monospace);
+  letter-spacing: 0.05em;
+}
+
+.text-highlight {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+}
+
+/* Exam Schedule Banner */
+.exam-pass-banner {
+  background-color: var(--chmsu-green-soft, #f0fdf4);
+  padding: 1.5rem;
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  border: 1px solid var(--chmsu-green-light, #15803d);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.banner-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--status-emerald-border, #a7f3d0);
+  padding-bottom: 0.75rem;
+}
+
+.banner-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--chmsu-green-deep, #0c5027);
+}
+
+.banner-badge {
+  font-size: 0.75rem;
+  font-family: var(--font-family-mono, monospace);
+  color: var(--chmsu-slate-600, #475569);
+}
+
+.banner-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .banner-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.banner-card {
+  background-color: var(--chmsu-white, #ffffff);
+  padding: 0.875rem;
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  display: flex;
+  flex-direction: column;
+}
+
+.banner-card-label {
+  font-size: 0.75rem;
+  color: var(--chmsu-slate-500, #64748b);
+}
+
+.banner-card-value {
+  font-size: 1.125rem;
+  font-weight: 800;
+  margin-top: 0.25rem;
+}
+
+.text-white { color: var(--chmsu-navy-900, #0f172a); }
+.text-sky { color: var(--chmsu-green-main, #116834); }
+.text-amber { color: var(--chmsu-gold-deep, #b45309); }
+
+.ticket-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 0.5rem;
+}
+
+/* Track Application Section */
+.track-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 0.5rem;
+}
+
+.track-card-title {
+  font-family: var(--font-family-heading);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--chmsu-navy-900, #0f172a);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.title-icon {
+  color: var(--chmsu-green-main, #116834);
+}
+
+.track-card-subtitle {
+  font-size: 0.8125rem;
+  color: var(--chmsu-slate-500, #64748b);
+  margin: 0.25rem 0 0 0;
+}
+
+.track-search-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .track-search-row {
+    flex-direction: row;
+  }
+}
+
+.track-input {
+  flex: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 1.125rem;
+  padding: 0.75rem 1rem;
+}
+
+.track-btn {
+  padding: 0.75rem 1.5rem;
+}
+
+.track-result-box {
+  background-color: var(--chmsu-slate-50, #f8fafc);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.result-box-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  padding-bottom: 0.75rem;
+}
+
+.result-details-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1rem;
+  font-size: 0.875rem;
+}
+
+@media (min-width: 768px) {
+  .result-details-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.status-tag {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.35rem 0.85rem;
+}
+
+.full-width-message {
+  width: 100%;
+}
+
+/* Admission Lock Banner Styles */
+.admission-lock-banner {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  padding: 1rem 1.25rem;
+  margin: 1rem 1.5rem 0.5rem 1.5rem;
+}
+
+.lock-banner-title {
+  color: #991b1b;
+  font-size: 1rem;
+}
+
+.lock-banner-text {
+  color: #b91c1c;
+}
+
+/* Print Media Styles */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  
+  .admission-portal,
+  .ticket-card,
+  .ticket-card * {
+    visibility: visible;
+  }
+
+  .portal-header,
+  p-toast,
+  .p-button,
+  .no-print {
+    display: none !important;
+  }
+
+  .ticket-card {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    border: none !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+}

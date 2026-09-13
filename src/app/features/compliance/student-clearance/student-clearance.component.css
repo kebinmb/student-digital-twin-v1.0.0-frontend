@@ -10,58 +10,294 @@
   width: 100%;
 }
 
-.clearance-toolbar-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 1rem;
+/* ==========================================================================
+   UNIFIED QUERY & FILTER SURFACE
+   ========================================================================== */
+
+.filter-surface {
   background: var(--chmsu-white, #ffffff);
   border: 1px solid var(--chmsu-slate-200, #e2e8f0);
   border-radius: var(--chmsu-border-radius-lg, 12px);
-  padding: 1rem 1.25rem;
+  padding: 1.25rem 1.5rem;
   box-shadow: var(--chmsu-shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
 }
 
-.clearance-filter-card {
-  background: var(--chmsu-white, #ffffff);
+.filter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.875rem;
+  border-bottom: 1px solid var(--chmsu-slate-100, #f1f5f9);
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.filter-header-title-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.filter-eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--chmsu-slate-400, #94a3b8);
+}
+
+.filter-title {
+  margin: 0.15rem 0 0 0;
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: var(--font-family-heading);
+  color: var(--chmsu-navy-900, #0f172a);
+  letter-spacing: -0.01em;
+}
+
+.active-term-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: var(--chmsu-slate-50, #f8fafc);
   border: 1px solid var(--chmsu-slate-200, #e2e8f0);
-  border-radius: var(--chmsu-border-radius-md, 8px);
-  padding: 1.25rem;
-  box-shadow: var(--chmsu-shadow-card);
+  border-radius: 9999px;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.75rem;
 }
 
-.clearance-filter-grid {
+.term-pill-label {
+  color: var(--chmsu-slate-500, #64748b);
+  font-weight: 600;
+}
+
+.term-pill-val {
+  color: var(--chmsu-navy-900, #0f172a);
+  font-weight: 700;
+}
+
+.term-pill-lock {
+  display: flex;
+  align-items: center;
+  color: var(--chmsu-slate-400, #94a3b8);
+  margin-left: 0.2rem;
+  cursor: help;
+}
+
+.filter-grid-layout {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1rem;
+  grid-template-columns: minmax(320px, 2fr) minmax(240px, 1.3fr) auto;
+  gap: 1.25rem;
   align-items: flex-end;
 }
 
-@media (max-width: 992px) {
-  .clearance-filter-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+@media (max-width: 1080px) {
+  .filter-grid-layout {
+    grid-template-columns: 1fr 1fr;
+  }
+  .filter-actions-cell {
+    grid-column: span 2;
+    justify-content: flex-end;
   }
 }
 
 @media (max-width: 640px) {
-  .clearance-filter-grid {
+  .filter-grid-layout {
     grid-template-columns: 1fr;
+  }
+  .filter-actions-cell {
+    grid-column: span 1;
+    flex-direction: column;
+  }
+  .filter-actions-cell .query-btn {
+    width: 100%;
   }
 }
 
-.actions-col {
+.filter-field-cell {
   display: flex;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.field-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-800, #1e293b);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+/* Student Readonly Card */
+.identity-card-readonly {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--chmsu-slate-50, #f8fafc);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  padding: 0.55rem 0.85rem;
+  min-height: 42px;
+}
+
+.identity-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--chmsu-green-soft, #f0fdf4);
+  border: 1px solid var(--status-emerald-border, #a7f3d0);
+  flex-shrink: 0;
+  font-size: 0.8125rem;
+}
+
+.identity-details {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.identity-name {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+}
+
+.identity-meta {
+  font-size: 0.6875rem;
+  color: var(--chmsu-slate-500, #64748b);
+  display: flex;
   align-items: center;
 }
+
+/* Custom PrimeNG Form Controls */
+::ng-deep .custom-select-trigger {
+  width: 100% !important;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--chmsu-slate-300, #cbd5e1) !important;
+  border-radius: var(--chmsu-border-radius-md, 8px) !important;
+  background: #ffffff !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+::ng-deep .custom-select-trigger:not(.p-disabled):hover {
+  border-color: var(--chmsu-slate-400, #94a3b8) !important;
+}
+
+::ng-deep .custom-select-trigger.p-focus {
+  border-color: var(--chmsu-green-main, #116834) !important;
+  box-shadow: 0 0 0 3px rgba(17, 104, 52, 0.12) !important;
+}
+
+.select-item-selected {
+  display: flex;
+  align-items: center;
+  font-size: 0.8125rem;
+}
+
+.suggestion-item-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.35rem 0.25rem;
+}
+
+.suggestion-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: var(--chmsu-slate-100, #f1f5f9);
+  flex-shrink: 0;
+  font-size: 0.875rem;
+}
+
+.suggestion-text {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.suggestion-name {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+}
+
+.suggestion-id {
+  font-size: 0.725rem;
+  color: var(--chmsu-slate-500, #64748b);
+}
+
+.suggestion-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.status-tag-compact {
+  font-size: 0.6875rem !important;
+  padding: 0.15rem 0.45rem !important;
+  font-weight: 700 !important;
+}
+
+.purpose-pill {
+  display: flex;
+  align-items: center;
+  font-size: 0.8125rem;
+}
+
+.purpose-option-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 0.8125rem;
+  color: var(--chmsu-navy-800, #1e293b);
+}
+
+.filter-actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  height: 42px;
+}
+
+.query-btn {
+  height: 42px;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.full-width-input {
+  width: 100% !important;
+}
+
+/* ==========================================================================
+   LOADING & SKELETON STATES
+   ========================================================================== */
 
 .clearance-loading-card {
   background: var(--chmsu-white, #ffffff);
   border: 1px solid var(--chmsu-slate-200, #e2e8f0);
-  border-radius: var(--chmsu-border-radius-md, 8px);
+  border-radius: var(--chmsu-border-radius-lg, 12px);
   padding: 1.5rem;
 }
+
+/* ==========================================================================
+   CLEARANCE OVERVIEW & METRICS
+   ========================================================================== */
 
 .clearance-overview-section {
   width: 100%;
@@ -77,7 +313,7 @@
 
 .overview-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 1.25rem;
@@ -93,20 +329,23 @@
   font-size: 0.6875rem;
   font-weight: 700;
   color: var(--chmsu-slate-500, #64748b);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .req-student-name {
   font-size: 1.35rem;
   font-weight: 700;
+  font-family: var(--font-family-heading);
   color: var(--chmsu-green-main, #116834);
-  margin: 0.15rem 0 0 0;
+  margin: 0.25rem 0 0 0;
+  letter-spacing: -0.015em;
 }
 
 .req-sub-info {
   font-size: 0.8125rem;
-  color: var(--chmsu-slate-500, #64748b);
-  margin: 0.25rem 0 0 0;
+  color: var(--chmsu-slate-600, #475569);
+  margin: 0.35rem 0 0 0;
 }
 
 .highlight-text {
@@ -115,51 +354,172 @@
 }
 
 ::ng-deep .status-badge-lg {
-  font-size: 0.9375rem !important;
-  padding: 0.35rem 0.85rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 700 !important;
+  padding: 0.4rem 0.9rem !important;
 }
 
+.clearance-metric-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .clearance-metric-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.metric-card {
+  background: var(--chmsu-slate-50, #f8fafc);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  padding: 0.875rem 1rem;
+}
+
+.metric-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--chmsu-slate-500, #64748b);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.metric-value-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0.35rem 0 0.5rem 0;
+}
+
+.metric-number {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+  font-family: var(--font-family-heading);
+}
+
+.metric-badge {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--chmsu-green-main, #116834);
+  background: var(--status-emerald-bg, #ecfdf5);
+  border: 1px solid var(--status-emerald-border, #a7f3d0);
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+}
+
+::ng-deep .clearance-progress-bar {
+  height: 6px !important;
+  background: var(--chmsu-slate-200, #e2e8f0) !important;
+}
+
+::ng-deep .clearance-progress-bar .p-progressbar-value {
+  background: var(--chmsu-green-main, #116834) !important;
+}
+
+.status-indicator {
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+}
+
+/* ==========================================================================
+   DEPARTMENT SIGN-OFF LEDGER TABLE
+   ========================================================================== */
+
 .timeline-section {
-  padding-top: 1rem;
+  padding-top: 1.25rem;
   border-top: 1px solid var(--chmsu-slate-200, #e2e8f0);
 }
 
+.table-header-row {
+  margin-bottom: 1rem;
+}
+
 .section-title {
-  font-size: 1.125rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-family: var(--font-family-heading);
+  color: var(--chmsu-navy-900, #0f172a);
+  margin: 0;
+}
+
+.section-subtitle {
+  font-size: 0.75rem;
+  color: var(--chmsu-slate-500, #64748b);
+  margin: 0.15rem 0 0 0;
+}
+
+.dept-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dept-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: var(--chmsu-slate-100, #f1f5f9);
+  color: var(--chmsu-green-main, #116834);
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.dept-name-block {
+  display: flex;
+  flex-direction: column;
+}
+
+.dept-title {
   font-weight: 700;
   color: var(--chmsu-navy-900, #0f172a);
-  margin: 0 0 1rem 0;
 }
 
-.view-only-text {
-  font-size: 0.8125rem;
+.dept-role-subtext {
+  font-size: 0.6875rem;
   color: var(--chmsu-slate-500, #64748b);
-  font-style: italic;
 }
 
-.radio-option-group {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-  margin-top: 0.25rem;
-}
-
-.radio-option {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.radio-label {
+.remarks-text {
+  color: var(--chmsu-navy-800, #1e293b);
   font-size: 0.8125rem;
-  font-weight: 700;
-  cursor: pointer;
 }
 
-.radio-label.text-green { color: var(--status-emerald-text, #047857); }
-.radio-label.text-red { color: #dc2626; }
+.signatory-text {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--chmsu-navy-800, #1e293b);
+}
 
-.full-width-input,
-::ng-deep .full-width-select {
-  width: 100% !important;
+.date-text {
+  font-size: 0.75rem;
+  color: var(--chmsu-slate-500, #64748b);
+}
+
+.view-only-tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--chmsu-slate-500, #64748b);
+  background: var(--chmsu-slate-100, #f1f5f9);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+/* ==========================================================================
+   DIALOG
+   ========================================================================== */
+
+.dialog-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }

@@ -14,10 +14,11 @@ export function resetInterceptorState(): void {
 export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, next: HttpHandlerFn) => {
   const authService = inject(AuthService);
   const token = authService.accessToken();
+  const isPublicApi = req.url.includes('/api/public') || req.url.includes('/api/v1/public');
 
-  // Attach token if available and not hitting public auth endpoints
+  // Attach token if available and not hitting public endpoints
   let authReq = req;
-  if (token && !req.url.includes('/api/public/auth')) {
+  if (token && !isPublicApi) {
     authReq = req.clone({
       setHeaders: { Authorization: `Bearer ${token}` }
     });
@@ -25,8 +26,8 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
 
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      // Intercept 401s on protected endpoints
-      if (error.status === 401 && !req.url.includes('/api/public/auth')) {
+      // Intercept 401s on protected endpoints only
+      if (error.status === 401 && !isPublicApi) {
         return handle401Error(authReq, next, authService);
       }
       return throwError(() => error);

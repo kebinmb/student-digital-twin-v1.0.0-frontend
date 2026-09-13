@@ -1,3 +1,5 @@
+/* File: src/app/features/compliance/student-advising/student-advising.component.css */
+
 .advising-container {
   display: flex;
   flex-direction: column;
@@ -6,16 +8,16 @@
 }
 
 .header-icon-emerald {
-  color: var(--p-primary-600, #116834);
+  color: var(--chmsu-green-main, #116834);
 }
 
 .clearance-lock-alert {
-  padding: 0.75rem;
+  padding: 0.75rem 1rem;
   margin-top: 0.75rem;
-  border-radius: 8px;
-  background-color: var(--p-amber-50, #fffbeb);
-  border: 1px solid var(--p-amber-300, #fcd34d);
-  color: var(--p-amber-900, #78350f);
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  background-color: var(--status-amber-bg, #fffbeb);
+  border: 1px solid var(--status-amber-border, #fde68a);
+  color: var(--status-amber-text, #b45309);
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -23,32 +25,35 @@
 
 .lock-icon {
   font-size: 1.25rem;
-  color: var(--p-amber-700, #b45309);
+  color: var(--chmsu-gold-main, #d97706);
+  flex-shrink: 0;
 }
 
 .lock-text {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   margin-left: 0.25rem;
+  line-height: 1.4;
 }
 
 .header-card {
   background: var(--chmsu-white, #ffffff);
   border: 1px solid var(--chmsu-slate-200, #e2e8f0);
-  border-radius: 12px;
+  border-radius: var(--chmsu-border-radius-lg, 12px);
   padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--chmsu-shadow-card);
 }
 
 .header-main {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 1.5rem;
+  gap: 1.25rem;
   flex-wrap: wrap;
 }
 
 .header-title-area {
   flex: 1;
+  min-width: 280px;
 }
 
 .module-title {
@@ -83,9 +88,9 @@
 .filter-strip-card {
   background: var(--chmsu-white, #ffffff);
   border: 1px solid var(--chmsu-slate-200, #e2e8f0);
-  border-radius: 12px;
+  border-radius: var(--chmsu-border-radius-lg, 12px);
   padding: 1rem 1.25rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--chmsu-shadow-card);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -100,23 +105,14 @@
   flex-wrap: wrap;
 }
 
-.filter-strip-status {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.student-switcher-box {
+  width: 20rem;
+  max-width: 100%;
 }
 
-.selected-student-badge {
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-}
-
-.status-dot {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background-color: var(--status-emerald-text, #047857);
-  display: inline-block;
-  flex-shrink: 0;
+.term-selector-box {
+  width: 16rem;
+  max-width: 100%;
 }
 
 /* Student Selector Collision Prevention */
@@ -126,7 +122,6 @@
   gap: 0.5rem;
   width: 100%;
   min-width: 0;
-  padding-right: 1.25rem;
 }
 
 .student-item-icon {
@@ -146,28 +141,15 @@
   flex-shrink: 0;
 }
 
-.student-option-item {
-  width: 100%;
-}
-
-.selector-label {
-  display: block;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--chmsu-navy-800, #1e293b);
-  margin-bottom: 0.25rem;
-  text-transform: uppercase;
-  letter-spacing: 0.025em;
-}
-
+/* Student Meta Information Grid */
 .student-meta-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 1rem;
   padding: 1rem;
-  background: var(--p-surface-50, #f8fafc);
-  border-radius: 8px;
-  border: 1px solid var(--p-surface-200, #e2e8f0);
+  background: var(--chmsu-slate-50, #f8fafc);
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
 }
 
 .meta-item {
@@ -180,15 +162,16 @@
   font-size: 0.6875rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--p-surface-500, #64748b);
-  font-weight: 600;
+  color: var(--chmsu-slate-500, #64748b);
+  font-weight: 700;
 }
 
 .meta-val {
   font-size: 0.875rem;
-  color: var(--p-surface-900, #0f172a);
+  color: var(--chmsu-navy-900, #0f172a);
 }
 
+/* Unit Cap Metric Container */
 .unit-cap-container {
   display: flex;
   flex-direction: column;
@@ -199,23 +182,21 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
 }
 
 .unit-text {
-  color: var(--p-surface-700, #374151);
+  color: var(--chmsu-navy-700, #334155);
 }
 
-.text-xs {
-  font-size: 0.75rem;
+.unit-percentage {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--chmsu-green-main, #116834);
 }
 
 .text-muted {
-  color: var(--p-surface-500, #6b7280);
-}
-
-.text-danger {
-  color: #dc2626;
+  color: var(--chmsu-slate-500, #64748b);
 }
 
 .cap-danger {
@@ -223,11 +204,11 @@
   font-weight: 700;
 }
 
-/* Progress Bar Heights & Institutional Colors */
+/* Progress Bar Overrides */
 :host ::ng-deep .p-progressbar {
-  height: 0.625rem !important; /* 10px / h-2.5 */
+  height: 8px !important;
   border-radius: 9999px !important;
-  background-color: var(--p-surface-200, #e2e8f0) !important;
+  background-color: var(--chmsu-slate-200, #e2e8f0) !important;
   overflow: hidden;
 }
 
@@ -237,19 +218,20 @@
 }
 
 :host ::ng-deep .unit-bar-normal .p-progressbar-value {
-  background-color: var(--p-primary-color, #116834) !important;
+  background-color: var(--chmsu-green-main, #116834) !important;
 }
 
 :host ::ng-deep .unit-bar-full .p-progressbar-value {
   background-color: #dc2626 !important;
 }
 
+/* Checklist Card & Table Layout */
 .checklist-card {
   background: var(--chmsu-white, #ffffff);
   border: 1px solid var(--chmsu-slate-200, #e2e8f0);
-  border-radius: 12px;
+  border-radius: var(--chmsu-border-radius-lg, 12px);
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--chmsu-shadow-card);
 }
 
 .card-header {
@@ -308,27 +290,27 @@
 }
 
 .prereq-chip.satisfied {
-  background: #ecfdf5;
-  color: #065f46;
-  border: 1px solid #a7f3d0;
+  background: var(--status-emerald-bg, #ecfdf5);
+  color: var(--status-emerald-text, #047857);
+  border: 1px solid var(--status-emerald-border, #a7f3d0);
 }
 
 .prereq-chip.unsatisfied {
-  background: #fef2f2;
-  color: #991b1b;
-  border: 1px solid #fecaca;
+  background: var(--status-rose-bg, #fef2f2);
+  color: var(--status-rose-text, #b91c1c);
+  border: 1px solid var(--status-rose-border, #fecaca);
 }
 
 .section-count-tag {
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--p-surface-700, #374151);
-  background: var(--p-surface-100, #f3f4f6);
+  color: var(--chmsu-navy-800, #1e293b);
+  background: var(--chmsu-slate-100, #f1f5f9);
   padding: 0.25rem 0.5rem;
-  border-radius: 6px;
+  border-radius: 4px;
 }
 
-/* Form Controls & Inputs Best Practices */
+/* Filter Controls Inside Table Header */
 .search-filter-container {
   display: flex;
   align-items: center;
@@ -336,15 +318,14 @@
   flex-wrap: wrap;
 }
 
-/* Prerequisite Status Quick Tab Pill Selector */
 .status-tab-group {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  background-color: var(--p-surface-100, #f1f5f9);
+  background-color: var(--chmsu-slate-100, #f1f5f9);
   padding: 0.25rem;
   border-radius: 8px;
-  border: 1px solid var(--p-surface-300, #cbd5e1);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
   height: 2.5rem;
 }
 
@@ -358,27 +339,22 @@
   border-radius: 6px;
   border: none;
   background: transparent;
-  color: var(--p-surface-600, #475569);
+  color: var(--chmsu-slate-600, #475569);
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
-  font-family: inherit;
 }
 
 .status-tab-btn:hover {
-  color: var(--p-surface-900, #0f172a);
-  background-color: rgba(0, 0, 0, 0.05);
+  color: var(--chmsu-navy-900, #0f172a);
+  background-color: rgba(0, 0, 0, 0.04);
 }
 
 .status-tab-btn.active {
   background-color: #ffffff;
-  color: var(--p-primary-color, #116834);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  color: var(--chmsu-green-main, #116834);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
   font-weight: 700;
-}
-
-.status-tab-btn.active:has(.count-badge.passed) {
-  color: #1d4ed8;
 }
 
 .count-badge {
@@ -393,32 +369,30 @@
 }
 
 .count-badge.eligible {
-  background-color: #ecfdf5;
-  color: #065f46;
-  border: 1px solid #a7f3d0;
+  background-color: var(--status-emerald-bg, #ecfdf5);
+  color: var(--status-emerald-text, #047857);
+  border: 1px solid var(--status-emerald-border, #a7f3d0);
 }
 
 .count-badge.passed {
-  background-color: #eff6ff;
-  color: #1e40af;
-  border: 1px solid #bfdbfe;
+  background-color: var(--status-blue-bg, #f0f9ff);
+  color: var(--status-blue-text, #0369a1);
+  border: 1px solid var(--status-blue-border, #bae6fd);
 }
 
 .count-badge.all {
-  background-color: var(--p-surface-200, #e2e8f0);
-  color: var(--p-surface-700, #334155);
+  background-color: var(--chmsu-slate-200, #e2e8f0);
+  color: var(--chmsu-navy-700, #334155);
 }
 
+/* Control Inputs Uniform Heights */
 :host ::ng-deep .search-filter-input,
 :host ::ng-deep .status-filter-select,
 :host ::ng-deep .student-switcher-box .p-select,
 :host ::ng-deep .term-selector-box .p-select {
-  height: 2.5rem !important; /* h-10 / 40px */
-  border-radius: 8px !important;
-  border: 1px solid var(--p-surface-300, #cbd5e1) !important;
-  background-color: #ffffff !important;
+  height: 2.5rem !important;
+  border-radius: var(--chmsu-border-radius-md, 8px) !important;
   font-size: 0.8125rem !important;
-  box-shadow: none !important;
 }
 
 :host ::ng-deep .p-iconfield {
@@ -431,9 +405,9 @@
 :host ::ng-deep .p-inputicon {
   position: absolute !important;
   left: 0.75rem !important;
-  top: 50% !important;
-  /* transform: translateY(-50%) !important; */
-  color: var(--p-surface-400, #94a3b8) !important;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--chmsu-slate-400, #94a3b8) !important;
   font-size: 0.875rem !important;
   pointer-events: none !important;
   z-index: 2 !important;
@@ -444,148 +418,7 @@
   width: 100% !important;
 }
 
-:host ::ng-deep .search-filter-input:focus {
-  border-color: var(--p-primary-color, #116834) !important;
-  box-shadow: 0 0 0 3px rgba(17, 104, 52, 0.15) !important;
-}
-
-:host ::ng-deep .status-filter-select .p-select-label,
-:host ::ng-deep .p-select .p-select-label {
-  display: flex !important;
-  align-items: center !important;
-  padding: 0 0.75rem !important;
-  font-size: 0.8125rem !important;
-  font-weight: 500 !important;
-  height: 2.5rem !important;
-}
-
-:host ::ng-deep .p-select:focus,
-:host ::ng-deep .p-select.p-focus {
-  border-color: var(--p-primary-color, #116834) !important;
-  box-shadow: 0 0 0 3px rgba(17, 104, 52, 0.15) !important;
-}
-
-/* Select Overlay & Dropdown Panel Styling */
-:host ::ng-deep .p-select-overlay,
-:host ::ng-deep .p-dropdown-panel {
-  border-radius: 10px !important;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
-  border: 1px solid var(--p-surface-200, #cbd5e1) !important;
-  overflow: hidden;
-  background-color: #ffffff !important;
-  z-index: 1100 !important;
-}
-
-:host ::ng-deep .p-select-header,
-:host ::ng-deep .p-dropdown-header {
-  padding: 0.5rem 0.75rem !important;
-  background-color: var(--p-surface-50, #f8fafc) !important;
-  border-bottom: 1px solid var(--p-surface-200, #e2e8f0) !important;
-}
-
-/* Filter Input Box Inside Dropdown Overlay */
-:host ::ng-deep .p-select-filter-container,
-:host ::ng-deep .p-dropdown-filter-container {
-  position: relative !important;
-  width: 100% !important;
-  display: flex !important;
-  align-items: center !important;
-}
-
-:host ::ng-deep .p-select-filter,
-:host ::ng-deep .p-dropdown-filter {
-  height: 2.25rem !important;
-  font-size: 0.8125rem !important;
-  font-family: var(--font-family-body, Arial, sans-serif) !important;
-  border-radius: 6px !important;
-  border: 1px solid var(--p-surface-300, #cbd5e1) !important;
-  background-color: #ffffff !important;
-  padding-left: 2rem !important;
-  padding-right: 0.75rem !important;
-  width: 100% !important;
-  box-shadow: none !important;
-  outline: none !important;
-  transition: all 0.15s ease;
-}
-
-:host ::ng-deep .p-select-filter:focus,
-:host ::ng-deep .p-dropdown-filter:focus {
-  border-color: var(--p-primary-color, #116834) !important;
-  box-shadow: 0 0 0 2px rgba(17, 104, 52, 0.15) !important;
-}
-
-:host ::ng-deep .p-select-filter-icon,
-:host ::ng-deep .p-dropdown-filter-icon {
-  position: absolute !important;
-  left: 0.625rem !important;
-  right: auto !important;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-  color: var(--p-surface-400, #94a3b8) !important;
-  font-size: 0.8125rem !important;
-  pointer-events: none !important;
-}
-
-:host ::ng-deep .p-paginator {
-  background: transparent;
-  border-top: 1px solid var(--p-surface-200, #e5e7eb);
-  padding: 0.75rem;
-  font-family: var(--font-family-body) !important;
-  font-size: 0.8125rem;
-}
-
-/* Advising Notice Banner p-message Full Width Rules */
-:host ::ng-deep p-message.w-full,
-:host ::ng-deep .p-message {
-  width: 100% !important;
-  display: flex !important;
-}
-
-:host ::ng-deep .p-message .p-message-content {
-  display: flex !important;
-  align-items: flex-start !important;
-  gap: 0.5rem !important;
-}
-
-/* ==========================================================================
-   ADMISSIONS & TRANSFEREE CREDITING DIALOG STYLES
-   ========================================================================== */
-
-.form-row-2col {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-@media (max-width: 640px) {
-  .form-row-2col {
-    grid-template-columns: 1fr;
-    gap: 0.875rem;
-  }
-}
-
-.form-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.form-label,
-.form-field-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--chmsu-navy-800, #1e293b);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  margin-bottom: 0.25rem;
-}
-
-.required-star {
-  color: #dc2626;
-  font-weight: 700;
-}
-
-/* Dynamic Classification Alert Banners */
+/* Dynamic Classification Alerts */
 .classification-alert-transferee {
   background-color: var(--status-amber-bg, #fffbeb);
   border: 1px solid var(--status-amber-border, #fde68a);
@@ -600,8 +433,8 @@
 
 /* Interactive Equivalency Preview Card */
 .equivalency-preview-card {
-  border-radius: 8px;
-  background-color: #f8fafc;
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  background-color: var(--chmsu-slate-50, #f8fafc);
   border: 1px solid var(--chmsu-slate-200, #e2e8f0);
 }
 
@@ -626,13 +459,21 @@
   font-family: var(--font-family-mono);
 }
 
-.badge-green {
-  display: inline-flex;
+.flow-arrow {
+  display: flex;
   align-items: center;
-  background-color: var(--status-emerald-bg, #ecfdf5);
-  border: 1px solid var(--status-emerald-border, #a7f3d0);
-  color: var(--status-emerald-text, #047857);
-  font-weight: 700;
+  justify-content: center;
+  color: var(--chmsu-green-main, #116834);
+}
+
+.prerequisite-impact-box {
+  background-color: var(--chmsu-green-soft, #f0fdf4);
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
 }
 
 /* Empty State Card */
@@ -654,9 +495,9 @@
   width: 4rem;
   height: 4rem;
   border-radius: 50%;
-  background: #f1f5f9;
-  border: 2px dashed #cbd5e1;
-  color: #94a3b8;
+  background: var(--chmsu-slate-100, #f1f5f9);
+  border: 2px dashed var(--chmsu-slate-300, #cbd5e1);
+  color: var(--chmsu-slate-400, #94a3b8);
   font-size: 1.5rem;
   margin: 0 auto 0.75rem auto;
 }
@@ -702,70 +543,6 @@
 .empty-state-link-btn i {
   font-size: 0.6875rem;
   flex-shrink: 0;
-}
-
-/* Responsive Layout Adaptations */
-@media (max-width: 768px) {
-  .header-main {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-
-  .header-actions {
-    width: 100%;
-    justify-content: flex-start;
-  }
-
-  .header-actions .p-button {
-    flex: 1;
-  }
-
-  .filter-strip-card {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 1rem;
-  }
-
-  .filter-controls-group {
-    flex-direction: column;
-    align-items: stretch;
-    width: 100%;
-  }
-
-  .student-switcher-box,
-  .term-selector-box {
-    width: 100% !important;
-  }
-}
-
-/* ==========================================================================
-   INSTITUTIONAL MODAL DIALOG STYLES (00 AI Index Standards)
-   ========================================================================== */
-
-:host ::ng-deep .institutional-dialog .p-dialog {
-  border-radius: 12px !important;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
-  border: 1px solid var(--chmsu-slate-200, #e2e8f0) !important;
-  overflow: hidden;
-}
-
-:host ::ng-deep .institutional-dialog .p-dialog-header {
-  padding: 1.25rem 1.5rem !important;
-  border-bottom: 1px solid var(--chmsu-slate-200, #e2e8f0) !important;
-  background-color: #ffffff !important;
-}
-
-:host ::ng-deep .institutional-dialog .p-dialog-content {
-  padding: 1.25rem 1.5rem !important;
-  background-color: #ffffff !important;
-  overflow-y: auto !important;
-}
-
-:host ::ng-deep .institutional-dialog .p-dialog-footer {
-  padding: 1rem 1.5rem !important;
-  border-top: 1px solid var(--chmsu-slate-200, #e2e8f0) !important;
-  background-color: var(--p-surface-50, #f8fafc) !important;
 }
 
 /* Modal Custom Header Layout */
@@ -832,7 +609,7 @@
 
 .context-tile {
   padding: 0.75rem 1rem;
-  background-color: var(--p-surface-50, #f8fafc);
+  background-color: var(--chmsu-slate-50, #f8fafc);
   border: 1px solid var(--chmsu-slate-200, #e2e8f0);
   border-radius: 8px;
   display: flex;
@@ -878,7 +655,7 @@
 
 :host ::ng-deep .section-table .p-datatable-header,
 :host ::ng-deep .section-table th {
-  background-color: var(--p-surface-50, #f8fafc) !important;
+  background-color: var(--chmsu-slate-50, #f8fafc) !important;
   font-size: 0.75rem !important;
   text-transform: uppercase !important;
   letter-spacing: 0.03em !important;
@@ -954,9 +731,9 @@
   padding: 0.125rem 0.375rem;
   font-size: 0.6875rem;
   font-weight: 700;
-  background-color: #f1f5f9;
-  color: #334155;
-  border: 1px solid #cbd5e1;
+  background-color: var(--chmsu-slate-100, #f1f5f9);
+  color: var(--chmsu-navy-800, #1e293b);
+  border: 1px solid var(--chmsu-slate-300, #cbd5e1);
   border-radius: 4px;
   text-transform: uppercase;
 }
@@ -990,27 +767,27 @@
 .badge-open-seats {
   font-size: 0.6875rem;
   font-weight: 600;
-  color: #047857;
-  background-color: #ecfdf5;
+  color: var(--status-emerald-text, #047857);
+  background-color: var(--status-emerald-bg, #ecfdf5);
   padding: 0.0625rem 0.375rem;
   border-radius: 4px;
-  border: 1px solid #a7f3d0;
+  border: 1px solid var(--status-emerald-border, #a7f3d0);
 }
 
 .badge-full-seats {
   font-size: 0.6875rem;
   font-weight: 700;
   color: #dc2626;
-  background-color: #fef2f2;
+  background-color: var(--status-rose-bg, #fef2f2);
   padding: 0.0625rem 0.375rem;
   border-radius: 4px;
-  border: 1px solid #fecaca;
+  border: 1px solid var(--status-rose-border, #fecaca);
 }
 
 .capacity-progress-track {
   height: 6px;
   width: 100%;
-  background-color: #e2e8f0;
+  background-color: var(--chmsu-slate-200, #e2e8f0);
   border-radius: 9999px;
   overflow: hidden;
   position: relative;
@@ -1031,20 +808,37 @@
   background-color: #dc2626;
 }
 
-/* Equivalency Live Flow Arrow & Prerequisite Impact Box */
-.flow-arrow {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.125rem;
-}
+/* Responsive Layout Adaptations */
+@media (max-width: 768px) {
+  .header-main {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
 
-.prerequisite-impact-box {
-  background-color: var(--chmsu-green-soft, #f0fdf4);
-  border: 1px solid #bbf7d0;
-  border-radius: 8px;
-  padding: 0.75rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .header-actions .p-button {
+    flex: 1;
+  }
+
+  .filter-strip-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .filter-controls-group {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .student-switcher-box,
+  .term-selector-box {
+    width: 100% !important;
+  }
 }

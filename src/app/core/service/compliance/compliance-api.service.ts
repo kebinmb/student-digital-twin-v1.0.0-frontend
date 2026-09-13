@@ -7,6 +7,7 @@ import { environment } from '../../../../environments/environment';
 import {
   ClearanceRequestDto,
   ClearanceSignoffDto,
+  ClearanceStudentSuggestionDto,
   InitiateClearanceRequest,
   ProcessSignoffRequest,
   DegreeAuditResultDto,
@@ -30,8 +31,8 @@ export class ComplianceApiService {
     return this.http.post<ClearanceRequestDto>(`${this.baseUrl}/clearance/requests`, request);
   }
 
-  getClearanceByStudentAndTerm(studentProfileId: number, termId: number): Observable<ClearanceRequestDto> {
-    return this.http.get<ClearanceRequestDto>(`${this.baseUrl}/clearance/requests/student/${studentProfileId}/term/${termId}`);
+  getClearanceByStudentAndTerm(studentIdentifier: string | number, termId: number): Observable<ClearanceRequestDto> {
+    return this.http.get<ClearanceRequestDto>(`${this.baseUrl}/clearance/requests/student/${studentIdentifier}/term/${termId}`);
   }
 
   getClearanceById(id: number): Observable<ClearanceRequestDto> {
@@ -44,6 +45,10 @@ export class ComplianceApiService {
 
   getPendingSignoffsByDepartment(departmentType: string): Observable<ClearanceSignoffDto[]> {
     return this.http.get<ClearanceSignoffDto[]>(`${this.baseUrl}/clearance/signoffs/pending/${departmentType}`);
+  }
+
+  getClearanceStudentSuggestions(query: string = ''): Observable<ClearanceStudentSuggestionDto[]> {
+    return this.http.get<ClearanceStudentSuggestionDto[]>(`${this.baseUrl}/clearance/requests/students/suggestions?query=${encodeURIComponent(query)}`);
   }
 
   // Degree Audit & Graduation

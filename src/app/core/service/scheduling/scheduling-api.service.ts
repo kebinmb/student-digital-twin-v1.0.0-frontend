@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, shareReplay, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
   CreateRoomRequest,
@@ -22,8 +22,17 @@ export class SchedulingApiService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/v1/scheduling`;
 
+  private allRooms$?: Observable<RoomResponse[]>;
+  private availableInstructors$?: Observable<InstructorOptionDto[]>;
+  private schedulingTerms$?: Observable<SchedulingTermDto[]>;
+
   getAllRooms(): Observable<RoomResponse[]> {
-    return this.http.get<RoomResponse[]>(`${this.baseUrl}/rooms`);
+    if (!this.allRooms$) {
+      this.allRooms$ = this.http.get<RoomResponse[]>(`${this.baseUrl}/rooms`).pipe(
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
+    }
+    return this.allRooms$;
   }
 
   getRoomsByCampus(campusId: number): Observable<RoomResponse[]> {
@@ -31,7 +40,9 @@ export class SchedulingApiService {
   }
 
   createRoom(request: CreateRoomRequest): Observable<RoomResponse> {
-    return this.http.post<RoomResponse>(`${this.baseUrl}/rooms`, request);
+    return this.http.post<RoomResponse>(`${this.baseUrl}/rooms`, request).pipe(
+      tap(() => this.invalidateRoomsCache())
+    );
   }
 
   getSectionsByTerm(termId: number): Observable<SectionDetailResponse[]> {
@@ -63,14 +74,44 @@ export class SchedulingApiService {
   }
 
   getSchedulingTerms(): Observable<SchedulingTermDto[]> {
-    return this.http.get<SchedulingTermDto[]>(`${this.baseUrl}/terms`);
+    if (!this.schedulingTerms$) {
+      this.schedulingTerms$ = this.http.get<SchedulingTermDto[]>(`${this.baseUrl}/terms`).pipe(
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
+    }
+    return this.schedulingTerms$;
   }
 
   updateTermMaxHoursPerClass(termId: number, maxHoursPerClass: number): Observable<SchedulingTermDto> {
-    return this.http.put<SchedulingTermDto>(`${this.baseUrl}/terms/${termId}/max-class-hours`, { maxHoursPerClass });
+    return this.http.put<SchedulingTermDto>(`${this.baseUrl}/terms/${termId}/max-class-hours`, { maxHoursPerClass }).pipe(
+      tap(() => this.invalidateTermsCache())
+    );
   }
 
   getAvailableInstructors(): Observable<InstructorOptionDto[]> {
-    return this.http.get<InstructorOptionDto[]>(`${this.baseUrl}/instructors`);
+    if (!this.availableInstructors$) {
+      this.availableInstructors$ = this.http.get<InstructorOptionDto[]>(`${this.baseUrl}/instructors`).pipe(
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
+    }
+    return this.availableInstructors$;
+  }
+
+  invalidateRoomsCache(): void {
+    this.allRooms$ = undefined;
+  }
+
+  invalidateTermsCache(): void {
+    this.schedulingTerms$ = undefined;
+  }
+
+  invalidateInstructorsCache(): void {
+    this.availableInstructors$ = undefined;
+  }
+
+  invalidateAllCache(): void {
+    this.invalidateRoomsCache();
+    this.invalidateTermsCache();
+    this.invalidateInstructorsCache();
   }
 }
