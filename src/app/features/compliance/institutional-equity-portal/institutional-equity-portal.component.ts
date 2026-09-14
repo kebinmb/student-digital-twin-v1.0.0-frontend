@@ -10,6 +10,7 @@ import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { TagModule } from 'primeng/tag';
 import { DialogModule } from 'primeng/dialog';
 import { TextareaModule } from 'primeng/textarea';
@@ -24,9 +25,13 @@ import {
   StudentEquityProfileDto,
   EquityStatisticsSummaryDto,
   EquityVerificationStatus,
-  VerifyEquityProfileRequest
+  VerifyEquityProfileRequest,
+  ApplicantEquityAuditDto,
+  ApplicantEquityStatsDto
 } from '../../../core/models/student-equity.model';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-institutional-equity-portal',
@@ -34,11 +39,13 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
   imports: [
     CommonModule,
     FormsModule,
+    RouterLink,
     TableModule,
     CardModule,
     ButtonModule,
     InputTextModule,
     SelectModule,
+    SelectButtonModule,
     TagModule,
     DialogModule,
     TextareaModule,
@@ -56,15 +63,30 @@ export class InstitutionalEquityPortalComponent implements OnInit {
   private readonly equityApi = inject(EquityApiService);
   private readonly messageService = inject(MessageService);
 
+  // Cohort Selection Signals
+  readonly activeCohort = signal<'ENROLLED' | 'ADMISSION'>('ENROLLED');
+  readonly cohortOptions = [
+    { label: 'Enrolled Students (Matriculated)', value: 'ENROLLED', icon: 'pi pi-users' },
+    { label: 'Prospective Students (Post-Exam Admissions)', value: 'ADMISSION', icon: 'pi pi-id-card' }
+  ];
+
   readonly isLoading = signal<boolean>(true);
   readonly isSavingVerification = signal<boolean>(false);
   readonly stats = signal<EquityStatisticsSummaryDto | null>(null);
   readonly profiles = signal<StudentEquityProfileDto[]>([]);
   readonly totalElements = signal<number>(0);
 
+  // Post-Exam Admission Signals
+  readonly applicantStats = signal<ApplicantEquityStatsDto | null>(null);
+  readonly applicants = signal<ApplicantEquityAuditDto[]>([]);
+  readonly applicantTotalElements = signal<number>(0);
+  readonly selectedApplicant = signal<ApplicantEquityAuditDto | null>(null);
+  readonly showApplicantDossierDialog = signal<boolean>(false);
+
   // Filter Signals
   readonly searchQuery = signal<string>('');
   readonly selectedStatus = signal<string>('');
+  readonly selectedAdmissionStatus = signal<string>('');
   readonly is4psFilter = signal<boolean | null>(null);
   readonly isIpFilter = signal<boolean | null>(null);
   readonly isPwdFilter = signal<boolean | null>(null);
@@ -91,6 +113,15 @@ export class InstitutionalEquityPortalComponent implements OnInit {
     { label: 'Rejected', value: 'REJECTED' }
   ];
 
+  readonly admissionStatusOptions = [
+    { label: 'All Post-Exam Statuses', value: '' },
+    { label: 'Exam Passed', value: 'EXAM_PASSED' },
+    { label: 'Exam Failed', value: 'EXAM_FAILED' },
+    { label: 'Interview Accepted', value: 'INTERVIEW_ACCEPTED' },
+    { label: 'Eligible for Enrollment', value: 'ELIGIBLE_FOR_ENROLLMENT' },
+    { label: 'Approved', value: 'APPROVED' }
+  ];
+
   readonly flagOptions = [
     { label: 'All', value: null },
     { label: 'Yes', value: true },
@@ -109,9 +140,40 @@ export class InstitutionalEquityPortalComponent implements OnInit {
     this.loadProfiles();
   }
 
+  switchCohort(cohort: 'ENROLLED' | 'ADMISSION'): void {
+    if (this.activeCohort() === cohort) return;
+    this.activeCohort.set(cohort);
+    this.page.set(0);
+    this.searchQuery.set('');
+    if (cohort === 'ADMISSION') {
+      this.loadApplicantStats();
+      this.loadApplicants();
+    } else {
+      this.loadStats();
+      this.loadProfiles();
+    }
+  }
+
+  refreshData(): void {
+    if (this.activeCohort() === 'ADMISSION') {
+      this.loadApplicantStats();
+      this.loadApplicants();
+    } else {
+      this.loadStats();
+      this.loadProfiles();
+    }
+  }
+
   loadStats(): void {
     this.equityApi.getEquityStatisticsSummary().subscribe({
       next: (data) => this.stats.set(data),
+      error: () => {}
+    });
+  }
+
+  loadApplicantStats(): void {
+    this.equityApi.getAdmissionApplicantEquityStats().subscribe({
+      next: (data) => this.applicantStats.set(data),
       error: () => {}
     });
   }
@@ -148,9 +210,52 @@ export class InstitutionalEquityPortalComponent implements OnInit {
     });
   }
 
+  loadApplicants(): void {
+    this.isLoading.set(true);
+    this.equityApi.searchAdmissionApplicants({
+      search: this.searchQuery() || undefined,
+      status: this.selectedAdmissionStatus() || undefined,
+      is4ps: this.is4psFilter() ?? undefined,
+      isIp: this.isIpFilter() ?? undefined,
+      isPwd: this.isPwdFilter() ?? undefined,
+      isSoloParent: this.isSoloParentFilter() ?? undefined,
+      isFarmerFisherfolk: this.isFarmerFisherfolkFilter() ?? undefined,
+      isBottom40: this.isBottom40Filter() ?? undefined,
+      isGida: this.isGidaFilter() ?? undefined,
+      isFirstGen: this.isFirstGenFilter() ?? undefined,
+      page: this.page(),
+      size: this.size(),
+      sortBy: 'examScore',
+      sortDir: 'DESC'
+    }).subscribe({
+      next: (res) => {
+        this.applicants.set(res.content || []);
+        this.applicantTotalElements.set(res.totalElements || 0);
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: err?.error?.message || 'Failed to load admission applicants.'
+        });
+        this.isLoading.set(false);
+      }
+    });
+  }
+
   onFilterChange(): void {
     this.page.set(0);
-    this.loadProfiles();
+    if (this.activeCohort() === 'ADMISSION') {
+      this.loadApplicants();
+    } else {
+      this.loadProfiles();
+    }
+  }
+
+  openApplicantDossier(item: ApplicantEquityAuditDto): void {
+    this.selectedApplicant.set(item);
+    this.showApplicantDossierDialog.set(true);
   }
 
   openVerifyDialog(item: StudentEquityProfileDto): void {
@@ -212,5 +317,27 @@ export class InstitutionalEquityPortalComponent implements OnInit {
       case 'UPPER_70K_PLUS': return 'Upper (₱70k+)';
       default: return 'Unspecified';
     }
+  }
+
+  getExamStatusSeverity(status?: string): "success" | "secondary" | "info" | "warn" | "danger" | "contrast" | undefined {
+    switch (status) {
+      case 'EXAM_PASSED':
+      case 'APPROVED':
+      case 'ELIGIBLE_FOR_ENROLLMENT':
+        return 'success';
+      case 'INTERVIEW_ACCEPTED':
+        return 'info';
+      case 'EXAM_FAILED':
+        return 'danger';
+      default:
+        return 'secondary';
+    }
+  }
+
+  getVulnerabilitySeverity(score?: number): "success" | "secondary" | "info" | "warn" | "danger" | "contrast" | undefined {
+    if (score === undefined || score === null) return 'secondary';
+    if (score >= 60) return 'danger';
+    if (score >= 30) return 'warn';
+    return 'info';
   }
 }

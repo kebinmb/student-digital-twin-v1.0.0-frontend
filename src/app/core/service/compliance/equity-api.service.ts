@@ -8,7 +8,9 @@ import {
   StudentEquityProfileDto,
   UpdateStudentEquityProfileRequest,
   VerifyEquityProfileRequest,
-  EquityStatisticsSummaryDto
+  EquityStatisticsSummaryDto,
+  ApplicantEquityAuditDto,
+  ApplicantEquityStatsDto
 } from '../../models/student-equity.model';
 
 export interface PageResponse<T> {
@@ -91,6 +93,19 @@ export class EquityApiService {
       );
     }
     return this.cachedStatistics$;
+  }
+
+  searchAdmissionApplicants(params: EquitySearchFilterParams): Observable<PageResponse<ApplicantEquityAuditDto>> {
+    const httpParams = this.buildFilterParams(params);
+    return this.http.get<PageResponse<ApplicantEquityAuditDto>>(`${this.baseUrl}/admission-applicants`, { params: httpParams });
+  }
+
+  getAdmissionApplicantEquityStats(): Observable<ApplicantEquityStatsDto> {
+    return this.http.get<ApplicantEquityStatsDto>(`${this.baseUrl}/admission-applicants/statistics`);
+  }
+
+  getAdmissionApplicantDossier(applicationNumber: string): Observable<ApplicantEquityAuditDto> {
+    return this.http.get<ApplicantEquityAuditDto>(`${this.baseUrl}/admission-applicants/${encodeURIComponent(applicationNumber)}`);
   }
 
   invalidateCache(): void {

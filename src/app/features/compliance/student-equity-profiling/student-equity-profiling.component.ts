@@ -7,9 +7,13 @@ import {
   signal,
   inject,
   ChangeDetectionStrategy,
-  computed
+  computed,
+  input,
+  effect,
+  untracked
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import {
   ReactiveFormsModule,
   FormBuilder,
@@ -18,7 +22,7 @@ import {
   AbstractControl,
   ValidationErrors
 } from '@angular/forms';
-import { Subscription } from 'rxjs';
+import { Subscription, merge } from 'rxjs';
 
 // PrimeNG Modules
 import { CardModule } from 'primeng/card';
@@ -30,11 +34,14 @@ import { TagModule } from 'primeng/tag';
 import { MessageService } from 'primeng/api';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
+import { TextareaModule } from 'primeng/textarea';
 
+import { AuthService } from '../../../core/service/authentication/auth-service';
 import { EquityApiService } from '../../../core/service/compliance/equity-api.service';
 import {
   StudentEquityProfileDto,
   UpdateStudentEquityProfileRequest,
+  VerifyEquityProfileRequest,
   DisabilityType,
   HouseholdIncomeBracket,
   EquityVerificationStatus
@@ -53,6 +60,7 @@ export function noWhitespaceValidator() {
   standalone: true,
   imports: [
     CommonModule,
+    RouterLink,
     ReactiveFormsModule,
     CardModule,
     ButtonModule,
@@ -61,24 +69,36 @@ export function noWhitespaceValidator() {
     CheckboxModule,
     TagModule,
     SkeletonModule,
-    TooltipModule
+    TooltipModule,
+    TextareaModule
   ],
   templateUrl: './student-equity-profiling.component.html',
   styleUrl: './student-equity-profiling.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class StudentEquityProfilingComponent implements OnInit, OnDestroy {
+  // Bound via withComponentInputBinding() from route /equity-audit/:studentId
+  readonly studentId = input<string | null>(null);
+
   private readonly fb = inject(FormBuilder);
   private readonly equityApi = inject(EquityApiService);
+  private readonly authService = inject(AuthService);
   private readonly messageService = inject(MessageService);
 
   readonly isLoading = signal<boolean>(true);
   readonly isSaving = signal<boolean>(false);
+  readonly isAuditing = signal<boolean>(false);
   readonly profile = signal<StudentEquityProfileDto | null>(null);
 
   private readonly subs = new Subscription();
+  private hasInitialized = false;
 
-  // Reactive Form Group
+  private readonly ADMIN_ROLES = ['SUPER_ADMIN', 'ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'GUIDANCE'];
+
+  readonly isAdminMode = computed(() => !!this.studentId() || this.authService.hasAnyRole(this.ADMIN_ROLES));
+  readonly canEditStudentFields = computed(() => !this.isAdminMode() && this.profile()?.verificationStatus !== 'VERIFIED');
+
+  // Reactive Form Group for Student Declarations
   readonly equityForm: FormGroup = this.fb.group({
     // 1. PWD
     isPersonWithDisability: [false],
@@ -125,6 +145,12 @@ export class StudentEquityProfilingComponent implements OnInit, OnDestroy {
     isFirstGenerationCollege: [false]
   });
 
+  // Reactive Form Group for Institutional Auditor Review
+  readonly auditForm: FormGroup = this.fb.group({
+    verificationStatus: ['VERIFIED' as EquityVerificationStatus, Validators.required],
+    verificationRemarks: ['', [Validators.maxLength(500)]]
+  });
+
   readonly disabilityTypeOptions = [
     { label: 'Visual Impairment', value: 'VISUAL' },
     { label: 'Hearing Impairment', value: 'HEARING' },
@@ -141,6 +167,12 @@ export class StudentEquityProfilingComponent implements OnInit, OnDestroy {
     { label: 'Lower Middle Income (₱20,000 - ₱40,000 / month)', value: 'LOWER_MIDDLE_20K_TO_40K' },
     { label: 'Middle Income (₱40,000 - ₱70,000 / month)', value: 'MIDDLE_40K_TO_70K' },
     { label: 'Upper Income (₱70,000+ / month)', value: 'UPPER_70K_PLUS' }
+  ];
+
+  readonly verificationStatusOptions = [
+    { label: 'Verified (Compliant)', value: 'VERIFIED' },
+    { label: 'Pending Verification (Requires Review)', value: 'PENDING_VERIFICATION' },
+    { label: 'Rejected (Non-Compliant)', value: 'REJECTED' }
   ];
 
   readonly statusTagSeverity = computed(() => {
@@ -165,9 +197,21 @@ export class StudentEquityProfilingComponent implements OnInit, OnDestroy {
     }
   });
 
+  constructor() {
+    effect(() => {
+      const sid = this.studentId();
+      untracked(() => {
+        if (this.hasInitialized) {
+          this.loadProfile();
+        }
+      });
+    });
+  }
+
   ngOnInit(): void {
     this.setupConditionalValidators();
     this.loadProfile();
+    this.hasInitialized = true;
   }
 
   ngOnDestroy(): void {
@@ -184,6 +228,7 @@ export class StudentEquityProfilingComponent implements OnInit, OnDestroy {
         typeCtrl?.setValidators([Validators.required]);
       } else {
         idCtrl?.clearValidators();
+        idCtrl?.setValidators([Validators.maxLength(60)]);
         idCtrl?.setValue('');
         typeCtrl?.clearValidators();
         typeCtrl?.setValue(null);
@@ -193,20 +238,24 @@ export class StudentEquityProfilingComponent implements OnInit, OnDestroy {
     });
     if (pwdSub) this.subs.add(pwdSub);
 
-    // 2. Solo Parent: require soloParentIdNumber when either isSoloParent or isRaisedBySoloParent is checked
-    const soloSub = this.equityForm.valueChanges.subscribe(val => {
-      const isSolo = val.isSoloParent || val.isRaisedBySoloParent;
-      const soloIdCtrl = this.equityForm.get('soloParentIdNumber');
+    // 2. Solo Parent: require soloParentIdNumber when either isSoloParent or isRaisedBySoloParent is checked (isolated merge)
+    const isSoloParentCtrl = this.equityForm.get('isSoloParent')!;
+    const isRaisedBySoloParentCtrl = this.equityForm.get('isRaisedBySoloParent')!;
+    const soloParentIdCtrl = this.equityForm.get('soloParentIdNumber')!;
+
+    const soloSub = merge(isSoloParentCtrl.valueChanges, isRaisedBySoloParentCtrl.valueChanges).subscribe(() => {
+      const isSolo = !!isSoloParentCtrl.value || !!isRaisedBySoloParentCtrl.value;
       if (isSolo) {
-        if (!soloIdCtrl?.hasValidator(Validators.required)) {
-          soloIdCtrl?.setValidators([Validators.required, Validators.maxLength(60), noWhitespaceValidator()]);
-          soloIdCtrl?.updateValueAndValidity({ emitEvent: false });
+        if (!soloParentIdCtrl.hasValidator(Validators.required)) {
+          soloParentIdCtrl.setValidators([Validators.required, Validators.maxLength(60), noWhitespaceValidator()]);
+          soloParentIdCtrl.updateValueAndValidity({ emitEvent: false });
         }
       } else {
-        if (soloIdCtrl?.hasValidator(Validators.required)) {
-          soloIdCtrl?.clearValidators();
-          soloIdCtrl?.setValue('', { emitEvent: false });
-          soloIdCtrl?.updateValueAndValidity({ emitEvent: false });
+        if (soloParentIdCtrl.hasValidator(Validators.required)) {
+          soloParentIdCtrl.clearValidators();
+          soloParentIdCtrl.setValidators([Validators.maxLength(60)]);
+          soloParentIdCtrl.setValue('', { emitEvent: false });
+          soloParentIdCtrl.updateValueAndValidity({ emitEvent: false });
         }
       }
     });
@@ -219,6 +268,7 @@ export class StudentEquityProfilingComponent implements OnInit, OnDestroy {
         ctrl?.setValidators([Validators.required, Validators.maxLength(60), noWhitespaceValidator()]);
       } else {
         ctrl?.clearValidators();
+        ctrl?.setValidators([Validators.maxLength(60)]);
         ctrl?.setValue('');
       }
       ctrl?.updateValueAndValidity();
@@ -234,8 +284,10 @@ export class StudentEquityProfilingComponent implements OnInit, OnDestroy {
         certCtrl?.setValidators([Validators.required, Validators.maxLength(100), noWhitespaceValidator()]);
       } else {
         groupCtrl?.clearValidators();
+        groupCtrl?.setValidators([Validators.maxLength(100)]);
         groupCtrl?.setValue('');
         certCtrl?.clearValidators();
+        certCtrl?.setValidators([Validators.maxLength(100)]);
         certCtrl?.setValue('');
       }
       groupCtrl?.updateValueAndValidity();
@@ -250,6 +302,7 @@ export class StudentEquityProfilingComponent implements OnInit, OnDestroy {
         ctrl?.setValidators([Validators.required, Validators.maxLength(150), noWhitespaceValidator()]);
       } else {
         ctrl?.clearValidators();
+        ctrl?.setValidators([Validators.maxLength(150)]);
         ctrl?.setValue('');
       }
       ctrl?.updateValueAndValidity();
@@ -263,6 +316,7 @@ export class StudentEquityProfilingComponent implements OnInit, OnDestroy {
         ctrl?.setValidators([Validators.required, Validators.maxLength(60), noWhitespaceValidator()]);
       } else {
         ctrl?.clearValidators();
+        ctrl?.setValidators([Validators.maxLength(60)]);
         ctrl?.setValue('');
       }
       ctrl?.updateValueAndValidity();
@@ -276,6 +330,7 @@ export class StudentEquityProfilingComponent implements OnInit, OnDestroy {
         ctrl?.setValidators([Validators.required, Validators.maxLength(60), noWhitespaceValidator()]);
       } else {
         ctrl?.clearValidators();
+        ctrl?.setValidators([Validators.maxLength(60)]);
         ctrl?.setValue('');
       }
       ctrl?.updateValueAndValidity();
@@ -285,17 +340,35 @@ export class StudentEquityProfilingComponent implements OnInit, OnDestroy {
 
   loadProfile(): void {
     this.isLoading.set(true);
-    this.equityApi.getMyEquityProfile().subscribe({
+    const sid = this.studentId();
+    const fetch$ = (sid && sid !== '')
+      ? this.equityApi.getEquityProfileByStudentProfileId(Number(sid))
+      : this.equityApi.getMyEquityProfile();
+
+    fetch$.subscribe({
       next: (data) => {
         this.profile.set(data);
         this.populateForm(data);
+        if (this.isAdminMode()) {
+          this.equityForm.disable({ emitEvent: false });
+          this.auditForm.patchValue({
+            verificationStatus: data.verificationStatus === 'SELF_DECLARED' ? 'VERIFIED' : data.verificationStatus,
+            verificationRemarks: data.verificationRemarks || ''
+          });
+        } else {
+          if (data.verificationStatus === 'VERIFIED') {
+            this.equityForm.disable({ emitEvent: false });
+          } else {
+            this.equityForm.enable({ emitEvent: false });
+          }
+        }
         this.isLoading.set(false);
       },
       error: (err) => {
         this.messageService.add({
           severity: 'error',
           summary: 'Error Loading Equity Profile',
-          detail: err?.error?.message || 'Failed to fetch equity profile declaration.'
+          detail: err?.error?.message || 'Failed to fetch statutory equity profile.'
         });
         this.isLoading.set(false);
       }
@@ -337,7 +410,7 @@ export class StudentEquityProfilingComponent implements OnInit, OnDestroy {
       monthlyHouseholdIncomeBracket: data.monthlyHouseholdIncomeBracket || 'POOR_BELOW_10K',
 
       isFirstGenerationCollege: data.isFirstGenerationCollege ?? false
-    });
+    }, { emitEvent: false });
   }
 
   isFieldInvalid(field: string): boolean {
@@ -345,7 +418,16 @@ export class StudentEquityProfilingComponent implements OnInit, OnDestroy {
     return !!(ctrl && ctrl.invalid && (ctrl.dirty || ctrl.touched));
   }
 
+  isAuditFieldInvalid(field: string): boolean {
+    const ctrl = this.auditForm.get(field);
+    return !!(ctrl && ctrl.invalid && (ctrl.dirty || ctrl.touched));
+  }
+
   saveProfile(): void {
+    if (!this.canEditStudentFields()) {
+      return;
+    }
+
     if (this.equityForm.invalid) {
       this.equityForm.markAllAsTouched();
       this.messageService.add({
@@ -357,37 +439,37 @@ export class StudentEquityProfilingComponent implements OnInit, OnDestroy {
     }
 
     this.isSaving.set(true);
-    const formVal = this.equityForm.value;
+    const formVal = this.equityForm.getRawValue();
 
     const req: UpdateStudentEquityProfileRequest = {
       isPersonWithDisability: !!formVal.isPersonWithDisability,
-      pwdIdNumber: formVal.pwdIdNumber ? formVal.pwdIdNumber.trim() : undefined,
-      disabilityType: formVal.disabilityType || undefined,
+      pwdIdNumber: formVal.isPersonWithDisability ? (formVal.pwdIdNumber?.trim() || null) : null,
+      disabilityType: formVal.isPersonWithDisability ? (formVal.disabilityType || null) : null,
 
       isSoloParent: !!formVal.isSoloParent,
       isRaisedBySoloParent: !!formVal.isRaisedBySoloParent,
-      soloParentIdNumber: formVal.soloParentIdNumber ? formVal.soloParentIdNumber.trim() : undefined,
+      soloParentIdNumber: (formVal.isSoloParent || formVal.isRaisedBySoloParent) ? (formVal.soloParentIdNumber?.trim() || null) : null,
 
       is4psBeneficiary: !!formVal.is4psBeneficiary,
-      household4psIdNumber: formVal.household4psIdNumber ? formVal.household4psIdNumber.trim() : undefined,
+      household4psIdNumber: formVal.is4psBeneficiary ? (formVal.household4psIdNumber?.trim() || null) : null,
       isListahananNhts: !!formVal.isListahananNhts,
       unifastTesAwardee: !!formVal.unifastTesAwardee,
-      unifastTesAwardNumber: formVal.unifastTesAwardNumber ? formVal.unifastTesAwardNumber.trim() : undefined,
+      unifastTesAwardNumber: formVal.unifastTesAwardee ? (formVal.unifastTesAwardNumber?.trim() || null) : null,
 
       isIndigenousPeople: !!formVal.isIndigenousPeople,
-      ipEthnicGroup: formVal.ipEthnicGroup ? formVal.ipEthnicGroup.trim() : undefined,
-      ncipCertificateNumber: formVal.ncipCertificateNumber ? formVal.ncipCertificateNumber.trim() : undefined,
+      ipEthnicGroup: formVal.isIndigenousPeople ? (formVal.ipEthnicGroup?.trim() || null) : null,
+      ncipCertificateNumber: formVal.isIndigenousPeople ? (formVal.ncipCertificateNumber?.trim() || null) : null,
 
       isOrphan: !!formVal.isOrphan,
 
       isGidaResident: !!formVal.isGidaResident,
-      gidaBarangayResidence: formVal.gidaBarangayResidence ? formVal.gidaBarangayResidence.trim() : undefined,
+      gidaBarangayResidence: formVal.isGidaResident ? (formVal.gidaBarangayResidence?.trim() || null) : null,
 
       isFarmerFisherfolk: !!formVal.isFarmerFisherfolk,
-      rsbsaRegistrationNumber: formVal.rsbsaRegistrationNumber ? formVal.rsbsaRegistrationNumber.trim() : undefined,
+      rsbsaRegistrationNumber: formVal.isFarmerFisherfolk ? (formVal.rsbsaRegistrationNumber?.trim() || null) : null,
 
       isRebelReturneeFamily: !!formVal.isRebelReturneeFamily,
-      certificateOfSurrenderNumber: formVal.certificateOfSurrenderNumber ? formVal.certificateOfSurrenderNumber.trim() : undefined,
+      certificateOfSurrenderNumber: formVal.isRebelReturneeFamily ? (formVal.certificateOfSurrenderNumber?.trim() || null) : null,
 
       isBottom40IncomeBracket: !!formVal.isBottom40IncomeBracket,
       monthlyHouseholdIncomeBracket: formVal.monthlyHouseholdIncomeBracket,
@@ -399,6 +481,9 @@ export class StudentEquityProfilingComponent implements OnInit, OnDestroy {
       next: (updated) => {
         this.profile.set(updated);
         this.populateForm(updated);
+        if (updated.verificationStatus === 'VERIFIED') {
+          this.equityForm.disable({ emitEvent: false });
+        }
         this.isSaving.set(false);
         this.messageService.add({
           severity: 'success',
@@ -412,6 +497,54 @@ export class StudentEquityProfilingComponent implements OnInit, OnDestroy {
           severity: 'error',
           summary: 'Save Failed',
           detail: err?.error?.message || 'An error occurred while saving your equity profile.'
+        });
+      }
+    });
+  }
+
+  submitAuditDecision(): void {
+    const prof = this.profile();
+    if (!prof || !prof.id) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Audit Error',
+        detail: 'No active student equity profile is loaded to audit.'
+      });
+      return;
+    }
+
+    if (this.auditForm.invalid) {
+      this.auditForm.markAllAsTouched();
+      return;
+    }
+
+    this.isAuditing.set(true);
+    const formVal = this.auditForm.value;
+    const req: VerifyEquityProfileRequest = {
+      verificationStatus: formVal.verificationStatus,
+      verificationRemarks: formVal.verificationRemarks ? formVal.verificationRemarks.trim() : ''
+    };
+
+    this.equityApi.verifyEquityProfile(prof.id, req).subscribe({
+      next: (updated) => {
+        this.profile.set(updated);
+        this.auditForm.patchValue({
+          verificationStatus: updated.verificationStatus,
+          verificationRemarks: updated.verificationRemarks || ''
+        });
+        this.isAuditing.set(false);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Audit Decision Recorded',
+          detail: `Student equity profile verification status set to ${updated.verificationStatus}.`
+        });
+      },
+      error: (err) => {
+        this.isAuditing.set(false);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Audit Submission Failed',
+          detail: err?.error?.message || 'Failed to record equity profile audit decision.'
         });
       }
     });

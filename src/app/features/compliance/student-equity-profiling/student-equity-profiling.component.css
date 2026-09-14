@@ -41,9 +41,18 @@
   flex-shrink: 0;
 }
 
+.header-icon-box.admin-icon-box {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
 .header-icon {
   font-size: 1.35rem;
   color: var(--chmsu-green-main, #116834);
+}
+
+.header-icon.admin-icon {
+  color: #2563eb;
 }
 
 .header-text-group {
@@ -76,6 +85,216 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+/* Student Dossier Card */
+.student-dossier-card {
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 1.25rem;
+  box-shadow: var(--chmsu-shadow-card, 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1));
+}
+
+.dossier-header-row {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.student-avatar-badge {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  border: 2px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+}
+
+.avatar-icon {
+  font-size: 1.5rem;
+}
+
+.dossier-main-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.dossier-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.student-dossier-name {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+  margin: 0;
+}
+
+.dossier-meta-chips {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.meta-chip {
+  font-size: 0.8125rem;
+  color: var(--chmsu-slate-600, #475569);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.meta-chip-icon {
+  color: var(--chmsu-slate-400, #94a3b8);
+  font-size: 0.875rem;
+}
+
+/* Institutional Auditor Action Panel */
+.audit-action-panel-card {
+  background: #ffffff;
+  border: 1px solid #bfdbfe;
+  border-left: 4px solid #2563eb;
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 1.25rem;
+  box-shadow: var(--chmsu-shadow-card, 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1));
+}
+
+.audit-panel-header {
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 1rem;
+}
+
+.audit-header-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.audit-panel-icon {
+  font-size: 1.5rem;
+  color: #2563eb;
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+}
+
+.audit-panel-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.audit-panel-subtitle {
+  font-size: 0.8125rem;
+  color: #64748b;
+  margin: 0.25rem 0 0 0;
+}
+
+.audit-form-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.audit-controls-grid {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.audit-status-field {
+  flex: 1;
+  min-width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.audit-submit-field {
+  flex-shrink: 0;
+}
+
+.audit-remarks-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.remarks-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.remarks-char-counter {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.audit-textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+  font-size: 0.875rem;
+}
+
+.audit-trail-footer {
+  font-size: 0.75rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+}
+
+/* Inspection Banner (Admin Mode) */
+.audit-inspection-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-left: 4px solid #64748b;
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  padding: 0.875rem 1.25rem;
+}
+
+.inspection-icon {
+  font-size: 1.25rem;
+  color: #64748b;
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+}
+
+.inspection-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.inspection-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.inspection-text {
+  font-size: 0.8125rem;
+  color: #475569;
+  margin: 0;
 }
 
 .equity-notice-card {
@@ -334,9 +553,10 @@
   margin-top: 0.15rem;
 }
 
-.full-width-input,
-::ng-deep .full-width-select {
-  width: 100% !important;
+:host p-select.full-width-select,
+:host .full-width-select,
+.full-width-input {
+  width: 100%;
 }
 
 .equity-field-row {

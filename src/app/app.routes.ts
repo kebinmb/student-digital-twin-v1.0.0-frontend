@@ -89,7 +89,7 @@ export const routes: Routes = [
       },
       {
         path: 'compliance',
-        canActivate: [roleGuard(['ADMIN', 'REGISTRAR', 'DEAN', 'ACCOUNTANT', 'STUDENT'])],
+        canActivate: [roleGuard(['ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'GUIDANCE', 'ACCOUNTANT', 'STUDENT'])],
         loadChildren: () =>
           import('./features/compliance/compliance.routes').then(m => m.COMPLIANCE_ROUTES)
       },

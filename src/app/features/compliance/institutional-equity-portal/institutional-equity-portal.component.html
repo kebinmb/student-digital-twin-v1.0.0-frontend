@@ -12,12 +12,34 @@
       </div>
     </div>
     <div class="header-actions-group">
-      <p-button label="Refresh Data" icon="pi pi-refresh" severity="secondary" (onClick)="loadStats(); loadProfiles();"></p-button>
+      <p-button label="Refresh Data" icon="pi pi-refresh" severity="secondary" (onClick)="refreshData()"></p-button>
     </div>
   </div>
 
-  <!-- Real-time Statutory Equity Metric KPI Cards -->
-  <div class="kpi-grid" *ngIf="stats() as s">
+  <!-- Cohort Selection Bar -->
+  <div class="cohort-selection-bar">
+    <button
+      type="button"
+      class="cohort-tab-btn"
+      [class.active]="activeCohort() === 'ENROLLED'"
+      (click)="switchCohort('ENROLLED')">
+      <i class="pi pi-users"></i>
+      <span>Enrolled Students (Matriculated)</span>
+      <span class="cohort-badge" *ngIf="stats() as s">{{ s.totalProfilesCount }}</span>
+    </button>
+    <button
+      type="button"
+      class="cohort-tab-btn"
+      [class.active]="activeCohort() === 'ADMISSION'"
+      (click)="switchCohort('ADMISSION')">
+      <i class="pi pi-id-card"></i>
+      <span>Prospective Students (Post-Exam Admissions)</span>
+      <span class="cohort-badge" *ngIf="applicantStats() as appStats">{{ appStats.totalPostExamCount }}</span>
+    </button>
+  </div>
+
+  <!-- Real-time Statutory Equity Metric KPI Cards: Enrolled Students -->
+  <div class="kpi-grid" *ngIf="activeCohort() === 'ENROLLED' && stats() as s">
     <div class="kpi-card border-green">
       <span class="kpi-title">Total Equity Declarations</span>
       <span class="kpi-value">{{ s.totalProfilesCount }} Students</span>
@@ -47,19 +69,75 @@
     </div>
   </div>
 
+  <!-- Real-time Statutory Equity Metric KPI Cards: Post-Exam Admissions -->
+  <div class="kpi-grid" *ngIf="activeCohort() === 'ADMISSION' && applicantStats() as appStats">
+    <div class="kpi-card border-green">
+      <span class="kpi-title">Post-Exam Applicants</span>
+      <span class="kpi-value">{{ appStats.totalPostExamCount }} Applicants</span>
+      <span class="kpi-subtext text-green">
+        <i class="pi pi-check-circle"></i> {{ appStats.examPassedCount }} Passed | {{ appStats.examFailedCount }} Failed
+      </span>
+    </div>
+    <div class="kpi-card border-blue">
+      <span class="kpi-title">4Ps & Low Income</span>
+      <span class="kpi-value text-blue">{{ appStats.count4psBeneficiaries }} 4Ps | {{ appStats.countBottom40IncomeBracket }} B40</span>
+      <span class="kpi-subtext">RA 10931 Priority Target Groups</span>
+    </div>
+    <div class="kpi-card border-purple">
+      <span class="kpi-title">Indigenous Peoples & PWD</span>
+      <span class="kpi-value text-purple">{{ appStats.countIndigenousPeoples }} IP | {{ appStats.countPersonsWithDisabilities }} PWD</span>
+      <span class="kpi-subtext">RA 8371 NCIP / RA 7277 PDAO</span>
+    </div>
+    <div class="kpi-card border-orange">
+      <span class="kpi-title">Solo Parents & Orphans</span>
+      <span class="kpi-value text-orange">{{ appStats.countSoloParents }} Solo | {{ appStats.countOrphans }} Orphans</span>
+      <span class="kpi-subtext">RA 11861 & DSWD Certified</span>
+    </div>
+    <div class="kpi-card border-amber">
+      <span class="kpi-title">Agri & First-Gen College</span>
+      <span class="kpi-value text-amber">{{ appStats.countFarmerFisherfolk }} RSBSA | {{ appStats.countFirstGenerationCollege }} 1st Gen</span>
+      <span class="kpi-subtext">DA Registered & First-in-Family</span>
+    </div>
+  </div>
+
   <!-- Filter Toolbar -->
   <div class="filter-card">
     <div class="filter-grid">
       <div class="filter-col search-col">
-        <label class="filter-label">Search Student</label>
+        <label class="filter-label">{{ activeCohort() === 'ENROLLED' ? 'Search Student' : 'Search Applicant' }}</label>
         <p-iconfield>
           <p-inputicon class="pi pi-search"></p-inputicon>
-          <input pInputText type="text" [(ngModel)]="searchQuery" (ngModelChange)="onFilterChange()" placeholder="Search Student # or Name..." class="full-width-input" />
+          <input
+            pInputText
+            type="text"
+            [(ngModel)]="searchQuery"
+            (ngModelChange)="onFilterChange()"
+            [placeholder]="activeCohort() === 'ENROLLED' ? 'Search Student # or Name...' : 'Search Admission # (e.g. ADM-2026-59384) or Name...'"
+            class="full-width-input" />
         </p-iconfield>
       </div>
       <div class="filter-col">
-        <label class="filter-label">Status Filter</label>
-        <p-select [options]="statusOptions" [(ngModel)]="selectedStatus" (onChange)="onFilterChange()" placeholder="Filter Status" optionLabel="label" optionValue="value" styleClass="full-width-select"></p-select>
+        <label class="filter-label">{{ activeCohort() === 'ENROLLED' ? 'Verification Status' : 'Admission/Exam Status' }}</label>
+        <p-select
+          *ngIf="activeCohort() === 'ENROLLED'"
+          [options]="statusOptions"
+          [(ngModel)]="selectedStatus"
+          (onChange)="onFilterChange()"
+          placeholder="Filter Status"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="full-width-select">
+        </p-select>
+        <p-select
+          *ngIf="activeCohort() === 'ADMISSION'"
+          [options]="admissionStatusOptions"
+          [(ngModel)]="selectedAdmissionStatus"
+          (onChange)="onFilterChange()"
+          placeholder="Filter Status"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="full-width-select">
+        </p-select>
       </div>
       <div class="filter-col">
         <label class="filter-label">4Ps Filter</label>
@@ -88,8 +166,8 @@
     </div>
   </div>
 
-  <!-- Data Table -->
-  <div class="table-card">
+  <!-- Data Table: Enrolled Students (Matriculated) -->
+  <div class="table-card" *ngIf="activeCohort() === 'ENROLLED'">
     <p-table
       [value]="profiles()"
       [loading]="isLoading()"
@@ -163,7 +241,10 @@
             <p-tag [value]="row.verificationStatus" [severity]="getStatusSeverity(row.verificationStatus)"></p-tag>
           </td>
           <td class="text-center">
-            <p-button icon="pi pi-check-square" severity="success" size="small" [text]="true" pTooltip="Verify & Audit Profile" (onClick)="openVerifyDialog(row)"></p-button>
+            <div class="flex gap-1 justify-content-center">
+              <p-button icon="pi pi-file-edit" severity="info" size="small" [text]="true" pTooltip="Open Detailed Dossier Audit" [routerLink]="['/dashboard/compliance/equity-audit', row.studentProfileId]"></p-button>
+              <p-button icon="pi pi-check-square" severity="success" size="small" [text]="true" pTooltip="Quick Verify" (onClick)="openVerifyDialog(row)"></p-button>
+            </div>
           </td>
         </tr>
       </ng-template>
@@ -174,6 +255,113 @@
               icon="pi pi-filter-slash"
               title="No Equity Profiles Found"
               description="No student equity profiles matched your search and statutory filter parameters.">
+            </app-empty-state>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- Data Table: Post-Exam Admission Applicants -->
+  <div class="table-card" *ngIf="activeCohort() === 'ADMISSION'">
+    <p-table
+      [value]="applicants()"
+      [loading]="isLoading()"
+      [rows]="size()"
+      [totalRecords]="applicantTotalElements()"
+      [paginator]="true"
+      [stripedRows]="true"
+      responsiveLayout="scroll"
+      styleClass="institutional-table p-datatable-sm p-datatable-gridlines">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Applicant Info</th>
+          <th>Program / Term</th>
+          <th>Exam Result</th>
+          <th>Affirmative Priority</th>
+          <th>4Ps / Grants</th>
+          <th>IP / PWD</th>
+          <th>Solo Parent / Orphan</th>
+          <th>Agri / Income</th>
+          <th class="text-center">Action</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-row>
+        <tr>
+          <td>
+            <span class="student-name-text">{{ row.applicantName }}</span>
+            <span class="applicant-id-badge">#{{ row.applicationNumber }}</span>
+            <div class="applicant-contact-text">{{ row.email }} &bull; {{ row.mobileNumber }}</div>
+          </td>
+          <td>
+            <span class="program-code-text" [pTooltip]="row.targetProgramName || ''">{{ row.targetProgramCode || '-' }}</span>
+            <div class="term-text">{{ row.termName || '-' }}</div>
+            <div class="high-school-text" *ngIf="row.highSchoolName">{{ row.highSchoolName }} ({{ row.highSchoolType || 'SHS' }})</div>
+          </td>
+          <td>
+            <div class="exam-result-box">
+              <span class="exam-score-text font-bold" [class.text-green]="row.examScore >= 75" [class.text-amber]="row.examScore < 75 && row.examScore >= 50" [class.text-rose]="row.examScore < 50">
+                {{ row.examScore != null ? (row.examScore + '%') : 'N/A' }}
+              </span>
+              <p-tag [value]="row.applicationStatus" [severity]="getExamStatusSeverity(row.applicationStatus)"></p-tag>
+            </div>
+          </td>
+          <td>
+            <div class="tag-stack">
+              <p-tag
+                [value]="(row.socioeconomicRiskScore != null ? (row.socioeconomicRiskScore + ' / 100') : 'N/A')"
+                [severity]="getVulnerabilitySeverity(row.socioeconomicRiskScore)"
+                pTooltip="RA 10931 Affirmative Vulnerability Index (Score based on income, public SHS, 4Ps, PWD, IP, Solo Parent, GIDA, Agri)">
+              </p-tag>
+              <span class="priority-label text-rose font-bold" *ngIf="row.socioeconomicRiskScore >= 60">High Affirmative Priority</span>
+              <span class="priority-label text-amber font-bold" *ngIf="row.socioeconomicRiskScore >= 30 && row.socioeconomicRiskScore < 60">Moderate Priority</span>
+              <span class="priority-label text-slate" *ngIf="row.socioeconomicRiskScore < 30">Standard Baseline</span>
+            </div>
+          </td>
+          <td>
+            <div class="tag-stack">
+              <p-tag *ngIf="row.is4psBeneficiary" value="4Ps" severity="success" pTooltip="Household ID: {{ row.household4psIdNumber || 'N/A' }}"></p-tag>
+              <p-tag *ngIf="row.scholarshipGrantType" [value]="row.scholarshipGrantType" severity="info"></p-tag>
+              <span *ngIf="!row.is4psBeneficiary && !row.scholarshipGrantType" class="dash-text">-</span>
+            </div>
+          </td>
+          <td>
+            <div class="tag-stack">
+              <p-tag *ngIf="row.isIndigenousPeople" [value]="row.ipEthnicGroup || 'IP'" severity="warn" pTooltip="NCIP Cert #: {{ row.ncipCertificateNumber || 'N/A' }}"></p-tag>
+              <p-tag *ngIf="row.isPersonWithDisability" [value]="row.disabilityType || 'PWD'" severity="info" pTooltip="PWD ID: {{ row.pwdIdNumber || 'N/A' }}"></p-tag>
+              <span *ngIf="!row.isIndigenousPeople && !row.isPersonWithDisability" class="dash-text">-</span>
+            </div>
+          </td>
+          <td>
+            <div class="tag-stack">
+              <p-tag *ngIf="row.isSoloParent" value="Solo Parent" severity="secondary" pTooltip="SP ID: {{ row.soloParentIdNumber || 'N/A' }}"></p-tag>
+              <p-tag *ngIf="row.isRaisedBySoloParent" value="Solo Dependent" severity="contrast" pTooltip="SP ID: {{ row.soloParentIdNumber || 'N/A' }}"></p-tag>
+              <p-tag *ngIf="row.isOrphan" value="Orphan" severity="danger"></p-tag>
+              <span *ngIf="!row.isSoloParent && !row.isRaisedBySoloParent && !row.isOrphan" class="dash-text">-</span>
+            </div>
+          </td>
+          <td>
+            <div class="tag-stack">
+              <p-tag *ngIf="row.isFarmerFisherfolk" value="RSBSA" severity="success" pTooltip="RSBSA Reg #: {{ row.rsbsaRegistrationNumber || 'N/A' }}"></p-tag>
+              <p-tag *ngIf="row.isRebelReturneeFamily" value="E-CLIP" severity="warn" pTooltip="JAPIC Cert #: {{ row.certificateOfSurrenderNumber || 'N/A' }}"></p-tag>
+              <span class="income-text">{{ formatIncome(row.monthlyHouseholdIncomeBracket) }}</span>
+              <p-tag *ngIf="row.isBottom40IncomeBracket" value="Bottom 40%" severity="danger"></p-tag>
+              <p-tag *ngIf="row.isGidaResident" value="GIDA" severity="warn" pTooltip="Location: {{ row.gidaBarangayResidence || 'N/A' }}"></p-tag>
+              <p-tag *ngIf="row.isFirstGenerationCollege" value="First-Gen" severity="info"></p-tag>
+            </div>
+          </td>
+          <td class="text-center">
+            <p-button icon="pi pi-id-card" severity="info" size="small" [text]="true" pTooltip="Inspect Prospective Student Equity Dossier" (onClick)="openApplicantDossier(row)"></p-button>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9" class="p-0">
+            <app-empty-state
+              icon="pi pi-filter-slash"
+              title="No Post-Exam Applicants Found"
+              description="No prospective students under admission matched your search and statutory filter parameters.">
             </app-empty-state>
           </td>
         </tr>
@@ -237,6 +425,116 @@
       <div class="dialog-footer-actions">
         <p-button label="Cancel" severity="secondary" (onClick)="showVerifyDialog.set(false)"></p-button>
         <p-button label="Save Verification" icon="pi pi-check" severity="success" [loading]="isSavingVerification()" (onClick)="saveVerification()"></p-button>
+      </div>
+    </ng-template>
+  </p-dialog>
+
+  <!-- Prospective Student Equity & Exam Dossier Dialog Modal -->
+  <p-dialog
+    header="Prospective Student Statutory Equity & Exam Dossier"
+    [(visible)]="showApplicantDossierDialog"
+    [modal]="true"
+    [style]="{ width: '90vw', maxWidth: '780px' }">
+    <div *ngIf="selectedApplicant() as a" class="dialog-form-grid">
+      <div class="student-summary-box">
+        <div class="flex justify-content-between align-items-start flex-wrap gap-2">
+          <div>
+            <span class="summary-label">Prospective Student Identification</span>
+            <span class="summary-name">{{ a.applicantName }}</span>
+            <div><span class="applicant-id-badge">#{{ a.applicationNumber }}</span></div>
+          </div>
+          <div class="text-right">
+            <span class="summary-id">{{ a.targetProgramCode }} - {{ a.targetProgramName }}</span>
+            <div class="applicant-contact-text">{{ a.termName }} &bull; {{ a.email }} &bull; {{ a.mobileNumber }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Affirmative Action Scoring & Assessment Box -->
+      <div class="applicant-assessment-card">
+        <div class="assessment-header">
+          <span class="dialog-section-label m-0">RA 10931 Affirmative Action Priority Index</span>
+          <p-tag
+            [value]="(a.socioeconomicRiskScore != null ? (a.socioeconomicRiskScore + ' / 100') : 'N/A')"
+            [severity]="getVulnerabilitySeverity(a.socioeconomicRiskScore)">
+          </p-tag>
+        </div>
+        <div class="assessment-bar-wrapper" *ngIf="a.socioeconomicRiskScore != null">
+          <div
+            class="assessment-bar-fill"
+            [style.width.%]="a.socioeconomicRiskScore"
+            [class.bg-rose]="a.socioeconomicRiskScore >= 60"
+            [class.bg-amber]="a.socioeconomicRiskScore >= 30 && a.socioeconomicRiskScore < 60"
+            [class.bg-blue]="a.socioeconomicRiskScore < 30">
+          </div>
+        </div>
+        <div class="assessment-details-grid">
+          <div>
+            <strong>High School:</strong> {{ a.highSchoolName || 'N/A' }} ({{ a.highSchoolType || 'N/A' }})
+          </div>
+          <div>
+            <strong>High School GWA:</strong> {{ a.highSchoolGwa != null ? a.highSchoolGwa : 'N/A' }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Entrance Exam & Admissions Evaluation -->
+      <div class="dialog-section">
+        <span class="dialog-section-label">Entrance Exam & Admissions Evaluation</span>
+        <div class="exam-eval-grid">
+          <div class="eval-stat-box">
+            <span class="eval-stat-label">Exam Score</span>
+            <span class="eval-stat-value font-bold" [class.text-green]="a.examScore != null && a.examScore >= 75" [class.text-rose]="a.examScore != null && a.examScore < 75">
+              {{ a.examScore != null ? (a.examScore + '%') : 'N/A' }}
+            </span>
+            <p-tag [value]="a.applicationStatus" [severity]="getExamStatusSeverity(a.applicationStatus)"></p-tag>
+          </div>
+          <div class="eval-stat-box">
+            <span class="eval-stat-label">Interview Score</span>
+            <span class="eval-stat-value">{{ a.interviewScore != null ? a.interviewScore : 'N/A' }}</span>
+            <span class="eval-subtext">{{ a.interviewRemarks || 'No interview remarks recorded' }}</span>
+          </div>
+          <div class="eval-stat-box full-width">
+            <span class="eval-stat-label">Evaluation Notes</span>
+            <span class="eval-subtext"><strong>Evaluator:</strong> {{ a.evaluatedByName || 'Admissions Committee' }}</span>
+            <span class="eval-subtext"><strong>Exam Remarks:</strong> {{ a.examRemarks || 'None' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Declared Statutory References & Certificates -->
+      <div class="dialog-section">
+        <span class="dialog-section-label">Philippine Statutory Affirmative Indicators & Certificates</span>
+        <ul class="decl-list">
+          <!-- 4Ps / TES -->
+          <li *ngIf="a.is4psBeneficiary"><strong>4Ps Household ID (RA 10931):</strong> {{ a.household4psIdNumber || 'Self-Declared (No ID)' }}</li>
+          <li *ngIf="a.scholarshipGrantType"><strong>Declared Scholarship / Grant:</strong> {{ a.scholarshipGrantType }}</li>
+
+          <!-- IP & PWD -->
+          <li *ngIf="a.isIndigenousPeople"><strong>Indigenous People Group (RA 8371):</strong> {{ a.ipEthnicGroup }} - Cert # {{ a.ncipCertificateNumber || 'No Cert #' }}</li>
+          <li *ngIf="a.isPersonWithDisability"><strong>Person with Disability (RA 7277):</strong> ID # {{ a.pwdIdNumber || 'No ID #' }} ({{ a.disabilityType || 'General' }})</li>
+
+          <!-- Solo Parent & Orphan -->
+          <li *ngIf="a.isSoloParent"><strong>Registered Solo Parent (RA 11861):</strong> ID # {{ a.soloParentIdNumber || 'Self-Declared (No ID)' }}</li>
+          <li *ngIf="a.isRaisedBySoloParent"><strong>Raised by Solo Parent:</strong> ID # {{ a.soloParentIdNumber || 'Self-Declared (No ID)' }}</li>
+          <li *ngIf="a.isOrphan"><strong>DSWD Orphan Status:</strong> Certified Orphan / Institutional Ward</li>
+
+          <!-- Agriculture & Peace -->
+          <li *ngIf="a.isFarmerFisherfolk"><strong>DA RSBSA Registration (RA 8435):</strong> # {{ a.rsbsaRegistrationNumber || 'Self-Declared (No ID)' }}</li>
+          <li *ngIf="a.isRebelReturneeFamily"><strong>E-CLIP / JAPIC Surrender Cert (EO 70):</strong> # {{ a.certificateOfSurrenderNumber || 'Self-Declared (No ID)' }}</li>
+
+          <!-- Mobility & Socioeconomic -->
+          <li *ngIf="a.isGidaResident"><strong>GIDA Resident:</strong> {{ a.gidaBarangayResidence || 'Self-Declared (No Location Provided)' }}</li>
+          <li *ngIf="a.isFirstGenerationCollege"><strong>First-Generation College Student:</strong> Yes (First in family to attend college)</li>
+          <li *ngIf="a.isUnderprivilegedHomeless"><strong>Underprivileged & Homeless (RA 7279):</strong> Yes</li>
+          <li><strong>Household Income Bracket:</strong> {{ formatIncome(a.monthlyHouseholdIncomeBracket) }} <span *ngIf="a.isBottom40IncomeBracket" class="text-rose font-bold">(Bottom 40%)</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <div class="dialog-footer-actions">
+        <p-button label="Close Dossier" icon="pi pi-times" severity="secondary" (onClick)="showApplicantDossierDialog.set(false)"></p-button>
       </div>
     </ng-template>
   </p-dialog>

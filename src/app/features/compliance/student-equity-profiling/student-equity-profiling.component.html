@@ -3,19 +3,35 @@
   <!-- Institutional Sticky Header Toolbar -->
   <div class="equity-profiling-toolbar-card">
     <div class="header-branding">
-      <div class="header-icon-box">
-        <i class="pi pi-id-card header-icon"></i>
+      <div class="header-icon-box" [ngClass]="{ 'admin-icon-box': isAdminMode() }">
+        <i [class]="isAdminMode() ? 'pi pi-verified header-icon admin-icon' : 'pi pi-id-card header-icon'"></i>
       </div>
       <div class="header-text-group">
         <div class="header-title-badge-row">
-          <h1 class="header-title">Philippine Statutory Equity Target Profiling</h1>
+          <h1 class="header-title">
+            {{ isAdminMode() ? 'Institutional Statutory Equity Compliance Audit' : 'Philippine Statutory Equity Target Profiling' }}
+          </h1>
           <p-tag *ngIf="profile()" [value]="statusTagLabel()" [severity]="statusTagSeverity()"></p-tag>
         </div>
-        <p class="header-subtitle">Institutional demographic & affirmative action declaration (RA 10931 UniFAST, RA 8371 IPRA, RA 7277 PWD, RA 11861 Solo Parents, RA 8435 RSBSA, EO 70 E-CLIP, GIDA & First-Gen)</p>
+        <p class="header-subtitle">
+          {{ isAdminMode() ? 'Administrative compliance audit & documentary verification for Philippine affirmative action statutory indicators' : 'Institutional demographic & affirmative action declaration (RA 10931 UniFAST, RA 8371 IPRA, RA 7277 PWD, RA 11861 Solo Parents, RA 8435 RSBSA, EO 70 E-CLIP, GIDA & First-Gen)' }}
+        </p>
       </div>
     </div>
     <div class="header-actions-group">
+      <!-- Back to Portal button in Admin Mode -->
       <p-button
+        *ngIf="isAdminMode()"
+        label="Back to Institutional Portal"
+        icon="pi pi-arrow-left"
+        severity="secondary"
+        [outlined]="true"
+        routerLink="/dashboard/compliance/equity-portal">
+      </p-button>
+
+      <!-- Save Equity Profile button in Student Self-Service Mode -->
+      <p-button
+        *ngIf="!isAdminMode() && canEditStudentFields()"
         label="Save Equity Profile"
         icon="pi pi-save"
         severity="success"
@@ -23,11 +39,133 @@
         [disabled]="isLoading()"
         (onClick)="saveProfile()">
       </p-button>
+
+      <p-button
+        *ngIf="!isAdminMode() && !canEditStudentFields()"
+        label="Profile Verified (Locked)"
+        icon="pi pi-lock"
+        severity="secondary"
+        [disabled]="true"
+        pTooltip="Verified statutory profiles cannot be modified directly. Contact OSAS or the Registrar for revisions.">
+      </p-button>
     </div>
   </div>
 
-  <!-- Statutory Legal Framework Alert Banner -->
-  <div class="equity-notice-card">
+  <!-- Student Dossier Metadata Header (Admin Mode) -->
+  <div *ngIf="!isLoading() && isAdminMode() && profile()" class="student-dossier-card">
+    <div class="dossier-header-row">
+      <div class="dossier-avatar-col">
+        <div class="student-avatar-badge">
+          <i class="pi pi-user avatar-icon"></i>
+        </div>
+      </div>
+      <div class="dossier-main-col">
+        <div class="dossier-name-row">
+          <h2 class="student-dossier-name">{{ profile()?.studentName || 'Student Dossier' }}</h2>
+          <p-tag [value]="statusTagLabel()" [severity]="statusTagSeverity()"></p-tag>
+        </div>
+        <div class="dossier-meta-chips">
+          <span class="meta-chip">
+            <i class="pi pi-id-card meta-chip-icon"></i>
+            Student ID: <strong>{{ profile()?.studentNumber || profile()?.studentProfileId }}</strong>
+          </span>
+          <span class="meta-chip">
+            <i class="pi pi-book meta-chip-icon"></i>
+            Program: <strong>{{ profile()?.programCode }} - {{ profile()?.programName }}</strong>
+          </span>
+          <span class="meta-chip">
+            <i class="pi pi-calendar meta-chip-icon"></i>
+            Declared: <strong>{{ profile()?.createdAt | date:'mediumDate' }}</strong>
+          </span>
+          <span *ngIf="profile()?.updatedAt" class="meta-chip">
+            <i class="pi pi-clock meta-chip-icon"></i>
+            Last Updated: <strong>{{ profile()?.updatedAt | date:'medium' }}</strong>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Institutional Auditor Action Panel (Admin Mode) -->
+  <div *ngIf="!isLoading() && isAdminMode()" class="audit-action-panel-card">
+    <div class="audit-panel-header">
+      <div class="audit-header-content">
+        <i class="pi pi-shield audit-panel-icon"></i>
+        <div>
+          <h2 class="audit-panel-title">Institutional Compliance Verification & Audit Decision</h2>
+          <p class="audit-panel-subtitle">Review statutory affirmative action declarations against physical or digital documentary evidence. Record your official verification decision below.</p>
+        </div>
+      </div>
+    </div>
+
+    <form [formGroup]="auditForm" (ngSubmit)="submitAuditDecision()" class="audit-form-body">
+      <div class="audit-controls-grid">
+        <div class="audit-status-field">
+          <label class="input-label" for="auditVerificationStatus">
+            Verification Decision <span class="required-star">*</span>
+          </label>
+          <p-select
+            inputId="auditVerificationStatus"
+            [options]="verificationStatusOptions"
+            formControlName="verificationStatus"
+            placeholder="Select Audit Decision"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="full-width-select"
+            [class.ng-invalid]="isAuditFieldInvalid('verificationStatus')">
+          </p-select>
+          <small *ngIf="isAuditFieldInvalid('verificationStatus')" class="form-field-error">
+            Verification decision is required.
+          </small>
+        </div>
+
+        <div class="audit-submit-field">
+          <p-button
+            label="Commit Audit Decision"
+            icon="pi pi-check-circle"
+            severity="primary"
+            type="submit"
+            [loading]="isAuditing()"
+            [disabled]="auditForm.invalid || isLoading()">
+          </p-button>
+        </div>
+      </div>
+
+      <div class="audit-remarks-field">
+        <div class="remarks-label-row">
+          <label class="input-label" for="auditVerificationRemarks">Institutional Audit Remarks & Documentary Evidentiary Notes</label>
+          <span class="remarks-char-counter">{{ (auditForm.get('verificationRemarks')?.value?.length || 0) }}/500</span>
+        </div>
+        <textarea
+          id="auditVerificationRemarks"
+          pTextarea
+          formControlName="verificationRemarks"
+          rows="3"
+          class="full-width-input audit-textarea"
+          placeholder="Enter documentary validation findings, verified certificate serial numbers, or deficiency notices for rejected declarations..."></textarea>
+        <small *ngIf="isAuditFieldInvalid('verificationRemarks')" class="form-field-error">
+          Audit remarks cannot exceed 500 characters.
+        </small>
+      </div>
+
+      <div *ngIf="profile()?.verifiedByUsername" class="audit-trail-footer">
+        <i class="pi pi-info-circle"></i>
+        <span>Currently audited by <strong>{{ profile()?.verifiedByUsername }}</strong> on {{ profile()?.verifiedAt | date:'medium' }}</span>
+      </div>
+    </form>
+  </div>
+
+  <!-- Read-Only Compliance Inspection Banner (Admin Mode) -->
+  <div *ngIf="!isLoading() && isAdminMode()" class="audit-inspection-banner">
+    <i class="pi pi-lock inspection-icon"></i>
+    <div class="inspection-body">
+      <span class="inspection-title">Read-Only Compliance Inspection Mode</span>
+      <p class="inspection-text">Student affirmative action declaration fields are locked from direct editing. To adjust verification status, use the Institutional Compliance Verification panel above.</p>
+    </div>
+  </div>
+
+  <!-- Statutory Legal Framework Alert Banner (Student Mode) -->
+  <div *ngIf="!isAdminMode()" class="equity-notice-card">
     <i class="pi pi-shield notice-icon"></i>
     <div class="notice-body">
       <h2 class="notice-title">Statutory Legal Framework & Privacy Compliance Notice</h2>
@@ -44,8 +182,8 @@
     <p-skeleton width="100%" height="10rem"></p-skeleton>
   </div>
 
-  <!-- Verification Audit Remarks Banner -->
-  <div *ngIf="!isLoading() && profile()?.verificationRemarks" class="audit-remarks-card" [ngClass]="profile()?.verificationStatus === 'REJECTED' ? 'rejected' : 'verified'">
+  <!-- Verification Audit Remarks Banner (Student Self-Service View) -->
+  <div *ngIf="!isLoading() && !isAdminMode() && profile()?.verificationRemarks" class="audit-remarks-card" [ngClass]="profile()?.verificationStatus === 'REJECTED' ? 'rejected' : 'verified'">
     <i [ngClass]="profile()?.verificationStatus === 'REJECTED' ? 'pi pi-exclamation-triangle remarks-icon-rejected' : 'pi pi-check-circle remarks-icon-verified'"></i>
     <div class="remarks-body">
       <span class="remarks-header">Institutional OSAS / Registrar Verification Remarks:</span>
@@ -349,7 +487,7 @@
         </div>
       </div>
 
-      <!-- Card 5: GIDA Resident, First-Gen & Household Income (Spans across or 2-col) -->
+      <!-- Card 5: GIDA Resident, First-Gen & Household Income -->
       <div class="equity-col full-span-col">
         <div class="equity-card">
           <div class="equity-card-header">
@@ -416,8 +554,12 @@
                   placeholder="Select Income Bracket"
                   optionLabel="label"
                   optionValue="value"
-                  styleClass="full-width-select">
+                  styleClass="full-width-select"
+                  [class.ng-invalid]="isFieldInvalid('monthlyHouseholdIncomeBracket')">
                 </p-select>
+                <small *ngIf="isFieldInvalid('monthlyHouseholdIncomeBracket')" class="form-field-error">
+                  Monthly household income bracket is required.
+                </small>
               </div>
             </div>
           </div>

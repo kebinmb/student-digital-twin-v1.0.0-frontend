@@ -32,14 +32,21 @@ export const COMPLIANCE_ROUTES: Routes = [
   },
   {
     path: 'equity-my-profile',
-    canActivate: [roleGuard(['ADMIN', 'REGISTRAR', 'STUDENT'])],
+    canActivate: [roleGuard(['STUDENT'])],
     loadComponent: () =>
       import('./student-equity-profiling/student-equity-profiling.component').then(m => m.StudentEquityProfilingComponent),
-    title: 'Statutory Equity Profiling — Student Digital Twin'
+    title: 'My Statutory Equity Profile — Student Digital Twin'
+  },
+  {
+    path: 'equity-audit/:studentId',
+    canActivate: [roleGuard(['SUPER_ADMIN', 'ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'GUIDANCE'])],
+    loadComponent: () =>
+      import('./student-equity-profiling/student-equity-profiling.component').then(m => m.StudentEquityProfilingComponent),
+    title: 'Student Statutory Equity Audit — Student Digital Twin'
   },
   {
     path: 'equity-portal',
-    canActivate: [roleGuard(['ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'ACCOUNTANT'])],
+    canActivate: [roleGuard(['SUPER_ADMIN', 'ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'GUIDANCE', 'ACCOUNTANT'])],
     loadComponent: () =>
       import('./institutional-equity-portal/institutional-equity-portal.component').then(m => m.InstitutionalEquityPortalComponent),
     title: 'Institutional Statutory Equity Audit — Student Digital Twin'

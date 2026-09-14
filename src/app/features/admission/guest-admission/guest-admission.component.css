@@ -1127,14 +1127,10 @@
 
 .queue-expiring-warning-banner {
   background-color: #fffbeb;
-  border: 1px solid #fde68a;
-  border-left: 4px solid #d97706;
 }
 
 .queue-expired-banner {
   background-color: #fef2f2;
-  border: 1px solid #fecaca;
-  border-left: 4px solid #dc2626;
 }
 
 .banner-icon-badge {

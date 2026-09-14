@@ -108,8 +108,8 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
         { label: 'Department Clearance', icon: 'pi pi-verified', routerLink: '/dashboard/compliance/clearance', roles: ['ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'ACCOUNTANT', 'STUDENT'] },
         { label: 'Degree Audit & TOR', icon: 'pi pi-graduation-cap', routerLink: '/dashboard/compliance/audit', roles: ['ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'STUDENT'] },
         { label: 'CHED HEMIS Reports', icon: 'pi pi-file-pdf', routerLink: '/dashboard/compliance/ched', roles: ['ADMIN', 'REGISTRAR', 'DEAN'] },
-        { label: 'My Equity Profiling', icon: 'pi pi-id-card', routerLink: '/dashboard/compliance/equity-my-profile', roles: ['ADMIN', 'REGISTRAR', 'STUDENT'] },
-        { label: 'Statutory Equity Portal', icon: 'pi pi-chart-bar', routerLink: '/dashboard/compliance/equity-portal', roles: ['ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'ACCOUNTANT'] }
+        { label: 'My Equity Profiling', icon: 'pi pi-id-card', routerLink: '/dashboard/compliance/equity-my-profile', roles: ['STUDENT'] },
+        { label: 'Statutory Equity Portal', icon: 'pi pi-chart-bar', routerLink: '/dashboard/compliance/equity-portal', roles: ['SUPER_ADMIN', 'ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'GUIDANCE', 'ACCOUNTANT'] }
       ]
     },
     {

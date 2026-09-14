@@ -88,40 +88,40 @@ export interface StudentEquityProfileDto {
 export interface UpdateStudentEquityProfileRequest {
   // 1. Person with Disability
   isPersonWithDisability: boolean;
-  pwdIdNumber?: string;
-  disabilityType?: DisabilityType;
+  pwdIdNumber?: string | null;
+  disabilityType?: DisabilityType | null;
 
   // 2. Solo Parent Status
   isSoloParent: boolean;
   isRaisedBySoloParent: boolean;
-  soloParentIdNumber?: string;
+  soloParentIdNumber?: string | null;
 
   // 3. 4Ps Beneficiary & UniFAST TES
   is4psBeneficiary: boolean;
-  household4psIdNumber?: string;
+  household4psIdNumber?: string | null;
   isListahananNhts: boolean;
   unifastTesAwardee: boolean;
-  unifastTesAwardNumber?: string;
+  unifastTesAwardNumber?: string | null;
 
   // 4. Indigenous Peoples
   isIndigenousPeople: boolean;
-  ipEthnicGroup?: string;
-  ncipCertificateNumber?: string;
+  ipEthnicGroup?: string | null;
+  ncipCertificateNumber?: string | null;
 
   // 5. Orphan Status
   isOrphan: boolean;
 
   // 6. GIDA Resident
   isGidaResident: boolean;
-  gidaBarangayResidence?: string;
+  gidaBarangayResidence?: string | null;
 
   // 7. Subsistence Farmer or Fisherfolk Family
   isFarmerFisherfolk: boolean;
-  rsbsaRegistrationNumber?: string;
+  rsbsaRegistrationNumber?: string | null;
 
   // 8. Rebel Returnees / E-CLIP
   isRebelReturneeFamily: boolean;
-  certificateOfSurrenderNumber?: string;
+  certificateOfSurrenderNumber?: string | null;
 
   // 9. Bottom 40% Household Income Bracket
   isBottom40IncomeBracket: boolean;
@@ -133,7 +133,7 @@ export interface UpdateStudentEquityProfileRequest {
 
 export interface VerifyEquityProfileRequest {
   verificationStatus: EquityVerificationStatus;
-  verificationRemarks?: string;
+  verificationRemarks?: string | null;
 }
 
 export interface EquityStatisticsSummaryDto {
@@ -156,4 +156,73 @@ export interface EquityStatisticsSummaryDto {
   countPendingVerification: number;
   countVerified: number;
   countRejected: number;
+}
+
+export interface ApplicantEquityAuditDto {
+  id: number;
+  applicationNumber: string; // e.g. "ADM-2026-59384"
+  applicantName: string;
+  email: string;
+  mobileNumber: string;
+  targetProgramId?: number;
+  targetProgramCode?: string;
+  targetProgramName?: string;
+  termId?: number;
+  termName?: string;
+  highSchoolName?: string;
+  highSchoolType?: string;
+  highSchoolGwa?: number;
+
+  // Entrance Exam & Evaluation
+  examScore?: number;
+  examRemarks?: string;
+  applicationStatus?: string;
+  evaluatedByName?: string;
+  interviewScore?: number;
+  interviewRemarks?: string;
+
+  // Philippine Statutory Equity Indicators
+  is4psBeneficiary: boolean;
+  household4psIdNumber?: string;
+  isIndigenousPeople: boolean;
+  ipEthnicGroup?: string;
+  ncipCertificateNumber?: string;
+  isPersonWithDisability: boolean;
+  disabilityType?: DisabilityType;
+  pwdIdNumber?: string;
+  isSoloParent: boolean;
+  isRaisedBySoloParent: boolean;
+  soloParentIdNumber?: string;
+  isOrphan: boolean;
+  isGidaResident: boolean;
+  gidaBarangayResidence?: string;
+  isFarmerFisherfolk: boolean;
+  rsbsaRegistrationNumber?: string;
+  isRebelReturneeFamily: boolean;
+  certificateOfSurrenderNumber?: string;
+  isBottom40IncomeBracket: boolean;
+  monthlyHouseholdIncomeBracket: HouseholdIncomeBracket;
+  isFirstGenerationCollege: boolean;
+  isUnderprivilegedHomeless: boolean;
+  scholarshipGrantType?: string;
+
+  // Telemetry & Priority Index
+  socioeconomicRiskScore?: number;
+  createdAt: string;
+  isEnrolled?: boolean;
+}
+
+export interface ApplicantEquityStatsDto {
+  totalPostExamCount: number;
+  examPassedCount: number;
+  examFailedCount: number;
+  count4psBeneficiaries: number;
+  countIndigenousPeoples: number;
+  countPersonsWithDisabilities: number;
+  countSoloParents: number;
+  countOrphans: number;
+  countGidaResidents: number;
+  countFarmerFisherfolk: number;
+  countBottom40IncomeBracket: number;
+  countFirstGenerationCollege: number;
 }
