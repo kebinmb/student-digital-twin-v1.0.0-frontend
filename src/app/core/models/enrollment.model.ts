@@ -112,6 +112,7 @@ export interface CreateStudentRequest {
   curriculumId: number;
   classification: 'FRESHMAN' | 'INCOMING_FIRST_YEAR' | 'TRANSFEREE' | 'RETURNEE' | 'CONTINUING' | 'SECOND_DEGREE';
   yearLevel?: number;
+  admissionApplicationId?: number;
 }
 
 export interface StudentProfileResponse {

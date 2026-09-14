@@ -8,10 +8,12 @@ import {
   Validators,
   AbstractControl,
   ValidationErrors,
-  ValidatorFn
+  ValidatorFn,
+  AsyncValidatorFn
 } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { Subscription, interval } from 'rxjs';
+import { Subscription, interval, of, timer, Observable } from 'rxjs';
+import { switchMap, map, catchError } from 'rxjs/operators';
 
 // PrimeNG Modules & Services
 import { CardModule } from 'primeng/card';
@@ -108,6 +110,22 @@ export class GuestAdmissionComponent implements OnInit, OnDestroy {
   trackingSearched = signal<boolean>(false);
 
   queueTokenInfo = signal<QueueTokenResponse | null>(null);
+  queueRemainingSeconds = signal<number | null>(null);
+  isQueueExpired = signal<boolean>(false);
+
+  isQueueExpiringSoon = computed(() => {
+    const rem = this.queueRemainingSeconds();
+    return rem !== null && rem > 0 && rem <= 120 && !this.isQueueExpired();
+  });
+
+  queueTimeRemainingFormatted = computed(() => {
+    const rem = this.queueRemainingSeconds();
+    if (rem === null || rem <= 0) return '00:00';
+    const mins = Math.floor(rem / 60);
+    const secs = rem % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  });
+
   showQueueModal = computed(() => {
     const q = this.queueTokenInfo();
     return q !== null && !q.allowedToProceed && this.activeTab() === 'apply';
@@ -190,7 +208,30 @@ export class GuestAdmissionComponent implements OnInit, OnDestroy {
   };
 
   private queuePollSubscription?: Subscription;
+  private queueCountdownSub?: Subscription;
   private readonly equitySubs = new Subscription();
+
+  private createEmailValidator(): AsyncValidatorFn {
+    return (control: AbstractControl): Observable<ValidationErrors | null> => {
+      const val = control.value;
+      if (!val) {
+        return of(null);
+      }
+      const email = val.toString().trim();
+      if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
+        return of(null);
+      }
+      return timer(400).pipe(
+        switchMap(() => {
+          const termId = control.parent?.get('termId')?.value || undefined;
+          return this.admissionApi.checkEmailAvailability(email, termId).pipe(
+            map(res => (res && !res.available ? { emailTaken: true } : null)),
+            catchError(() => of(null))
+          );
+        })
+      );
+    };
+  }
 
   // Schema-aligned constraints:
   // Names: VARCHAR(50), Suffix: VARCHAR(10), Mobile: 11 Digits (09XXXXXXXXX)
@@ -232,6 +273,8 @@ export class GuestAdmissionComponent implements OnInit, OnDestroy {
       Validators.required,
       Validators.maxLength(100),
       Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
+    ], [
+      this.createEmailValidator()
     ]],
     lrnNumber: ['', [Validators.pattern(/^\d{12}$/)]],
     highSchoolName: ['', [Validators.required, Validators.maxLength(150), noWhitespaceValidator()]],
@@ -310,6 +353,9 @@ export class GuestAdmissionComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.queuePollSubscription) {
       this.queuePollSubscription.unsubscribe();
+    }
+    if (this.queueCountdownSub) {
+      this.queueCountdownSub.unsubscribe();
     }
     this.equitySubs.unsubscribe();
   }
@@ -442,7 +488,7 @@ export class GuestAdmissionComponent implements OnInit, OnDestroy {
         const activeTerm = termsList.find(t => t.isActive) || (termsList.length > 0 ? termsList[0] : null);
         if (activeTerm) {
           this.admissionForm.get('termId')?.setValue(activeTerm.id);
-          this.activeTermLabel.set(this.formatAcademicTerm(activeTerm.academicYearCode, activeTerm.termType)); // <--- Normalized
+          this.activeTermLabel.set(this.formatAcademicTerm(activeTerm.academicYearCode, activeTerm.termType));
           this.loadAdmissionConfig(activeTerm.id);
           this.loadExamSlots(activeTerm.id);
         } else {
@@ -454,11 +500,14 @@ export class GuestAdmissionComponent implements OnInit, OnDestroy {
     });
   }
 
-  private initQueueToken(): void {
+  initQueueToken(): void {
     this.admissionApi.requestQueueToken({ clientIdentifier: 'guest-' + Date.now() }).subscribe({
       next: res => {
         this.queueTokenInfo.set(res);
-        if (!res.allowedToProceed) {
+        if (res.allowedToProceed) {
+          this.isQueueExpired.set(false);
+          this.startQueueCountdown(res.expiresAt, res.ttlSeconds);
+        } else {
           this.startQueuePolling(res.queueToken);
         }
       },
@@ -472,11 +521,73 @@ export class GuestAdmissionComponent implements OnInit, OnDestroy {
       this.admissionApi.checkQueueStatus(token).subscribe({
         next: statusRes => {
           this.queueTokenInfo.set(statusRes);
-          if (statusRes.allowedToProceed && this.queuePollSubscription) {
-            this.queuePollSubscription.unsubscribe();
+          if (statusRes.allowedToProceed) {
+            if (this.queuePollSubscription) {
+              this.queuePollSubscription.unsubscribe();
+            }
+            this.isQueueExpired.set(false);
+            this.startQueueCountdown(statusRes.expiresAt, statusRes.ttlSeconds);
           }
         }
       });
+    });
+  }
+
+  private startQueueCountdown(expiresAtStr?: string, ttlSeconds?: number): void {
+    if (this.queueCountdownSub) {
+      this.queueCountdownSub.unsubscribe();
+    }
+
+    let expiryMs: number;
+    if (expiresAtStr) {
+      const parsed = new Date(expiresAtStr).getTime();
+      expiryMs = isNaN(parsed) ? Date.now() + (ttlSeconds ?? 600) * 1000 : parsed;
+    } else if (ttlSeconds !== undefined && ttlSeconds !== null) {
+      expiryMs = Date.now() + ttlSeconds * 1000;
+    } else {
+      expiryMs = Date.now() + 600 * 1000;
+    }
+
+    const calcRemaining = () => Math.max(0, Math.floor((expiryMs - Date.now()) / 1000));
+    const initialRem = calcRemaining();
+    this.queueRemainingSeconds.set(initialRem);
+    this.isQueueExpired.set(initialRem <= 0);
+
+    if (initialRem > 0) {
+      this.queueCountdownSub = interval(1000).subscribe(() => {
+        const rem = calcRemaining();
+        this.queueRemainingSeconds.set(rem);
+        if (rem <= 0) {
+          this.isQueueExpired.set(true);
+          if (this.queueCountdownSub) {
+            this.queueCountdownSub.unsubscribe();
+          }
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Queue Session Expired',
+            detail: 'Your application queue window has expired. Please refresh your queue spot to submit.'
+          });
+        }
+      });
+    }
+  }
+
+  refreshQueueToken(): void {
+    this.isQueueExpired.set(false);
+    this.initQueueToken();
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Refreshing Queue Spot',
+      detail: 'Acquiring a fresh queue token. Your entered application data remains intact.'
+    });
+  }
+
+  switchToTrackTab(): void {
+    this.activeTab.set('track');
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Track Application',
+      detail: 'Enter your application reference number to check your status.'
     });
   }
 
@@ -516,6 +627,7 @@ export class GuestAdmissionComponent implements OnInit, OnDestroy {
     if (!control || !control.errors || !(control.touched || control.dirty)) return '';
 
     if (control.errors['required'] || control.errors['whitespace']) return 'This field is required.';
+    if (control.errors['emailTaken']) return 'This email address is already registered for this admission term.';
     if (control.errors['minlength']) return `Minimum ${control.errors['minlength'].requiredLength} characters required.`;
     if (control.errors['maxlength']) return `Maximum allowed length is ${control.errors['maxlength'].requiredLength} characters.`;
     if (control.errors['minAge']) return `Applicant must be at least ${control.errors['minAge'].requiredAge} years old.`;
@@ -610,6 +722,11 @@ export class GuestAdmissionComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (this.isQueueExpired()) {
+      this.refreshQueueToken();
+      return;
+    }
+
     if (this.admissionForm.invalid) {
       this.admissionForm.markAllAsTouched();
       for (let s = 1; s <= 5; s++) {
@@ -629,7 +746,6 @@ export class GuestAdmissionComponent implements OnInit, OnDestroy {
 
     this.submitting.set(true);
 
-    // Use getRawValue() so disabled fields (termId) are included in the payload
     const formVal = this.admissionForm.getRawValue();
     const req: SubmitAdmissionRequest = {
       ...formVal,
@@ -640,12 +756,31 @@ export class GuestAdmissionComponent implements OnInit, OnDestroy {
       next: res => {
         this.submitting.set(false);
         this.submittedApplication.set(res);
+        if (this.queueCountdownSub) {
+          this.queueCountdownSub.unsubscribe();
+        }
         this.messageService.add({ severity: 'success', summary: 'Application Submitted', detail: 'Exam slot booking confirmed.' });
       },
       error: err => {
         this.submitting.set(false);
-        const msg = err.error?.message || err.message || 'Submission failed.';
-        this.messageService.add({ severity: 'error', summary: 'Submission Failed', detail: msg });
+        const errDetail = err.error?.detail || err.error?.message || err.message || '';
+        const isQueueSessionExpired =
+          err.error?.errorCode === 'QUEUE_SESSION_EXPIRED' ||
+          err.error?.code === 'QUEUE_SESSION_EXPIRED' ||
+          errDetail.includes('QUEUE_SESSION_EXPIRED') ||
+          errDetail.toLowerCase().includes('queuing session has expired');
+
+        if (isQueueSessionExpired) {
+          this.isQueueExpired.set(true);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Queue Session Expired',
+            detail: 'Your queuing window has expired. Your form entries have been preserved! Please click "Refresh Queue Spot" to acquire a fresh token and proceed.'
+          });
+        } else {
+          const msg = err.error?.detail || err.error?.message || err.message || 'Submission failed.';
+          this.messageService.add({ severity: 'error', summary: 'Submission Failed', detail: msg });
+        }
       }
     });
   }
@@ -698,16 +833,14 @@ export class GuestAdmissionComponent implements OnInit, OnDestroy {
       this.admissionForm.get('termId')?.setValue(activeTerm.id);
       this.activeTermLabel.set(this.formatAcademicTerm(activeTerm.academicYearCode, activeTerm.termType));
     }
+    this.initQueueToken();
   }
 
-  // Helper function to convert DB codes into proper academic display terms
   private formatAcademicTerm(ayCode?: string, termType?: string): string {
     if (!ayCode || !termType) return 'N/A';
 
-    // Normalize Academic Year (e.g., "AY-2026-2027" -> "A.Y. 2026–2027")
     const normalizedAy = ayCode.replace(/^AY[-_]?/i, 'A.Y. ').replace('-', '–');
 
-    // Normalize Term / Semester enums
     const termMap: Record<string, string> = {
       'FIRST_SEM': '1st Semester',
       'SECOND_SEM': '2nd Semester',
@@ -723,9 +856,6 @@ export class GuestAdmissionComponent implements OnInit, OnDestroy {
     return `${normalizedAy} • ${normalizedSem}`;
   }
 
-  // Add these helper methods to GuestAdmissionComponent
-
-  /** Blocks non-digit keystrokes except standard navigation keys */
   allowDigitsOnly(event: KeyboardEvent): boolean {
     const allowedKeys = ['Backspace', 'ArrowLeft', 'ArrowRight', 'Delete', 'Tab'];
     if (allowedKeys.includes(event.key)) {
@@ -738,7 +868,6 @@ export class GuestAdmissionComponent implements OnInit, OnDestroy {
     return true;
   }
 
-  /** Strips any non-numeric characters on paste or mobile autocomplete */
   sanitizeNumberInput(event: Event, controlName: string): void {
     const input = event.target as HTMLInputElement;
     const digitsOnly = input.value.replace(/\D/g, '').slice(0, 11);

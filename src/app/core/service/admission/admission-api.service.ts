@@ -6,6 +6,7 @@ import {
   AdmissionApplicationResponse,
   AdmissionConfigDto,
   CreateExamSlotRequest,
+  EmailAvailabilityResponse,
   EntranceExamSlotResponse,
   EvaluateExamRequest,
   EvaluateInterviewRequest,
@@ -68,6 +69,14 @@ export class AdmissionApiService {
     return this.http.get<QueueTokenResponse>(`${this.publicBaseUrl}/queue/status`, { params });
   }
 
+  checkEmailAvailability(email: string, termId?: number): Observable<EmailAvailabilityResponse> {
+    let params = new HttpParams().set('email', email);
+    if (termId) {
+      params = params.set('termId', termId.toString());
+    }
+    return this.http.get<EmailAvailabilityResponse>(`${this.publicBaseUrl}/check-email`, { params });
+  }
+
   getAvailableExamSlots(termId?: number): Observable<EntranceExamSlotResponse[]> {
     let params = new HttpParams();
     if (termId) {
@@ -100,6 +109,12 @@ export class AdmissionApiService {
     if (termId) params = params.set('termId', termId.toString());
     if (status) params = params.set('status', status);
     return this.http.get<AdmissionApplicationResponse[]>(`${this.adminBaseUrl}/applications`, { params });
+  }
+
+  getUnclaimedApplications(termId?: number): Observable<AdmissionApplicationResponse[]> {
+    let params = new HttpParams();
+    if (termId) params = params.set('termId', termId.toString());
+    return this.http.get<AdmissionApplicationResponse[]>(`${this.adminBaseUrl}/applications/unclaimed`, { params });
   }
 
   getApplicationsForProgram(programId: number, status?: string): Observable<AdmissionApplicationResponse[]> {

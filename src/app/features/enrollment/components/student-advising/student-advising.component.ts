@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, ChangeDetectionStrategy, signal, computed, DestroyRef } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy, signal, computed, DestroyRef, ChangeDetectorRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, of, filter, distinctUntilChanged, switchMap, catchError } from 'rxjs';
 import {
@@ -78,7 +78,7 @@ export class StudentAdvisingComponent implements OnInit {
   private readonly enrollmentApi = inject(EnrollmentApiService);
   private readonly admissionApi = inject(AdmissionApiService);
   private readonly destroyRef = inject(DestroyRef);
-
+  private readonly cdr = inject(ChangeDetectorRef);
   private readonly programSelect$ = new Subject<number>();
   private currentAdmitProgramId: number | null = null;
 
@@ -98,11 +98,21 @@ export class StudentAdvisingComponent implements OnInit {
   readonly isAdmissionsSubmitted = signal<boolean>(false);
   readonly programOptions = signal<{ label: string; value: number }[]>([]);
   readonly curriculumOptions = signal<{ label: string; value: number }[]>([]);
-  readonly pendingApplications = signal<AdmissionApplicationResponse[]>([]);
+  readonly rawApplications = signal<AdmissionApplicationResponse[]>([]);
+  readonly pendingApplications = this.rawApplications;
   readonly selectedAdmissionAppId = signal<number | null>(null);
 
+  readonly availableApplications = computed(() => {
+    return this.rawApplications().filter(app => {
+      const st = (app.status || app.applicationStatus || '').toUpperCase();
+      const isApproved = st === 'APPROVED' || st === 'ELIGIBLE_FOR_ENROLLMENT' || st === 'INTERVIEW_ACCEPTED';
+      const isEnrolled = st === 'ENROLLED' || app.isEnrolled === true || !!app.studentId || !!app.studentProfileId;
+      return isApproved && !isEnrolled;
+    });
+  });
+
   readonly admissionAppOptions = computed(() => {
-    return this.pendingApplications().map(app => ({
+    return this.availableApplications().map(app => ({
       label: `${app.applicationNumber} — ${app.fullName} (${app.targetProgramCode || 'Program'})`,
       value: app.id
     }));
@@ -300,7 +310,7 @@ export class StudentAdvisingComponent implements OnInit {
       const matchesSearch = !search || c.code.toLowerCase().includes(search) || c.title.toLowerCase().includes(search);
       const matchesStatus = status === 'ALL' || c.eligibilityStatus === status;
       const matchesYear = year === 'ALL' || String(c.yearLevel) === year;
-      
+
       let matchesSem = true;
       if (sem !== 'ALL') {
         const courseSem = (c.semester || '').toUpperCase();
@@ -515,11 +525,17 @@ export class StudentAdvisingComponent implements OnInit {
 
     this.curriculumOptions.set([]);
 
-    this.admissionApi.getAllApplications().pipe(
+    const fetch$ = this.admissionApi.getUnclaimedApplications
+      ? this.admissionApi.getUnclaimedApplications().pipe(
+          catchError(() => this.admissionApi.getAllApplications().pipe(catchError(() => of([]))))
+        )
+      : this.admissionApi.getAllApplications().pipe(catchError(() => of([])));
+
+    fetch$.pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe({
-      next: apps => this.pendingApplications.set(apps || []),
-      error: () => this.pendingApplications.set([])
+      next: apps => this.rawApplications.set(apps || []),
+      error: () => this.rawApplications.set([])
     });
 
     this.programService.getAll().pipe(
@@ -545,7 +561,7 @@ export class StudentAdvisingComponent implements OnInit {
     if (!id || isNaN(id) || id <= 0) return;
     this.selectedAdmissionAppId.set(id);
 
-    const app = this.pendingApplications().find(a => a.id === id);
+    const app = this.availableApplications().find(a => a.id === id) || this.rawApplications().find(a => a.id === id);
     if (!app) return;
 
     this.admissionsForm.patchValue({
@@ -569,17 +585,34 @@ export class StudentAdvisingComponent implements OnInit {
     this.currentAdmitProgramId = null;
   }
 
-  onAdmitProgramChange(programId: number | { value: number } | null): void {
-    const id = typeof programId === 'object' && programId !== null ? programId.value : Number(programId);
-    if (!id) return;
+  onAdmitProgramChange(programId: number | { value: number } | null | undefined): void {
+    const id = typeof programId === 'object' && programId !== null ? (programId as any).value : Number(programId);
+    if (!id || isNaN(id) || id <= 0) return;
+
     if (this.currentAdmitProgramId === id) return;
     this.currentAdmitProgramId = id;
 
-    if (this.admissionsForm.get('programId')?.value !== id) {
-      this.admissionsForm.patchValue({ programId: id }, { emitEvent: false });
-    }
+    this.admissionsForm.patchValue({ programId: id }, { emitEvent: false });
 
-    this.programSelect$.next(id);
+    this.curriculumApi.getCurriculaByProgram(id).pipe(
+      catchError(() => of([])),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(curricula => {
+      const options = (curricula || []).map(c => ({
+        label: `${c.code} (${c.status})`,
+        value: c.id
+      }));
+      this.curriculumOptions.set(options);
+
+      // Auto-select the active or first curriculum
+      const activeOrFirst = curricula.find(c => c.status === 'ACTIVE') || (curricula.length > 0 ? curricula[0] : null);
+      if (activeOrFirst) {
+        this.admissionsForm.patchValue({ curriculumId: activeOrFirst.id });
+      } else {
+        this.admissionsForm.patchValue({ curriculumId: null });
+      }
+      this.cdr.markForCheck();
+    });
   }
 
   private setupCurriculumPipeline(): void {
@@ -639,6 +672,8 @@ export class StudentAdvisingComponent implements OnInit {
     const username = formVal.username.trim() || studentNumber.toLowerCase().replace('-', '_');
     const email = formVal.email.trim();
 
+    const admittedAppId = this.selectedAdmissionAppId();
+
     this.store.createStudent(
       {
         studentNumber,
@@ -647,9 +682,13 @@ export class StudentAdvisingComponent implements OnInit {
         programId,
         curriculumId,
         classification: formVal.classification,
-        yearLevel: formVal.yearLevel
+        yearLevel: formVal.yearLevel,
+        admissionApplicationId: admittedAppId || undefined
       },
       (res) => {
+        if (admittedAppId) {
+          this.rawApplications.update(apps => apps.filter(a => a.id !== admittedAppId));
+        }
         this.messageService.add({
           severity: 'success',
           summary: 'Student Intake Successful',

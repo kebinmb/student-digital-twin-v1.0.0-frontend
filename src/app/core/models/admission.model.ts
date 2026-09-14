@@ -76,6 +76,12 @@ export interface QueueTokenResponse {
   queuePosition: number;
   estimatedWaitSeconds: number;
   allowedToProceed: boolean;
+  expiresAt?: string;
+  ttlSeconds?: number;
+}
+
+export interface EmailAvailabilityResponse {
+  available: boolean;
 }
 
 export interface SubmitAdmissionRequest {
@@ -215,6 +221,11 @@ export interface AdmissionApplicationResponse {
   scholarshipGrantType?: string;
   queueToken?: string;
   applicationStatus: 'SUBMITTED' | 'UNDER_REVIEW' | 'EXAM_PASSED' | 'EXAM_FAILED' | 'INTERVIEW_ACCEPTED' | 'REJECTED' | 'ELIGIBLE_FOR_ENROLLMENT' | 'ENROLLED' | 'APPROVED';
+  status?: string;
+  isEnrolled?: boolean;
+  studentId?: number | null;
+  studentProfileId?: number | null;
+  enrolledAt?: string | null;
   examScore?: number;
   examRemarks?: string;
   interviewScore?: number;

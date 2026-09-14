@@ -380,4 +380,123 @@ describe('StudentAdvisingComponent', () => {
       expect(setStudentIdSpy).not.toHaveBeenCalledWith(-1);
     });
   });
+
+  describe('Guest Admission Applications Intake & Exclusion', () => {
+    it('should filter out enrolled, already claimed, or non-approved applications in availableApplications', () => {
+      const mockApps: any[] = [
+        {
+          id: 1,
+          applicationNumber: 'ADM-2026-0001',
+          fullName: 'Approved Candidate',
+          targetProgramId: 10,
+          targetProgramCode: 'BSIT',
+          applicationStatus: 'APPROVED',
+          isEnrolled: false
+        },
+        {
+          id: 2,
+          applicationNumber: 'ADM-2026-0002',
+          fullName: 'Eligible Candidate',
+          targetProgramId: 10,
+          targetProgramCode: 'BSIT',
+          applicationStatus: 'ELIGIBLE_FOR_ENROLLMENT',
+          isEnrolled: false
+        },
+        {
+          id: 3,
+          applicationNumber: 'ADM-2026-0003',
+          fullName: 'Already Enrolled Candidate',
+          targetProgramId: 10,
+          targetProgramCode: 'BSIT',
+          applicationStatus: 'ENROLLED',
+          isEnrolled: true,
+          studentId: 101
+        },
+        {
+          id: 4,
+          applicationNumber: 'ADM-2026-0004',
+          fullName: 'Flagged Enrolled Candidate',
+          targetProgramId: 10,
+          targetProgramCode: 'BSIT',
+          applicationStatus: 'APPROVED',
+          isEnrolled: true
+        },
+        {
+          id: 5,
+          applicationNumber: 'ADM-2026-0005',
+          fullName: 'Pending Review Candidate',
+          targetProgramId: 10,
+          targetProgramCode: 'BSIT',
+          applicationStatus: 'UNDER_REVIEW',
+          isEnrolled: false
+        }
+      ];
+
+      component.rawApplications.set(mockApps);
+
+      const available = component.availableApplications();
+      expect(available).toHaveLength(2);
+      expect(available.map(a => a.id)).toEqual([1, 2]);
+      expect(component.admissionAppOptions()).toHaveLength(2);
+      expect(component.admissionAppOptions()[0].value).toBe(1);
+    });
+
+    it('should pass admissionApplicationId when admitting student and remove from rawApplications upon success', () => {
+      const createStudentSpy = vi.spyOn(store, 'createStudent').mockImplementation((req, onSuccess) => {
+        expect(req.admissionApplicationId).toBe(42);
+        if (onSuccess) {
+          onSuccess({
+            id: 88,
+            studentNumber: req.studentNumber,
+            username: req.username,
+            email: req.email,
+            programId: req.programId,
+            programCode: 'BSIT',
+            programName: 'Information Technology',
+            curriculumId: req.curriculumId,
+            curriculumCode: 'BSIT-2026',
+            classification: req.classification,
+            yearLevel: req.yearLevel || 1,
+            enrollmentStatus: 'REGULAR',
+            isGraduating: false,
+            totalUnitsEarned: 0,
+            userId: 99
+          });
+        }
+      });
+
+      component.rawApplications.set([
+        {
+          id: 42,
+          applicationNumber: 'ADM-2026-0042',
+          fullName: 'Jane Doe',
+          targetProgramId: 1,
+          targetProgramCode: 'BSIT',
+          applicationStatus: 'APPROVED',
+          isEnrolled: false
+        } as any
+      ]);
+
+      component.onImportAdmissionAppChange(42);
+      expect(component.selectedAdmissionAppId()).toBe(42);
+
+      component.admissionsForm.patchValue({
+        studentNumber: '2026-0042',
+        firstName: 'Jane',
+        lastName: 'Doe',
+        username: 'jane_doe',
+        email: 'jane.doe@student.university.edu.ph',
+        programId: 1,
+        curriculumId: 10,
+        classification: 'INCOMING_FIRST_YEAR',
+        yearLevel: 1
+      });
+
+      component.submitAdmitStudent();
+
+      expect(createStudentSpy).toHaveBeenCalled();
+      expect(component.rawApplications().find(a => a.id === 42)).toBeUndefined();
+      expect(component.availableApplications()).toHaveLength(0);
+    });
+  });
 });

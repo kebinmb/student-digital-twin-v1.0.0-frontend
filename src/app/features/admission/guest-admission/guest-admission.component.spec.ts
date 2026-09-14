@@ -4,6 +4,8 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { MessageService } from 'primeng/api';
+import { throwError } from 'rxjs';
+import { AdmissionApiService } from '../../../core/service/admission/admission-api.service';
 import { GuestAdmissionComponent } from './guest-admission.component';
 
 describe('GuestAdmissionComponent', () => {
@@ -115,5 +117,78 @@ describe('GuestAdmissionComponent', () => {
     expect(component.isAdmissionLocked()).toBe(true);
     component.nextStep();
     expect(component.currentStep()).toBe(1);
+  });
+
+  it('should identify queue session expiring soon when within 120 seconds', () => {
+    component.queueRemainingSeconds.set(119);
+    expect(component.isQueueExpiringSoon()).toBe(true);
+
+    component.queueRemainingSeconds.set(121);
+    expect(component.isQueueExpiringSoon()).toBe(false);
+
+    component.queueRemainingSeconds.set(0);
+    expect(component.isQueueExpiringSoon()).toBe(false);
+  });
+
+  it('should format remaining queue session time correctly', () => {
+    component.queueRemainingSeconds.set(599);
+    expect(component.queueTimeRemainingFormatted()).toBe('09:59');
+
+    component.queueRemainingSeconds.set(65);
+    expect(component.queueTimeRemainingFormatted()).toBe('01:05');
+
+    component.queueRemainingSeconds.set(0);
+    expect(component.queueTimeRemainingFormatted()).toBe('00:00');
+  });
+
+  it('should switch to track tab when switchToTrackTab is invoked', () => {
+    component.activeTab.set('apply');
+    component.switchToTrackTab();
+    expect(component.activeTab()).toBe('track');
+  });
+
+  it('should refresh queue token and reset expired flag on refreshQueueToken', () => {
+    component.isQueueExpired.set(true);
+    let called = false;
+    component.initQueueToken = () => { called = true; };
+    component.refreshQueueToken();
+    expect(component.isQueueExpired()).toBe(false);
+    expect(called).toBe(true);
+  });
+
+  it('should keep form data intact when submission fails with QUEUE_SESSION_EXPIRED', () => {
+    component.admissionForm.patchValue({
+      targetProgramId: 1,
+      termId: 4,
+      firstName: 'Maria',
+      lastName: 'Clara',
+      birthDate: '2006-05-12',
+      gender: 'FEMALE',
+      civilStatus: 'SINGLE',
+      citizenship: 'FILIPINO',
+      mobileNumber: '09187654321',
+      email: 'maria@example.com',
+      highSchoolName: 'CHMSU High',
+      highSchoolType: 'PUBLIC',
+      highSchoolGwa: 92.5,
+      streetAddress: '123 Rizal St',
+      barangay: 'Brgy 1',
+      cityMunicipality: 'Talisay City',
+      province: 'Negros Occidental',
+      emergencyContactName: 'Jose Rizal',
+      emergencyContactRelationship: 'Father',
+      emergencyContactNumber: '09191234567'
+    });
+
+    const admissionApi = TestBed.inject(AdmissionApiService);
+    admissionApi.submitApplication = () => throwError(() => ({
+      error: { errorCode: 'QUEUE_SESSION_EXPIRED', detail: 'QUEUE_SESSION_EXPIRED' }
+    }));
+
+    component.onSubmit();
+
+    expect(component.isQueueExpired()).toBe(true);
+    expect(component.admissionForm.get('firstName')?.value).toBe('Maria');
+    expect(component.admissionForm.get('email')?.value).toBe('maria@example.com');
   });
 });
