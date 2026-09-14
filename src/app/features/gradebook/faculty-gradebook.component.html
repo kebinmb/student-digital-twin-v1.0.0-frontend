@@ -123,6 +123,19 @@
 
           @if (isDean()) {
             <p-button 
+              label="Reject & Return" 
+              icon="pi pi-times-circle" 
+              severity="danger" 
+              size="small"
+              [disabled]="ros.gradeStatus !== 'SUBMITTED' || isSaving()"
+              [loading]="isSaving()"
+              pTooltip="Reject submitted grades and return roster to Faculty for revision"
+              tooltipPosition="bottom"
+              (onClick)="rejectGrades()"
+              styleClass="gb-btn-compact">
+            </p-button>
+
+            <p-button 
               label="Verify Grades" 
               icon="pi pi-verified" 
               severity="help" 
@@ -162,6 +175,23 @@
             tooltipPosition="bottom"
             styleClass="gb-btn-compact">
           </p-button>
+
+          @if (isDean() || isRegistrar() || isAdmin()) {
+            <p-button
+              label="Pending Requests"
+              icon="pi pi-inbox"
+              severity="warn"
+              size="small"
+              [outlined]="true"
+              [badge]="pendingRequestsCount() > 0 ? '' + pendingRequestsCount() : undefined"
+              badgeSeverity="danger"
+              (onClick)="openPendingRequestsModal()"
+              (click)="openPendingRequestsModal()"
+              pTooltip="Review pending post-seal grade change requests"
+              tooltipPosition="bottom"
+              styleClass="gb-btn-compact">
+            </p-button>
+          }
         </div>
       </div>
 
@@ -466,6 +496,7 @@
                     severity="warn"
                     [text]="true"
                     (onClick)="openGradeChangeModal(student)"
+                    (click)="openGradeChangeModal(student)"
                     pTooltip="Submit post-seal Grade Change Request"
                     tooltipPosition="top">
                   </p-button>
@@ -647,11 +678,13 @@
         </ng-template>
       </p-table>
     </section>
+  }
 
-    <!-- Dialog for Adding Assessment Activity -->
+  <!-- Dialog for Adding Assessment Activity -->
     <p-dialog 
       header="Add Assessment Activity" 
-      [(visible)]="showAddItemModal" 
+      [visible]="showAddItemModal()" 
+      (visibleChange)="showAddItemModal.set($event)"
       [modal]="true" 
       [style]="{ width: '400px' }"
       [breakpoints]="{ '640px': '92vw' }"
@@ -694,8 +727,8 @@
       </div>
 
       <ng-template pTemplate="footer">
-        <p-button label="Cancel" severity="secondary" size="small" (onClick)="showAddItemModal.set(false)"></p-button>
-        <p-button label="Add Activity" severity="primary" size="small" (onClick)="submitAddItem()"></p-button>
+        <p-button label="Cancel" severity="secondary" size="small" (onClick)="showAddItemModal.set(false)" (click)="showAddItemModal.set(false)"></p-button>
+        <p-button label="Add Activity" severity="primary" size="small" (onClick)="submitAddItem()" (click)="submitAddItem()"></p-button>
 
       </ng-template>
     </p-dialog>
@@ -703,7 +736,8 @@
     <!-- Post-Seal Grade Change Request Dialog -->
     <p-dialog
       header="Submit Post-Seal Grade Change Request"
-      [(visible)]="isGradeChangeModalOpen"
+      [visible]="isGradeChangeModalOpen()"
+      (visibleChange)="isGradeChangeModalOpen.set($event)"
       [modal]="true"
       [style]="{ width: '480px' }"
     >
@@ -752,7 +786,7 @@
       }
 
       <ng-template pTemplate="footer">
-        <p-button label="Cancel" severity="secondary" size="small" (onClick)="isGradeChangeModalOpen.set(false)" />
+        <p-button label="Cancel" severity="secondary" size="small" (onClick)="isGradeChangeModalOpen.set(false)" (click)="isGradeChangeModalOpen.set(false)" />
         <p-button
           label="Submit Request"
           severity="warn"
@@ -760,8 +794,91 @@
           icon="pi pi-send"
           [loading]="isSaving()"
           (onClick)="submitGradeChangeRequest()"
+          (click)="submitGradeChangeRequest()"
         />
       </ng-template>
     </p-dialog>
-  }
+
+    <!-- Pending Post-Seal Grade Change Requests Review Dialog (Dean / Registrar) -->
+    <p-dialog
+      header="Pending Post-Seal Grade Change Requests"
+      [visible]="isPendingRequestsModalOpen()"
+      (visibleChange)="isPendingRequestsModalOpen.set($event)"
+      [modal]="true"
+      [style]="{ width: '780px' }"
+    >
+      <div style="display: flex; flex-direction: column; gap: 1rem; padding-top: 0.5rem;">
+        @if (pendingRequests().length === 0) {
+          <div class="gb-empty-wrapper" style="padding: 2rem 0;">
+            <div class="gb-empty-icon-circle"><i class="pi pi-check-circle"></i></div>
+            <h3 class="gb-empty-heading">No Pending Requests</h3>
+            <p class="gb-empty-subtext">There are currently no pending post-seal grade correction requests awaiting review.</p>
+          </div>
+        } @else {
+          <p-table [value]="pendingRequests()" [loading]="isLoadingPendingRequests()" styleClass="p-datatable-sm p-datatable-gridlines">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Student</th>
+                <th>Course</th>
+                <th style="text-align: center;">Prev Grade</th>
+                <th style="text-align: center;">New Grade</th>
+                <th>Reason</th>
+                <th>Requested By</th>
+                <th style="text-align: center;">Actions</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body">
+              @for (req of pendingRequests(); track req.id) {
+                <tr>
+                  <td>
+                    <div class="font-medium text-slate-800">{{ req.studentName }}</div>
+                    <div class="text-xs text-slate-400">{{ req.studentNumber }}</div>
+                  </td>
+                  <td>
+                    <div class="font-medium text-slate-800">{{ req.courseCode }}</div>
+                    <div class="text-xs text-slate-400">{{ req.courseTitle }}</div>
+                  </td>
+                  <td style="text-align: center;" class="font-semibold text-slate-600">
+                    {{ req.previousGrade | number:'1.2-2' }}
+                  </td>
+                  <td style="text-align: center;" class="font-bold text-amber-600">
+                    {{ req.newGrade | number:'1.2-2' }}
+                  </td>
+                  <td class="text-xs text-slate-600 max-w-xs truncate" [pTooltip]="req.reason" tooltipPosition="top">
+                    {{ req.reason }}
+                  </td>
+                  <td class="text-xs text-slate-500">
+                    {{ req.requestedBy }}
+                  </td>
+                  <td style="text-align: center;">
+                    <div style="display: flex; gap: 0.25rem; justify-content: center;">
+                      <p-button
+                        icon="pi pi-check"
+                        severity="success"
+                        size="small"
+                        [text]="true"
+                        pTooltip="Approve & Update Transcript"
+                        (onClick)="approveGradeChange(req.id)"
+                      />
+                      <p-button
+                        icon="pi pi-times"
+                        severity="danger"
+                        size="small"
+                        [text]="true"
+                        pTooltip="Reject Request"
+                        (onClick)="rejectGradeChange(req.id)"
+                      />
+                    </div>
+                  </td>
+                </tr>
+              }
+            </ng-template>
+          </p-table>
+        }
+      </div>
+
+      <ng-template pTemplate="footer">
+        <p-button label="Close" severity="secondary" size="small" (onClick)="isPendingRequestsModalOpen.set(false)" />
+      </ng-template>
+    </p-dialog>
 </main>

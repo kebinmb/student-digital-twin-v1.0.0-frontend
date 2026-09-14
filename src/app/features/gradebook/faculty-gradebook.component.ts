@@ -121,6 +121,12 @@ export class FacultyGradebookComponent implements OnInit {
   readonly gradeChangeNewGrade = signal<number>(1.75);
   readonly gradeChangeReason = signal<string>('');
 
+  // Pending Grade Change Requests State (Dean / Registrar / Admin)
+  readonly pendingRequests = signal<any[]>([]);
+  readonly isPendingRequestsModalOpen = signal<boolean>(false);
+  readonly isLoadingPendingRequests = signal<boolean>(false);
+  readonly pendingRequestsCount = computed(() => this.pendingRequests().length);
+
 
   // Computed states
   readonly currentGradeStatus = computed(() => this.roster()?.gradeStatus || 'DRAFT');
@@ -171,11 +177,16 @@ export class FacultyGradebookComponent implements OnInit {
     return this.isAdmin() || (this.isFaculty() && this.isAssignedInstructor());
   });
 
-  readonly hasIncompleteGrades = computed(() =>
-    this.editableStudents().some(
-      s => s.finalNumericalGrade === null || s.finalNumericalGrade === undefined || s.completionStatus === 'IN_PROGRESS'
-    )
+  readonly unreadyStudentsCount = computed(() =>
+    this.editableStudents().filter(
+      s => s.finalNumericalGrade === null || 
+           s.finalNumericalGrade === undefined || 
+           s.completionStatus === 'IN_PROGRESS' || 
+           s.completionStatus === 'ENROLLED'
+    ).length
   );
+
+  readonly hasIncompleteGrades = computed(() => this.unreadyStudentsCount() > 0);
 
   readonly hasGradeErrors = computed(() => this.editableStudents().some(s => !!s.gradeError));
 
@@ -192,9 +203,7 @@ export class FacultyGradebookComponent implements OnInit {
   readonly deficientCount = computed(() =>
     this.editableStudents().filter(s => s.finalNumericalGrade === 5.00 || s.completionStatus === 'FAILED' || s.completionStatus === 'DROPPED').length
   );
-  readonly unassignedCount = computed(() =>
-    this.editableStudents().filter(s => (s.finalNumericalGrade === null || s.finalNumericalGrade === undefined) && s.completionStatus === 'IN_PROGRESS').length
-  );
+  readonly unassignedCount = computed(() => this.unreadyStudentsCount());
 
   readonly superiorPercent = computed(() => this.totalStudents() > 0 ? (this.superiorCount() / this.totalStudents()) * 100 : 0);
   readonly satisfactoryPercent = computed(() => this.totalStudents() > 0 ? (this.satisfactoryCount() / this.totalStudents()) * 100 : 0);
@@ -221,8 +230,9 @@ export class FacultyGradebookComponent implements OnInit {
       return `Submission disabled: Current status is ${this.currentGradeStatus()}`;
     }
     if (this.hasGradeErrors()) return 'Submission blocked: Grade scale errors must be resolved';
-    if (this.hasIncompleteGrades()) {
-      return `Submission blocked: ${this.unassignedCount()} student(s) missing numerical grade or in progress`;
+    const unready = this.unreadyStudentsCount();
+    if (unready > 0) {
+      return `Submission blocked: ${unready} student(s) missing numerical grade or in progress`;
     }
     return '';
   });
@@ -327,6 +337,9 @@ export class FacultyGradebookComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadTerms();
+    if (this.isDean() || this.isRegistrar() || this.isAdmin()) {
+      this.loadPendingRequests();
+    }
   }
 
   loadTerms(): void {
@@ -808,8 +821,10 @@ export class FacultyGradebookComponent implements OnInit {
               const matrixRow = matrix.rows.find(r => r.studentId === s.studentId);
               if (matrixRow && matrixRow.transmutedGrade !== null && matrixRow.transmutedGrade !== undefined) {
                 initialGrade = matrixRow.transmutedGrade;
-                status = matrixRow.completionStatus || (initialGrade <= 3.00 ? 'PASSED' : 'FAILED');
+                status = matrixRow.completionStatus || (initialGrade <= 3.00 ? 'PASSED' : (Math.abs(initialGrade - 4.00) < 0.001 ? 'INCOMPLETE' : 'FAILED'));
               }
+            } else if (initialGrade !== null && initialGrade !== undefined && (status === 'ENROLLED' || status === 'IN_PROGRESS')) {
+              status = initialGrade <= 3.00 ? 'PASSED' : (Math.abs(initialGrade - 4.00) < 0.001 ? 'INCOMPLETE' : 'FAILED');
             }
 
             const r: EditableRosterRow = {
@@ -1015,6 +1030,45 @@ export class FacultyGradebookComponent implements OnInit {
     });
   }
 
+  rejectGrades(): void {
+    const sectionId = this.selectedSectionId();
+    const ros = this.roster();
+    if (!sectionId || !ros || ros.gradeStatus !== 'SUBMITTED') return;
+
+    this.confirmationService.confirm({
+      message: 'Reject section grade sheet and return roster to Faculty for revision? Instructors will be able to edit and re-submit grades.',
+      header: 'Confirm Rejection & Return to Faculty',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Reject & Return to Draft',
+      rejectLabel: 'Cancel',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        this.isSaving.set(true);
+        this.enrollmentApi.rejectSectionGrades(sectionId, 'Returned by Dean for academic revision')
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({
+            next: res => {
+              this.messageService.add({
+                severity: 'warn',
+                summary: 'Grades Returned to Faculty',
+                detail: `Section grades returned to DRAFT for revision. Status: ${res.gradeStatus}`
+              });
+              this.isSaving.set(false);
+              this.loadSectionRoster(sectionId);
+            },
+            error: err => {
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Rejection Blocked',
+                detail: err.error?.detail || 'Failed to reject section grades.'
+              });
+              this.isSaving.set(false);
+            }
+          });
+      }
+    });
+  }
+
   sealGrades(): void {
     const sectionId = this.selectedSectionId();
     const ros = this.roster();
@@ -1097,6 +1151,80 @@ export class FacultyGradebookComponent implements OnInit {
         this.isSaving.set(false);
       }
     });
+  }
+
+  loadPendingRequests(): void {
+    if (!this.isDean() && !this.isRegistrar() && !this.isAdmin()) return;
+    this.isLoadingPendingRequests.set(true);
+    this.enrollmentApi.getPendingGradeChangeRequests()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.pendingRequests.set(res || []);
+          this.isLoadingPendingRequests.set(false);
+        },
+        error: () => {
+          this.isLoadingPendingRequests.set(false);
+        }
+      });
+  }
+
+  openPendingRequestsModal(): void {
+    this.loadPendingRequests();
+    this.isPendingRequestsModalOpen.set(true);
+  }
+
+  approveGradeChange(requestId: number): void {
+    this.isSaving.set(true);
+    this.enrollmentApi.approveGradeChangeRequest(requestId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Request Approved',
+            detail: 'Post-seal grade change request approved and applied to student records.'
+          });
+          this.loadPendingRequests();
+          if (this.selectedSectionId()) {
+            this.loadSectionRoster(this.selectedSectionId()!);
+          }
+          this.isSaving.set(false);
+        },
+        error: (err) => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Approval Failed',
+            detail: err.error?.detail || 'Failed to approve grade change request.'
+          });
+          this.isSaving.set(false);
+        }
+      });
+  }
+
+  rejectGradeChange(requestId: number): void {
+    this.isSaving.set(true);
+    this.enrollmentApi.rejectGradeChangeRequest(requestId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Request Rejected',
+            detail: 'Post-seal grade change request rejected.'
+          });
+          this.loadPendingRequests();
+          this.isSaving.set(false);
+        },
+        error: (err) => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Rejection Failed',
+            detail: err.error?.detail || 'Failed to reject grade change request.'
+          });
+          this.isSaving.set(false);
+        }
+      });
   }
 
   exportChedGradeSheet(): void {

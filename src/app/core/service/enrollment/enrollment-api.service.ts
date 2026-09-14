@@ -130,6 +130,13 @@ export class EnrollmentApiService {
     );
   }
 
+  rejectSectionGrades(sectionId: number, reason?: string): Observable<import('../../models/enrollment.model').GradeActionResponse> {
+    return this.http.post<import('../../models/enrollment.model').GradeActionResponse>(
+      `${environment.apiUrl}/v1/sections/${sectionId}/grades/reject`,
+      { reason }
+    );
+  }
+
   sealSectionGrades(sectionId: number): Observable<import('../../models/enrollment.model').GradeActionResponse> {
     return this.http.post<import('../../models/enrollment.model').GradeActionResponse>(
       `${environment.apiUrl}/v1/sections/${sectionId}/grades/seal`,

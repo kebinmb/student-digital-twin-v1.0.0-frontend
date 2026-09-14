@@ -125,13 +125,31 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
 
   // Dynamically filtered navigation sections based on the authenticated user's roles
   readonly filteredNavSections = computed<NavSection[]>(() => {
+    const role = (this.userRole() || '').toUpperCase();
     return this.allNavSections
       .map(section => ({
         ...section,
-        items: section.items.filter(item => {
-          if (!item.roles || item.roles.length === 0) return true;
-          return this.authService.hasAnyRole(item.roles);
-        })
+        items: section.items
+          .filter(item => {
+            if (!item.roles || item.roles.length === 0) return true;
+            return this.authService.hasAnyRole(item.roles);
+          })
+          .map(item => {
+            if (item.routerLink === '/dashboard/grades') {
+              let label = 'Section Gradebook';
+              if (role.includes('REGISTRAR')) {
+                label = 'Registrar Grade Sealing';
+              } else if (role.includes('DEAN') || role.includes('CHAIRPERSON')) {
+                label = 'Dean Grade Verification';
+              } else if (role.includes('ADMIN')) {
+                label = 'Gradebook & Sealing Engine';
+              } else if (role.includes('FACULTY')) {
+                label = 'Faculty Gradebook';
+              }
+              return { ...item, label };
+            }
+            return item;
+          })
       }))
       .filter(section => section.items.length > 0);
   });
