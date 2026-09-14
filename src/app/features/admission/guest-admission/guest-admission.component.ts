@@ -1,10 +1,19 @@
 import { Component, OnInit, OnDestroy, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import {
+  FormsModule,
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators,
+  AbstractControl,
+  ValidationErrors,
+  ValidatorFn
+} from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { Subscription, interval } from 'rxjs';
 
-// PrimeNG 21 Modules & Services
+// PrimeNG Modules & Services
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -31,6 +40,33 @@ import {
   QueueTokenResponse,
   SubmitAdmissionRequest
 } from '../../../core/models/admission.model';
+
+export function noWhitespaceValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    if (control.value === null || control.value === undefined) return null;
+    const isWhitespace = (control.value.toString() || '').trim().length === 0;
+    return isWhitespace ? { whitespace: true } : null;
+  };
+}
+
+export function applicantAgeValidator(minAge = 15, maxAge = 80): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    if (!control.value) return null;
+    const selectedDate = new Date(control.value);
+    if (isNaN(selectedDate.getTime())) return { invalidDate: true };
+
+    const today = new Date();
+    let age = today.getFullYear() - selectedDate.getFullYear();
+    const m = today.getMonth() - selectedDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < selectedDate.getDate())) {
+      age--;
+    }
+
+    if (age < minAge) return { minAge: { requiredAge: minAge, actualAge: age } };
+    if (age > maxAge) return { maxAge: { requiredAge: maxAge, actualAge: age } };
+    return null;
+  };
+}
 
 @Component({
   selector: 'app-guest-admission',
@@ -88,6 +124,7 @@ export class GuestAdmissionComponent implements OnInit, OnDestroy {
 
   publicPrograms = signal<PublicProgramDto[]>([]);
   publicTerms = signal<PublicTermDto[]>([]);
+  activeTermLabel = signal<string>('Loading active term...');
   examSlots = signal<EntranceExamSlotResponse[]>([]);
   admissionConfig = signal<AdmissionConfigDto | null>(null);
   isAdmissionLocked = computed(() => !this.admissionConfig()?.isActive);
@@ -96,13 +133,6 @@ export class GuestAdmissionComponent implements OnInit, OnDestroy {
 
   programOptions = computed(() =>
     this.publicPrograms().map(p => ({ label: `${p.code} - ${p.name}`, value: p.id }))
-  );
-
-  termOptions = computed(() =>
-    this.publicTerms().map(t => ({
-      label: `${t.academicYearCode} - ${t.termType} ${t.isActive ? '(Active Term)' : ''}`,
-      value: t.id
-    }))
   );
 
   wizardStepItems: MenuItem[] = [
@@ -132,51 +162,143 @@ export class GuestAdmissionComponent implements OnInit, OnDestroy {
     { label: 'SUC / LUC High School', value: 'STATE_UNIVERSITY' }
   ];
 
+  readonly incomeBracketOptions = [
+    { label: 'Poor (Below ₱10,000 / month)', value: 'POOR_BELOW_10K' },
+    { label: 'Low Income (₱10,000 - ₱20,000 / month)', value: 'LOW_INCOME_10K_TO_20K' },
+    { label: 'Lower Middle Income (₱20,000 - ₱40,000 / month)', value: 'LOWER_MIDDLE_20K_TO_40K' },
+    { label: 'Middle Income (₱40,000 - ₱70,000 / month)', value: 'MIDDLE_40K_TO_70K' },
+    { label: 'Upper Income (₱70,000+ / month)', value: 'UPPER_70K_PLUS' }
+  ];
+
   private readonly stepFieldsMap: Record<number, string[]> = {
     1: ['targetProgramId', 'termId', 'firstName', 'lastName', 'birthDate', 'gender', 'civilStatus', 'citizenship', 'mobileNumber', 'email'],
     2: ['highSchoolName', 'highSchoolType', 'lrnNumber', 'highSchoolGwa'],
-    3: ['streetAddress', 'barangay', 'cityMunicipality', 'province', 'emergencyContactName', 'emergencyContactRelationship', 'emergencyContactNumber'],
-    4: ['is4psBeneficiary', 'household4psIdNumber', 'isIndigenousPeople', 'ipEthnicGroup', 'isPersonWithDisability', 'disabilityType'],
+    3: ['streetAddress', 'barangay', 'cityMunicipality', 'province', 'zipCode', 'emergencyContactName', 'emergencyContactRelationship', 'emergencyContactNumber', 'emergencyContactEmail'],
+    4: [
+      'is4psBeneficiary', 'household4psIdNumber',
+      'isIndigenousPeople', 'ipEthnicGroup', 'ncipCertificateNumber',
+      'isPersonWithDisability', 'disabilityType', 'pwdIdNumber',
+      'isSoloParent', 'isRaisedBySoloParent', 'soloParentIdNumber',
+      'isOrphan',
+      'isGidaResident', 'gidaBarangayResidence',
+      'isFarmerFisherfolk', 'rsbsaRegistrationNumber',
+      'isRebelReturneeFamily', 'certificateOfSurrenderNumber',
+      'isBottom40IncomeBracket', 'monthlyHouseholdIncomeBracket',
+      'isFirstGenerationCollege'
+    ],
     5: ['examSlotId']
   };
 
   private queuePollSubscription?: Subscription;
+  private readonly equitySubs = new Subscription();
 
+  // Schema-aligned constraints:
+  // Names: VARCHAR(50), Suffix: VARCHAR(10), Mobile: 11 Digits (09XXXXXXXXX)
   admissionForm: FormGroup = this.fb.group({
-    targetProgramId: [null, Validators.required],
-    termId: [null, Validators.required],
+    targetProgramId: [null, [Validators.required]],
+    termId: [{ value: null, disabled: true }, [Validators.required]],
     examSlotId: [null],
-    firstName: ['', [Validators.required, Validators.minLength(2)]],
-    middleName: [''],
-    lastName: ['', [Validators.required, Validators.minLength(2)]],
-    suffix: [''],
-    birthDate: ['2007-01-01', Validators.required],
-    gender: ['FEMALE', Validators.required],
-    civilStatus: ['SINGLE', Validators.required],
-    citizenship: ['FILIPINO', Validators.required],
-    mobileNumber: ['', [Validators.required, Validators.pattern(/^(09|\+639)\d{9}$/)]],
-    email: ['', [Validators.required, Validators.email]],
+    firstName: ['', [
+      Validators.required,
+      Validators.minLength(2),
+      Validators.maxLength(50),
+      noWhitespaceValidator(),
+      Validators.pattern(/^[a-zA-Z\sñÑ\-'.]+$/)
+    ]],
+    middleName: ['', [
+      Validators.maxLength(50),
+      Validators.pattern(/^[a-zA-Z\sñÑ\-'.]*$/)
+    ]],
+    lastName: ['', [
+      Validators.required,
+      Validators.minLength(2),
+      Validators.maxLength(50),
+      noWhitespaceValidator(),
+      Validators.pattern(/^[a-zA-Z\sñÑ\-'.]+$/)
+    ]],
+    suffix: ['', [
+      Validators.maxLength(10),
+      Validators.pattern(/^[a-zA-Z0-9.\s]*$/)
+    ]],
+    birthDate: ['', [Validators.required, applicantAgeValidator(15, 80)]],
+    gender: ['FEMALE', [Validators.required]],
+    civilStatus: ['SINGLE', [Validators.required]],
+    citizenship: ['FILIPINO', [Validators.required, Validators.maxLength(50), noWhitespaceValidator()]],
+    mobileNumber: ['', [
+      Validators.required,
+      Validators.pattern(/^09\d{9}$/)
+    ]],
+    email: ['', [
+      Validators.required,
+      Validators.maxLength(100),
+      Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
+    ]],
     lrnNumber: ['', [Validators.pattern(/^\d{12}$/)]],
-    highSchoolName: ['', Validators.required],
-    highSchoolType: ['PUBLIC', Validators.required],
-    shsTrackAndStrand: [''],
-    highSchoolGwa: [null, [Validators.min(75), Validators.max(100)]],
-    streetAddress: ['', Validators.required],
-    barangay: ['', Validators.required],
-    cityMunicipality: ['', Validators.required],
-    province: ['', Validators.required],
-    zipCode: [''],
-    emergencyContactName: ['', Validators.required],
-    emergencyContactRelationship: ['', Validators.required],
-    emergencyContactNumber: ['', [Validators.required, Validators.pattern(/^(09|\+639)\d{9}$/)]],
-    emergencyContactEmail: ['', [Validators.email]],
+    highSchoolName: ['', [Validators.required, Validators.maxLength(150), noWhitespaceValidator()]],
+    highSchoolType: ['PUBLIC', [Validators.required]],
+    shsTrackAndStrand: ['', [Validators.maxLength(100)]],
+    highSchoolGwa: [null, [Validators.required, Validators.min(75), Validators.max(100)]],
+    streetAddress: ['', [Validators.required, Validators.maxLength(255), noWhitespaceValidator()]],
+    barangay: ['', [Validators.required, Validators.maxLength(100), noWhitespaceValidator()]],
+    cityMunicipality: ['', [Validators.required, Validators.maxLength(100), noWhitespaceValidator()]],
+    province: ['', [Validators.required, Validators.maxLength(100), noWhitespaceValidator()]],
+    zipCode: ['', [Validators.pattern(/^\d{4}$/)]],
+    emergencyContactName: ['', [
+      Validators.required,
+      Validators.maxLength(100),
+      noWhitespaceValidator(),
+      Validators.pattern(/^[a-zA-Z\sñÑ\-'.]+$/)
+    ]],
+    emergencyContactRelationship: ['', [Validators.required, Validators.maxLength(50), noWhitespaceValidator()]],
+    emergencyContactNumber: ['', [
+      Validators.required,
+      Validators.pattern(/^09\d{9}$/)
+    ]],
+    emergencyContactEmail: ['', [
+      Validators.maxLength(100),
+      Validators.pattern(/^$|^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
+    ]],
+
+    // 1. DSWD 4Ps
     is4psBeneficiary: [false],
-    household4psIdNumber: [''],
+    household4psIdNumber: ['', [Validators.maxLength(60)]],
+
+    // 2. IPRA Indigenous Peoples
     isIndigenousPeople: [false],
-    ipEthnicGroup: [''],
+    ipEthnicGroup: ['', [Validators.maxLength(100)]],
+    ncipCertificateNumber: ['', [Validators.maxLength(100)]],
+
+    // 3. Person with Disability
     isPersonWithDisability: [false],
-    disabilityType: [''],
-    isSoloParentOrDependent: [false]
+    disabilityType: ['', [Validators.maxLength(60)]],
+    pwdIdNumber: ['', [Validators.maxLength(60)]],
+
+    // 4. Solo Parent & Raised by Solo Parent
+    isSoloParent: [false],
+    isRaisedBySoloParent: [false],
+    soloParentIdNumber: ['', [Validators.maxLength(60)]],
+
+    // 5. Orphan Status
+    isOrphan: [false],
+
+    // 6. GIDA Resident
+    isGidaResident: [false],
+    gidaBarangayResidence: ['', [Validators.maxLength(150)]],
+
+    // 7. Subsistence Farmer / Fisherfolk
+    isFarmerFisherfolk: [false],
+    rsbsaRegistrationNumber: ['', [Validators.maxLength(60)]],
+
+    // 8. Rebel Returnee Family
+    isRebelReturneeFamily: [false],
+    certificateOfSurrenderNumber: ['', [Validators.maxLength(60)]],
+
+    // 9. Bottom 40% & Income Bracket
+    isBottom40IncomeBracket: [false],
+    monthlyHouseholdIncomeBracket: ['POOR_BELOW_10K', [Validators.required]],
+
+    // 10. First-Generation College Student
+    isFirstGenerationCollege: [false]
   });
 
   ngOnInit(): void {
@@ -189,41 +311,116 @@ export class GuestAdmissionComponent implements OnInit, OnDestroy {
     if (this.queuePollSubscription) {
       this.queuePollSubscription.unsubscribe();
     }
+    this.equitySubs.unsubscribe();
   }
 
   private setupConditionalValidators(): void {
-    this.admissionForm.get('is4psBeneficiary')?.valueChanges.subscribe(is4ps => {
+    // 1. 4Ps
+    const fourPsSub = this.admissionForm.get('is4psBeneficiary')?.valueChanges.subscribe(is4ps => {
       const idControl = this.admissionForm.get('household4psIdNumber');
       if (is4ps) {
-        idControl?.setValidators([Validators.required]);
+        idControl?.setValidators([Validators.required, Validators.maxLength(60), noWhitespaceValidator()]);
       } else {
         idControl?.clearValidators();
         idControl?.setValue('');
       }
       idControl?.updateValueAndValidity();
     });
+    if (fourPsSub) this.equitySubs.add(fourPsSub);
 
-    this.admissionForm.get('isIndigenousPeople')?.valueChanges.subscribe(isIp => {
+    // 2. IP
+    const ipSub = this.admissionForm.get('isIndigenousPeople')?.valueChanges.subscribe(isIp => {
       const groupControl = this.admissionForm.get('ipEthnicGroup');
+      const certControl = this.admissionForm.get('ncipCertificateNumber');
       if (isIp) {
-        groupControl?.setValidators([Validators.required]);
+        groupControl?.setValidators([Validators.required, Validators.maxLength(100), noWhitespaceValidator()]);
+        certControl?.setValidators([Validators.required, Validators.maxLength(100), noWhitespaceValidator()]);
       } else {
         groupControl?.clearValidators();
         groupControl?.setValue('');
+        certControl?.clearValidators();
+        certControl?.setValue('');
       }
       groupControl?.updateValueAndValidity();
+      certControl?.updateValueAndValidity();
     });
+    if (ipSub) this.equitySubs.add(ipSub);
 
-    this.admissionForm.get('isPersonWithDisability')?.valueChanges.subscribe(isPwd => {
+    // 3. PWD
+    const pwdSub = this.admissionForm.get('isPersonWithDisability')?.valueChanges.subscribe(isPwd => {
       const typeControl = this.admissionForm.get('disabilityType');
+      const pwdIdControl = this.admissionForm.get('pwdIdNumber');
       if (isPwd) {
-        typeControl?.setValidators([Validators.required]);
+        typeControl?.setValidators([Validators.required, Validators.maxLength(60), noWhitespaceValidator()]);
+        pwdIdControl?.setValidators([Validators.required, Validators.maxLength(60), noWhitespaceValidator()]);
       } else {
         typeControl?.clearValidators();
         typeControl?.setValue('');
+        pwdIdControl?.clearValidators();
+        pwdIdControl?.setValue('');
       }
       typeControl?.updateValueAndValidity();
+      pwdIdControl?.updateValueAndValidity();
     });
+    if (pwdSub) this.equitySubs.add(pwdSub);
+
+    // 4. Solo Parent
+    const soloSub = this.admissionForm.valueChanges.subscribe(val => {
+      const isSolo = val.isSoloParent || val.isRaisedBySoloParent;
+      const soloIdControl = this.admissionForm.get('soloParentIdNumber');
+      if (isSolo) {
+        if (!soloIdControl?.hasValidator(Validators.required)) {
+          soloIdControl?.setValidators([Validators.required, Validators.maxLength(60), noWhitespaceValidator()]);
+          soloIdControl?.updateValueAndValidity({ emitEvent: false });
+        }
+      } else {
+        if (soloIdControl?.hasValidator(Validators.required)) {
+          soloIdControl?.clearValidators();
+          soloIdControl?.setValue('', { emitEvent: false });
+          soloIdControl?.updateValueAndValidity({ emitEvent: false });
+        }
+      }
+    });
+    this.equitySubs.add(soloSub);
+
+    // 5. GIDA
+    const gidaSub = this.admissionForm.get('isGidaResident')?.valueChanges.subscribe(isGida => {
+      const gidaControl = this.admissionForm.get('gidaBarangayResidence');
+      if (isGida) {
+        gidaControl?.setValidators([Validators.required, Validators.maxLength(150), noWhitespaceValidator()]);
+      } else {
+        gidaControl?.clearValidators();
+        gidaControl?.setValue('');
+      }
+      gidaControl?.updateValueAndValidity();
+    });
+    if (gidaSub) this.equitySubs.add(gidaSub);
+
+    // 6. Farmer / Fisherfolk
+    const farmerSub = this.admissionForm.get('isFarmerFisherfolk')?.valueChanges.subscribe(isFarmer => {
+      const rsbsaControl = this.admissionForm.get('rsbsaRegistrationNumber');
+      if (isFarmer) {
+        rsbsaControl?.setValidators([Validators.required, Validators.maxLength(60), noWhitespaceValidator()]);
+      } else {
+        rsbsaControl?.clearValidators();
+        rsbsaControl?.setValue('');
+      }
+      rsbsaControl?.updateValueAndValidity();
+    });
+    if (farmerSub) this.equitySubs.add(farmerSub);
+
+    // 7. Rebel Returnee Family
+    const rebelSub = this.admissionForm.get('isRebelReturneeFamily')?.valueChanges.subscribe(isRebel => {
+      const certControl = this.admissionForm.get('certificateOfSurrenderNumber');
+      if (isRebel) {
+        certControl?.setValidators([Validators.required, Validators.maxLength(60), noWhitespaceValidator()]);
+      } else {
+        certControl?.clearValidators();
+        certControl?.setValue('');
+      }
+      certControl?.updateValueAndValidity();
+    });
+    if (rebelSub) this.equitySubs.add(rebelSub);
   }
 
   private loadInitialData(): void {
@@ -242,20 +439,18 @@ export class GuestAdmissionComponent implements OnInit, OnDestroy {
     this.admissionApi.getPublicTerms().subscribe({
       next: termsList => {
         this.publicTerms.set(termsList);
-        const activeTerm = termsList.find(t => t.isActive);
+        const activeTerm = termsList.find(t => t.isActive) || (termsList.length > 0 ? termsList[0] : null);
         if (activeTerm) {
-          this.admissionForm.patchValue({ termId: activeTerm.id });
+          this.admissionForm.get('termId')?.setValue(activeTerm.id);
+          this.activeTermLabel.set(this.formatAcademicTerm(activeTerm.academicYearCode, activeTerm.termType)); // <--- Normalized
           this.loadAdmissionConfig(activeTerm.id);
           this.loadExamSlots(activeTerm.id);
-        } else if (termsList.length > 0) {
-          this.admissionForm.patchValue({ termId: termsList[0].id });
-          this.loadAdmissionConfig(termsList[0].id);
-          this.loadExamSlots(termsList[0].id);
         } else {
+          this.activeTermLabel.set('No active academic term configured.');
           this.loadAdmissionConfig();
         }
       },
-      error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to load public terms.' })
+      error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to load academic terms.' })
     });
   }
 
@@ -285,14 +480,6 @@ export class GuestAdmissionComponent implements OnInit, OnDestroy {
     });
   }
 
-  onTermChange(): void {
-    const termId = this.admissionForm.get('termId')?.value;
-    if (termId) {
-      this.loadAdmissionConfig(termId);
-      this.loadExamSlots(termId);
-    }
-  }
-
   private loadAdmissionConfig(termId?: number): void {
     this.admissionApi.getPublicAdmissionConfig(termId).subscribe({
       next: cfg => this.admissionConfig.set(cfg),
@@ -316,6 +503,7 @@ export class GuestAdmissionComponent implements OnInit, OnDestroy {
 
   selectExamSlot(slotId: number): void {
     this.admissionForm.patchValue({ examSlotId: slotId });
+    this.admissionForm.get('examSlotId')?.markAsDirty();
   }
 
   isFieldInvalid(fieldName: string): boolean {
@@ -326,29 +514,62 @@ export class GuestAdmissionComponent implements OnInit, OnDestroy {
   getFieldError(fieldName: string): string {
     const control = this.admissionForm.get(fieldName);
     if (!control || !control.errors || !(control.touched || control.dirty)) return '';
-    if (control.errors['required']) return 'This field is required.';
-    if (control.errors['email']) return 'Please enter a valid email address.';
+
+    if (control.errors['required'] || control.errors['whitespace']) return 'This field is required.';
     if (control.errors['minlength']) return `Minimum ${control.errors['minlength'].requiredLength} characters required.`;
+    if (control.errors['maxlength']) return `Maximum allowed length is ${control.errors['maxlength'].requiredLength} characters.`;
+    if (control.errors['minAge']) return `Applicant must be at least ${control.errors['minAge'].requiredAge} years old.`;
+    if (control.errors['maxAge']) return `Please enter a valid birth year (under ${control.errors['maxAge'].requiredAge} years old).`;
+    if (control.errors['invalidDate']) return 'Please enter a valid calendar date.';
+
     if (control.errors['pattern']) {
       if (fieldName === 'mobileNumber' || fieldName === 'emergencyContactNumber') {
-        return 'Must be a valid 11-digit PH mobile number (e.g. 09171234567).';
+        return 'Must be an 11-digit mobile number starting with 09 (e.g. 09171234567).';
       }
       if (fieldName === 'lrnNumber') {
-        return 'LRN must be exactly 12 digits.';
+        return 'DepEd LRN must be exactly 12 numeric digits.';
+      }
+      if (fieldName === 'zipCode') {
+        return 'ZIP code must be 4 digits.';
+      }
+      if (fieldName === 'email' || fieldName === 'emergencyContactEmail') {
+        return 'Please enter a valid email address (e.g. applicant@domain.com).';
+      }
+      if (fieldName === 'firstName' || fieldName === 'lastName' || fieldName === 'middleName' || fieldName === 'emergencyContactName') {
+        return 'Name should contain letters, spaces, hyphens, and apostrophes only.';
+      }
+      if (fieldName === 'suffix') {
+        return 'Suffix must be alphanumeric (e.g. Jr, III, Sr).';
       }
     }
-    if (control.errors['min'] || control.errors['max']) return 'GWA must be between 75.00 and 100.00.';
+
+    if (control.errors['min'] || control.errors['max']) {
+      return 'GWA must be between 75.00 and 100.00.';
+    }
+
     return 'Invalid input.';
   }
 
   isStepValid(step: number): boolean {
     const fields = this.stepFieldsMap[step] || [];
     let valid = true;
+
     for (const field of fields) {
       const control = this.admissionForm.get(field);
+      if (field === 'household4psIdNumber' && !this.admissionForm.get('is4psBeneficiary')?.value) continue;
+      if (field === 'ipEthnicGroup' && !this.admissionForm.get('isIndigenousPeople')?.value) continue;
+      if (field === 'ncipCertificateNumber' && !this.admissionForm.get('isIndigenousPeople')?.value) continue;
+      if (field === 'disabilityType' && !this.admissionForm.get('isPersonWithDisability')?.value) continue;
+      if (field === 'pwdIdNumber' && !this.admissionForm.get('isPersonWithDisability')?.value) continue;
+      if (field === 'soloParentIdNumber' && !this.admissionForm.get('isSoloParent')?.value && !this.admissionForm.get('isRaisedBySoloParent')?.value) continue;
+      if (field === 'gidaBarangayResidence' && !this.admissionForm.get('isGidaResident')?.value) continue;
+      if (field === 'rsbsaRegistrationNumber' && !this.admissionForm.get('isFarmerFisherfolk')?.value) continue;
+      if (field === 'certificateOfSurrenderNumber' && !this.admissionForm.get('isRebelReturneeFamily')?.value) continue;
+
       if (control && control.invalid) {
         valid = false;
         control.markAsTouched();
+        control.markAsDirty();
       }
     }
     return valid;
@@ -363,6 +584,7 @@ export class GuestAdmissionComponent implements OnInit, OnDestroy {
       });
       return;
     }
+
     if (this.isStepValid(this.currentStep())) {
       this.currentStep.update(s => Math.min(5, s + 1));
     } else {
@@ -387,19 +609,28 @@ export class GuestAdmissionComponent implements OnInit, OnDestroy {
       });
       return;
     }
+
     if (this.admissionForm.invalid) {
       this.admissionForm.markAllAsTouched();
+      for (let s = 1; s <= 5; s++) {
+        if (!this.isStepValid(s)) {
+          this.currentStep.set(s);
+          break;
+        }
+      }
+
       this.messageService.add({
         severity: 'error',
         summary: 'Incomplete Form',
-        detail: 'Please fill in all required fields highlighted in red across all sections.'
+        detail: 'Please correct highlighted errors in the form before submitting.'
       });
       return;
     }
 
     this.submitting.set(true);
 
-    const formVal = this.admissionForm.value;
+    // Use getRawValue() so disabled fields (termId) are included in the payload
+    const formVal = this.admissionForm.getRawValue();
     const req: SubmitAdmissionRequest = {
       ...formVal,
       queueToken: this.queueTokenInfo()?.queueToken
@@ -448,11 +679,72 @@ export class GuestAdmissionComponent implements OnInit, OnDestroy {
       gender: 'FEMALE',
       civilStatus: 'SINGLE',
       citizenship: 'FILIPINO',
-      highSchoolType: 'PUBLIC'
+      highSchoolType: 'PUBLIC',
+      is4psBeneficiary: false,
+      isIndigenousPeople: false,
+      isPersonWithDisability: false,
+      isSoloParent: false,
+      isRaisedBySoloParent: false,
+      isOrphan: false,
+      isGidaResident: false,
+      isFarmerFisherfolk: false,
+      isRebelReturneeFamily: false,
+      isBottom40IncomeBracket: false,
+      monthlyHouseholdIncomeBracket: 'POOR_BELOW_10K',
+      isFirstGenerationCollege: false
     });
     const activeTerm = this.publicTerms().find(t => t.isActive);
     if (activeTerm) {
-      this.admissionForm.patchValue({ termId: activeTerm.id });
+      this.admissionForm.get('termId')?.setValue(activeTerm.id);
+      this.activeTermLabel.set(this.formatAcademicTerm(activeTerm.academicYearCode, activeTerm.termType));
+    }
+  }
+
+  // Helper function to convert DB codes into proper academic display terms
+  private formatAcademicTerm(ayCode?: string, termType?: string): string {
+    if (!ayCode || !termType) return 'N/A';
+
+    // Normalize Academic Year (e.g., "AY-2026-2027" -> "A.Y. 2026–2027")
+    const normalizedAy = ayCode.replace(/^AY[-_]?/i, 'A.Y. ').replace('-', '–');
+
+    // Normalize Term / Semester enums
+    const termMap: Record<string, string> = {
+      'FIRST_SEM': '1st Semester',
+      'SECOND_SEM': '2nd Semester',
+      'SUMMER': 'Summer Term',
+      'MIDYEAR': 'Midyear Term',
+      'TRIMESTER_1': '1st Trimester',
+      'TRIMESTER_2': '2nd Trimester',
+      'TRIMESTER_3': '3rd Trimester'
+    };
+
+    const normalizedSem = termMap[termType.toUpperCase()] || termType.replace(/_/g, ' ');
+
+    return `${normalizedAy} • ${normalizedSem}`;
+  }
+
+  // Add these helper methods to GuestAdmissionComponent
+
+  /** Blocks non-digit keystrokes except standard navigation keys */
+  allowDigitsOnly(event: KeyboardEvent): boolean {
+    const allowedKeys = ['Backspace', 'ArrowLeft', 'ArrowRight', 'Delete', 'Tab'];
+    if (allowedKeys.includes(event.key)) {
+      return true;
+    }
+    if (!/^\d$/.test(event.key)) {
+      event.preventDefault();
+      return false;
+    }
+    return true;
+  }
+
+  /** Strips any non-numeric characters on paste or mobile autocomplete */
+  sanitizeNumberInput(event: Event, controlName: string): void {
+    const input = event.target as HTMLInputElement;
+    const digitsOnly = input.value.replace(/\D/g, '').slice(0, 11);
+    if (input.value !== digitsOnly) {
+      input.value = digitsOnly;
+      this.admissionForm.get(controlName)?.setValue(digitsOnly);
     }
   }
 }

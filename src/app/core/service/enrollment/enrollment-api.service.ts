@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
   AdvisingEligibilityResponse,
@@ -21,19 +21,18 @@ export class EnrollmentApiService {
   getAdvisingEligibility(
     studentId: number,
     termId: number,
-    targetYearLevel?: number | null,
-    targetSemester?: string | null,
-    allCourses: boolean = true
+    targetYearLevel?: number,
+    targetSemester?: string,
+    allCourses: boolean = false
   ): Observable<AdvisingEligibilityResponse> {
-    const params: Record<string, string> = {};
-    if (allCourses) params['allCourses'] = 'true';
-    if (targetYearLevel) params['targetYearLevel'] = String(targetYearLevel);
-    if (targetSemester) params['targetSemester'] = targetSemester;
-
-    return this.http.get<AdvisingEligibilityResponse>(
-      `${this.baseUrl}/advising/student/${studentId}/term/${termId}`,
-      { params }
-    );
+    let url = `${this.baseUrl}/advising/student/${studentId}/term/${termId}?allCourses=${allCourses}`;
+    if (targetYearLevel) {
+      url += `&targetYearLevel=${targetYearLevel}`;
+    }
+    if (targetSemester) {
+      url += `&targetSemester=${targetSemester}`;
+    }
+    return this.http.get<AdvisingEligibilityResponse>(url);
   }
 
   enlistSection(studentId: number, request: EnlistSectionRequest): Observable<StudentEnrollmentResponse> {
@@ -49,6 +48,20 @@ export class EnrollmentApiService {
   }
 
   getEnrollment(studentId: number, termId: number): Observable<StudentEnrollmentResponse> {
+    if (!studentId || studentId <= 0) {
+      return of({
+        enrollmentId: null as unknown as number,
+        studentId: studentId,
+        studentNumber: '',
+        termId: termId,
+        termName: 'UNENROLLED',
+        enrollmentDate: '',
+        status: 'NOT_ENROLLED',
+        totalCreditUnits: 0,
+        isOverloadApproved: false,
+        items: []
+      });
+    }
     return this.http.get<StudentEnrollmentResponse>(`${this.baseUrl}/student/${studentId}/term/${termId}`);
   }
 

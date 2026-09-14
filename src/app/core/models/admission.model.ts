@@ -125,11 +125,20 @@ export interface SubmitAdmissionRequest {
   isPersonWithDisability?: boolean;
   disabilityType?: string;
   pwdIdNumber?: string;
-  isSoloParentOrDependent?: boolean;
+  isSoloParent?: boolean;
+  isRaisedBySoloParent?: boolean;
   soloParentIdNumber?: string;
-  isUnderprivilegedHomeless?: boolean;
-  isDisplacedOrRebelReturnee?: boolean;
+  isOrphan?: boolean;
+  isGidaResident?: boolean;
+  gidaBarangayResidence?: string;
+  isFarmerFisherfolk?: boolean;
+  rsbsaRegistrationNumber?: string;
+  isRebelReturneeFamily?: boolean;
+  certificateOfSurrenderNumber?: string;
+  isBottom40IncomeBracket?: boolean;
   monthlyHouseholdIncomeBracket?: string;
+  isFirstGenerationCollege?: boolean;
+  isUnderprivilegedHomeless?: boolean;
   scholarshipGrantType?: string;
 }
 
@@ -189,11 +198,20 @@ export interface AdmissionApplicationResponse {
   isPersonWithDisability: boolean;
   disabilityType?: string;
   pwdIdNumber?: string;
-  isSoloParentOrDependent: boolean;
+  isSoloParent: boolean;
+  isRaisedBySoloParent: boolean;
   soloParentIdNumber?: string;
-  isUnderprivilegedHomeless?: boolean;
-  isDisplacedOrRebelReturnee?: boolean;
+  isOrphan: boolean;
+  isGidaResident: boolean;
+  gidaBarangayResidence?: string;
+  isFarmerFisherfolk: boolean;
+  rsbsaRegistrationNumber?: string;
+  isRebelReturneeFamily: boolean;
+  certificateOfSurrenderNumber?: string;
+  isBottom40IncomeBracket: boolean;
   monthlyHouseholdIncomeBracket?: string;
+  isFirstGenerationCollege: boolean;
+  isUnderprivilegedHomeless?: boolean;
   scholarshipGrantType?: string;
   queueToken?: string;
   applicationStatus: 'SUBMITTED' | 'UNDER_REVIEW' | 'EXAM_PASSED' | 'EXAM_FAILED' | 'INTERVIEW_ACCEPTED' | 'REJECTED' | 'ELIGIBLE_FOR_ENROLLMENT' | 'ENROLLED' | 'APPROVED';

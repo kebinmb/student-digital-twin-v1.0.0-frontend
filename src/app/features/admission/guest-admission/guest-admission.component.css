@@ -63,7 +63,7 @@
 }
 
 .brand-title {
-  font-family: var(--font-family-heading);
+  font-family: var(--font-family-heading, inherit);
   font-size: 1.125rem;
   font-weight: 700;
   color: var(--chmsu-navy-900, #0f172a);
@@ -104,6 +104,31 @@
   display: flex;
   flex-direction: column;
   gap: 2rem;
+}
+
+/* Readonly Term Indicator Component */
+.readonly-term-box {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--chmsu-slate-300, #cbd5e1);
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  background-color: var(--chmsu-slate-100, #f1f5f9);
+  color: var(--chmsu-navy-900, #0f172a);
+  cursor: not-allowed;
+  user-select: none;
+}
+
+.readonly-term-icon {
+  color: var(--chmsu-green-main, #116834);
+  font-size: 1.1rem;
+}
+
+.readonly-term-text {
+  font-weight: 700;
+  font-size: 0.875rem;
+  letter-spacing: 0.01em;
 }
 
 /* Virtual Waiting Room Modal (PrimeNG Dialog) */
@@ -150,7 +175,7 @@
 }
 
 .queue-modal-title {
-  font-family: var(--font-family-heading);
+  font-family: var(--font-family-heading, inherit);
   font-size: 1.25rem;
   font-weight: 800;
   color: var(--chmsu-navy-900, #0f172a);
@@ -250,7 +275,7 @@
 }
 
 .wizard-main-title {
-  font-family: var(--font-family-heading);
+  font-family: var(--font-family-heading, inherit);
   font-size: 1.5rem;
   font-weight: 800;
   color: var(--chmsu-navy-900, #0f172a);
@@ -309,7 +334,7 @@
 }
 
 .step-section-title {
-  font-family: var(--font-family-heading);
+  font-family: var(--font-family-heading, inherit);
   font-size: 1.125rem;
   font-weight: 700;
   color: var(--chmsu-green-main, #116834);
@@ -322,6 +347,11 @@
 .required-notice {
   font-size: 0.75rem;
   color: var(--chmsu-slate-500, #64748b);
+}
+
+.required-star {
+  color: #ef4444;
+  font-weight: bold;
 }
 
 /* Form Controls & Grids */
@@ -339,6 +369,13 @@
   letter-spacing: 0.03em;
 }
 
+.form-field-error {
+  color: #dc2626;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 0.15rem;
+}
+
 .full-width-input {
   width: 100%;
 }
@@ -346,6 +383,10 @@
 .medium-width-input {
   width: 100%;
   max-width: 24rem;
+}
+
+.font-mono {
+  font-family: var(--font-family-mono, monospace);
 }
 
 .form-row-2 {
@@ -405,7 +446,7 @@
 }
 
 .sub-section-title {
-  font-family: var(--font-family-heading);
+  font-family: var(--font-family-heading, inherit);
   font-size: 0.875rem;
   font-weight: 700;
   color: var(--chmsu-navy-900, #0f172a);
@@ -507,7 +548,7 @@
 }
 
 .slot-venue-name {
-  font-family: var(--font-family-heading);
+  font-family: var(--font-family-heading, inherit);
   font-size: 1rem;
   font-weight: 800;
   color: var(--chmsu-navy-900, #0f172a);
@@ -596,7 +637,7 @@
 }
 
 .ticket-header-title {
-  font-family: var(--font-family-heading);
+  font-family: var(--font-family-heading, inherit);
   font-size: 1.25rem;
   font-weight: 800;
   color: var(--chmsu-green-deep, #0c5027);
@@ -760,7 +801,7 @@
 }
 
 .track-card-title {
-  font-family: var(--font-family-heading);
+  font-family: var(--font-family-heading, inherit);
   font-size: 1.25rem;
   font-weight: 800;
   color: var(--chmsu-navy-900, #0f172a);
@@ -841,8 +882,38 @@
   padding: 0.35rem 0.85rem;
 }
 
-.full-width-message {
-  width: 100%;
+/* Empty State Styling */
+.empty-state-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+  border: 1px dashed var(--chmsu-slate-300, #cbd5e1);
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  background-color: var(--chmsu-slate-50, #f8fafc);
+  gap: 0.75rem;
+}
+
+.empty-state-icon {
+  font-size: 2.25rem;
+  color: var(--chmsu-slate-400, #94a3b8);
+}
+
+.empty-state-title {
+  font-family: var(--font-family-heading, inherit);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+  margin: 0;
+}
+
+.empty-state-subtext {
+  font-size: 0.875rem;
+  color: var(--chmsu-slate-600, #475569);
+  max-width: 32rem;
+  margin: 0;
+  line-height: 1.4;
 }
 
 /* Admission Lock Banner Styles */

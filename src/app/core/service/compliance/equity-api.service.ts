@@ -37,6 +37,9 @@ export interface EquitySearchFilterParams {
   isPwd?: boolean;
   isGida?: boolean;
   isFirstGen?: boolean;
+  isSoloParent?: boolean;
+  isFarmerFisherfolk?: boolean;
+  isBottom40?: boolean;
   page?: number;
   size?: number;
   sortBy?: string;
@@ -103,6 +106,9 @@ export class EquityApiService {
     if (params.isPwd !== undefined && params.isPwd !== null) httpParams = httpParams.set('isPwd', params.isPwd);
     if (params.isGida !== undefined && params.isGida !== null) httpParams = httpParams.set('isGida', params.isGida);
     if (params.isFirstGen !== undefined && params.isFirstGen !== null) httpParams = httpParams.set('isFirstGen', params.isFirstGen);
+    if (params.isSoloParent !== undefined && params.isSoloParent !== null) httpParams = httpParams.set('isSoloParent', params.isSoloParent);
+    if (params.isFarmerFisherfolk !== undefined && params.isFarmerFisherfolk !== null) httpParams = httpParams.set('isFarmerFisherfolk', params.isFarmerFisherfolk);
+    if (params.isBottom40 !== undefined && params.isBottom40 !== null) httpParams = httpParams.set('isBottom40', params.isBottom40);
     if (params.page !== undefined) httpParams = httpParams.set('page', params.page);
     if (params.size !== undefined) httpParams = httpParams.set('size', params.size);
     if (params.sortBy) httpParams = httpParams.set('sortBy', params.sortBy);

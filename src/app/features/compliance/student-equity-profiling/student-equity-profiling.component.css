@@ -20,14 +20,62 @@
   border: 1px solid var(--chmsu-slate-200, #e2e8f0);
   border-radius: var(--chmsu-border-radius-lg, 12px);
   padding: 1rem 1.25rem;
-  box-shadow: var(--chmsu-shadow-card);
+  box-shadow: var(--chmsu-shadow-card, 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1));
+}
+
+.header-branding {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.header-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: var(--chmsu-green-50, #f0fdf4);
+  border: 1px solid var(--chmsu-green-200, #bbf7d0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.header-icon {
+  font-size: 1.35rem;
+  color: var(--chmsu-green-main, #116834);
+}
+
+.header-text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
 }
 
 .header-title-badge-row {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.625rem;
   flex-wrap: wrap;
+}
+
+.header-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+  margin: 0;
+}
+
+.header-subtitle {
+  font-size: 0.8125rem;
+  color: var(--chmsu-slate-500, #64748b);
+  margin: 0;
+}
+
+.header-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .equity-notice-card {
@@ -39,7 +87,7 @@
   border-left: 4px solid var(--chmsu-green-main, #116834);
   border-radius: var(--chmsu-border-radius-md, 8px);
   padding: 1rem 1.25rem;
-  box-shadow: var(--chmsu-shadow-card);
+  box-shadow: var(--chmsu-shadow-card, 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1));
 }
 
 .notice-icon {
@@ -82,7 +130,7 @@
   gap: 0.75rem;
   border-radius: var(--chmsu-border-radius-md, 8px);
   padding: 1rem 1.25rem;
-  box-shadow: var(--chmsu-shadow-card);
+  box-shadow: var(--chmsu-shadow-card, 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1));
 }
 
 .audit-remarks-card.verified {
@@ -130,6 +178,10 @@
   margin-top: 0.35rem;
 }
 
+.equity-form-wrapper {
+  width: 100%;
+}
+
 .equity-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -148,12 +200,16 @@
   flex-direction: column;
 }
 
+.full-span-col {
+  grid-column: 1 / -1;
+}
+
 .equity-card {
   background: var(--chmsu-white, #ffffff);
   border: 1px solid var(--chmsu-slate-200, #e2e8f0);
   border-radius: var(--chmsu-border-radius-lg, 12px);
   padding: 1.25rem;
-  box-shadow: var(--chmsu-shadow-card);
+  box-shadow: var(--chmsu-shadow-card, 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1));
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -187,14 +243,13 @@
   flex: 1;
 }
 
-.equity-toggle-row {
+.equity-checkbox-row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  align-items: flex-start;
+  gap: 0.75rem;
 }
 
-.equity-toggle-row.border-top,
+.equity-checkbox-row.border-top,
 .equity-field-row.border-top {
   padding-top: 0.75rem;
   border-top: 1px solid var(--chmsu-slate-200, #e2e8f0);
@@ -203,6 +258,7 @@
 .toggle-info {
   display: flex;
   flex-direction: column;
+  gap: 0.15rem;
 }
 
 .toggle-label {
@@ -215,6 +271,7 @@
 .toggle-subtext {
   font-size: 0.75rem;
   color: var(--chmsu-slate-500, #64748b);
+  line-height: 1.35;
 }
 
 .equity-nested-field {
@@ -247,11 +304,34 @@
   gap: 0.25rem;
 }
 
+.equity-horizontal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+@media (max-width: 768px) {
+  .equity-horizontal-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .input-label {
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--chmsu-navy-800, #1e293b);
   display: block;
+}
+
+.required-star {
+  color: #dc2626;
+  font-weight: bold;
+}
+
+.form-field-error {
+  font-size: 0.75rem;
+  color: #dc2626;
+  margin-top: 0.15rem;
 }
 
 .full-width-input,
@@ -262,5 +342,17 @@
 .equity-field-row {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.25rem;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.mt-2 {
+  margin-top: 0.5rem;
+}
+
+.mb-1 {
+  margin-bottom: 0.25rem;
 }

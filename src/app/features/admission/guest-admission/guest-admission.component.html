@@ -17,36 +17,22 @@
     </div>
 
     <div class="header-actions">
-      <button pButton 
-              [label]="'New Application'" 
-              icon="pi pi-plus" 
-              [outlined]="activeTab() !== 'apply'" 
-              severity="success" 
-              (click)="activeTab.set('apply')" 
-              class="p-button-sm font-semibold"></button>
-      
-      <button pButton 
-              [label]="'Track Permit'" 
-              icon="pi pi-search" 
-              [outlined]="activeTab() !== 'track'" 
-              severity="secondary" 
-              (click)="activeTab.set('track')" 
-              class="p-button-sm font-semibold"></button>
+      <button pButton [label]="'New Application'" icon="pi pi-plus" [outlined]="activeTab() !== 'apply'"
+        severity="success" (click)="activeTab.set('apply')" class="p-button-sm font-semibold"></button>
+
+      <button pButton [label]="'Track Permit'" icon="pi pi-search" [outlined]="activeTab() !== 'track'"
+        severity="secondary" (click)="activeTab.set('track')" class="p-button-sm font-semibold"></button>
 
       <a routerLink="/login" class="login-link">
-        <button pButton label="Portal Login" icon="pi pi-sign-in" iconPos="right" [text]="true" severity="success" class="p-button-sm font-semibold"></button>
+        <button pButton label="Portal Login" icon="pi pi-sign-in" iconPos="right" [text]="true" severity="success"
+          class="p-button-sm font-semibold"></button>
       </a>
     </div>
   </header>
 
   <!-- High-Concurrency Virtual Waiting Room Modal (PrimeNG Dialog) -->
-  <p-dialog [visible]="showQueueModal()" 
-            [modal]="true" 
-            [closable]="false" 
-            [draggable]="false" 
-            [resizable]="false" 
-            header="Virtual Waiting Room" 
-            styleClass="queue-modal-dialog">
+  <p-dialog [visible]="showQueueModal()" [modal]="true" [closable]="false" [draggable]="false" [resizable]="false"
+    header="Virtual Waiting Room" styleClass="queue-modal-dialog">
     <div class="queue-modal-content">
       <div class="queue-spinner-ring">
         <i class="pi pi-clock queue-icon"></i>
@@ -54,7 +40,8 @@
 
       <div class="queue-modal-header">
         <h3 class="queue-modal-title">High Concurrency Rate Limiting</h3>
-        <p class="queue-modal-subtitle">To maintain system stability during peak enrollment, guest transactions are queued in real time.</p>
+        <p class="queue-modal-subtitle">To maintain system stability during peak enrollment, guest transactions are
+          queued in real time.</p>
       </div>
 
       <div class="queue-stats-grid">
@@ -68,606 +55,780 @@
         </div>
       </div>
 
-      <p-progressBar [value]="queueProgressPercent()" [showValue]="false" styleClass="queue-progress-bar"></p-progressBar>
-      <p class="queue-modal-footer-note">Do not refresh or close this tab. You will automatically proceed once a registration slot opens.</p>
+      <p-progressBar [value]="queueProgressPercent()" [showValue]="false"
+        styleClass="queue-progress-bar"></p-progressBar>
+      <p class="queue-modal-footer-note">Do not refresh or close this tab. You will automatically proceed once a
+        registration slot opens.</p>
     </div>
   </p-dialog>
 
   <!-- Main Content Body -->
   <main class="portal-main">
-    
+
     <!-- TAB 1: NEW APPLICATION -->
     @if (activeTab() === 'apply') {
-      <!-- Application Ticket Pass View (When Submitted) -->
-      @if (submittedApplication()) {
-        <p-card styleClass="ticket-card shadow-card">
-          <ng-template pTemplate="header">
-            <div class="ticket-card-header">
-              <div class="header-status-group">
-                <div class="status-icon-circle">
-                  <i class="pi pi-check-circle"></i>
-                </div>
-                <div>
-                  <h2 class="ticket-header-title">Application & Exam Slot Booking Confirmed!</h2>
-                  <p class="ticket-header-subtitle">Your registration has been logged into the University Admissions database.</p>
-                </div>
-              </div>
-              <p-tag value="VERIFIED ADMISSION PASS" severity="success" [rounded]="true" styleClass="verified-pass-tag"></p-tag>
+    @if (submittedApplication()) {
+    <p-card styleClass="ticket-card shadow-card">
+      <ng-template pTemplate="header">
+        <div class="ticket-card-header">
+          <div class="header-status-group">
+            <div class="status-icon-circle">
+              <i class="pi pi-check-circle"></i>
             </div>
-          </ng-template>
-
-          <div class="ticket-card-body">
-            <div class="ticket-details-grid">
-              <div class="detail-cell">
-                <span class="detail-label">Application Reference Number</span>
-                <p class="detail-value reference-number">{{ submittedApplication()?.applicationNumber }}</p>
-              </div>
-              <div class="detail-cell">
-                <span class="detail-label">Applicant Full Name</span>
-                <p class="detail-value text-highlight">{{ submittedApplication()?.fullName }}</p>
-              </div>
-              <div class="detail-cell">
-                <span class="detail-label">Target Program</span>
-                <p class="detail-value">{{ submittedApplication()?.targetProgramName }} ({{ submittedApplication()?.targetProgramCode }})</p>
-              </div>
-              <div class="detail-cell">
-                <span class="detail-label">Academic Term</span>
-                <p class="detail-value">{{ submittedApplication()?.termName }}</p>
-              </div>
-            </div>
-
-            <!-- Exam Schedule Venue Ticket Box -->
-            @if (submittedApplication()?.examSlotId) {
-              <div class="exam-pass-banner">
-                <div class="banner-top">
-                  <span class="banner-title">
-                    <i class="pi pi-calendar"></i>
-                    Entrance Examination Schedule Pass
-                  </span>
-                  <span class="banner-badge">Venue Room Reserved</span>
-                </div>
-
-                <div class="banner-grid">
-                  <div class="banner-card">
-                    <span class="banner-card-label">Exam Date</span>
-                    <span class="banner-card-value text-white">{{ submittedApplication()?.examDate }}</span>
-                  </div>
-                  <div class="banner-card">
-                    <span class="banner-card-label">Time Window</span>
-                    <span class="banner-card-value text-sky">{{ submittedApplication()?.examStartTime }} - {{ submittedApplication()?.examEndTime }}</span>
-                  </div>
-                  <div class="banner-card">
-                    <span class="banner-card-label">Testing Hall / Venue Room</span>
-                    <span class="banner-card-value text-amber">{{ submittedApplication()?.examVenue }}</span>
-                  </div>
-                </div>
-              </div>
-            }
-
-            <div class="ticket-actions font-actions">
-              <button pButton label="Print Exam Ticket Pass" icon="pi pi-print" severity="success" (click)="printTicket()" class="p-button-lg font-bold"></button>
-              <button pButton label="Submit Another Application" icon="pi pi-refresh" [outlined]="true" severity="secondary" (click)="resetForm()" class="p-button-lg font-bold"></button>
+            <div>
+              <h2 class="ticket-header-title">Application & Exam Slot Booking Confirmed!</h2>
+              <p class="ticket-header-subtitle">Your registration has been logged into the University Admissions
+                database.</p>
             </div>
           </div>
-        </p-card>
-      } @else {
-        <!-- Multi-Step Wizard Container -->
-        <p-card styleClass="wizard-card shadow-card">
-          <ng-template pTemplate="header">
-            <div class="wizard-header">
-              <div class="wizard-header-title-row">
-                <div>
-                  <h2 class="wizard-main-title">Online Admission Application</h2>
-                  <p class="wizard-main-subtitle">Complete statutory personal profiling, Form 137 high school data, and reserve your entrance exam slot.</p>
-                </div>
-                <p-tag [value]="'Step ' + currentStep() + ' of 5'" severity="success" [rounded]="true" styleClass="step-counter-tag"></p-tag>
-              </div>
+          <p-tag value="VERIFIED ADMISSION PASS" severity="success" [rounded]="true"
+            styleClass="verified-pass-tag"></p-tag>
+        </div>
+      </ng-template>
 
-              <!-- PrimeNG Steps Component -->
-              <p-steps [model]="wizardStepItems" [activeIndex]="currentStepIndex()" [readonly]="true" styleClass="custom-steps"></p-steps>
+      <div class="ticket-card-body">
+        <div class="ticket-details-grid">
+          <div class="detail-cell">
+            <span class="detail-label">Application Reference Number</span>
+            <p class="detail-value reference-number">{{ submittedApplication()?.applicationNumber }}</p>
+          </div>
+          <div class="detail-cell">
+            <span class="detail-label">Applicant Full Name</span>
+            <p class="detail-value text-highlight">{{ submittedApplication()?.fullName }}</p>
+          </div>
+          <div class="detail-cell">
+            <span class="detail-label">Target Program</span>
+            <p class="detail-value">{{ submittedApplication()?.targetProgramName }} ({{
+              submittedApplication()?.targetProgramCode }})</p>
+          </div>
+          <div class="detail-cell">
+            <span class="detail-label">Academic Term</span>
+            <p class="detail-value">{{ submittedApplication()?.termName }}</p>
+          </div>
+        </div>
+
+        <!-- Exam Schedule Venue Ticket Box -->
+        @if (submittedApplication()?.examSlotId) {
+        <div class="exam-pass-banner">
+          <div class="banner-top">
+            <span class="banner-title">
+              <i class="pi pi-calendar"></i>
+              Entrance Examination Schedule Pass
+            </span>
+            <span class="banner-badge">Venue Room Reserved</span>
+          </div>
+
+          <div class="banner-grid">
+            <div class="banner-card">
+              <span class="banner-card-label">Exam Date</span>
+              <span class="banner-card-value text-white">{{ submittedApplication()?.examDate }}</span>
+            </div>
+            <div class="banner-card">
+              <span class="banner-card-label">Time Window</span>
+              <span class="banner-card-value text-sky">{{ submittedApplication()?.examStartTime }} - {{
+                submittedApplication()?.examEndTime }}</span>
+            </div>
+            <div class="banner-card">
+              <span class="banner-card-label">Testing Hall / Venue Room</span>
+              <span class="banner-card-value text-amber">{{ submittedApplication()?.examVenue }}</span>
+            </div>
+          </div>
+        </div>
+        }
+
+        <div class="ticket-actions font-actions">
+          <button pButton label="Print Exam Ticket Pass" icon="pi pi-print" severity="success" (click)="printTicket()"
+            class="p-button-lg font-bold"></button>
+          <button pButton label="Submit Another Application" icon="pi pi-refresh" [outlined]="true" severity="secondary"
+            (click)="resetForm()" class="p-button-lg font-bold"></button>
+        </div>
+      </div>
+    </p-card>
+    } @else {
+    <!-- Multi-Step Wizard Container -->
+    <p-card styleClass="wizard-card shadow-card">
+      <ng-template pTemplate="header">
+        <div class="wizard-header">
+          <div class="wizard-header-title-row">
+            <div>
+              <h2 class="wizard-main-title">Online Admission Application</h2>
+              <p class="wizard-main-subtitle">Complete statutory personal profiling, Form 137 high school data, and
+                reserve your entrance exam slot.</p>
+            </div>
+            <p-tag [value]="'Step ' + currentStep() + ' of 5'" severity="success" [rounded]="true"
+              styleClass="step-counter-tag"></p-tag>
+          </div>
+
+          <!-- PrimeNG Steps Component -->
+          <p-steps [model]="wizardStepItems" [activeIndex]="currentStepIndex()" [readonly]="true"
+            styleClass="custom-steps"></p-steps>
+        </div>
+
+        <!-- Admission Period Locked / Closed Banner -->
+        @if (isAdmissionLocked()) {
+        <div class="admission-lock-banner">
+          <div class="lock-banner-title font-bold flex align-items-center gap-2">
+            <i class="pi pi-lock text-xl"></i>
+            <span>Admission Application Period Locked / Closed</span>
+          </div>
+          <p class="lock-banner-text text-sm mt-1 mb-0">
+            Public guest admission is currently locked. The Guidance / Admin Office has not yet activated this admission
+            period or total slot limits have been reached. Please check back later or contact the Registrar's Office.
+          </p>
+        </div>
+        }
+      </ng-template>
+
+      <!-- Wizard Form Body -->
+      <form [formGroup]="admissionForm" (ngSubmit)="onSubmit()" class="wizard-form" novalidate>
+
+        <!-- STEP 1: Academic Target & Personal Information -->
+        @if (currentStep() === 1) {
+        <div class="step-section">
+          <div class="step-section-header">
+            <h3 class="step-section-title">
+              <i class="pi pi-user"></i>
+              1. Target Program & Personal Information (CHED CMO 25)
+            </h3>
+            <span class="required-notice"><span class="required-star">*</span> Mandatory fields</span>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label">Target Academic Program <span class="required-star">*</span></label>
+              <p-select [options]="programOptions()" formControlName="targetProgramId" optionLabel="label"
+                optionValue="value" [filter]="true" filterBy="label" filterPlaceholder="Search degree program..."
+                [showClear]="true" [invalid]="isFieldInvalid('targetProgramId')"
+                placeholder="-- Select Academic Program --" styleClass="full-width-input">
+              </p-select>
+              @if (isFieldInvalid('targetProgramId')) {
+              <small class="form-field-error">{{ getFieldError('targetProgramId') }}</small>
+              }
             </div>
 
-            <!-- Admission Period Locked / Closed Banner -->
-            @if (isAdmissionLocked()) {
-              <div class="admission-lock-banner">
-                <div class="lock-banner-title font-bold flex align-items-center gap-2">
-                  <i class="pi pi-lock text-xl"></i>
-                  <span>Admission Application Period Locked / Closed</span>
+            <div class="form-group">
+              <label class="form-label">Target Academic Term</label>
+              <div class="readonly-term-box">
+                <div class="readonly-term-info">
+                  <i class="pi pi-calendar readonly-term-icon"></i>
+                  <span class="readonly-term-text">{{ activeTermLabel() }}</span>
                 </div>
-                <p class="lock-banner-text text-sm mt-1 mb-0">
-                  Public guest admission is currently locked. The Guidance / Admin Office has not yet activated this admission period or total slot limits have been reached. Please check back later or contact the Registrar's Office.
-                </p>
+                <p-tag value="Active Term" severity="success" [rounded]="true" styleClass="active-term-badge"></p-tag>
               </div>
-            }
-          </ng-template>
+            </div>
+          </div>
 
-          <!-- Wizard Form Body -->
-          <form [formGroup]="admissionForm" (ngSubmit)="onSubmit()" class="wizard-form">
-            
-            <!-- STEP 1: Academic Target & Personal Information -->
-            @if (currentStep() === 1) {
-              <div class="step-section">
-                <div class="step-section-header">
-                  <h3 class="step-section-title">
-                    <i class="pi pi-user"></i>
-                    1. Target Program & Personal Information (CHED CMO 25)
-                  </h3>
-                  <span class="required-notice"><span class="required-star">*</span> Mandatory fields</span>
-                </div>
+          <div class="form-row-4">
+            <div class="form-group">
+              <label class="form-label">First Name <span class="required-star">*</span></label>
+              <input pInputText formControlName="firstName" maxlength="50" [invalid]="isFieldInvalid('firstName')"
+                placeholder="Juan" class="full-width-input" />
+              @if (isFieldInvalid('firstName')) {
+              <small class="form-field-error">{{ getFieldError('firstName') }}</small>
+              }
+            </div>
+            <div class="form-group">
+              <label class="form-label">Middle Name</label>
+              <input pInputText formControlName="middleName" maxlength="50" [invalid]="isFieldInvalid('middleName')"
+                placeholder="Santos (optional)" class="full-width-input" />
+              @if (isFieldInvalid('middleName')) {
+              <small class="form-field-error">{{ getFieldError('middleName') }}</small>
+              }
+            </div>
+            <div class="form-group">
+              <label class="form-label">Last Name <span class="required-star">*</span></label>
+              <input pInputText formControlName="lastName" maxlength="50" [invalid]="isFieldInvalid('lastName')"
+                placeholder="Dela Cruz" class="full-width-input" />
+              @if (isFieldInvalid('lastName')) {
+              <small class="form-field-error">{{ getFieldError('lastName') }}</small>
+              }
+            </div>
+            <div class="form-group">
+              <label class="form-label">Suffix</label>
+              <input pInputText formControlName="suffix" maxlength="10" [invalid]="isFieldInvalid('suffix')"
+                placeholder="Jr., III (optional)" class="full-width-input" />
+              @if (isFieldInvalid('suffix')) {
+              <small class="form-field-error">{{ getFieldError('suffix') }}</small>
+              }
+            </div>
+          </div>
 
-                <div class="form-row-2">
-                  <div class="form-group">
-                    <label class="form-label">Target Academic Program <span class="required-star">*</span></label>
-                    <p-select [options]="programOptions()" 
-                              formControlName="targetProgramId" 
-                              optionLabel="label" 
-                              optionValue="value" 
-                              [filter]="true"
-                              filterBy="label"
-                              filterPlaceholder="Search degree program..."
-                              [showClear]="true"
-                              [invalid]="isFieldInvalid('targetProgramId')"
-                              placeholder="-- Select Academic Program --" 
-                              styleClass="full-width-input">
-                    </p-select>
-                    @if (isFieldInvalid('targetProgramId')) {
-                      <small class="form-field-error">{{ getFieldError('targetProgramId') }}</small>
-                    }
-                  </div>
+          <div class="form-row-3">
+            <div class="form-group">
+              <label class="form-label">Date of Birth <span class="required-star">*</span></label>
+              <input type="date" pInputText formControlName="birthDate" [invalid]="isFieldInvalid('birthDate')"
+                class="full-width-input" />
+              @if (isFieldInvalid('birthDate')) {
+              <small class="form-field-error">{{ getFieldError('birthDate') }}</small>
+              }
+            </div>
+            <div class="form-group">
+              <label class="form-label">Gender <span class="required-star">*</span></label>
+              <p-select [options]="genderOptions" formControlName="gender" optionLabel="label" optionValue="value"
+                [invalid]="isFieldInvalid('gender')" styleClass="full-width-input">
+              </p-select>
+              @if (isFieldInvalid('gender')) {
+              <small class="form-field-error">{{ getFieldError('gender') }}</small>
+              }
+            </div>
+            <div class="form-group">
+              <label class="form-label">Civil Status <span class="required-star">*</span></label>
+              <p-select [options]="civilStatusOptions" formControlName="civilStatus" optionLabel="label"
+                optionValue="value" [invalid]="isFieldInvalid('civilStatus')" styleClass="full-width-input">
+              </p-select>
+              @if (isFieldInvalid('civilStatus')) {
+              <small class="form-field-error">{{ getFieldError('civilStatus') }}</small>
+              }
+            </div>
+          </div>
 
-                  <div class="form-group">
-                    <label class="form-label">Target Academic Term <span class="required-star">*</span></label>
-                    <p-select [options]="termOptions()" 
-                              formControlName="termId" 
-                              optionLabel="label" 
-                              optionValue="value" 
-                              [filter]="true"
-                              filterBy="label"
-                              filterPlaceholder="Search term..."
-                              [showClear]="true"
-                              [invalid]="isFieldInvalid('termId')"
-                              (onChange)="onTermChange()" 
-                              placeholder="-- Select Term --"
-                              styleClass="full-width-input">
-                    </p-select>
-                    @if (isFieldInvalid('termId')) {
-                      <small class="form-field-error">{{ getFieldError('termId') }}</small>
-                    }
-                  </div>
-                </div>
+          <div class="form-row-3">
+            <div class="form-group">
+              <label class="form-label">Citizenship <span class="required-star">*</span></label>
+              <input pInputText formControlName="citizenship" maxlength="50" [invalid]="isFieldInvalid('citizenship')"
+                placeholder="FILIPINO" class="full-width-input" />
+              @if (isFieldInvalid('citizenship')) {
+              <small class="form-field-error">{{ getFieldError('citizenship') }}</small>
+              }
+            </div>
+            <div class="form-group">
+              <label class="form-label">Mobile Contact Number <span class="required-star">*</span></label>
+              <input pInputText formControlName="mobileNumber" type="tel" inputmode="numeric" maxlength="11"
+                (keypress)="allowDigitsOnly($event)" (input)="sanitizeNumberInput($event, 'mobileNumber')"
+                [invalid]="isFieldInvalid('mobileNumber')" placeholder="09171234567"
+                class="full-width-input font-mono" />
+              @if (isFieldInvalid('mobileNumber')) {
+              <small class="form-field-error">{{ getFieldError('mobileNumber') }}</small>
+              }
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email Address <span class="required-star">*</span></label>
+              <input pInputText type="email" formControlName="email" maxlength="100" [invalid]="isFieldInvalid('email')"
+                placeholder="applicant@example.com" class="full-width-input" />
+              @if (isFieldInvalid('email')) {
+              <small class="form-field-error">{{ getFieldError('email') }}</small>
+              }
+            </div>
+          </div>
+        </div>
+        }
 
-                <div class="form-row-4">
-                  <div class="form-group">
-                    <label class="form-label">First Name <span class="required-star">*</span></label>
-                    <input pInputText formControlName="firstName" [invalid]="isFieldInvalid('firstName')" placeholder="Juan" class="full-width-input" />
-                    @if (isFieldInvalid('firstName')) {
-                      <small class="form-field-error">{{ getFieldError('firstName') }}</small>
-                    }
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Middle Name</label>
-                    <input pInputText formControlName="middleName" placeholder="Santos (optional)" class="full-width-input" />
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Last Name <span class="required-star">*</span></label>
-                    <input pInputText formControlName="lastName" [invalid]="isFieldInvalid('lastName')" placeholder="Dela Cruz" class="full-width-input" />
-                    @if (isFieldInvalid('lastName')) {
-                      <small class="form-field-error">{{ getFieldError('lastName') }}</small>
-                    }
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Suffix</label>
-                    <input pInputText formControlName="suffix" placeholder="Jr., III (optional)" class="full-width-input" />
-                  </div>
-                </div>
+        <!-- STEP 2: Academic Background & Form 137 Data -->
+        @if (currentStep() === 2) {
+        <div class="step-section">
+          <div class="step-section-header">
+            <h3 class="step-section-title">
+              <i class="pi pi-id-card"></i>
+              2. Academic Background & Form 137 High School Data
+            </h3>
+            <span class="required-notice">DepEd Form 137 Verification</span>
+          </div>
 
-                <div class="form-row-3">
-                  <div class="form-group">
-                    <label class="form-label">Date of Birth <span class="required-star">*</span></label>
-                    <input type="date" pInputText formControlName="birthDate" [invalid]="isFieldInvalid('birthDate')" class="full-width-input" />
-                    @if (isFieldInvalid('birthDate')) {
-                      <small class="form-field-error">{{ getFieldError('birthDate') }}</small>
-                    }
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Gender <span class="required-star">*</span></label>
-                    <p-select [options]="genderOptions" 
-                              formControlName="gender" 
-                              optionLabel="label" 
-                              optionValue="value" 
-                              [invalid]="isFieldInvalid('gender')"
-                              styleClass="full-width-input">
-                    </p-select>
-                    @if (isFieldInvalid('gender')) {
-                      <small class="form-field-error">{{ getFieldError('gender') }}</small>
-                    }
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Civil Status <span class="required-star">*</span></label>
-                    <p-select [options]="civilStatusOptions" 
-                              formControlName="civilStatus" 
-                              optionLabel="label" 
-                              optionValue="value" 
-                              [invalid]="isFieldInvalid('civilStatus')"
-                              styleClass="full-width-input">
-                    </p-select>
-                    @if (isFieldInvalid('civilStatus')) {
-                      <small class="form-field-error">{{ getFieldError('civilStatus') }}</small>
-                    }
-                  </div>
-                </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label">Learner Reference Number (LRN)</label>
+              <input pInputText formControlName="lrnNumber" maxlength="12" [invalid]="isFieldInvalid('lrnNumber')"
+                placeholder="12-digit DepEd LRN (optional)" class="full-width-input font-mono" />
+              @if (isFieldInvalid('lrnNumber')) {
+              <small class="form-field-error">{{ getFieldError('lrnNumber') }}</small>
+              }
+            </div>
+            <div class="form-group">
+              <label class="form-label">High School Name <span class="required-star">*</span></label>
+              <input pInputText formControlName="highSchoolName" maxlength="150"
+                [invalid]="isFieldInvalid('highSchoolName')" placeholder="e.g., Manila Science High School"
+                class="full-width-input" />
+              @if (isFieldInvalid('highSchoolName')) {
+              <small class="form-field-error">{{ getFieldError('highSchoolName') }}</small>
+              }
+            </div>
+          </div>
 
-                <div class="form-row-3">
-                  <div class="form-group">
-                    <label class="form-label">Citizenship <span class="required-star">*</span></label>
-                    <input pInputText formControlName="citizenship" [invalid]="isFieldInvalid('citizenship')" placeholder="FILIPINO" class="full-width-input" />
-                    @if (isFieldInvalid('citizenship')) {
-                      <small class="form-field-error">{{ getFieldError('citizenship') }}</small>
-                    }
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Mobile Contact Number <span class="required-star">*</span></label>
-                    <input pInputText formControlName="mobileNumber" [invalid]="isFieldInvalid('mobileNumber')" placeholder="09171234567" class="full-width-input font-mono" />
-                    @if (isFieldInvalid('mobileNumber')) {
-                      <small class="form-field-error">{{ getFieldError('mobileNumber') }}</small>
-                    }
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Email Address <span class="required-star">*</span></label>
-                    <input pInputText type="email" formControlName="email" [invalid]="isFieldInvalid('email')" placeholder="applicant@example.com" class="full-width-input" />
-                    @if (isFieldInvalid('email')) {
-                      <small class="form-field-error">{{ getFieldError('email') }}</small>
-                    }
-                  </div>
-                </div>
-              </div>
-            }
+          <div class="form-row-3">
+            <div class="form-group">
+              <label class="form-label">School Type / Sector <span class="required-star">*</span></label>
+              <p-select [options]="schoolTypeOptions" formControlName="highSchoolType" optionLabel="label"
+                optionValue="value" [invalid]="isFieldInvalid('highSchoolType')" styleClass="full-width-input">
+              </p-select>
+              @if (isFieldInvalid('highSchoolType')) {
+              <small class="form-field-error">{{ getFieldError('highSchoolType') }}</small>
+              }
+            </div>
+            <div class="form-group">
+              <label class="form-label">SHS Track & Strand</label>
+              <input pInputText formControlName="shsTrackAndStrand" maxlength="100"
+                [invalid]="isFieldInvalid('shsTrackAndStrand')" placeholder="e.g., Academic - STEM"
+                class="full-width-input" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">High School GWA (General Weighted Avg) <span
+                  class="required-star">*</span></label>
+              <input pInputText type="number" step="0.01" formControlName="highSchoolGwa"
+                [invalid]="isFieldInvalid('highSchoolGwa')" placeholder="e.g., 88.50" class="full-width-input" />
+              @if (isFieldInvalid('highSchoolGwa')) {
+              <small class="form-field-error">{{ getFieldError('highSchoolGwa') }}</small>
+              }
+            </div>
+          </div>
+        </div>
+        }
 
-            <!-- STEP 2: Academic Background & Form 137 Data -->
-            @if (currentStep() === 2) {
-              <div class="step-section">
-                <div class="step-section-header">
-                  <h3 class="step-section-title">
-                    <i class="pi pi-id-card"></i>
-                    2. Academic Background & Form 137 High School Data
-                  </h3>
-                  <span class="required-notice">DepEd Form 137 Verification</span>
-                </div>
+        <!-- STEP 3: Permanent Address & Emergency Contact -->
+        @if (currentStep() === 3) {
+        <div class="step-section">
+          <div class="step-section-header">
+            <h3 class="step-section-title">
+              <i class="pi pi-map-marker"></i>
+              3. Permanent Residence Address & Emergency Contact
+            </h3>
+            <span class="required-notice"><span class="required-star">*</span> Mandatory fields</span>
+          </div>
 
-                <div class="form-row-2">
-                  <div class="form-group">
-                    <label class="form-label">Learner Reference Number (LRN)</label>
-                    <input pInputText formControlName="lrnNumber" [invalid]="isFieldInvalid('lrnNumber')" placeholder="12-digit DepEd LRN (optional)" class="full-width-input font-mono" />
-                    @if (isFieldInvalid('lrnNumber')) {
-                      <small class="form-field-error">{{ getFieldError('lrnNumber') }}</small>
-                    }
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">High School Name <span class="required-star">*</span></label>
-                    <input pInputText formControlName="highSchoolName" [invalid]="isFieldInvalid('highSchoolName')" placeholder="e.g., Manila Science High School" class="full-width-input" />
-                    @if (isFieldInvalid('highSchoolName')) {
-                      <small class="form-field-error">{{ getFieldError('highSchoolName') }}</small>
-                    }
-                  </div>
-                </div>
+          <div class="form-stack">
+            <div class="form-group">
+              <label class="form-label">Street Address / House No. <span class="required-star">*</span></label>
+              <input pInputText formControlName="streetAddress" maxlength="255"
+                [invalid]="isFieldInvalid('streetAddress')" placeholder="123 Rizal St." class="full-width-input" />
+              @if (isFieldInvalid('streetAddress')) {
+              <small class="form-field-error">{{ getFieldError('streetAddress') }}</small>
+              }
+            </div>
 
-                <div class="form-row-3">
-                  <div class="form-group">
-                    <label class="form-label">School Type / Sector <span class="required-star">*</span></label>
-                    <p-select [options]="schoolTypeOptions" 
-                              formControlName="highSchoolType" 
-                              optionLabel="label" 
-                              optionValue="value" 
-                              [invalid]="isFieldInvalid('highSchoolType')"
-                              styleClass="full-width-input">
-                    </p-select>
-                    @if (isFieldInvalid('highSchoolType')) {
-                      <small class="form-field-error">{{ getFieldError('highSchoolType') }}</small>
-                    }
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">SHS Track & Strand</label>
-                    <input pInputText formControlName="shsTrackAndStrand" placeholder="e.g., Academic - STEM" class="full-width-input" />
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">High School GWA (General Weighted Avg)</label>
-                    <input pInputText type="number" step="0.01" formControlName="highSchoolGwa" [invalid]="isFieldInvalid('highSchoolGwa')" placeholder="e.g., 88.50" class="full-width-input" />
-                    @if (isFieldInvalid('highSchoolGwa')) {
-                      <small class="form-field-error">{{ getFieldError('highSchoolGwa') }}</small>
-                    }
-                  </div>
-                </div>
-              </div>
-            }
-
-            <!-- STEP 3: Permanent Address & Emergency Contact -->
-            @if (currentStep() === 3) {
-              <div class="step-section">
-                <div class="step-section-header">
-                  <h3 class="step-section-title">
-                    <i class="pi pi-map-marker"></i>
-                    3. Permanent Residence Address & Emergency Contact
-                  </h3>
-                  <span class="required-notice"><span class="required-star">*</span> Mandatory fields</span>
-                </div>
-
-                <div class="form-stack">
-                  <div class="form-group">
-                    <label class="form-label">Street Address / House No. <span class="required-star">*</span></label>
-                    <input pInputText formControlName="streetAddress" [invalid]="isFieldInvalid('streetAddress')" placeholder="123 Rizal St." class="full-width-input" />
-                    @if (isFieldInvalid('streetAddress')) {
-                      <small class="form-field-error">{{ getFieldError('streetAddress') }}</small>
-                    }
-                  </div>
-
-                  <div class="form-row-3">
-                    <div class="form-group">
-                      <label class="form-label">Barangay <span class="required-star">*</span></label>
-                      <input pInputText formControlName="barangay" [invalid]="isFieldInvalid('barangay')" placeholder="Brgy. 101" class="full-width-input" />
-                      @if (isFieldInvalid('barangay')) {
-                        <small class="form-field-error">{{ getFieldError('barangay') }}</small>
-                      }
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">City / Municipality <span class="required-star">*</span></label>
-                      <input pInputText formControlName="cityMunicipality" [invalid]="isFieldInvalid('cityMunicipality')" placeholder="Quezon City" class="full-width-input" />
-                      @if (isFieldInvalid('cityMunicipality')) {
-                        <small class="form-field-error">{{ getFieldError('cityMunicipality') }}</small>
-                      }
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">Province <span class="required-star">*</span></label>
-                      <input pInputText formControlName="province" [invalid]="isFieldInvalid('province')" placeholder="Metro Manila" class="full-width-input" />
-                      @if (isFieldInvalid('province')) {
-                        <small class="form-field-error">{{ getFieldError('province') }}</small>
-                      }
-                    </div>
-                  </div>
-                </div>
-
-                <div class="form-sub-section">
-                  <h4 class="sub-section-title">Emergency Guardian / Contact Person</h4>
-                  <div class="form-row-3">
-                    <div class="form-group">
-                      <label class="form-label">Guardian Name <span class="required-star">*</span></label>
-                      <input pInputText formControlName="emergencyContactName" [invalid]="isFieldInvalid('emergencyContactName')" placeholder="Parent / Guardian Name" class="full-width-input" />
-                      @if (isFieldInvalid('emergencyContactName')) {
-                        <small class="form-field-error">{{ getFieldError('emergencyContactName') }}</small>
-                      }
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">Relationship <span class="required-star">*</span></label>
-                      <input pInputText formControlName="emergencyContactRelationship" [invalid]="isFieldInvalid('emergencyContactRelationship')" placeholder="Mother, Father, Guardian" class="full-width-input" />
-                      @if (isFieldInvalid('emergencyContactRelationship')) {
-                        <small class="form-field-error">{{ getFieldError('emergencyContactRelationship') }}</small>
-                      }
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">Phone Number <span class="required-star">*</span></label>
-                      <input pInputText formControlName="emergencyContactNumber" [invalid]="isFieldInvalid('emergencyContactNumber')" placeholder="09181234567" class="full-width-input font-mono" />
-                      @if (isFieldInvalid('emergencyContactNumber')) {
-                        <small class="form-field-error">{{ getFieldError('emergencyContactNumber') }}</small>
-                      }
-                    </div>
-                  </div>
-                </div>
-              </div>
-            }
-
-            <!-- STEP 4: Statutory Philippine Equity Indicators -->
-            @if (currentStep() === 4) {
-              <div class="step-section">
-                <div class="step-section-header">
-                  <h3 class="step-section-title">
-                    <i class="pi pi-shield"></i>
-                    4. Statutory Philippine Equity Indicators
-                  </h3>
-                  <span class="required-notice">CHED & Statutory Priority Compliance</span>
-                </div>
-
-                <div class="equity-stack">
-                  <!-- 4Ps Household -->
-                  <div class="equity-box">
-                    <div class="checkbox-row">
-                      <p-checkbox formControlName="is4psBeneficiary" [binary]="true" inputId="chk4ps"></p-checkbox>
-                      <label for="chk4ps" class="checkbox-label">4Ps Pantawid Pamilyang Pilipino Program Beneficiary (RA 11310)</label>
-                    </div>
-                    @if (admissionForm.get('is4psBeneficiary')?.value) {
-                      <div class="nested-field">
-                        <label class="form-label">4Ps Household ID Number <span class="required-star">*</span></label>
-                        <input pInputText formControlName="household4psIdNumber" [invalid]="isFieldInvalid('household4psIdNumber')" placeholder="Enter 4Ps Household ID" class="medium-width-input" />
-                        @if (isFieldInvalid('household4psIdNumber')) {
-                          <small class="form-field-error">{{ getFieldError('household4psIdNumber') }}</small>
-                        }
-                      </div>
-                    }
-                  </div>
-
-                  <!-- Indigenous People -->
-                  <div class="equity-box">
-                    <div class="checkbox-row">
-                      <p-checkbox formControlName="isIndigenousPeople" [binary]="true" inputId="chkIp"></p-checkbox>
-                      <label for="chkIp" class="checkbox-label">Indigenous People / Cultural Community Member (IPRA RA 8371)</label>
-                    </div>
-                    @if (admissionForm.get('isIndigenousPeople')?.value) {
-                      <div class="nested-field">
-                        <label class="form-label">IP Group / Ethnic Community Name <span class="required-star">*</span></label>
-                        <input pInputText formControlName="ipEthnicGroup" [invalid]="isFieldInvalid('ipEthnicGroup')" placeholder="e.g., Igorot, Mangyan, Lumad" class="medium-width-input" />
-                        @if (isFieldInvalid('ipEthnicGroup')) {
-                          <small class="form-field-error">{{ getFieldError('ipEthnicGroup') }}</small>
-                        }
-                      </div>
-                    }
-                  </div>
-
-                  <!-- Person with Disability -->
-                  <div class="equity-box">
-                    <div class="checkbox-row">
-                      <p-checkbox formControlName="isPersonWithDisability" [binary]="true" inputId="chkPwd"></p-checkbox>
-                      <label for="chkPwd" class="checkbox-label">Person with Disability (PWD RA 7277)</label>
-                    </div>
-                    @if (admissionForm.get('isPersonWithDisability')?.value) {
-                      <div class="nested-field">
-                        <label class="form-label">Disability Type / Category <span class="required-star">*</span></label>
-                        <input pInputText formControlName="disabilityType" [invalid]="isFieldInvalid('disabilityType')" placeholder="e.g., Visual, Mobility, Hearing" class="medium-width-input" />
-                        @if (isFieldInvalid('disabilityType')) {
-                          <small class="form-field-error">{{ getFieldError('disabilityType') }}</small>
-                        }
-                      </div>
-                    }
-                  </div>
-
-                  <!-- Solo Parent -->
-                  <div class="equity-box">
-                    <div class="checkbox-row">
-                      <p-checkbox formControlName="isSoloParentOrDependent" [binary]="true" inputId="chkSolo"></p-checkbox>
-                      <label for="chkSolo" class="checkbox-label">Solo Parent or Dependent of Solo Parent (RA 11861)</label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            }
-
-            <!-- STEP 5: Entrance Exam Slot Selector -->
-            @if (currentStep() === 5) {
-              <div class="step-section">
-                <div class="step-section-header">
-                  <h3 class="step-section-title">
-                    <i class="pi pi-calendar"></i>
-                    5. Reserve Entrance Examination Venue & Schedule Slot
-                  </h3>
-                  <span class="required-notice">Atomic Room Reservation</span>
-                </div>
-
-                @if (examSlots().length === 0) {
-                  <!-- Rich Empty State for No Available Exam Slots -->
-                  <div class="empty-state-card bento-card flex-center">
-                    <div class="empty-state-icon">
-                      <i class="pi pi-calendar-times"></i>
-                    </div>
-                    <h4 class="empty-state-title">No Exam Schedule Slots Available</h4>
-                    <p class="empty-state-subtext">
-                      There are currently no open testing hall slots for the selected academic term. You can still submit your application, and the Admissions Office will assign your testing room schedule later.
-                    </p>
-                  </div>
-                } @else {
-                  <div class="slots-grid">
-                    @for (slot of examSlots(); track slot.id) {
-                      <div [class]="admissionForm.get('examSlotId')?.value === slot.id ? 'slot-card slot-card-selected' : 'slot-card'"
-                           (click)="selectExamSlot(slot.id)">
-                        <div class="slot-card-header">
-                          <div class="slot-radio-group">
-                            <p-radioButton name="examSlotIdRadio" [value]="slot.id" formControlName="examSlotId" [inputId]="'slot_' + slot.id"></p-radioButton>
-                            <div>
-                              <span class="slot-venue-name">{{ slot.venueRoom }}</span>
-                              <span class="slot-date-text">{{ slot.examDate }}</span>
-                            </div>
-                          </div>
-
-                          <p-tag [value]="slot.availableSeats + ' seats left'" 
-                                 [severity]="slot.availableSeats > 20 ? 'success' : 'warn'" 
-                                 [rounded]="true" styleClass="seats-tag"></p-tag>
-                        </div>
-
-                        <div class="slot-card-footer">
-                          <span>Time: <strong class="time-highlight">{{ slot.startTime }} - {{ slot.endTime }}</strong></span>
-                          <span>Booked: {{ slot.reservedCount }}/{{ slot.maxCapacity }}</span>
-                        </div>
-                      </div>
-                    }
-                  </div>
+            <div class="form-row-4">
+              <div class="form-group">
+                <label class="form-label">Barangay <span class="required-star">*</span></label>
+                <input pInputText formControlName="barangay" maxlength="100" [invalid]="isFieldInvalid('barangay')"
+                  placeholder="Brgy. 101" class="full-width-input" />
+                @if (isFieldInvalid('barangay')) {
+                <small class="form-field-error">{{ getFieldError('barangay') }}</small>
                 }
               </div>
-            }
+              <div class="form-group">
+                <label class="form-label">City / Municipality <span class="required-star">*</span></label>
+                <input pInputText formControlName="cityMunicipality" maxlength="100"
+                  [invalid]="isFieldInvalid('cityMunicipality')" placeholder="Quezon City" class="full-width-input" />
+                @if (isFieldInvalid('cityMunicipality')) {
+                <small class="form-field-error">{{ getFieldError('cityMunicipality') }}</small>
+                }
+              </div>
+              <div class="form-group">
+                <label class="form-label">Province <span class="required-star">*</span></label>
+                <input pInputText formControlName="province" maxlength="100" [invalid]="isFieldInvalid('province')"
+                  placeholder="Metro Manila" class="full-width-input" />
+                @if (isFieldInvalid('province')) {
+                <small class="form-field-error">{{ getFieldError('province') }}</small>
+                }
+              </div>
+              <div class="form-group">
+                <label class="form-label">ZIP Code</label>
+                <input pInputText formControlName="zipCode" maxlength="4" [invalid]="isFieldInvalid('zipCode')"
+                  placeholder="1000" class="full-width-input font-mono" />
+                @if (isFieldInvalid('zipCode')) {
+                <small class="form-field-error">{{ getFieldError('zipCode') }}</small>
+                }
+              </div>
+            </div>
+          </div>
 
-            <!-- Wizard Actions Footer -->
-            <div class="wizard-footer">
-              @if (currentStep() > 1) {
-                <button type="button" pButton label="Previous" icon="pi pi-arrow-left" severity="secondary" [outlined]="true" (click)="prevStep()" class="action-btn font-bold"></button>
-              } @else {
-                <div></div>
-              }
+          <div class="form-sub-section">
+            <h4 class="sub-section-title">Emergency Guardian / Contact Person</h4>
+            <div class="form-row-4">
+              <div class="form-group">
+                <label class="form-label">Guardian Name <span class="required-star">*</span></label>
+                <input pInputText formControlName="emergencyContactName" maxlength="100"
+                  [invalid]="isFieldInvalid('emergencyContactName')" placeholder="Parent / Guardian Name"
+                  class="full-width-input" />
+                @if (isFieldInvalid('emergencyContactName')) {
+                <small class="form-field-error">{{ getFieldError('emergencyContactName') }}</small>
+                }
+              </div>
+              <div class="form-group">
+                <label class="form-label">Relationship <span class="required-star">*</span></label>
+                <input pInputText formControlName="emergencyContactRelationship" maxlength="50"
+                  [invalid]="isFieldInvalid('emergencyContactRelationship')" placeholder="Mother, Father, Guardian"
+                  class="full-width-input" />
+                @if (isFieldInvalid('emergencyContactRelationship')) {
+                <small class="form-field-error">{{ getFieldError('emergencyContactRelationship') }}</small>
+                }
+              </div>
+              <div class="form-group">
+                <label class="form-label">Phone Number <span class="required-star">*</span></label>
+                <input pInputText formControlName="emergencyContactNumber" type="tel" inputmode="numeric" maxlength="11"
+                  (keypress)="allowDigitsOnly($event)" (input)="sanitizeNumberInput($event, 'emergencyContactNumber')"
+                  [invalid]="isFieldInvalid('emergencyContactNumber')" placeholder="09181234567"
+                  class="full-width-input font-mono" />
+                @if (isFieldInvalid('emergencyContactNumber')) {
+                <small class="form-field-error">{{ getFieldError('emergencyContactNumber') }}</small>
+                }
+              </div>
+              <div class="form-group">
+                <label class="form-label">Email Address (Optional)</label>
+                <input pInputText type="email" formControlName="emergencyContactEmail" maxlength="100"
+                  [invalid]="isFieldInvalid('emergencyContactEmail')" placeholder="guardian@example.com"
+                  class="full-width-input" />
+                @if (isFieldInvalid('emergencyContactEmail')) {
+                <small class="form-field-error">{{ getFieldError('emergencyContactEmail') }}</small>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+        }
 
-              @if (currentStep() < 5) {
-                <button type="button" pButton label="Next Step" icon="pi pi-arrow-right" iconPos="right" severity="success" [disabled]="isAdmissionLocked()" (click)="nextStep()" class="action-btn font-bold"></button>
-              } @else {
-                <button type="submit" pButton [label]="submitting() ? 'Submitting Application...' : 'Submit Application & Reserve Slot'" icon="pi pi-check" severity="success" [loading]="submitting()" [disabled]="isAdmissionLocked()" class="action-btn submit-btn font-extrabold"></button>
+        <!-- STEP 4: Statutory Philippine Equity Indicators -->
+        @if (currentStep() === 4) {
+        <div class="step-section">
+          <div class="step-section-header">
+            <h3 class="step-section-title">
+              <i class="pi pi-shield"></i>
+              4. Statutory Philippine Equity Indicators
+            </h3>
+            <span class="required-notice">CHED & Statutory Priority Compliance</span>
+          </div>
+
+          <div class="equity-stack">
+            <!-- 1. 4Ps Household -->
+            <div class="equity-box">
+              <div class="checkbox-row">
+                <p-checkbox formControlName="is4psBeneficiary" [binary]="true" inputId="chk4ps"></p-checkbox>
+                <label for="chk4ps" class="checkbox-label">4Ps Pantawid Pamilyang Pilipino Program Beneficiary (RA 11310)</label>
+              </div>
+              @if (admissionForm.get('is4psBeneficiary')?.value) {
+              <div class="nested-field">
+                <label class="form-label" for="txt4psId">4Ps Household ID Number <span class="required-star">*</span></label>
+                <input id="txt4psId" pInputText formControlName="household4psIdNumber" maxlength="60"
+                  [invalid]="isFieldInvalid('household4psIdNumber')" placeholder="Enter 4Ps Household ID (e.g. 4PS-2023-XXXXX)"
+                  class="medium-width-input font-mono" />
+                @if (isFieldInvalid('household4psIdNumber')) {
+                <small class="form-field-error">{{ getFieldError('household4psIdNumber') }}</small>
+                }
+              </div>
               }
             </div>
-          </form>
-        </p-card>
-      }
+
+            <!-- 2. Indigenous People -->
+            <div class="equity-box">
+              <div class="checkbox-row">
+                <p-checkbox formControlName="isIndigenousPeople" [binary]="true" inputId="chkIp"></p-checkbox>
+                <label for="chkIp" class="checkbox-label">Indigenous People / Cultural Community Member (IPRA RA 8371)</label>
+              </div>
+              @if (admissionForm.get('isIndigenousPeople')?.value) {
+              <div class="nested-field">
+                <label class="form-label" for="txtIpGroup">IP Group / Ethnic Community Name <span class="required-star">*</span></label>
+                <input id="txtIpGroup" pInputText formControlName="ipEthnicGroup" maxlength="100"
+                  [invalid]="isFieldInvalid('ipEthnicGroup')" placeholder="e.g., Ati, Bukidnon, Tagbanwa, Igorot"
+                  class="medium-width-input" />
+                @if (isFieldInvalid('ipEthnicGroup')) {
+                <small class="form-field-error">{{ getFieldError('ipEthnicGroup') }}</small>
+                }
+
+                <label class="form-label mt-2" for="txtNcipCert">NCIP Certificate of Confirmation / Tribal ID <span class="required-star">*</span></label>
+                <input id="txtNcipCert" pInputText formControlName="ncipCertificateNumber" maxlength="100"
+                  [invalid]="isFieldInvalid('ncipCertificateNumber')" placeholder="e.g., NCIP-CNO-2024-XXXX"
+                  class="medium-width-input font-mono" />
+                @if (isFieldInvalid('ncipCertificateNumber')) {
+                <small class="form-field-error">{{ getFieldError('ncipCertificateNumber') }}</small>
+                }
+              </div>
+              }
+            </div>
+
+            <!-- 3. Person with Disability -->
+            <div class="equity-box">
+              <div class="checkbox-row">
+                <p-checkbox formControlName="isPersonWithDisability" [binary]="true" inputId="chkPwd"></p-checkbox>
+                <label for="chkPwd" class="checkbox-label">Person with Disability (PWD RA 7277 / 9442 / 10754)</label>
+              </div>
+              @if (admissionForm.get('isPersonWithDisability')?.value) {
+              <div class="nested-field">
+                <label class="form-label" for="txtPwdId">PWD ID Card Number <span class="required-star">*</span></label>
+                <input id="txtPwdId" pInputText formControlName="pwdIdNumber" maxlength="60"
+                  [invalid]="isFieldInvalid('pwdIdNumber')" placeholder="e.g., PWD-06-2024-XXXX"
+                  class="medium-width-input font-mono" />
+                @if (isFieldInvalid('pwdIdNumber')) {
+                <small class="form-field-error">{{ getFieldError('pwdIdNumber') }}</small>
+                }
+
+                <label class="form-label mt-2" for="txtDisabilityType">Disability Classification / Category <span class="required-star">*</span></label>
+                <input id="txtDisabilityType" pInputText formControlName="disabilityType" maxlength="60"
+                  [invalid]="isFieldInvalid('disabilityType')" placeholder="e.g., Visual, Mobility, Hearing, Neurodevelopmental"
+                  class="medium-width-input" />
+                @if (isFieldInvalid('disabilityType')) {
+                <small class="form-field-error">{{ getFieldError('disabilityType') }}</small>
+                }
+              </div>
+              }
+            </div>
+
+            <!-- 4. Solo Parent -->
+            <div class="equity-box">
+              <div class="checkbox-row">
+                <p-checkbox formControlName="isSoloParent" [binary]="true" inputId="chkSoloParent"></p-checkbox>
+                <label for="chkSoloParent" class="checkbox-label">Registered Solo Parent (RA 11861)</label>
+              </div>
+              <div class="checkbox-row">
+                <p-checkbox formControlName="isRaisedBySoloParent" [binary]="true" inputId="chkRaisedSolo"></p-checkbox>
+                <label for="chkRaisedSolo" class="checkbox-label">Child Dependent Raised by a Solo Parent</label>
+              </div>
+              @if (admissionForm.get('isSoloParent')?.value || admissionForm.get('isRaisedBySoloParent')?.value) {
+              <div class="nested-field">
+                <label class="form-label" for="txtSoloId">Solo Parent ID Card Number <span class="required-star">*</span></label>
+                <input id="txtSoloId" pInputText formControlName="soloParentIdNumber" maxlength="60"
+                  [invalid]="isFieldInvalid('soloParentIdNumber')" placeholder="e.g., SP-2024-XXXX"
+                  class="medium-width-input font-mono" />
+                @if (isFieldInvalid('soloParentIdNumber')) {
+                <small class="form-field-error">{{ getFieldError('soloParentIdNumber') }}</small>
+                }
+              </div>
+              }
+            </div>
+
+            <!-- 5. Orphan Status -->
+            <div class="equity-box">
+              <div class="checkbox-row">
+                <p-checkbox formControlName="isOrphan" [binary]="true" inputId="chkOrphan"></p-checkbox>
+                <label for="chkOrphan" class="checkbox-label">DSWD Certified Orphan / Institutional Childcare Ward</label>
+              </div>
+            </div>
+
+            <!-- 6. GIDA Resident -->
+            <div class="equity-box">
+              <div class="checkbox-row">
+                <p-checkbox formControlName="isGidaResident" [binary]="true" inputId="chkGida"></p-checkbox>
+                <label for="chkGida" class="checkbox-label">Resident of Geographically Isolated and Disadvantaged Area (DOH AO 2020-0023)</label>
+              </div>
+              @if (admissionForm.get('isGidaResident')?.value) {
+              <div class="nested-field">
+                <label class="form-label" for="txtGidaBrgy">GIDA Barangay & Location Details <span class="required-star">*</span></label>
+                <input id="txtGidaBrgy" pInputText formControlName="gidaBarangayResidence" maxlength="150"
+                  [invalid]="isFieldInvalid('gidaBarangayResidence')" placeholder="e.g., Barangay, Island / Mountain Sitio, Municipality"
+                  class="medium-width-input" />
+                @if (isFieldInvalid('gidaBarangayResidence')) {
+                <small class="form-field-error">{{ getFieldError('gidaBarangayResidence') }}</small>
+                }
+              </div>
+              }
+            </div>
+
+            <!-- 7. Farmer / Fisherfolk -->
+            <div class="equity-box">
+              <div class="checkbox-row">
+                <p-checkbox formControlName="isFarmerFisherfolk" [binary]="true" inputId="chkFarmer"></p-checkbox>
+                <label for="chkFarmer" class="checkbox-label">Subsistence Farmer or Fisherfolk Family (RA 8435 / RA 11321)</label>
+              </div>
+              @if (admissionForm.get('isFarmerFisherfolk')?.value) {
+              <div class="nested-field">
+                <label class="form-label" for="txtRsbsa">DA RSBSA Registration Number <span class="required-star">*</span></label>
+                <input id="txtRsbsa" pInputText formControlName="rsbsaRegistrationNumber" maxlength="60"
+                  [invalid]="isFieldInvalid('rsbsaRegistrationNumber')" placeholder="e.g., RSBSA-06-45-XXXX"
+                  class="medium-width-input font-mono" />
+                @if (isFieldInvalid('rsbsaRegistrationNumber')) {
+                <small class="form-field-error">{{ getFieldError('rsbsaRegistrationNumber') }}</small>
+                }
+              </div>
+              }
+            </div>
+
+            <!-- 8. Rebel Returnee Family -->
+            <div class="equity-box">
+              <div class="checkbox-row">
+                <p-checkbox formControlName="isRebelReturneeFamily" [binary]="true" inputId="chkRebel"></p-checkbox>
+                <label for="chkRebel" class="checkbox-label">Rebel Returnee Family / E-CLIP Beneficiary (EO 70 s. 2018)</label>
+              </div>
+              @if (admissionForm.get('isRebelReturneeFamily')?.value) {
+              <div class="nested-field">
+                <label class="form-label" for="txtSurrenderCert">Certificate of Surrender / JAPIC Control Number <span class="required-star">*</span></label>
+                <input id="txtSurrenderCert" pInputText formControlName="certificateOfSurrenderNumber" maxlength="60"
+                  [invalid]="isFieldInvalid('certificateOfSurrenderNumber')" placeholder="e.g., ECLIP-JAPIC-2024-XXXX"
+                  class="medium-width-input font-mono" />
+                @if (isFieldInvalid('certificateOfSurrenderNumber')) {
+                <small class="form-field-error">{{ getFieldError('certificateOfSurrenderNumber') }}</small>
+                }
+              </div>
+              }
+            </div>
+
+            <!-- 9. Bottom 40% & Household Income Bracket -->
+            <div class="equity-box">
+              <div class="checkbox-row">
+                <p-checkbox formControlName="isBottom40IncomeBracket" [binary]="true" inputId="chkBottom40"></p-checkbox>
+                <label for="chkBottom40" class="checkbox-label">Bottom 40% Household Income Decile (RA 10931 Sec 7/9)</label>
+              </div>
+              <div class="nested-field">
+                <label class="form-label" for="selIncome">Monthly Gross Household Income Bracket <span class="required-star">*</span></label>
+                <p-select
+                  id="selIncome"
+                  [options]="incomeBracketOptions"
+                  formControlName="monthlyHouseholdIncomeBracket"
+                  placeholder="Select Monthly Income Bracket"
+                  optionLabel="label"
+                  optionValue="value"
+                  styleClass="w-full">
+                </p-select>
+              </div>
+            </div>
+
+            <!-- 10. First-Generation College Student -->
+            <div class="equity-box">
+              <div class="checkbox-row">
+                <p-checkbox formControlName="isFirstGenerationCollege" [binary]="true" inputId="chkFirstGen"></p-checkbox>
+                <label for="chkFirstGen" class="checkbox-label">First-Generation College Student (Neither parent completed a 4-year degree)</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        }
+
+        <!-- STEP 5: Entrance Exam Slot Selector -->
+        @if (currentStep() === 5) {
+        <div class="step-section">
+          <div class="step-section-header">
+            <h3 class="step-section-title">
+              <i class="pi pi-calendar"></i>
+              5. Reserve Entrance Examination Venue & Schedule Slot
+            </h3>
+            <span class="required-notice">Atomic Room Reservation</span>
+          </div>
+
+          @if (examSlots().length === 0) {
+          <div class="empty-state-card bento-card flex-center">
+            <div class="empty-state-icon">
+              <i class="pi pi-calendar-times"></i>
+            </div>
+            <h4 class="empty-state-title">No Exam Schedule Slots Available</h4>
+            <p class="empty-state-subtext">
+              There are currently no open testing hall slots for the selected academic term. You can still submit your
+              application, and the Admissions Office will assign your testing room schedule later.
+            </p>
+          </div>
+          } @else {
+          <div class="slots-grid">
+            @for (slot of examSlots(); track slot.id) {
+            <div
+              [class]="admissionForm.get('examSlotId')?.value === slot.id ? 'slot-card slot-card-selected' : 'slot-card'"
+              (click)="selectExamSlot(slot.id)">
+              <div class="slot-card-header">
+                <div class="slot-radio-group">
+                  <p-radioButton name="examSlotIdRadio" [value]="slot.id" formControlName="examSlotId"
+                    [inputId]="'slot_' + slot.id"></p-radioButton>
+                  <div>
+                    <span class="slot-venue-name">{{ slot.venueRoom }}</span>
+                    <span class="slot-date-text">{{ slot.examDate }}</span>
+                  </div>
+                </div>
+
+                <p-tag [value]="slot.availableSeats + ' seats left'"
+                  [severity]="slot.availableSeats > 20 ? 'success' : 'warn'" [rounded]="true"
+                  styleClass="seats-tag"></p-tag>
+              </div>
+
+              <div class="slot-card-footer">
+                <span>Time: <strong class="time-highlight">{{ slot.startTime }} - {{ slot.endTime }}</strong></span>
+                <span>Booked: {{ slot.reservedCount }}/{{ slot.maxCapacity }}</span>
+              </div>
+            </div>
+            }
+          </div>
+          }
+        </div>
+        }
+
+        <!-- Wizard Actions Footer -->
+        <div class="wizard-footer">
+          @if (currentStep() > 1) {
+          <button type="button" pButton label="Previous" icon="pi pi-arrow-left" severity="secondary" [outlined]="true"
+            (click)="prevStep()" class="action-btn font-bold"></button>
+          } @else {
+          <div></div>
+          }
+
+          @if (currentStep() < 5) { <button type="button" pButton label="Next Step" icon="pi pi-arrow-right"
+            iconPos="right" severity="success" [disabled]="isAdmissionLocked()" (click)="nextStep()"
+            class="action-btn font-bold"></button>
+            } @else {
+            <button type="submit" pButton
+              [label]="submitting() ? 'Submitting Application...' : 'Submit Application & Reserve Slot'"
+              icon="pi pi-check" severity="success" [loading]="submitting()" [disabled]="isAdmissionLocked()"
+              class="action-btn submit-btn font-extrabold"></button>
+            }
+        </div>
+      </form>
+    </p-card>
+    }
     }
 
     <!-- TAB 2: TRACK APPLICATION -->
     @if (activeTab() === 'track') {
-      <p-card styleClass="track-card shadow-card">
-        <div class="track-card-content">
-          <div>
-            <h2 class="track-card-title">
-              <i class="pi pi-search title-icon"></i>
-              Track Admission Application & Exam Permit
-            </h2>
-            <p class="track-card-subtitle">Enter your application reference number (e.g. ADM-2026-12345) to view application status and print your exam permit pass.</p>
-          </div>
-
-          <div class="track-search-row">
-            <input pInputText [(ngModel)]="trackNumberInput" placeholder="ADM-2026-XXXXX" class="track-input font-mono" />
-            <button pButton label="Track Status" icon="pi pi-search" severity="success" (click)="trackApplication()" class="track-btn font-bold"></button>
-          </div>
-
-          @if (trackedApplication()) {
-            <div class="track-result-box">
-              <div class="result-box-header">
-                <div>
-                  <span class="detail-label">Application Number</span>
-                  <h3 class="reference-number">{{ trackedApplication()?.applicationNumber }}</h3>
-                </div>
-                <p-tag [value]="trackedApplication()?.applicationStatus || 'SUBMITTED'" 
-                       [severity]="trackedApplication()?.applicationStatus === 'APPROVED' ? 'success' : 'info'" 
-                       [rounded]="true" styleClass="status-tag"></p-tag>
-              </div>
-
-              <div class="result-details-grid">
-                <div>
-                  <span class="detail-label">Applicant Name</span>
-                  <span class="detail-value text-white">{{ trackedApplication()?.fullName }}</span>
-                </div>
-                <div>
-                  <span class="detail-label">Program</span>
-                  <span class="detail-value text-white">{{ trackedApplication()?.targetProgramName }}</span>
-                </div>
-                <div>
-                  <span class="detail-label">Exam Schedule</span>
-                  <span class="detail-value text-amber">{{ trackedApplication()?.examDate ? (trackedApplication()?.examDate + ' @ ' + trackedApplication()?.examVenue) : 'Not Scheduled' }}</span>
-                </div>
-              </div>
-            </div>
-          } @else if (trackingSearched()) {
-            <!-- Empty state when search returned no results -->
-            <div class="empty-state-card bento-card flex-center">
-              <div class="empty-state-icon">
-                <i class="pi pi-exclamation-triangle"></i>
-              </div>
-              <h4 class="empty-state-title">Application Record Not Found</h4>
-              <p class="empty-state-subtext">
-                No admission application was found matching reference number "{{ trackNumberInput }}". Please double-check your application receipt number or contact the Admissions Office.
-              </p>
-            </div>
-          } @else {
-            <!-- Initial empty state before searching -->
-            <div class="empty-state-card bento-card flex-center">
-              <div class="empty-state-icon">
-                <i class="pi pi-search"></i>
-              </div>
-              <h4 class="empty-state-title">Track Your Admission Status</h4>
-              <p class="empty-state-subtext">
-                Enter your 12-character application reference number above (issued upon registration) to view your application status and access your examination venue pass.
-              </p>
-            </div>
-          }
+    <p-card styleClass="track-card shadow-card">
+      <div class="track-card-content">
+        <div>
+          <h2 class="track-card-title">
+            <i class="pi pi-search title-icon"></i>
+            Track Admission Application & Exam Permit
+          </h2>
+          <p class="track-card-subtitle">Enter your application reference number (e.g. ADM-2026-12345) to view
+            application status and print your exam permit pass.</p>
         </div>
-      </p-card>
+
+        <div class="track-search-row">
+          <input pInputText [(ngModel)]="trackNumberInput" placeholder="ADM-2026-XXXXX" class="track-input font-mono" />
+          <button pButton label="Track Status" icon="pi pi-search" severity="success" (click)="trackApplication()"
+            class="track-btn font-bold"></button>
+        </div>
+
+        @if (trackedApplication()) {
+        <div class="track-result-box">
+          <div class="result-box-header">
+            <div>
+              <span class="detail-label">Application Number</span>
+              <h3 class="reference-number">{{ trackedApplication()?.applicationNumber }}</h3>
+            </div>
+            <p-tag [value]="trackedApplication()?.applicationStatus || 'SUBMITTED'"
+              [severity]="trackedApplication()?.applicationStatus === 'APPROVED' ? 'success' : 'info'" [rounded]="true"
+              styleClass="status-tag"></p-tag>
+          </div>
+
+          <div class="result-details-grid">
+            <div>
+              <span class="detail-label">Applicant Name</span>
+              <span class="detail-value text-white">{{ trackedApplication()?.fullName }}</span>
+            </div>
+            <div>
+              <span class="detail-label">Program</span>
+              <span class="detail-value text-white">{{ trackedApplication()?.targetProgramName }}</span>
+            </div>
+            <div>
+              <span class="detail-label">Exam Schedule</span>
+              <span class="detail-value text-amber">{{ trackedApplication()?.examDate ? (trackedApplication()?.examDate
+                + ' @ ' + trackedApplication()?.examVenue) : 'Not Scheduled' }}</span>
+            </div>
+          </div>
+        </div>
+        } @else if (trackingSearched()) {
+        <div class="empty-state-card bento-card flex-center">
+          <div class="empty-state-icon">
+            <i class="pi pi-exclamation-triangle"></i>
+          </div>
+          <h4 class="empty-state-title">Application Record Not Found</h4>
+          <p class="empty-state-subtext">
+            No admission application was found matching reference number "{{ trackNumberInput }}". Please double-check
+            your application receipt number or contact the Admissions Office.
+          </p>
+        </div>
+        } @else {
+        <div class="empty-state-card bento-card flex-center">
+          <div class="empty-state-icon">
+            <i class="pi pi-search"></i>
+          </div>
+          <h4 class="empty-state-title">Track Your Admission Status</h4>
+          <p class="empty-state-subtext">
+            Enter your application reference number above (issued upon registration) to view your application status and
+            access your examination venue pass.
+          </p>
+        </div>
+        }
+      </div>
+    </p-card>
     }
   </main>
 </div>

@@ -500,6 +500,20 @@
             <span class="context-label">Applicant Details</span>
             <span class="context-name">{{ app.fullName }}</span>
             <span class="context-meta">App No: <code>{{ app.applicationNumber }}</code> • Program: <strong>{{ app.targetProgramCode }}</strong></span>
+            @if (app.is4psBeneficiary || app.isIndigenousPeople || app.isPersonWithDisability || app.isSoloParent || app.isRaisedBySoloParent || app.isOrphan || app.isFarmerFisherfolk || app.isRebelReturneeFamily || app.isGidaResident || app.isBottom40IncomeBracket || app.isFirstGenerationCollege) {
+              <div class="equity-badge-row">
+                @if (app.is4psBeneficiary) { <p-tag value="4Ps" severity="success" pTooltip="4Ps Beneficiary"></p-tag> }
+                @if (app.isIndigenousPeople) { <p-tag [value]="app.ipEthnicGroup || 'IP'" severity="warn" pTooltip="Indigenous Peoples"></p-tag> }
+                @if (app.isPersonWithDisability) { <p-tag [value]="app.disabilityType || 'PWD'" severity="info" pTooltip="PWD"></p-tag> }
+                @if (app.isSoloParent || app.isRaisedBySoloParent) { <p-tag value="Solo Parent" severity="secondary"></p-tag> }
+                @if (app.isOrphan) { <p-tag value="Orphan" severity="danger"></p-tag> }
+                @if (app.isFarmerFisherfolk) { <p-tag value="RSBSA" severity="success" pTooltip="Farmer/Fisherfolk"></p-tag> }
+                @if (app.isRebelReturneeFamily) { <p-tag value="E-CLIP" severity="warn"></p-tag> }
+                @if (app.isGidaResident) { <p-tag value="GIDA" severity="warn"></p-tag> }
+                @if (app.isBottom40IncomeBracket) { <p-tag value="Bottom 40%" severity="danger"></p-tag> }
+                @if (app.isFirstGenerationCollege) { <p-tag value="First-Gen" severity="info"></p-tag> }
+              </div>
+            }
           </div>
         </div>
 
@@ -567,6 +581,20 @@
             <span class="context-name">{{ app.fullName }}</span>
             <span class="context-meta">App: <code>{{ app.applicationNumber }}</code> • Program: <strong>{{ app.targetProgramCode }}</strong></span>
             <span class="context-highlight">Exam Score: <strong>{{ app.examScore }} / 100</strong></span>
+            @if (app.is4psBeneficiary || app.isIndigenousPeople || app.isPersonWithDisability || app.isSoloParent || app.isRaisedBySoloParent || app.isOrphan || app.isFarmerFisherfolk || app.isRebelReturneeFamily || app.isGidaResident || app.isBottom40IncomeBracket || app.isFirstGenerationCollege) {
+              <div class="equity-badge-row">
+                @if (app.is4psBeneficiary) { <p-tag value="4Ps" severity="success" pTooltip="4Ps Beneficiary"></p-tag> }
+                @if (app.isIndigenousPeople) { <p-tag [value]="app.ipEthnicGroup || 'IP'" severity="warn" pTooltip="Indigenous Peoples"></p-tag> }
+                @if (app.isPersonWithDisability) { <p-tag [value]="app.disabilityType || 'PWD'" severity="info" pTooltip="PWD"></p-tag> }
+                @if (app.isSoloParent || app.isRaisedBySoloParent) { <p-tag value="Solo Parent" severity="secondary"></p-tag> }
+                @if (app.isOrphan) { <p-tag value="Orphan" severity="danger"></p-tag> }
+                @if (app.isFarmerFisherfolk) { <p-tag value="RSBSA" severity="success" pTooltip="Farmer/Fisherfolk"></p-tag> }
+                @if (app.isRebelReturneeFamily) { <p-tag value="E-CLIP" severity="warn"></p-tag> }
+                @if (app.isGidaResident) { <p-tag value="GIDA" severity="warn"></p-tag> }
+                @if (app.isBottom40IncomeBracket) { <p-tag value="Bottom 40%" severity="danger"></p-tag> }
+                @if (app.isFirstGenerationCollege) { <p-tag value="First-Gen" severity="info"></p-tag> }
+              </div>
+            }
           </div>
         </div>
 

@@ -341,3 +341,11 @@
   border-top: 1px solid var(--chmsu-slate-200, #e2e8f0);
   margin-top: 0.5rem;
 }
+
+.equity-badge-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+}

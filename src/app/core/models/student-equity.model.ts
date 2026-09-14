@@ -18,7 +18,7 @@ export type HouseholdIncomeBracket =
 
 export type EquityVerificationStatus =
   | 'SELF_DECLARED'
-  | 'DOCUMENTED'
+  | 'PENDING_VERIFICATION'
   | 'VERIFIED'
   | 'REJECTED';
 
@@ -30,29 +30,51 @@ export interface StudentEquityProfileDto {
   programCode: string;
   programName: string;
 
-  // Statutory Indicators
+  // 1. Person with Disability (PWD RA 7277 / RA 9442 / RA 10754)
+  isPersonWithDisability: boolean;
+  pwdIdNumber?: string;
+  disabilityType?: DisabilityType;
+
+  // 2. Solo Parent Status (RA 8972 / RA 11861 - Explicit Separation)
+  isSoloParent: boolean;
+  isRaisedBySoloParent: boolean;
+  soloParentIdNumber?: string;
+
+  // 3. 4Ps Beneficiary (RA 11310) & UniFAST TES
   is4psBeneficiary: boolean;
   household4psIdNumber?: string;
   isListahananNhts: boolean;
   unifastTesAwardee: boolean;
   unifastTesAwardNumber?: string;
 
+  // 4. Indigenous Peoples (RA 8371 IPRA)
   isIndigenousPeople: boolean;
   ipEthnicGroup?: string;
   ncipCertificateNumber?: string;
 
-  isPersonWithDisability: boolean;
-  pwdIdNumber?: string;
-  disabilityType?: DisabilityType;
+  // 5. Orphan Status (DSWD Case Study / Cert)
+  isOrphan: boolean;
 
-  isSoloParentOrDependent: boolean;
-  soloParentIdNumber?: string;
-
-  isFirstGenerationCollege: boolean;
+  // 6. Geographically Isolated and Disadvantaged Area (DOH AO 2020-0023)
   isGidaResident: boolean;
+  gidaBarangayResidence?: string;
+
+  // 7. Subsistence Farmer or Fisherfolk Family (RA 8435 / RA 11321)
+  isFarmerFisherfolk: boolean;
+  rsbsaRegistrationNumber?: string;
+
+  // 8. Rebel Returnees / E-CLIP (EO 70 s. 2018)
+  isRebelReturneeFamily: boolean;
+  certificateOfSurrenderNumber?: string;
+
+  // 9. Bottom 40% Household Income Bracket (RA 10931 Sec 7/9)
+  isBottom40IncomeBracket: boolean;
   monthlyHouseholdIncomeBracket: HouseholdIncomeBracket;
 
-  // Governance & Audit
+  // 10. First Generation College Student
+  isFirstGenerationCollege: boolean;
+
+  // 11. Verification & Audit Metadata
   verificationStatus: EquityVerificationStatus;
   verifiedByUserId?: number;
   verifiedByUsername?: string;
@@ -64,26 +86,49 @@ export interface StudentEquityProfileDto {
 }
 
 export interface UpdateStudentEquityProfileRequest {
+  // 1. Person with Disability
+  isPersonWithDisability: boolean;
+  pwdIdNumber?: string;
+  disabilityType?: DisabilityType;
+
+  // 2. Solo Parent Status
+  isSoloParent: boolean;
+  isRaisedBySoloParent: boolean;
+  soloParentIdNumber?: string;
+
+  // 3. 4Ps Beneficiary & UniFAST TES
   is4psBeneficiary: boolean;
   household4psIdNumber?: string;
   isListahananNhts: boolean;
   unifastTesAwardee: boolean;
   unifastTesAwardNumber?: string;
 
+  // 4. Indigenous Peoples
   isIndigenousPeople: boolean;
   ipEthnicGroup?: string;
   ncipCertificateNumber?: string;
 
-  isPersonWithDisability: boolean;
-  pwdIdNumber?: string;
-  disabilityType?: DisabilityType;
+  // 5. Orphan Status
+  isOrphan: boolean;
 
-  isSoloParentOrDependent: boolean;
-  soloParentIdNumber?: string;
-
-  isFirstGenerationCollege: boolean;
+  // 6. GIDA Resident
   isGidaResident: boolean;
+  gidaBarangayResidence?: string;
+
+  // 7. Subsistence Farmer or Fisherfolk Family
+  isFarmerFisherfolk: boolean;
+  rsbsaRegistrationNumber?: string;
+
+  // 8. Rebel Returnees / E-CLIP
+  isRebelReturneeFamily: boolean;
+  certificateOfSurrenderNumber?: string;
+
+  // 9. Bottom 40% Household Income Bracket
+  isBottom40IncomeBracket: boolean;
   monthlyHouseholdIncomeBracket: HouseholdIncomeBracket;
+
+  // 10. First Generation College Student
+  isFirstGenerationCollege: boolean;
 }
 
 export interface VerifyEquityProfileRequest {
@@ -93,17 +138,22 @@ export interface VerifyEquityProfileRequest {
 
 export interface EquityStatisticsSummaryDto {
   totalProfilesCount: number;
+  countPersonsWithDisabilities: number;
+  countSoloParents: number;
+  countRaisedBySoloParents: number;
   count4psBeneficiaries: number;
   countListahananNhts: number;
   countUnifastTesAwardees: number;
   countIndigenousPeoples: number;
-  countPersonsWithDisabilities: number;
-  countSoloParents: number;
-  countFirstGenerationCollege: number;
+  countOrphans: number;
   countGidaResidents: number;
+  countFarmerFisherfolk: number;
+  countRebelReturneeFamilies: number;
+  countBottom40IncomeBracket: number;
+  countFirstGenerationCollege: number;
 
   countSelfDeclared: number;
-  countDocumented: number;
+  countPendingVerification: number;
   countVerified: number;
   countRejected: number;
 }

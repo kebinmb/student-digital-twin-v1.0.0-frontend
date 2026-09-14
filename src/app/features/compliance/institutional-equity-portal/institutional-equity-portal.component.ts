@@ -68,6 +68,9 @@ export class InstitutionalEquityPortalComponent implements OnInit {
   readonly is4psFilter = signal<boolean | null>(null);
   readonly isIpFilter = signal<boolean | null>(null);
   readonly isPwdFilter = signal<boolean | null>(null);
+  readonly isSoloParentFilter = signal<boolean | null>(null);
+  readonly isFarmerFisherfolkFilter = signal<boolean | null>(null);
+  readonly isBottom40Filter = signal<boolean | null>(null);
   readonly isGidaFilter = signal<boolean | null>(null);
   readonly isFirstGenFilter = signal<boolean | null>(null);
 
@@ -82,8 +85,8 @@ export class InstitutionalEquityPortalComponent implements OnInit {
 
   readonly statusOptions = [
     { label: 'All Statuses', value: '' },
-    { label: 'Self Declared', value: 'SELF_DECLARED' },
-    { label: 'Documented', value: 'DOCUMENTED' },
+    { label: 'Self-Declared', value: 'SELF_DECLARED' },
+    { label: 'Pending Verification', value: 'PENDING_VERIFICATION' },
     { label: 'Verified', value: 'VERIFIED' },
     { label: 'Rejected', value: 'REJECTED' }
   ];
@@ -96,7 +99,7 @@ export class InstitutionalEquityPortalComponent implements OnInit {
 
   readonly verifyStatusOptions = [
     { label: 'VERIFIED', value: 'VERIFIED' },
-    { label: 'DOCUMENTED', value: 'DOCUMENTED' },
+    { label: 'PENDING_VERIFICATION', value: 'PENDING_VERIFICATION' },
     { label: 'REJECTED', value: 'REJECTED' },
     { label: 'SELF_DECLARED', value: 'SELF_DECLARED' }
   ];
@@ -121,6 +124,9 @@ export class InstitutionalEquityPortalComponent implements OnInit {
       is4ps: this.is4psFilter() ?? undefined,
       isIp: this.isIpFilter() ?? undefined,
       isPwd: this.isPwdFilter() ?? undefined,
+      isSoloParent: this.isSoloParentFilter() ?? undefined,
+      isFarmerFisherfolk: this.isFarmerFisherfolkFilter() ?? undefined,
+      isBottom40: this.isBottom40Filter() ?? undefined,
       isGida: this.isGidaFilter() ?? undefined,
       isFirstGen: this.isFirstGenFilter() ?? undefined,
       page: this.page(),
@@ -190,7 +196,7 @@ export class InstitutionalEquityPortalComponent implements OnInit {
   getStatusSeverity(status?: string): "success" | "secondary" | "info" | "warn" | "danger" | "contrast" | undefined {
     switch (status) {
       case 'VERIFIED': return 'success';
-      case 'DOCUMENTED': return 'info';
+      case 'PENDING_VERIFICATION': return 'info';
       case 'REJECTED': return 'danger';
       case 'SELF_DECLARED':
       default: return 'warn';

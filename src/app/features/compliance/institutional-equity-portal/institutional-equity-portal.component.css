@@ -5,7 +5,7 @@
   flex-direction: column;
   gap: 1.25rem;
   padding: 1.5rem;
-  max-width: 1400px;
+  max-width: 1440px;
   margin: 0 auto;
   width: 100%;
 }
@@ -20,23 +20,77 @@
   border: 1px solid var(--chmsu-slate-200, #e2e8f0);
   border-radius: var(--chmsu-border-radius-lg, 12px);
   padding: 1rem 1.25rem;
-  box-shadow: var(--chmsu-shadow-card);
+  box-shadow: var(--chmsu-shadow-card, 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1));
+}
+
+.header-branding {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.header-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: var(--chmsu-green-50, #f0fdf4);
+  border: 1px solid var(--chmsu-green-200, #bbf7d0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.header-icon {
+  font-size: 1.35rem;
+  color: var(--chmsu-green-main, #116834);
+}
+
+.header-text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.header-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+  margin: 0;
+}
+
+.header-subtitle {
+  font-size: 0.8125rem;
+  color: var(--chmsu-slate-500, #64748b);
+  margin: 0;
+}
+
+.header-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 1rem;
   width: 100%;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
+  .kpi-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
   .kpi-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 480px) {
   .kpi-grid {
     grid-template-columns: 1fr;
   }
@@ -47,7 +101,7 @@
   border: 1px solid var(--chmsu-slate-200, #e2e8f0);
   border-radius: var(--chmsu-border-radius-md, 8px);
   padding: 1rem 1.15rem;
-  box-shadow: var(--chmsu-shadow-card);
+  box-shadow: var(--chmsu-shadow-card, 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1));
   display: flex;
   flex-direction: column;
 }
@@ -68,6 +122,10 @@
   border-left: 4px solid #ea580c;
 }
 
+.kpi-card.border-amber {
+  border-left: 4px solid #d97706;
+}
+
 .kpi-title {
   font-size: 0.6875rem;
   font-weight: 700;
@@ -77,7 +135,7 @@
 }
 
 .kpi-value {
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--chmsu-navy-900, #0f172a);
   margin-top: 0.25rem;
@@ -86,6 +144,7 @@
 .kpi-value.text-blue { color: #0284c7; }
 .kpi-value.text-purple { color: #7c3aed; }
 .kpi-value.text-orange { color: #ea580c; }
+.kpi-value.text-amber { color: #d97706; }
 
 .kpi-subtext {
   font-size: 0.75rem;
@@ -103,17 +162,26 @@
   border: 1px solid var(--chmsu-slate-200, #e2e8f0);
   border-radius: var(--chmsu-border-radius-md, 8px);
   padding: 1rem 1.25rem;
-  box-shadow: var(--chmsu-shadow-card);
+  box-shadow: var(--chmsu-shadow-card, 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1));
 }
 
 .filter-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
-  gap: 0.875rem;
+  grid-template-columns: 2fr repeat(7, minmax(0, 1fr));
+  gap: 0.75rem;
   align-items: flex-end;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
+  .filter-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .search-col {
+    grid-column: span 2 / span 2;
+  }
+}
+
+@media (max-width: 768px) {
   .filter-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -122,7 +190,7 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 480px) {
   .filter-grid {
     grid-template-columns: 1fr;
   }
@@ -148,7 +216,7 @@
   border: 1px solid var(--chmsu-slate-200, #e2e8f0);
   border-radius: var(--chmsu-border-radius-md, 8px);
   padding: 1rem;
-  box-shadow: var(--chmsu-shadow-card);
+  box-shadow: var(--chmsu-shadow-card, 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1));
 }
 
 .student-name-text {
@@ -243,6 +311,29 @@
   font-size: 0.8125rem;
   line-height: 1.6;
   color: var(--chmsu-navy-800, #1e293b);
+}
+
+.decl-list li {
+  padding: 0.2rem 0;
+  border-bottom: 1px dashed var(--chmsu-slate-200, #e2e8f0);
+}
+
+.decl-list li:last-child {
+  border-bottom: none;
+}
+
+.text-rose {
+  color: #e11d48;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.dialog-footer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
 }
 
 .full-width-input,

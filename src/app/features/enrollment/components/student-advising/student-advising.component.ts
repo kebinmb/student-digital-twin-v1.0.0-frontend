@@ -1,6 +1,17 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, ChangeDetectionStrategy, signal, computed } from '@angular/core';
-import { FormsModule, ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
+import { Component, inject, OnInit, ChangeDetectionStrategy, signal, computed, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subject, of, filter, distinctUntilChanged, switchMap, catchError } from 'rxjs';
+import {
+  FormsModule,
+  ReactiveFormsModule,
+  FormGroup,
+  FormControl,
+  Validators,
+  AbstractControl,
+  ValidationErrors,
+  ValidatorFn
+} from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
@@ -13,19 +24,25 @@ import { InputText } from 'primeng/inputtext';
 import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
 import { MessageService } from 'primeng/api';
-import { EnrollmentStore } from '../../state/enrollment.store';
-import { CourseEligibilityItemDto, AvailableSectionOptionDto } from '../../../../core/models/enrollment.model';
-
 import { Skeleton } from 'primeng/skeleton';
 import { InputNumberModule } from 'primeng/inputnumber';
+
+import { EnrollmentStore } from '../../state/enrollment.store';
+import { CourseEligibilityItemDto, AvailableSectionOptionDto } from '../../../../core/models/enrollment.model';
 import { ProgramService } from '../../../../core/services/institution.service';
 import { CurriculumApiService } from '../../../../core/service/curriculum/curriculum-api.service';
-
 import { AuthService } from '../../../../core/service/authentication/auth-service';
 import { EnrollmentApiService } from '../../../../core/service/enrollment/enrollment-api.service';
 import { AdmissionApiService } from '../../../../core/service/admission/admission-api.service';
 import { AdmissionApplicationResponse } from '../../../../core/models/admission.model';
 
+export function noWhitespaceValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    if (control.value === null || control.value === undefined) return null;
+    const isWhitespace = (control.value.toString() || '').trim().length === 0;
+    return isWhitespace ? { whitespace: true } : null;
+  };
+}
 
 @Component({
   selector: 'app-student-advising',
@@ -60,7 +77,10 @@ export class StudentAdvisingComponent implements OnInit {
   private readonly curriculumApi = inject(CurriculumApiService);
   private readonly enrollmentApi = inject(EnrollmentApiService);
   private readonly admissionApi = inject(AdmissionApiService);
+  private readonly destroyRef = inject(DestroyRef);
 
+  private readonly programSelect$ = new Subject<number>();
+  private currentAdmitProgramId: number | null = null;
 
   readonly isStudentUser = computed(() => this.authService.hasRole('STUDENT'));
   readonly canAdmitStudent = computed(() => this.authService.hasAnyRole(['ADMIN', 'REGISTRAR']));
@@ -73,7 +93,7 @@ export class StudentAdvisingComponent implements OnInit {
   readonly yearFilter = signal<string>('ALL');
   readonly semesterFilter = signal<string>('ALL');
 
-  // Admissions Intake Reactive Form & State
+  // Admissions Intake State
   readonly isAdmissionsDialogVisible = signal<boolean>(false);
   readonly isAdmissionsSubmitted = signal<boolean>(false);
   readonly programOptions = signal<{ label: string; value: number }[]>([]);
@@ -88,23 +108,50 @@ export class StudentAdvisingComponent implements OnInit {
     }));
   });
 
+  // Schema-aligned validators: student_number VARCHAR(30), username VARCHAR(50), email VARCHAR(100), names VARCHAR(50)
   readonly admissionsForm = new FormGroup({
     studentNumber: new FormControl<string>('', {
       nonNullable: true,
-      validators: [Validators.required, Validators.pattern(/^[0-9]{4}-[0-9]{4,6}$/)]
+      validators: [
+        Validators.required,
+        Validators.maxLength(30),
+        Validators.pattern(/^[0-9]{4}-[0-9]{4,6}$/)
+      ]
     }),
     firstName: new FormControl<string>('', {
       nonNullable: true,
-      validators: [Validators.required, (c) => (c.value || '').trim() ? null : { whitespace: true }]
+      validators: [
+        Validators.required,
+        Validators.minLength(2),
+        Validators.maxLength(50),
+        noWhitespaceValidator(),
+        Validators.pattern(/^[a-zA-Z\sñÑ\-'.]+$/)
+      ]
     }),
     lastName: new FormControl<string>('', {
       nonNullable: true,
-      validators: [Validators.required, (c) => (c.value || '').trim() ? null : { whitespace: true }]
+      validators: [
+        Validators.required,
+        Validators.minLength(2),
+        Validators.maxLength(50),
+        noWhitespaceValidator(),
+        Validators.pattern(/^[a-zA-Z\sñÑ\-'.]+$/)
+      ]
     }),
-    username: new FormControl<string>('', { nonNullable: true }),
+    username: new FormControl<string>('', {
+      nonNullable: true,
+      validators: [
+        Validators.maxLength(50),
+        Validators.pattern(/^[a-zA-Z0-9._-]+$/)
+      ]
+    }),
     email: new FormControl<string>('', {
       nonNullable: true,
-      validators: [Validators.required, Validators.email]
+      validators: [
+        Validators.required,
+        Validators.maxLength(100),
+        Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
+      ]
     }),
     classification: new FormControl<'INCOMING_FIRST_YEAR' | 'TRANSFEREE' | 'RETURNEE' | 'CONTINUING'>('INCOMING_FIRST_YEAR', {
       nonNullable: true,
@@ -122,28 +169,37 @@ export class StudentAdvisingComponent implements OnInit {
     })
   });
 
-  // Backward-compatibility signal accessors for existing tests
-  readonly admitStudentNumber = computed(() => this.admissionsForm.get('studentNumber')?.value || '');
-  readonly admitClassification = computed(() => this.admissionsForm.get('classification')?.value || 'INCOMING_FIRST_YEAR');
-  readonly admitYearLevel = computed(() => this.admissionsForm.get('yearLevel')?.value || 1);
-
-  // Transferee Crediting Reactive Form & State
+  // Transferee Crediting State
   readonly isCreditingDialogVisible = signal<boolean>(false);
   readonly isCreditingSubmitted = signal<boolean>(false);
   readonly selectedCreditingInternalId = signal<number | null>(null);
 
+  // Schema: external_institution VARCHAR(150), external_course_code VARCHAR(30), external_course_title VARCHAR(150), remarks VARCHAR(255)
   readonly creditingForm = new FormGroup({
     externalInstitution: new FormControl<string>('Polytechnic State College', {
       nonNullable: true,
-      validators: [Validators.required, (c) => (c.value || '').trim() ? null : { whitespace: true }]
+      validators: [
+        Validators.required,
+        Validators.maxLength(150),
+        noWhitespaceValidator()
+      ]
     }),
     externalCourseCode: new FormControl<string>('', {
       nonNullable: true,
-      validators: [Validators.required, (c) => (c.value || '').trim() ? null : { whitespace: true }]
+      validators: [
+        Validators.required,
+        Validators.maxLength(30),
+        noWhitespaceValidator(),
+        Validators.pattern(/^[a-zA-Z0-9\-\s]+$/)
+      ]
     }),
     externalCourseTitle: new FormControl<string>('', {
       nonNullable: true,
-      validators: [Validators.required, (c) => (c.value || '').trim() ? null : { whitespace: true }]
+      validators: [
+        Validators.required,
+        Validators.maxLength(150),
+        noWhitespaceValidator()
+      ]
     }),
     internalCourseId: new FormControl<number | null>(null, {
       validators: [Validators.required]
@@ -157,14 +213,18 @@ export class StudentAdvisingComponent implements OnInit {
       validators: [Validators.required, Validators.min(1.0), Validators.max(6.0)]
     }),
     remarks: new FormControl<string>('Accredited under CMO 25 equivalency matrix', {
-      nonNullable: true
+      nonNullable: true,
+      validators: [Validators.maxLength(255)]
     })
   });
 
-  // Backward-compatibility signal accessors for crediting
+  // Backward-compatibility signal accessors for existing tests
+  readonly admitStudentNumber = computed(() => this.admissionsForm.get('studentNumber')?.value || '');
+  readonly admitClassification = computed(() => this.admissionsForm.get('classification')?.value || 'INCOMING_FIRST_YEAR');
+  readonly admitYearLevel = computed(() => this.admissionsForm.get('yearLevel')?.value || 1);
   readonly creditingExternalSchool = computed(() => this.creditingForm.get('externalInstitution')?.value || '');
-  readonly creditingGrade = computed(() => this.creditingForm.get('externalNumericalGrade')?.value ?? 1.50);
-  readonly creditingUnits = computed(() => this.creditingForm.get('creditsGranted')?.value ?? 3.00);
+  readonly creditingGrade = computed(() => this.creditingForm.get('externalNumericalGrade')?.value || 0);
+  readonly creditingUnits = computed(() => this.creditingForm.get('creditsGranted')?.value || 0);
 
   readonly classificationOptions = [
     { label: 'Incoming First Year (Freshman)', value: 'INCOMING_FIRST_YEAR' },
@@ -199,7 +259,6 @@ export class StudentAdvisingComponent implements OnInit {
     }));
   });
 
-  // Live Equivalency Preview & Prerequisite Impact
   readonly selectedInternalCourse = computed(() => {
     const id = this.selectedCreditingInternalId();
     if (!id) return null;
@@ -262,10 +321,10 @@ export class StudentAdvisingComponent implements OnInit {
 
   readonly yearOptions = [
     { label: 'All Years', value: 'ALL' },
-    { label: '1st Year', value: '1' },
-    { label: '2nd Year', value: '2' },
-    { label: '3rd Year', value: '3' },
-    { label: '4th Year', value: '4' }
+    { label: '1st Year', value: 1 },
+    { label: '2nd Year', value: 2 },
+    { label: '3rd Year', value: 3 },
+    { label: '4th Year', value: 4 }
   ];
 
   readonly semesterOptions = [
@@ -275,25 +334,37 @@ export class StudentAdvisingComponent implements OnInit {
     { label: 'Summer Term', value: 'SUMMER' }
   ];
 
+  constructor() {
+    this.setupCurriculumPipeline();
+  }
+
   ngOnInit(): void {
     this.store.loadInitialData();
-    if (this.store.studentId() && this.store.selectedTermId()) {
+    const sid = this.store.studentId();
+    const tid = this.store.selectedTermId();
+    if (sid && sid > 0 && tid && tid > 0) {
       this.store.refreshAdvising();
     }
   }
 
-  onStudentSelect(studentId: number | { value: number } | string | null): void {
-    const id = typeof studentId === 'object' ? studentId?.value : Number(studentId);
-    if (id) {
-      this.store.setStudentId(id);
+  onStudentSelect(studentId: number | { value: number } | string | null | undefined): void {
+    const id = typeof studentId === 'object' && studentId !== null ? (studentId as any).value : Number(studentId);
+    if (!id || isNaN(id) || id <= 0 || this.store.studentId() === id) {
+      if (id && !isNaN(id) && id < 0) {
+        this.openAdmissionsDialog();
+        this.onImportAdmissionAppChange(Math.abs(id));
+      }
+      return;
     }
+    this.store.setStudentId(id);
   }
 
-  onTermSelect(termId: number | { value: number } | string | null): void {
-    const id = typeof termId === 'object' ? termId?.value : Number(termId);
-    if (id) {
-      this.store.setSelectedTermId(id);
+  onTermSelect(termId: number | { value: number } | string | null | undefined): void {
+    const id = typeof termId === 'object' && termId !== null ? (termId as any).value : Number(termId);
+    if (!id || isNaN(id) || id <= 0 || this.store.selectedTermId() === id) {
+      return;
     }
+    this.store.setSelectedTermId(id);
   }
 
   openSectionChooser(course: CourseEligibilityItemDto): void {
@@ -390,10 +461,16 @@ export class StudentAdvisingComponent implements OnInit {
   getAdmissionsControlError(controlName: string): string {
     const control = this.admissionsForm.get(controlName);
     if (!control || !control.errors) return '';
-    if (control.errors['required']) return 'This field is required.';
-    if (control.errors['whitespace']) return 'Field cannot be empty whitespace.';
-    if (control.errors['pattern']) return 'Format must match YYYY-XXXX (e.g. 2026-0001).';
-    if (control.errors['email']) return 'Please enter a valid institutional email address.';
+    if (control.errors['required'] || control.errors['whitespace']) return 'This field is required.';
+    if (control.errors['minlength']) return `Minimum ${control.errors['minlength'].requiredLength} characters required.`;
+    if (control.errors['maxlength']) return `Maximum allowed length is ${control.errors['maxlength'].requiredLength} characters.`;
+    if (control.errors['pattern']) {
+      if (controlName === 'studentNumber') return 'Student ID format must be YYYY-XXXX (e.g. 2026-0001).';
+      if (controlName === 'firstName' || controlName === 'lastName') return 'Name should only contain letters, spaces, hyphens, and apostrophes.';
+      if (controlName === 'username') return 'Username can only contain alphanumeric characters, dots, underscores, and hyphens.';
+      if (controlName === 'email') return 'Please enter a valid institutional email address.';
+    }
+    if (control.errors['email']) return 'Please enter a valid email address.';
     if (control.errors['min'] || control.errors['max']) return 'Year level must be between 1 and 4.';
     return 'Invalid value.';
   }
@@ -406,10 +483,11 @@ export class StudentAdvisingComponent implements OnInit {
   getCreditingControlError(controlName: string): string {
     const control = this.creditingForm.get(controlName);
     if (!control || !control.errors) return '';
-    if (control.errors['required']) return 'This field is required.';
-    if (control.errors['whitespace']) return 'Field cannot be empty whitespace.';
+    if (control.errors['required'] || control.errors['whitespace']) return 'This field is required.';
+    if (control.errors['maxlength']) return `Maximum allowed length is ${control.errors['maxlength'].requiredLength} characters.`;
+    if (control.errors['pattern']) return 'Alphanumeric and standard code characters only.';
     if (control.errors['min'] || control.errors['max']) {
-      if (controlName === 'externalNumericalGrade') return 'CMO 25 credit transfer requires passing mark between 1.00 and 3.00.';
+      if (controlName === 'externalNumericalGrade') return 'CHED CMO 25 requires a passing grade between 1.00 and 3.00.';
       if (controlName === 'creditsGranted') return 'Units must be between 1.0 and 6.0.';
     }
     return 'Invalid value.';
@@ -422,6 +500,7 @@ export class StudentAdvisingComponent implements OnInit {
 
     this.isAdmissionsSubmitted.set(false);
     this.selectedAdmissionAppId.set(null);
+    this.currentAdmitProgramId = null;
     this.admissionsForm.reset({
       studentNumber: genStudentNumber,
       firstName: '',
@@ -436,16 +515,20 @@ export class StudentAdvisingComponent implements OnInit {
 
     this.curriculumOptions.set([]);
 
-    this.admissionApi.getAllApplications().subscribe({
+    this.admissionApi.getAllApplications().pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
       next: apps => this.pendingApplications.set(apps || []),
       error: () => this.pendingApplications.set([])
     });
 
-    this.programService.getAll().subscribe({
+    this.programService.getAll().pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
       next: programs => {
         const options = (programs || []).map(p => ({ label: `${p.code} - ${p.name}`, value: p.id }));
         this.programOptions.set(options);
-        if (options.length > 0) {
+        if (options.length > 0 && !this.admissionsForm.get('programId')?.value) {
           this.onAdmitProgramChange(options[0].value);
         }
       },
@@ -457,9 +540,9 @@ export class StudentAdvisingComponent implements OnInit {
     this.isAdmissionsDialogVisible.set(true);
   }
 
-  onImportAdmissionAppChange(appId: number | { value: number } | null): void {
-    const id = typeof appId === 'object' && appId !== null ? appId.value : Number(appId);
-    if (!id) return;
+  onImportAdmissionAppChange(appId: number | { value: number } | null | undefined): void {
+    const id = typeof appId === 'object' && appId !== null ? (appId as any).value : Number(appId);
+    if (!id || isNaN(id) || id <= 0) return;
     this.selectedAdmissionAppId.set(id);
 
     const app = this.pendingApplications().find(a => a.id === id);
@@ -471,10 +554,9 @@ export class StudentAdvisingComponent implements OnInit {
       email: app.email || `${app.applicationNumber.toLowerCase().replace(/[^a-z0-9]/g, '')}@student.university.edu.ph`,
       classification: 'INCOMING_FIRST_YEAR',
       yearLevel: 1
-    });
+    }, { emitEvent: false });
 
     if (app.targetProgramId) {
-      this.admissionsForm.patchValue({ programId: app.targetProgramId });
       this.onAdmitProgramChange(app.targetProgramId);
     }
 
@@ -484,29 +566,42 @@ export class StudentAdvisingComponent implements OnInit {
   closeAdmissionsDialog(): void {
     this.isAdmissionsDialogVisible.set(false);
     this.isAdmissionsSubmitted.set(false);
+    this.currentAdmitProgramId = null;
   }
 
   onAdmitProgramChange(programId: number | { value: number } | null): void {
     const id = typeof programId === 'object' && programId !== null ? programId.value : Number(programId);
     if (!id) return;
-    this.admissionsForm.patchValue({ programId: id });
+    if (this.currentAdmitProgramId === id) return;
+    this.currentAdmitProgramId = id;
 
-    this.curriculumApi.getCurriculaByProgram(id).subscribe({
-      next: curricula => {
-        const options = (curricula || []).map(c => ({
-          label: `${c.code} (${c.status})`,
-          value: c.id
-        }));
-        this.curriculumOptions.set(options);
-        if (options.length > 0) {
-          this.admissionsForm.patchValue({ curriculumId: options[0].value });
-        } else {
-          this.admissionsForm.patchValue({ curriculumId: null });
-        }
-      },
-      error: () => {
-        this.curriculumOptions.set([]);
-        this.admissionsForm.patchValue({ curriculumId: null });
+    if (this.admissionsForm.get('programId')?.value !== id) {
+      this.admissionsForm.patchValue({ programId: id }, { emitEvent: false });
+    }
+
+    this.programSelect$.next(id);
+  }
+
+  private setupCurriculumPipeline(): void {
+    this.programSelect$.pipe(
+      filter((id): id is number => id != null && id > 0),
+      distinctUntilChanged(),
+      switchMap(programId =>
+        this.curriculumApi.getCurriculaByProgram(programId).pipe(
+          catchError(() => of([]))
+        )
+      ),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(curricula => {
+      const options = (curricula || []).map(c => ({
+        label: `${c.code} (${c.status})`,
+        value: c.id
+      }));
+      this.curriculumOptions.set(options);
+      if (options.length > 0) {
+        this.admissionsForm.patchValue({ curriculumId: options[0].value }, { emitEvent: false });
+      } else {
+        this.admissionsForm.patchValue({ curriculumId: null }, { emitEvent: false });
       }
     });
   }
@@ -514,15 +609,13 @@ export class StudentAdvisingComponent implements OnInit {
   onAdmitNameOrIdChange(): void {
     const studentNum = (this.admissionsForm.get('studentNumber')?.value || '').trim();
     const currentUsername = this.admissionsForm.get('username')?.value || '';
-    const currentEmail = this.admissionsForm.get('email')?.value || '';
 
-    // Auto-populate username & email if left default or blank
     if (!currentUsername || currentUsername.startsWith('2026')) {
       const newUsername = studentNum.toLowerCase().replace('-', '_');
       this.admissionsForm.patchValue({
         username: newUsername,
         email: `${newUsername}@student.university.edu.ph`
-      });
+      }, { emitEvent: false });
     }
   }
 
@@ -576,7 +669,7 @@ export class StudentAdvisingComponent implements OnInit {
 
   openCreditingDialog(): void {
     const studentId = this.store.studentId();
-    if (!studentId) {
+    if (!studentId || studentId <= 0) {
       this.messageService.add({ severity: 'warn', summary: 'No Student Selected', detail: 'Please select an active student first.' });
       return;
     }
@@ -605,15 +698,16 @@ export class StudentAdvisingComponent implements OnInit {
     this.isCreditingSubmitted.set(false);
   }
 
-  onCreditingInternalCourseChange(courseId: number | { value: number } | null): void {
-    const id = typeof courseId === 'object' && courseId !== null ? courseId.value : Number(courseId);
+  onCreditingInternalCourseChange(courseId: number | { value: number } | null | undefined): void {
+    const id = typeof courseId === 'object' && courseId !== null ? (courseId as any).value : Number(courseId);
+    if (!id || isNaN(id) || id <= 0) return;
     this.creditingForm.patchValue({ internalCourseId: id });
     this.selectedCreditingInternalId.set(id);
   }
 
   submitCrediting(): void {
     const studentId = this.store.studentId();
-    if (!studentId) {
+    if (!studentId || studentId <= 0) {
       this.messageService.add({ severity: 'warn', summary: 'Validation Error', detail: 'Please select an active student.' });
       return;
     }
@@ -688,6 +782,4 @@ export class StudentAdvisingComponent implements OnInit {
       }
     });
   }
-
 }
-
