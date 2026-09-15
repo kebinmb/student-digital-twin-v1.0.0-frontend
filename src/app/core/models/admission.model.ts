@@ -219,6 +219,7 @@ export interface AdmissionApplicationResponse {
   isFirstGenerationCollege: boolean;
   isUnderprivilegedHomeless?: boolean;
   scholarshipGrantType?: string;
+  socioeconomicRiskScore?: number;
   queueToken?: string;
   applicationStatus: 'SUBMITTED' | 'UNDER_REVIEW' | 'EXAM_PASSED' | 'EXAM_FAILED' | 'INTERVIEW_ACCEPTED' | 'REJECTED' | 'ELIGIBLE_FOR_ENROLLMENT' | 'ENROLLED' | 'APPROVED';
   status?: string;

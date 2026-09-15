@@ -15,6 +15,8 @@ import { ToastModule } from 'primeng/toast';
 import { MessageModule } from 'primeng/message';
 import { TabsModule } from 'primeng/tabs';
 import { TooltipModule } from 'primeng/tooltip';
+import { IconField } from 'primeng/iconfield';
+import { InputIcon } from 'primeng/inputicon';
 import { MessageService } from 'primeng/api';
 
 import { AdmissionApiService } from '../../../core/service/admission/admission-api.service';
@@ -46,7 +48,9 @@ import {
     ToastModule,
     MessageModule,
     TabsModule,
-    TooltipModule
+    TooltipModule,
+    IconField,
+    InputIcon
   ],
   providers: [MessageService],
   templateUrl: './admission-management.component.html',
@@ -80,6 +84,34 @@ export class AdmissionManagementComponent implements OnInit {
   isInterviewModalVisible = signal<boolean>(false);
   isCreateSlotModalVisible = signal<boolean>(false);
   selectedApp = signal<AdmissionApplicationResponse | null>(null);
+
+  // Program Chair Interview Queue Filters & Statutory Equity State
+  interviewSearchQuery = signal<string>('');
+  interviewEquityFilter = signal<string>('ALL');
+  interviewPriorityFilter = signal<string>('ALL');
+  selectedDossierApp = signal<AdmissionApplicationResponse | null>(null);
+  isDossierModalVisible = signal<boolean>(false);
+
+  readonly queueEquityFilterOptions = [
+    { label: 'All Equity Declarations', value: 'ALL' },
+    { label: 'Any Statutory Target Group', value: 'ANY_EQUITY' },
+    { label: '4Ps Beneficiaries (RA 10931)', value: '4PS' },
+    { label: 'Indigenous Peoples (RA 8371)', value: 'IP' },
+    { label: 'Persons with Disabilities (RA 7277)', value: 'PWD' },
+    { label: 'Solo Parents / Dependents (RA 11861)', value: 'SOLO_PARENT' },
+    { label: 'Orphans (DSWD Certified)', value: 'ORPHAN' },
+    { label: 'Agrarian / Fisherfolk (RA 8435 RSBSA)', value: 'AGRI' },
+    { label: 'Bottom 40% Low-Income Bracket', value: 'BOTTOM_40' },
+    { label: 'First-Gen College Student', value: 'FIRST_GEN' },
+    { label: 'GIDA Barangay Residents', value: 'GIDA' }
+  ];
+
+  readonly queuePriorityFilterOptions = [
+    { label: 'All Priority Levels', value: 'ALL' },
+    { label: 'High Priority (Risk ≥ 60)', value: 'HIGH' },
+    { label: 'Moderate Priority (Risk 30 - 59)', value: 'MODERATE' },
+    { label: 'Standard Baseline (Risk < 30)', value: 'BASELINE' }
+  ];
 
   configForm: FormGroup = this.fb.group({
     termId: [null, Validators.required],
@@ -130,9 +162,54 @@ export class AdmissionManagementComponent implements OnInit {
     }))
   );
 
-  programOptions = computed(() =>
-    this.publicPrograms().map(p => ({ label: `${p.code} - ${p.name}`, value: p.id }))
-  );
+  programOptions = computed(() => [
+    { label: 'All Academic Programs', value: null },
+    ...this.publicPrograms().map(p => ({ label: `${p.code} - ${p.name}`, value: p.id }))
+  ]);
+
+  // Real-time KPI Summary for Program Chair Interview Queue
+  readonly interviewQueueSummary = computed(() => {
+    const progId = this.selectedProgramId();
+    const apps = this.allApplications().filter(a => {
+      const matchesProg = !progId || a.targetProgramId === progId;
+      return matchesProg && a.applicationStatus === 'EXAM_PASSED';
+    });
+
+    let count4ps = 0;
+    let countBottom40 = 0;
+    let countIp = 0;
+    let countPwd = 0;
+    let countSolo = 0;
+    let countOrphan = 0;
+    let countAgri = 0;
+    let countFirstGen = 0;
+    let countHighPriority = 0;
+
+    for (const a of apps) {
+      if (a.is4psBeneficiary) count4ps++;
+      if (a.isBottom40IncomeBracket || a.monthlyHouseholdIncomeBracket === 'POOR_BELOW_10K') countBottom40++;
+      if (a.isIndigenousPeople) countIp++;
+      if (a.isPersonWithDisability) countPwd++;
+      if (a.isSoloParent || a.isRaisedBySoloParent) countSolo++;
+      if (a.isOrphan) countOrphan++;
+      if (a.isFarmerFisherfolk) countAgri++;
+      if (a.isFirstGenerationCollege) countFirstGen++;
+      if (this.getRiskScore(a) >= 60) countHighPriority++;
+    }
+
+    return {
+      totalCount: apps.length,
+      count4ps,
+      countBottom40,
+      countIp,
+      countPwd,
+      countSolo,
+      countOrphan,
+      countAgri,
+      countFirstGen,
+      countHighPriority
+    };
+  });
 
   // Filtered Lists
   pendingExamApps = computed(() =>
@@ -141,9 +218,46 @@ export class AdmissionManagementComponent implements OnInit {
 
   chairInterviewApps = computed(() => {
     const progId = this.selectedProgramId();
+    const search = this.interviewSearchQuery().toLowerCase().trim();
+    const eqFilter = this.interviewEquityFilter();
+    const priFilter = this.interviewPriorityFilter();
+
     return this.allApplications().filter(a => {
       const matchesProg = !progId || a.targetProgramId === progId;
-      return matchesProg && a.applicationStatus === 'EXAM_PASSED';
+      if (!matchesProg) return false;
+      if (a.applicationStatus !== 'EXAM_PASSED') return false;
+
+      if (search) {
+        const nameMatch = a.fullName?.toLowerCase().includes(search);
+        const numMatch = a.applicationNumber?.toLowerCase().includes(search);
+        const emailMatch = a.email?.toLowerCase().includes(search);
+        if (!nameMatch && !numMatch && !emailMatch) return false;
+      }
+
+      const score = this.getRiskScore(a);
+
+      if (priFilter === 'HIGH' && score < 60) return false;
+      if (priFilter === 'MODERATE' && (score < 30 || score >= 60)) return false;
+      if (priFilter === 'BASELINE' && score >= 30) return false;
+
+      if (eqFilter === '4PS' && !a.is4psBeneficiary) return false;
+      if (eqFilter === 'IP' && !a.isIndigenousPeople) return false;
+      if (eqFilter === 'PWD' && !a.isPersonWithDisability) return false;
+      if (eqFilter === 'SOLO_PARENT' && (!a.isSoloParent && !a.isRaisedBySoloParent)) return false;
+      if (eqFilter === 'ORPHAN' && !a.isOrphan) return false;
+      if (eqFilter === 'AGRI' && !a.isFarmerFisherfolk) return false;
+      if (eqFilter === 'BOTTOM_40' && !a.isBottom40IncomeBracket && a.monthlyHouseholdIncomeBracket !== 'POOR_BELOW_10K') return false;
+      if (eqFilter === 'FIRST_GEN' && !a.isFirstGenerationCollege) return false;
+      if (eqFilter === 'GIDA' && !a.isGidaResident) return false;
+      if (eqFilter === 'ANY_EQUITY' && !(
+        a.is4psBeneficiary || a.isIndigenousPeople || a.isPersonWithDisability ||
+        a.isSoloParent || a.isRaisedBySoloParent || a.isOrphan || a.isFarmerFisherfolk ||
+        a.isRebelReturneeFamily || a.isGidaResident || a.isBottom40IncomeBracket ||
+        a.monthlyHouseholdIncomeBracket === 'POOR_BELOW_10K' ||
+        a.isFirstGenerationCollege || a.isUnderprivilegedHomeless
+      )) return false;
+
+      return true;
     });
   });
 
@@ -413,5 +527,56 @@ export class AdmissionManagementComponent implements OnInit {
       default:
         return 'secondary';
     }
+  }
+
+  getRiskScore(app: AdmissionApplicationResponse): number {
+    if (app.socioeconomicRiskScore != null) return Number(app.socioeconomicRiskScore);
+    let score = 10.0;
+    if (app.highSchoolType?.toUpperCase() === 'PUBLIC') score += 10.0;
+    if (app.isBottom40IncomeBracket || app.monthlyHouseholdIncomeBracket === 'POOR_BELOW_10K') score += 20.0;
+    else if (app.monthlyHouseholdIncomeBracket === 'LOW_INCOME_10K_TO_20K') score += 10.0;
+    if (app.is4psBeneficiary) score += 15.0;
+    if (app.isPersonWithDisability) score += 15.0;
+    if (app.isSoloParent || app.isRaisedBySoloParent) score += 10.0;
+    if (app.isOrphan) score += 15.0;
+    if (app.isGidaResident) score += 10.0;
+    if (app.isFarmerFisherfolk) score += 10.0;
+    if (app.isRebelReturneeFamily) score += 10.0;
+    return Math.min(score, 100.0);
+  }
+
+  getVulnerabilitySeverity(score?: number): 'danger' | 'warn' | 'info' | 'secondary' {
+    if (score === undefined || score === null) return 'secondary';
+    if (score >= 60) return 'danger';
+    if (score >= 30) return 'warn';
+    return 'info';
+  }
+
+  getPriorityLabel(score?: number): string {
+    if (score === undefined || score === null) return 'Standard Baseline';
+    if (score >= 60) return 'High Affirmative Priority';
+    if (score >= 30) return 'Moderate Priority';
+    return 'Standard Baseline';
+  }
+
+  formatIncome(bracket?: string): string {
+    switch (bracket) {
+      case 'POOR_BELOW_10K': return 'Poor (< ₱10k)';
+      case 'LOW_INCOME_10K_TO_20K': return 'Low Income (₱10k-20k)';
+      case 'LOWER_MIDDLE_20K_TO_40K': return 'Lower Middle (₱20k-40k)';
+      case 'MIDDLE_40K_TO_70K': return 'Middle (₱40k-70k)';
+      case 'UPPER_70K_PLUS': return 'Upper (₱70k+)';
+      default: return bracket || 'Unspecified';
+    }
+  }
+
+  openDossierModal(app: AdmissionApplicationResponse): void {
+    this.selectedDossierApp.set(app);
+    this.isDossierModalVisible.set(true);
+  }
+
+  closeDossierModal(): void {
+    this.isDossierModalVisible.set(false);
+    this.selectedDossierApp.set(null);
   }
 }
