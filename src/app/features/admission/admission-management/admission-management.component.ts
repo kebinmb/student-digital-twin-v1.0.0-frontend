@@ -69,6 +69,18 @@ export class AdmissionManagementComponent implements OnInit {
   readonly canConductInterview = computed(() => this.authService.hasAnyRole(['ADMIN', 'CHAIRPERSON', 'DEAN', 'REGISTRAR']));
   readonly canViewInterviewQueue = computed(() => this.authService.hasAnyRole(['ADMIN', 'CHAIRPERSON', 'DEAN', 'REGISTRAR', 'GUIDANCE']));
 
+  // CHAIRPERSON-specific program scoping
+  readonly isChairperson = computed(() =>
+    this.authService.hasRole('CHAIRPERSON') && !this.authService.hasAnyRole(['ADMIN', 'REGISTRAR'])
+  );
+  readonly assignedProgramId = computed<number | null>(() => this.authService.currentUser().programId ?? null);
+  readonly assignedProgramName = computed<string | null>(() => {
+    const id = this.assignedProgramId();
+    if (!id) return null;
+    const prog = this.publicPrograms().find(p => Number(p.id) === Number(id));
+    return prog ? `${prog.code} - ${prog.name}` : `Program #${id}`;
+  });
+
   activeTab = signal<string>('config');
   loading = signal<boolean>(false);
 
@@ -164,14 +176,25 @@ export class AdmissionManagementComponent implements OnInit {
     }))
   );
 
-  programOptions = computed(() => [
-    { label: 'All Academic Programs', value: null },
-    ...this.publicPrograms().map(p => ({ label: `${p.code} - ${p.name}`, value: p.id }))
-  ]);
+  programOptions = computed(() => {
+    if (this.isChairperson() && this.assignedProgramId()) {
+      const assignedId = Number(this.assignedProgramId());
+      const prog = this.publicPrograms().find(p => Number(p.id) === assignedId);
+      if (prog) {
+        return [{ label: `${prog.code} - ${prog.name} (Assigned Program)`, value: prog.id }];
+      }
+      return [{ label: `Assigned Program (#${assignedId})`, value: assignedId }];
+    }
+    return [
+      { label: 'All Academic Programs', value: null },
+      ...this.publicPrograms().map(p => ({ label: `${p.code} - ${p.name}`, value: p.id }))
+    ];
+  });
 
   // Real-time KPI Summary for Program Chair Interview Queue
   readonly interviewQueueSummary = computed(() => {
-    const progId = this.selectedProgramId();
+    const assignedId = this.isChairperson() ? this.assignedProgramId() : null;
+    const progId = assignedId ?? this.selectedProgramId();
     const isAllPrograms = !progId || progId === 'ALL';
     const apps = this.allApplications().filter(a => {
       const matchesProg = isAllPrograms || (a.targetProgramId != null && Number(a.targetProgramId) === Number(progId));
@@ -224,7 +247,8 @@ export class AdmissionManagementComponent implements OnInit {
   );
 
   chairInterviewApps = computed(() => {
-    const progId = this.selectedProgramId();
+    const assignedId = this.isChairperson() ? this.assignedProgramId() : null;
+    const progId = assignedId ?? this.selectedProgramId();
     const isAllPrograms = !progId || progId === 'ALL';
     const search = this.interviewSearchQuery().toLowerCase().trim();
     const eqFilter = this.interviewEquityFilter();
@@ -271,17 +295,29 @@ export class AdmissionManagementComponent implements OnInit {
     });
   });
 
-  eligibleEnrollmentApps = computed(() =>
-    this.allApplications().filter(a => {
+  eligibleEnrollmentApps = computed(() => {
+    const assignedId = this.isChairperson() ? this.assignedProgramId() : null;
+    const progId = assignedId ?? this.selectedProgramId();
+    const isAllPrograms = !progId || progId === 'ALL';
+    return this.allApplications().filter(a => {
+      const matchesProg = isAllPrograms || (a.targetProgramId != null && Number(a.targetProgramId) === Number(progId));
+      if (!matchesProg) return false;
+
       const status = (a.applicationStatus || (a as any).status)?.toString().trim().toUpperCase();
       return status === 'INTERVIEW_ACCEPTED' ||
         status === 'ELIGIBLE_FOR_ENROLLMENT' ||
         status === 'ENROLLED';
-    })
-  );
+    });
+  });
 
   ngOnInit(): void {
-    if (!this.isAdminOrGuidance() && this.canViewInterviewQueue()) {
+    if (this.isChairperson()) {
+      this.activeTab.set('interview');
+      const progId = this.assignedProgramId();
+      if (progId) {
+        this.selectedProgramId.set(progId);
+      }
+    } else if (!this.isAdminOrGuidance() && this.canViewInterviewQueue()) {
       this.activeTab.set('interview');
     }
     this.loadTermsAndPrograms();
@@ -305,6 +341,10 @@ export class AdmissionManagementComponent implements OnInit {
     this.admissionApi.getPublicPrograms().subscribe({
       next: progs => {
         this.publicPrograms.set(progs);
+        const progId = this.assignedProgramId();
+        if (this.isChairperson() && progId) {
+          this.selectedProgramId.set(progId);
+        }
       }
     });
   }
@@ -494,6 +534,14 @@ export class AdmissionManagementComponent implements OnInit {
         severity: 'warn',
         summary: 'Access Restricted',
         detail: 'Only Program Chairpersons and Academic Deans are authorized to evaluate interviews.'
+      });
+      return;
+    }
+    if (this.isChairperson() && this.assignedProgramId() && app.targetProgramId && Number(app.targetProgramId) !== Number(this.assignedProgramId())) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Access Denied',
+        detail: 'You are only authorized to evaluate applicants for your assigned program.'
       });
       return;
     }

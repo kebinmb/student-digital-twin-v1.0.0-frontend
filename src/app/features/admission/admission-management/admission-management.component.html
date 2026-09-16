@@ -353,8 +353,18 @@
     <section class="section-card">
       <div class="section-header-wrap">
         <div>
-          <h2 class="section-title">Program Chairperson Interview Queue</h2>
-          <p class="section-subtitle">Applicants qualified through examination (EXAM_PASSED) with Philippine Statutory Equity Profiling & Affirmative Action Indicators</p>
+          <div class="flex align-items-center gap-2">
+            <h2 class="section-title">Program Chairperson Interview Queue</h2>
+            @if (isChairperson() && assignedProgramName(); as progName) {
+              <p-tag [value]="progName" severity="info" icon="pi pi-lock"></p-tag>
+            }
+          </div>
+          <p class="section-subtitle">
+            Applicants qualified through examination (EXAM_PASSED) with Philippine Statutory Equity Profiling & Affirmative Action Indicators
+            @if (isChairperson() && assignedProgramName()) {
+              &bull; <strong>Scoped to: {{ assignedProgramName() }}</strong>
+            }
+          </p>
         </div>
 
         <div class="header-actions-group">
@@ -415,12 +425,13 @@
             <label class="filter-label">Program Filter</label>
             <p-select 
               [options]="programOptions()" 
-              [ngModel]="selectedProgramId()" 
+              [ngModel]="isChairperson() && assignedProgramId() ? assignedProgramId() : selectedProgramId()" 
               (onChange)="selectedProgramId.set($event.value)"
               optionLabel="label" 
               optionValue="value" 
               placeholder="All Academic Programs" 
-              [showClear]="true"
+              [showClear]="!isChairperson()"
+              [disabled]="isChairperson() && !!assignedProgramId()"
               styleClass="w-full">
             </p-select>
           </div>
@@ -583,8 +594,18 @@
     <section class="section-card">
       <div class="section-header">
         <div>
-          <h2 class="section-title">Admitted Applicants — Enrollment Hand-off</h2>
-          <p class="section-subtitle">Applicants marked INTERVIEW_ACCEPTED are seeded directly into Student Enrollment & Advising</p>
+          <div class="flex align-items-center gap-2">
+            <h2 class="section-title">Admitted Applicants — Enrollment Hand-off</h2>
+            @if (isChairperson() && assignedProgramName(); as progName) {
+              <p-tag [value]="progName" severity="info" icon="pi pi-lock"></p-tag>
+            }
+          </div>
+          <p class="section-subtitle">
+            Applicants marked INTERVIEW_ACCEPTED are seeded directly into Student Enrollment & Advising
+            @if (isChairperson() && assignedProgramName()) {
+              &bull; <strong>Scoped to: {{ assignedProgramName() }}</strong>
+            }
+          </p>
         </div>
         <span class="badge-green">{{ eligibleEnrollmentApps().length }} Admitted</span>
       </div>

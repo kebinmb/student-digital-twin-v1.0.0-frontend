@@ -5,10 +5,12 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { AdmissionManagementComponent } from './admission-management.component';
+import { AuthService } from '../../../core/service/authentication/auth-service';
 
 describe('AdmissionManagementComponent', () => {
   let component: AdmissionManagementComponent;
   let fixture: ComponentFixture<AdmissionManagementComponent>;
+  let authService: AuthService;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -21,6 +23,7 @@ describe('AdmissionManagementComponent', () => {
       ]
     }).compileComponents();
 
+    authService = TestBed.inject(AuthService);
     fixture = TestBed.createComponent(AdmissionManagementComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -276,5 +279,90 @@ describe('AdmissionManagementComponent', () => {
     // Resetting back to null shows all again
     component.selectedProgramId.set(null);
     expect(component.chairInterviewApps().length).toBe(3);
+  });
+
+  it('should strictly scope interview queue, summary metrics, and program options to chairperson assigned program', () => {
+    const chairJwt = `${btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))}.${btoa(JSON.stringify({
+      sub: '42',
+      preferred_username: 'chairperson_cs',
+      roles: ['ROLE_CHAIRPERSON'],
+      program_id: 2
+    }))}.signature`;
+
+    authService.setAccessToken(chairJwt);
+    fixture.detectChanges();
+
+    expect(component.isChairperson()).toBe(true);
+    expect(component.assignedProgramId()).toBe(2);
+
+    component.publicPrograms.set([
+      { id: 1, code: 'BSIT', name: 'BS Information Technology' } as any,
+      { id: 2, code: 'BSCS', name: 'BS Computer Science' } as any,
+      { id: 3, code: 'BSIS', name: 'BS Information Systems' } as any
+    ]);
+
+    // Program options should only list the assigned program
+    const options = component.programOptions();
+    expect(options.length).toBe(1);
+    expect(options[0].value).toBe(2);
+    expect(options[0].label).toContain('BSCS');
+
+    expect(component.assignedProgramName()).toBe('BSCS - BS Computer Science');
+
+    const mockApps: any[] = [
+      {
+        id: 101,
+        fullName: 'BSIT Applicant',
+        applicationStatus: 'EXAM_PASSED',
+        targetProgramId: 1,
+        is4psBeneficiary: true
+      },
+      {
+        id: 102,
+        fullName: 'BSCS Applicant 1',
+        applicationStatus: 'EXAM_PASSED',
+        targetProgramId: 2,
+        is4psBeneficiary: true
+      },
+      {
+        id: 103,
+        fullName: 'BSCS Applicant 2',
+        applicationStatus: 'EXAM_PASSED',
+        targetProgramId: 2,
+        is4psBeneficiary: false
+      },
+      {
+        id: 104,
+        fullName: 'BSIS Applicant',
+        applicationStatus: 'EXAM_PASSED',
+        targetProgramId: 3,
+        is4psBeneficiary: true
+      }
+    ];
+
+    component.allApplications.set(mockApps);
+    fixture.detectChanges();
+
+    // Even if selectedProgramId was null, chairInterviewApps must be restricted to program 2
+    const queue = component.chairInterviewApps();
+    expect(queue.length).toBe(2);
+    expect(queue.every(a => a.targetProgramId === 2)).toBe(true);
+
+    // Summary metrics should only count program 2 candidates
+    const summary = component.interviewQueueSummary();
+    expect(summary.totalCount).toBe(2);
+    expect(summary.count4ps).toBe(1);
+
+    // Guard against evaluating applicants outside assigned program
+    const outOfScopeApp = mockApps[0]; // program 1
+    component.openInterviewModal(outOfScopeApp);
+    expect(component.selectedApp()).toBeNull();
+    expect(component.isInterviewModalVisible()).toBe(false);
+
+    // Evaluating assigned program applicant succeeds
+    const inScopeApp = mockApps[1]; // program 2
+    component.openInterviewModal(inScopeApp);
+    expect(component.selectedApp()).toBe(inScopeApp);
+    expect(component.isInterviewModalVisible()).toBe(true);
   });
 });
