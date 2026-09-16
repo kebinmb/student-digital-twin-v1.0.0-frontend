@@ -222,4 +222,59 @@ describe('AdmissionManagementComponent', () => {
     expect(component.isDossierModalVisible()).toBe(false);
     expect(component.selectedDossierApp()).toBeNull();
   });
+
+  it('should include EXAM_PASSED applicants across all programs when selectedProgramId is null and handle status casing', () => {
+    const mockApps: any[] = [
+      {
+        id: 10,
+        fullName: 'BSIT Candidate',
+        applicationNumber: 'ADM-2026-010',
+        applicationStatus: 'EXAM_PASSED',
+        targetProgramId: 1
+      },
+      {
+        id: 20,
+        fullName: 'BSCS Candidate',
+        applicationNumber: 'ADM-2026-020',
+        applicationStatus: 'exam_passed', // lowercase
+        targetProgramId: 2
+      },
+      {
+        id: 30,
+        fullName: 'Civil Eng Candidate',
+        applicationNumber: 'ADM-2026-030',
+        applicationStatus: ' EXAM_PASSED ', // whitespace
+        targetProgramId: 3
+      },
+      {
+        id: 40,
+        fullName: 'Pending Guidance Exam',
+        applicationNumber: 'ADM-2026-040',
+        applicationStatus: 'SUBMITTED',
+        targetProgramId: 1
+      }
+    ];
+
+    component.allApplications.set(mockApps);
+    component.selectedProgramId.set(null); // All Programs
+    fixture.detectChanges();
+
+    // All 3 passed exam applicants should be in chairInterviewApps
+    const queue = component.chairInterviewApps();
+    expect(queue.length).toBe(3);
+    expect(queue.map(a => a.id)).toEqual([10, 20, 30]);
+
+    // Summary count should also be 3
+    expect(component.interviewQueueSummary().totalCount).toBe(3);
+
+    // Filtering to Program 2 (with string coercion) should show only BSCS
+    component.selectedProgramId.set('2' as any);
+    expect(component.chairInterviewApps().length).toBe(1);
+    expect(component.chairInterviewApps()[0].fullName).toBe('BSCS Candidate');
+    expect(component.interviewQueueSummary().totalCount).toBe(1);
+
+    // Resetting back to null shows all again
+    component.selectedProgramId.set(null);
+    expect(component.chairInterviewApps().length).toBe(3);
+  });
 });

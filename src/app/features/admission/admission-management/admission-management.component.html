@@ -66,7 +66,7 @@
       </button>
     }
 
-    @if (isProgramChair()) {
+    @if (canViewInterviewQueue()) {
       <button 
         pButton 
         type="button" 
@@ -88,6 +88,7 @@
         [outlined]="activeTab() !== 'handoff'"
         (click)="activeTab.set('handoff')" 
         size="small">
+        <span class="tab-badge info-badge">{{ eligibleEnrollmentApps().length }}</span>
       </button>
     }
   </nav>
@@ -348,7 +349,7 @@
   }
 
   <!-- TAB 3: Program Chair Interview Queue -->
-  @if (activeTab() === 'interview' && isProgramChair()) {
+  @if (activeTab() === 'interview' && canViewInterviewQueue()) {
     <section class="section-card">
       <div class="section-header-wrap">
         <div>
@@ -419,6 +420,7 @@
               optionLabel="label" 
               optionValue="value" 
               placeholder="All Academic Programs" 
+              [showClear]="true"
               styleClass="w-full">
             </p-select>
           </div>
@@ -538,6 +540,7 @@
             <td class="text-center">
               <div class="flex gap-1 justify-content-center">
                 <p-button 
+                  *ngIf="canConductInterview()"
                   label="Interview" 
                   icon="pi pi-comments" 
                   severity="warn" 
@@ -576,7 +579,7 @@
   }
 
   <!-- TAB 4: Admitted Applicants & Enrollment Hand-off -->
-  @if (activeTab() === 'handoff' && isProgramChair()) {
+  @if (activeTab() === 'handoff' && canViewInterviewQueue()) {
     <section class="section-card">
       <div class="section-header">
         <div>

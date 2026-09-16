@@ -66,6 +66,8 @@ export class AdmissionManagementComponent implements OnInit {
   // Role Checks
   readonly isAdminOrGuidance = computed(() => this.authService.hasAnyRole(['ADMIN', 'REGISTRAR', 'GUIDANCE']));
   readonly isProgramChair = computed(() => this.authService.hasAnyRole(['ADMIN', 'CHAIRPERSON', 'DEAN', 'REGISTRAR']));
+  readonly canConductInterview = computed(() => this.authService.hasAnyRole(['ADMIN', 'CHAIRPERSON', 'DEAN', 'REGISTRAR']));
+  readonly canViewInterviewQueue = computed(() => this.authService.hasAnyRole(['ADMIN', 'CHAIRPERSON', 'DEAN', 'REGISTRAR', 'GUIDANCE']));
 
   activeTab = signal<string>('config');
   loading = signal<boolean>(false);
@@ -79,7 +81,7 @@ export class AdmissionManagementComponent implements OnInit {
   // Applications Lists & Modal States
   allApplications = signal<AdmissionApplicationResponse[]>([]);
   adminExamSlots = signal<EntranceExamSlotResponse[]>([]);
-  selectedProgramId = signal<number | null>(null);
+  selectedProgramId = signal<number | string | null>(null);
   isExamModalVisible = signal<boolean>(false);
   isInterviewModalVisible = signal<boolean>(false);
   isCreateSlotModalVisible = signal<boolean>(false);
@@ -170,9 +172,11 @@ export class AdmissionManagementComponent implements OnInit {
   // Real-time KPI Summary for Program Chair Interview Queue
   readonly interviewQueueSummary = computed(() => {
     const progId = this.selectedProgramId();
+    const isAllPrograms = !progId || progId === 'ALL';
     const apps = this.allApplications().filter(a => {
-      const matchesProg = !progId || a.targetProgramId === progId;
-      return matchesProg && a.applicationStatus === 'EXAM_PASSED';
+      const matchesProg = isAllPrograms || (a.targetProgramId != null && Number(a.targetProgramId) === Number(progId));
+      const status = (a.applicationStatus || (a as any).status)?.toString().trim().toUpperCase();
+      return matchesProg && status === 'EXAM_PASSED';
     });
 
     let count4ps = 0;
@@ -213,19 +217,25 @@ export class AdmissionManagementComponent implements OnInit {
 
   // Filtered Lists
   pendingExamApps = computed(() =>
-    this.allApplications().filter(a => a.applicationStatus === 'SUBMITTED' || a.applicationStatus === 'UNDER_REVIEW')
+    this.allApplications().filter(a => {
+      const status = (a.applicationStatus || (a as any).status)?.toString().trim().toUpperCase();
+      return status === 'SUBMITTED' || status === 'UNDER_REVIEW';
+    })
   );
 
   chairInterviewApps = computed(() => {
     const progId = this.selectedProgramId();
+    const isAllPrograms = !progId || progId === 'ALL';
     const search = this.interviewSearchQuery().toLowerCase().trim();
     const eqFilter = this.interviewEquityFilter();
     const priFilter = this.interviewPriorityFilter();
 
     return this.allApplications().filter(a => {
-      const matchesProg = !progId || a.targetProgramId === progId;
+      const matchesProg = isAllPrograms || (a.targetProgramId != null && Number(a.targetProgramId) === Number(progId));
       if (!matchesProg) return false;
-      if (a.applicationStatus !== 'EXAM_PASSED') return false;
+
+      const status = (a.applicationStatus || (a as any).status)?.toString().trim().toUpperCase();
+      if (status !== 'EXAM_PASSED') return false;
 
       if (search) {
         const nameMatch = a.fullName?.toLowerCase().includes(search);
@@ -262,14 +272,18 @@ export class AdmissionManagementComponent implements OnInit {
   });
 
   eligibleEnrollmentApps = computed(() =>
-    this.allApplications().filter(a =>
-      a.applicationStatus === 'INTERVIEW_ACCEPTED' ||
-      a.applicationStatus === 'ELIGIBLE_FOR_ENROLLMENT' ||
-      a.applicationStatus === 'ENROLLED'
-    )
+    this.allApplications().filter(a => {
+      const status = (a.applicationStatus || (a as any).status)?.toString().trim().toUpperCase();
+      return status === 'INTERVIEW_ACCEPTED' ||
+        status === 'ELIGIBLE_FOR_ENROLLMENT' ||
+        status === 'ENROLLED';
+    })
   );
 
   ngOnInit(): void {
+    if (!this.isAdminOrGuidance() && this.canViewInterviewQueue()) {
+      this.activeTab.set('interview');
+    }
     this.loadTermsAndPrograms();
   }
 
@@ -291,9 +305,6 @@ export class AdmissionManagementComponent implements OnInit {
     this.admissionApi.getPublicPrograms().subscribe({
       next: progs => {
         this.publicPrograms.set(progs);
-        if (progs.length > 0) {
-          this.selectedProgramId.set(progs[0].id);
-        }
       }
     });
   }
@@ -467,6 +478,8 @@ export class AdmissionManagementComponent implements OnInit {
           detail: `Application ${updated.applicationNumber} updated to ${updated.applicationStatus}`
         });
         this.closeExamModal();
+        // Optimistically update application in state to guarantee instant reactive queue rendering
+        this.allApplications.update(list => list.map(item => item.id === updated.id ? updated : item));
         this.refreshAllData();
       },
       error: err => {
@@ -476,6 +489,14 @@ export class AdmissionManagementComponent implements OnInit {
   }
 
   openInterviewModal(app: AdmissionApplicationResponse): void {
+    if (!this.canConductInterview()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Access Restricted',
+        detail: 'Only Program Chairpersons and Academic Deans are authorized to evaluate interviews.'
+      });
+      return;
+    }
     this.selectedApp.set(app);
     this.interviewForm.reset({
       interviewScore: 90,
@@ -502,6 +523,8 @@ export class AdmissionManagementComponent implements OnInit {
           detail: `Application ${updated.applicationNumber} promoted to ${updated.applicationStatus}`
         });
         this.closeInterviewModal();
+        // Optimistically update application in state to guarantee instant reactive handoff rendering
+        this.allApplications.update(list => list.map(item => item.id === updated.id ? updated : item));
         this.refreshAllData();
       },
       error: err => {
