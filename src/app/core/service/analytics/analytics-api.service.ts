@@ -41,6 +41,13 @@ export class AnalyticsApiService {
     );
   }
 
+  getDailyAttendance(date?: string, sectionId?: number): Observable<AttendanceRecordResponse[]> {
+    let params = new HttpParams();
+    if (date) params = params.set('date', date);
+    if (sectionId) params = params.set('sectionId', sectionId.toString());
+    return this.http.get<AttendanceRecordResponse[]>(`${environment.apiUrl}/v1/attendance/daily`, { params });
+  }
+
   getStudentRiskProfile(studentId: number): Observable<DigitalTwinRiskProfileDto> {
     return this.http.get<DigitalTwinRiskProfileDto>(`${environment.apiUrl}/v1/analytics/digital-twin/risk/${studentId}`);
   }

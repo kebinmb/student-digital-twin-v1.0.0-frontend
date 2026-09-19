@@ -1,4 +1,3 @@
-<!-- File: src/app/features/analytics/qr-attendance/qr-attendance.component.html -->
 <div class="qr-container">
   <!-- Institutional Sticky Header Toolbar -->
   <div class="qr-toolbar-card">
@@ -13,12 +12,13 @@
         </div>
         <h1 class="header-title">Dynamic QR Attendance & GPS Geofence Terminal</h1>
         <p class="header-subtitle">
-          Time-decaying QR code generation for instructors and GPS proximity-verified scanning for students.
+          Time-decaying QR code generation per section schedule and daily GPS proximity-verified student attendance tracking.
         </p>
       </div>
     </div>
   </div>
 
+  <!-- QR Action Panels -->
   <div class="qr-grid">
     <!-- Instructor Panel -->
     <div class="qr-panel-card">
@@ -27,8 +27,22 @@
           <i class="pi pi-qrcode icon-green"></i> Instructor QR Generator Panel
         </h2>
         <p class="panel-subtext">
-          Generates dynamic 15-minute time-decaying QR code with 50-meter classroom GPS geofence bounds.
+          Select an assigned section schedule to generate a dynamic 15-minute time-decaying QR code with 50m GPS geofence bounds.
         </p>
+
+        <!-- Section Schedule Selection -->
+        <div class="section-select-group">
+          <label class="form-label font-mono-bold">Assigned Class Section Schedule</label>
+          <p-select
+            [options]="scheduleOptions()"
+            [ngModel]="selectedScheduleId()"
+            (ngModelChange)="selectedScheduleId.set($event)"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Select Assigned Class Section..."
+            styleClass="full-width-select"
+          ></p-select>
+        </div>
 
         @if (activeSession(); as sess) {
           <div class="qr-active-box">
@@ -48,15 +62,15 @@
           <app-empty-state
             icon="pi pi-qrcode"
             title="No Active Attendance Session"
-            description="Generate a 15-minute dynamic QR token window with GPS geofencing."
+            description="Select a section above and generate a 15-minute dynamic QR token window with GPS geofencing."
             actionLabel="Start Attendance Window"
             actionIcon="pi pi-bolt"
-            (actionClick)="startClassSession(1)">
+            (actionClick)="startClassSession()">
           </app-empty-state>
         }
       </div>
 
-      <p-button label="Generate Dynamic Class QR" icon="pi pi-bolt" severity="success" styleClass="full-width-btn" [loading]="isGenerating()" (onClick)="startClassSession(1)"></p-button>
+      <p-button label="Generate Dynamic Class QR" icon="pi pi-bolt" severity="success" styleClass="full-width-btn" [loading]="isGenerating()" (onClick)="startClassSession()"></p-button>
     </div>
 
     <!-- Student Panel -->
@@ -66,12 +80,12 @@
           <i class="pi pi-mobile icon-blue"></i> Student Geofenced Attendance Scanner
         </h2>
         <p class="panel-subtext">
-          Validates device GPS location against classroom coordinates before recording attendance.
+          Validates device GPS location against classroom coordinates before recording daily attendance.
         </p>
 
         <div class="input-section">
           <div class="form-field">
-            <label class="form-label">Scanned QR Seed Code</label>
+            <label class="form-label font-mono-bold">Scanned QR Seed Code</label>
             <input pInputText [ngModel]="qrSeedInput()" (ngModelChange)="qrSeedInput.set($event)" placeholder="Paste or scan QR seed code..." class="full-width-input font-mono" />
           </div>
 
@@ -92,5 +106,117 @@
       <p-button label="Verify Geofenced Attendance Scan" icon="pi pi-check-circle" severity="primary" styleClass="full-width-btn" [loading]="isScanning()" (onClick)="scanAttendance()"></p-button>
     </div>
   </div>
-</div>
 
+  <!-- Daily Attendance & Telemetry Table Card -->
+  <div class="daily-attendance-card">
+    <div class="card-header-bar">
+      <div class="header-left">
+        <h2 class="table-title">
+          <i class="pi pi-calendar-clock icon-green"></i> Daily Student Attendance Log
+        </h2>
+        <p class="table-subtitle">Real-time classroom telemetry, GPS geofence validation, and attendance metrics per day.</p>
+      </div>
+
+      <div class="header-filters">
+        <div class="filter-field">
+          <label class="filter-label">Date:</label>
+          <input type="date" [ngModel]="selectedDate()" (ngModelChange)="onDateChange($event)" class="date-input font-mono" />
+        </div>
+
+        <div class="filter-field">
+          <label class="filter-label">Section:</label>
+          <p-select
+            [options]="filterSectionOptions()"
+            [ngModel]="selectedFilterSectionId()"
+            (ngModelChange)="onFilterSectionChange($event)"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="All Sections"
+            styleClass="filter-select"
+          ></p-select>
+        </div>
+
+        <p-button icon="pi pi-refresh" label="Refresh" severity="secondary" [loading]="isLoadingDaily()" (onClick)="loadDailyAttendance()"></p-button>
+      </div>
+    </div>
+
+    <!-- Attendance Metrics KPIs -->
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <span class="metric-label">Total Daily Logs</span>
+        <span class="metric-value blue">{{ totalRecords() }}</span>
+      </div>
+
+      <div class="metric-card">
+        <span class="metric-label">Present Students</span>
+        <span class="metric-value green">{{ presentCount() }}</span>
+      </div>
+
+      <div class="metric-card">
+        <span class="metric-label">Late Students</span>
+        <span class="metric-value orange">{{ lateCount() }}</span>
+      </div>
+
+      <div class="metric-card">
+        <span class="metric-label">Geofence Pass Rate</span>
+        <span class="metric-value teal">{{ geofenceValidRate() }}%</span>
+      </div>
+    </div>
+
+    <!-- PrimeNG Daily Attendance Table -->
+    <p-table [value]="dailyRecords()" [loading]="isLoadingDaily()" styleClass="p-datatable-striped p-datatable-sm shadow-table">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Scanned At</th>
+          <th>Student</th>
+          <th>Section / Course</th>
+          <th>Status</th>
+          <th>GPS Geofence</th>
+          <th>Device Telemetry</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-record>
+        <tr>
+          <td class="font-mono">{{ record.scannedAt | date:'mediumTime' }}</td>
+          <td>
+            <div class="student-cell">
+              <span class="student-name">{{ record.studentName }}</span>
+              <span class="student-num font-mono">#{{ record.studentNumber }}</span>
+            </div>
+          </td>
+          <td>
+            <div class="section-cell">
+              <p-tag [value]="record.sectionCode || 'N/A'" severity="secondary"></p-tag>
+              <span class="font-mono-bold">{{ record.courseCode || '' }}</span>
+            </div>
+          </td>
+          <td>
+            <p-tag [value]="record.attendanceStatus" [severity]="getStatusSeverity(record.attendanceStatus)"></p-tag>
+          </td>
+          <td>
+            <p-tag
+              [value]="record.isGeofenceValid ? 'GPS PASS (<=50m)' : 'OUT OF BOUNDS'"
+              [severity]="record.isGeofenceValid ? 'success' : 'danger'"
+            ></p-tag>
+          </td>
+          <td class="font-mono text-muted text-xs">
+            {{ record.deviceFingerprint || 'Browser Client' }}
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="empty-table-cell">
+            <app-empty-state
+              icon="pi pi-calendar-times"
+              title="No Attendance Records Found"
+              description="No student scans recorded for the selected date and section filter.">
+            </app-empty-state>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

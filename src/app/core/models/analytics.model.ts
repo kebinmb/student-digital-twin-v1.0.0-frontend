@@ -27,12 +27,15 @@ export interface ScanAttendanceRequest {
 export interface AttendanceRecordResponse {
   recordId: number;
   sessionId: number;
+  sectionCode?: string;
+  courseCode?: string;
   studentId: number;
   studentNumber: string;
   studentName: string;
   attendanceStatus: string;
   isGeofenceValid: boolean;
   scannedAt: string;
+  deviceFingerprint?: string;
 }
 
 export interface DigitalTwinRiskProfileDto {
