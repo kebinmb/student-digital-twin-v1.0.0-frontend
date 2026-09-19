@@ -49,8 +49,25 @@
             <span class="active-label">Active Dynamic Session QR</span>
             <div class="qr-code-wrapper">
               <div class="qr-display-box">
-                <i class="pi pi-qrcode qr-icon-large"></i>
-                <span class="qr-seed-text">{{ sess.qrSeed }}</span>
+                <svg width="110" height="110" viewBox="0 0 100 100" class="qr-svg-matrix">
+                  <rect x="5" y="5" width="26" height="26" fill="none" stroke="white" stroke-width="4"/>
+                  <rect x="11" y="11" width="14" height="14" fill="#a7f3d0"/>
+                  <rect x="69" y="5" width="26" height="26" fill="none" stroke="white" stroke-width="4"/>
+                  <rect x="75" y="11" width="14" height="14" fill="#a7f3d0"/>
+                  <rect x="5" y="69" width="26" height="26" fill="none" stroke="white" stroke-width="4"/>
+                  <rect x="11" y="75" width="14" height="14" fill="#a7f3d0"/>
+                  <rect x="38" y="10" width="8" height="8" fill="white"/>
+                  <rect x="50" y="18" width="8" height="8" fill="#a7f3d0"/>
+                  <rect x="10" y="38" width="8" height="8" fill="white"/>
+                  <rect x="22" y="48" width="8" height="8" fill="#a7f3d0"/>
+                  <rect x="38" y="38" width="24" height="24" fill="#10b981"/>
+                  <rect x="70" y="40" width="8" height="8" fill="white"/>
+                  <rect x="82" y="50" width="8" height="8" fill="#a7f3d0"/>
+                  <rect x="40" y="70" width="8" height="8" fill="white"/>
+                  <rect x="52" y="80" width="8" height="8" fill="#a7f3d0"/>
+                  <rect x="70" y="72" width="16" height="16" fill="white"/>
+                </svg>
+                <span class="qr-seed-text font-mono mt-1 text-xs">{{ sess.qrSeed }}</span>
               </div>
             </div>
             <p class="qr-meta-text">
@@ -137,6 +154,7 @@
         </div>
 
         <p-button icon="pi pi-refresh" label="Refresh" severity="secondary" [loading]="isLoadingDaily()" (onClick)="loadDailyAttendance()"></p-button>
+        <p-button icon="pi pi-download" label="Export CSV" severity="success" (onClick)="exportAttendanceCsv()"></p-button>
       </div>
     </div>
 

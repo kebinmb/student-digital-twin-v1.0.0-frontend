@@ -375,4 +375,34 @@ export class QrAttendanceScannerComponent implements OnInit {
       default: return 'info';
     }
   }
+
+  exportAttendanceCsv(): void {
+    const records = this.dailyRecords();
+    if (!records || records.length === 0) {
+      this.messageService.add({ severity: 'warn', summary: 'Export Warning', detail: 'No attendance records available for export.' });
+      return;
+    }
+
+    const headers = ['Scanned At', 'Student Name', 'Student Number', 'Section Code', 'Course Code', 'Status', 'Geofence Valid', 'Device Fingerprint'];
+    const rows = records.map(r => [
+      r.scannedAt || '',
+      `"${r.studentName || ''}"`,
+      `"${r.studentNumber || ''}"`,
+      `"${r.sectionCode || ''}"`,
+      `"${r.courseCode || ''}"`,
+      r.attendanceStatus || 'PRESENT',
+      r.isGeofenceValid ? 'YES' : 'NO',
+      `"${r.deviceFingerprint || ''}"`
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `Attendance_Log_${this.selectedDate()}_${this.selectedFilterSectionId() || 'All'}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    this.messageService.add({ severity: 'success', summary: 'CSV Exported', detail: `Downloaded ${records.length} telemetry records as CSV.` });
+  }
 }
