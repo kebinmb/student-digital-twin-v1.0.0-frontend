@@ -273,6 +273,25 @@
                 (click)="openSlotDetailsModal(sec); $event.stopPropagation()">
                 <i class="pi pi-calendar"></i>
               </button>
+              @if (canAddSchedule()) {
+                <button 
+                  type="button"
+                  class="table-action-icon-btn edit flex-center" 
+                  pTooltip="Edit Class Section"
+                  tooltipPosition="top"
+                  (click)="openEditModal(sec); $event.stopPropagation()">
+                  <i class="pi pi-pencil"></i>
+                </button>
+                <button 
+                  type="button"
+                  class="table-action-icon-btn danger flex-center" 
+                  pTooltip="Delete Section"
+                  tooltipPosition="top"
+                  [disabled]="sec.enrolledCount > 0"
+                  (click)="deleteSection(sec); $event.stopPropagation()">
+                  <i class="pi pi-trash"></i>
+                </button>
+              }
               @if (sec.schedules.length > 0 && sec.schedules[0].instructorUserId) {
                 <button 
                   type="button"
@@ -320,7 +339,7 @@
   <!-- DIALOG 1: Create Section & Timetable Modal Dialog                         -->
   <!-- ========================================================================= -->
   <p-dialog 
-    header="Create Class Section & Timetable" 
+    [header]="isEditMode() ? 'Edit Class Section & Timetable' : 'Create Class Section & Timetable'" 
     [visible]="isCreateModalVisible()" 
     (visibleChange)="isCreateModalVisible.set($event)"
     [modal]="true" 
@@ -764,7 +783,7 @@
           <p-button 
             type="submit" 
             form="createSectionForm"
-            label="Create Schedule Section" 
+            [label]="isEditMode() ? 'Update Schedule Section' : 'Create Schedule Section'" 
             icon="pi pi-check" 
             severity="primary" 
             size="small"
@@ -904,15 +923,27 @@
     <ng-template #footer pTemplate="footer">
       <div class="flex items-center justify-between w-full gap-2">
         <span class="text-xs text-slate-500 font-medium">Class Section &amp; Timetable Inspector</span>
-        <p-button 
-          label="Close Inspector" 
-          icon="pi pi-times" 
-          severity="secondary" 
-          [outlined]="true"
-          size="small"
-          styleClass="action-btn-secondary"
-          (onClick)="closeSlotDetailsModal()">
-        </p-button>
+        <div class="flex items-center gap-2">
+          @if (selectedSectionForDetails() && canAddSchedule()) {
+            <p-button 
+              label="Edit Section" 
+              icon="pi pi-pencil" 
+              severity="primary" 
+              size="small"
+              styleClass="action-btn-primary"
+              (onClick)="closeSlotDetailsModal(); openEditModal(selectedSectionForDetails()!)">
+            </p-button>
+          }
+          <p-button 
+            label="Close Inspector" 
+            icon="pi pi-times" 
+            severity="secondary" 
+            [outlined]="true"
+            size="small"
+            styleClass="action-btn-secondary"
+            (onClick)="closeSlotDetailsModal()">
+          </p-button>
+        </div>
       </div>
     </ng-template>
   </p-drawer>

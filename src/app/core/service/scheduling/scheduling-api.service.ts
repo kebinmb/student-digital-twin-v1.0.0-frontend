@@ -6,6 +6,7 @@ import {
   CreateRoomRequest,
   CreateScheduleSlotRequest,
   CreateSectionRequest,
+  UpdateSectionRequest,
   FacultyLoadSummaryResponse,
   InstructorOptionDto,
   RoomResponse,
@@ -55,6 +56,14 @@ export class SchedulingApiService {
 
   createSection(request: CreateSectionRequest): Observable<SectionDetailResponse> {
     return this.http.post<SectionDetailResponse>(`${this.baseUrl}/sections`, request);
+  }
+
+  updateSection(sectionId: number, request: UpdateSectionRequest): Observable<SectionDetailResponse> {
+    return this.http.put<SectionDetailResponse>(`${this.baseUrl}/sections/${sectionId}`, request);
+  }
+
+  deleteSection(sectionId: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/sections/${sectionId}`);
   }
 
   addScheduleSlots(sectionId: number, request: CreateScheduleSlotRequest): Observable<SectionDetailResponse> {

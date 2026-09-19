@@ -89,7 +89,7 @@ export class FacultyGradebookComponent implements OnInit {
   readonly userRole = computed(() => (this.currentUser().role || '').toUpperCase());
   readonly isAdmin = computed(() => this.userRole().includes('ADMIN'));
   readonly isFaculty = computed(() => this.userRole().includes('FACULTY'));
-  readonly isDean = computed(() => this.isAdmin() || this.userRole().includes('DEAN') || this.userRole().includes('CHAIRPERSON'));
+  readonly isDean = computed(() => this.isAdmin() || this.userRole().includes('DEAN'));
   readonly isRegistrar = computed(() => this.isAdmin() || this.userRole().includes('REGISTRAR'));
 
   // Term & Section State
@@ -174,7 +174,7 @@ export class FacultyGradebookComponent implements OnInit {
 
   readonly canEditGrades = computed(() => {
     if (this.currentGradeStatus() !== 'DRAFT') return false;
-    return this.isAdmin() || (this.isFaculty() && this.isAssignedInstructor());
+    return this.isAdmin() || this.isAssignedInstructor();
   });
 
   readonly unreadyStudentsCount = computed(() =>
@@ -546,10 +546,17 @@ export class FacultyGradebookComponent implements OnInit {
       hasRaw = true;
     }
 
-    row.totalRawPercentage = hasRaw ? Math.round(totalRaw * 100) / 100 : null;
     if (row.totalRawPercentage !== null) {
       row.transmutedGrade = this.transmutePercentageToChedGrade(row.totalRawPercentage);
-      row.completionStatus = row.transmutedGrade <= 3.00 ? 'PASSED' : 'FAILED';
+      if (row.transmutedGrade !== null && row.transmutedGrade !== undefined) {
+        if (row.transmutedGrade <= 3.00) {
+          row.completionStatus = 'PASSED';
+        } else if (Math.abs(row.transmutedGrade - 4.00) < 0.001) {
+          row.completionStatus = 'INCOMPLETE';
+        } else {
+          row.completionStatus = 'FAILED';
+        }
+      }
     } else {
       row.transmutedGrade = null;
       row.completionStatus = 'IN_PROGRESS';
@@ -659,6 +666,28 @@ export class FacultyGradebookComponent implements OnInit {
       .subscribe({
         next: updatedMatrix => {
           this.classRecordMatrix.set(updatedMatrix);
+
+          if (!this.manualRosterOverride() && updatedMatrix && updatedMatrix.rows) {
+            const currentRoster = this.editableStudents();
+            const updatedRoster = currentRoster.map(s => {
+              const matrixRow = updatedMatrix.rows.find(r => r.studentId === s.studentId);
+              if (matrixRow && matrixRow.transmutedGrade !== null && matrixRow.transmutedGrade !== undefined) {
+                const grade = matrixRow.transmutedGrade;
+                const status = matrixRow.completionStatus && matrixRow.completionStatus !== 'IN_PROGRESS'
+                  ? matrixRow.completionStatus
+                  : (grade <= 3.00 ? 'PASSED' : (Math.abs(grade - 4.00) < 0.001 ? 'INCOMPLETE' : 'FAILED'));
+                return {
+                  ...s,
+                  finalNumericalGrade: grade,
+                  completionStatus: status,
+                  isDirty: false
+                };
+              }
+              return s;
+            });
+            this.editableStudents.set(updatedRoster);
+          }
+
           this.messageService.add({
             severity: 'success',
             summary: 'Class Record Saved',
@@ -821,7 +850,9 @@ export class FacultyGradebookComponent implements OnInit {
               const matrixRow = matrix.rows.find(r => r.studentId === s.studentId);
               if (matrixRow && matrixRow.transmutedGrade !== null && matrixRow.transmutedGrade !== undefined) {
                 initialGrade = matrixRow.transmutedGrade;
-                status = matrixRow.completionStatus || (initialGrade <= 3.00 ? 'PASSED' : (Math.abs(initialGrade - 4.00) < 0.001 ? 'INCOMPLETE' : 'FAILED'));
+                status = matrixRow.completionStatus && matrixRow.completionStatus !== 'IN_PROGRESS'
+                  ? matrixRow.completionStatus
+                  : (initialGrade <= 3.00 ? 'PASSED' : (Math.abs(initialGrade - 4.00) < 0.001 ? 'INCOMPLETE' : 'FAILED'));
               }
             } else if (initialGrade !== null && initialGrade !== undefined && (status === 'ENROLLED' || status === 'IN_PROGRESS')) {
               status = initialGrade <= 3.00 ? 'PASSED' : (Math.abs(initialGrade - 4.00) < 0.001 ? 'INCOMPLETE' : 'FAILED');

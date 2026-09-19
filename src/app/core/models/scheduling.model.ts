@@ -58,6 +58,12 @@ export interface CreateSectionRequest {
   scheduleSlots: ScheduleSlotDto[];
 }
 
+export interface UpdateSectionRequest {
+  sectionCode: string;
+  maxCapacity: number;
+  scheduleSlots: ScheduleSlotDto[];
+}
+
 export interface ScheduleSlotResponse {
   id: number;
   roomId: number;

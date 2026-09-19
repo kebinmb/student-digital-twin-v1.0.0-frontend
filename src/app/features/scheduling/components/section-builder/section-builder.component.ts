@@ -28,7 +28,7 @@ import { Drawer } from 'primeng/drawer';
 import { Skeleton } from 'primeng/skeleton';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { SchedulingStore } from '../../state/scheduling.store';
-import { CreateSectionRequest, ScheduleSlotDto, SectionDetailResponse } from '../../../../core/models/scheduling.model';
+import { CreateSectionRequest, ScheduleSlotDto, SectionDetailResponse, UpdateSectionRequest } from '../../../../core/models/scheduling.model';
 import { CurriculumApiService } from '../../../../core/service/curriculum/curriculum-api.service';
 import { CourseItemDto } from '../../../../core/models/curriculum-designer.model';
 import { AuthService } from '../../../../core/service/authentication/auth-service';
@@ -113,6 +113,8 @@ export class SectionBuilderComponent implements OnInit {
   readonly selectedCourseId = signal<number | null>(null);
   readonly selectedSectionForDetails = signal<SectionDetailResponse | null>(null);
   readonly selectedFacultyId = signal<number | null>(null);
+  readonly editingSection = signal<SectionDetailResponse | null>(null);
+  readonly isEditMode = computed(() => !!this.editingSection());
 
   // Real-time form slots cache for computations
   readonly formSlots = signal<any[]>([]);
@@ -471,6 +473,7 @@ export class SectionBuilderComponent implements OnInit {
   }
 
   openCreateModal(): void {
+    this.editingSection.set(null);
     if (!this.store.isCurriculumActive()) {
       const activeCurr = this.store.curricula().find(c => c.status === 'ACTIVE');
       if (activeCurr) {
@@ -490,8 +493,105 @@ export class SectionBuilderComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
+  openEditModal(section: SectionDetailResponse): void {
+    this.editingSection.set(section);
+    this.submitted.set(false);
+
+    this.store.selectedTermId.set(section.termId);
+    this.store.selectedCurriculumId.set(section.curriculumId);
+    this.selectedCourseId.set(section.courseId);
+
+    let pCode = this.getDefaultProgramCode();
+    let yLevel = 1;
+    let sLetter = 'A';
+
+    if (section.sectionCode) {
+      const parts = section.sectionCode.split('-');
+      if (parts.length >= 2) {
+        pCode = parts[0];
+        const remainder = parts[1];
+        const match = remainder.match(/^(\d+)([A-Z])$/i);
+        if (match) {
+          yLevel = parseInt(match[1], 10);
+          sLetter = match[2].toUpperCase();
+        }
+      }
+    }
+
+    this.sectionForm = this.fb.group({
+      termId: [section.termId, Validators.required],
+      curriculumId: [section.curriculumId, Validators.required],
+      courseId: [{ value: section.courseId, disabled: true }, Validators.required],
+      programCode: [pCode, Validators.required],
+      yearLevel: [yLevel, Validators.required],
+      sectionLetter: [sLetter, Validators.required],
+      sectionCode: [section.sectionCode, [Validators.required, Validators.maxLength(30), nonWhitespaceValidator()]],
+      maxCapacity: [section.maxCapacity, [Validators.required, Validators.min(1), Validators.max(100)]],
+      scheduleSlots: this.fb.array([])
+    });
+
+    const updateSectionCode = () => {
+      const p = this.sectionForm.get('programCode')?.value || '';
+      const y = this.sectionForm.get('yearLevel')?.value || '';
+      const s = this.sectionForm.get('sectionLetter')?.value || '';
+      if (p && y && s) {
+        const derivedCode = `${p}-${y}${s}`;
+        this.sectionForm.get('sectionCode')?.setValue(derivedCode, { emitEvent: false });
+      }
+    };
+
+    this.sectionForm.get('programCode')?.valueChanges.subscribe(updateSectionCode);
+    this.sectionForm.get('yearLevel')?.valueChanges.subscribe(updateSectionCode);
+    this.sectionForm.get('sectionLetter')?.valueChanges.subscribe(updateSectionCode);
+
+    this.sectionForm.valueChanges.subscribe(val => {
+      this.formSlots.set(val?.scheduleSlots || []);
+      this.cdr.markForCheck();
+    });
+
+    if (section.schedules && section.schedules.length > 0) {
+      const groupedMap = new Map<string, { roomId: number; instructorUserId: number | null; daysOfWeek: string[]; startTime: string; endTime: string; scheduleType: string }>();
+      section.schedules.forEach(s => {
+        const key = `${s.roomId}_${s.instructorUserId || 'none'}_${s.startTime}_${s.endTime}_${s.scheduleType}`;
+        if (groupedMap.has(key)) {
+          groupedMap.get(key)!.daysOfWeek.push(s.dayOfWeek.toUpperCase());
+        } else {
+          groupedMap.set(key, {
+            roomId: s.roomId,
+            instructorUserId: s.instructorUserId || null,
+            daysOfWeek: [s.dayOfWeek.toUpperCase()],
+            startTime: s.startTime,
+            endTime: s.endTime,
+            scheduleType: s.scheduleType
+          });
+        }
+      });
+
+      groupedMap.forEach(group => {
+        const slotGroup = this.fb.group({
+          roomId: [group.roomId, Validators.required],
+          instructorUserId: [group.instructorUserId],
+          dayOfWeek: [group.daysOfWeek[0] || 'MONDAY', Validators.required],
+          daysOfWeek: [group.daysOfWeek, [Validators.required]],
+          startTime: [group.startTime, Validators.required],
+          endTime: [group.endTime, Validators.required],
+          scheduleType: [group.scheduleType, Validators.required]
+        }, { validators: [timeOrderValidator()] });
+        this.scheduleSlotsArray.push(slotGroup);
+      });
+    } else {
+      this.addSlot(['MONDAY', 'WEDNESDAY']);
+    }
+
+    this.formSlots.set(this.sectionForm.getRawValue()?.scheduleSlots || []);
+    this.loadAvailableCourses();
+    this.isCreateModalVisible.set(true);
+    this.cdr.markForCheck();
+  }
+
   closeCreateModal(): void {
     this.isCreateModalVisible.set(false);
+    this.editingSection.set(null);
     this.initForm();
     this.cdr.markForCheck();
   }
@@ -555,7 +655,7 @@ export class SectionBuilderComponent implements OnInit {
 
     for (const day of days) {
       // 1. External collision with existing sections in term
-      const ext = this.store.checkRoomCollision(s.roomId, day, s.startTime, s.endTime);
+      const ext = this.store.checkRoomCollision(s.roomId, day, s.startTime, s.endTime, this.editingSection()?.id);
       if (ext.hasCollision) return ext.message || `Room conflict on ${day}.`;
 
       // 2. Internal collision within this form's slots
@@ -582,7 +682,7 @@ export class SectionBuilderComponent implements OnInit {
 
     for (const day of days) {
       // 1. External collision with existing sections in term
-      const ext = this.store.checkFacultyCollision(s.instructorUserId, day, s.startTime, s.endTime);
+      const ext = this.store.checkFacultyCollision(s.instructorUserId, day, s.startTime, s.endTime, this.editingSection()?.id);
       if (ext.hasCollision) return ext.message || `Faculty conflict on ${day}.`;
 
       // 2. Internal collision within this form's slots
@@ -673,46 +773,131 @@ export class SectionBuilderComponent implements OnInit {
     }
 
     const formValue = this.sectionForm.getRawValue();
-    const request: CreateSectionRequest = {
-      termId: Number(formValue.termId || this.store.selectedTermId()),
-      curriculumId: Number(formValue.curriculumId || this.store.selectedCurriculumId()),
-      courseId: Number(formValue.courseId),
-      sectionCode: String(formValue.sectionCode).trim(),
-      maxCapacity: Number(formValue.maxCapacity),
-      scheduleSlots: (formValue.scheduleSlots || []).map((s: { roomId?: number; instructorUserId?: number; dayOfWeek?: string; daysOfWeek?: string[]; startTime?: string | Date; endTime?: string | Date; scheduleType?: string }) => {
-        const days: string[] = (s.daysOfWeek && s.daysOfWeek.length > 0) ? s.daysOfWeek : [s.dayOfWeek || 'MONDAY'];
-        return {
-          roomId: Number(s.roomId),
-          instructorUserId: s.instructorUserId ? Number(s.instructorUserId) : null,
-          dayOfWeek: days[0].toUpperCase(),
-          daysOfWeek: days.map((d: string) => d.toUpperCase()),
-          startTime: this.formatTimeValue(s.startTime),
-          endTime: this.formatTimeValue(s.endTime),
-          scheduleType: String(s.scheduleType || 'LECTURE').toUpperCase()
-        };
-      })
-    };
 
-    this.store.createSection(
-      request,
-      () => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Section Created',
-          detail: `Class section ${request.sectionCode} has been scheduled successfully.`
-        });
-        this.closeCreateModal();
-        this.cdr.markForCheck();
-      },
-      errorMsg => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Scheduling Error',
-          detail: errorMsg
-        });
-        this.cdr.markForCheck();
+    if (this.isEditMode()) {
+      const updateReq: UpdateSectionRequest = {
+        sectionCode: String(formValue.sectionCode).trim(),
+        maxCapacity: Number(formValue.maxCapacity),
+        scheduleSlots: (formValue.scheduleSlots || []).map((s: { roomId?: number; instructorUserId?: number; dayOfWeek?: string; daysOfWeek?: string[]; startTime?: string | Date; endTime?: string | Date; scheduleType?: string }) => {
+          const days: string[] = (s.daysOfWeek && s.daysOfWeek.length > 0) ? s.daysOfWeek : [s.dayOfWeek || 'MONDAY'];
+          return {
+            roomId: Number(s.roomId),
+            instructorUserId: s.instructorUserId ? Number(s.instructorUserId) : null,
+            dayOfWeek: days[0].toUpperCase(),
+            daysOfWeek: days.map((d: string) => d.toUpperCase()),
+            startTime: this.formatTimeValue(s.startTime),
+            endTime: this.formatTimeValue(s.endTime),
+            scheduleType: String(s.scheduleType || 'LECTURE').toUpperCase()
+          };
+        })
+      };
+
+      this.store.updateSection(
+        this.editingSection()!.id,
+        updateReq,
+        () => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Section Updated',
+            detail: `Schedule section ${updateReq.sectionCode} has been updated successfully.`
+          });
+          this.closeCreateModal();
+          this.cdr.markForCheck();
+        },
+        errorMsg => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Scheduling Error',
+            detail: errorMsg
+          });
+          this.cdr.markForCheck();
+        }
+      );
+    } else {
+      const request: CreateSectionRequest = {
+        termId: Number(formValue.termId || this.store.selectedTermId()),
+        curriculumId: Number(formValue.curriculumId || this.store.selectedCurriculumId()),
+        courseId: Number(formValue.courseId),
+        sectionCode: String(formValue.sectionCode).trim(),
+        maxCapacity: Number(formValue.maxCapacity),
+        scheduleSlots: (formValue.scheduleSlots || []).map((s: { roomId?: number; instructorUserId?: number; dayOfWeek?: string; daysOfWeek?: string[]; startTime?: string | Date; endTime?: string | Date; scheduleType?: string }) => {
+          const days: string[] = (s.daysOfWeek && s.daysOfWeek.length > 0) ? s.daysOfWeek : [s.dayOfWeek || 'MONDAY'];
+          return {
+            roomId: Number(s.roomId),
+            instructorUserId: s.instructorUserId ? Number(s.instructorUserId) : null,
+            dayOfWeek: days[0].toUpperCase(),
+            daysOfWeek: days.map((d: string) => d.toUpperCase()),
+            startTime: this.formatTimeValue(s.startTime),
+            endTime: this.formatTimeValue(s.endTime),
+            scheduleType: String(s.scheduleType || 'LECTURE').toUpperCase()
+          };
+        })
+      };
+
+      this.store.createSection(
+        request,
+        () => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Section Created',
+            detail: `Class section ${request.sectionCode} has been scheduled successfully.`
+          });
+          this.closeCreateModal();
+          this.cdr.markForCheck();
+        },
+        errorMsg => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Scheduling Error',
+            detail: errorMsg
+          });
+          this.cdr.markForCheck();
+        }
+      );
+    }
+  }
+
+  deleteSection(section: SectionDetailResponse): void {
+    if (section.enrolledCount > 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Delete Blocked',
+        detail: `Cannot delete section ${section.sectionCode}: ${section.enrolledCount} student(s) are currently enrolled.`
+      });
+      return;
+    }
+
+    this.confirmationService.confirm({
+      key: 'schedulingConfirmDialog',
+      header: 'Confirm Section Deletion',
+      message: `Are you sure you want to delete class section ${section.sectionCode} (${section.courseCode}) and remove all schedule allocations?`,
+      icon: 'pi pi-trash',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        this.store.deleteSection(
+          section.id,
+          () => {
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Section Deleted',
+              detail: `Section ${section.sectionCode} deleted successfully.`
+            });
+            if (this.selectedSectionForDetails()?.id === section.id) {
+              this.closeSlotDetailsModal();
+            }
+            this.cdr.markForCheck();
+          },
+          errorMsg => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Deletion Failed',
+              detail: errorMsg
+            });
+            this.cdr.markForCheck();
+          }
+        );
       }
-    );
+    });
   }
 
   // --- Slot Details Modal Methods ---

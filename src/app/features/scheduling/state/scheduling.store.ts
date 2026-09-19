@@ -8,6 +8,7 @@ import { Program } from '../../../core/models/institution.model';
 import { CurriculumApiService } from '../../../core/service/curriculum/curriculum-api.service';
 import {
   CreateSectionRequest,
+  UpdateSectionRequest,
   FacultyLoadSummaryResponse,
   InstructorOptionDto,
   RoomResponse,
@@ -175,6 +176,48 @@ export class SchedulingStore {
       }),
       catchError(err => {
         const msg = err.error?.detail || 'Failed to create class section.';
+        this.errorMessage.set(msg);
+        if (onError) onError(msg);
+        return of(null);
+      }),
+      finalize(() => this.isSaving.set(false))
+    ).subscribe();
+  }
+
+  updateSection(sectionId: number, request: UpdateSectionRequest, onSuccess?: () => void, onError?: (msg: string) => void): void {
+    this.isSaving.set(true);
+    this.errorMessage.set(null);
+
+    this.schedulingApi.updateSection(sectionId, request).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      tap(updatedSection => {
+        this.sections.update(list => list.map(s => s.id === updatedSection.id ? updatedSection : s));
+        this.enrollmentStore.refreshAdvising();
+        if (onSuccess) onSuccess();
+      }),
+      catchError(err => {
+        const msg = err.error?.detail || 'Failed to update class section schedule.';
+        this.errorMessage.set(msg);
+        if (onError) onError(msg);
+        return of(null);
+      }),
+      finalize(() => this.isSaving.set(false))
+    ).subscribe();
+  }
+
+  deleteSection(sectionId: number, onSuccess?: () => void, onError?: (msg: string) => void): void {
+    this.isSaving.set(true);
+    this.errorMessage.set(null);
+
+    this.schedulingApi.deleteSection(sectionId).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      tap(() => {
+        this.sections.update(list => list.filter(s => s.id !== sectionId));
+        this.enrollmentStore.refreshAdvising();
+        if (onSuccess) onSuccess();
+      }),
+      catchError(err => {
+        const msg = err.error?.detail || 'Failed to delete class section.';
         this.errorMessage.set(msg);
         if (onError) onError(msg);
         return of(null);

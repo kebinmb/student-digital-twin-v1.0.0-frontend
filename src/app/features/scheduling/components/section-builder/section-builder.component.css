@@ -105,6 +105,11 @@
 .table-action-icon-btn { width: 2rem; height: 2rem; border-radius: 6px; border: 1px solid transparent; cursor: pointer; background: transparent; font-size: 0.85rem; }
 .table-action-icon-btn.info { color: #0284c7; }
 .table-action-icon-btn.info:hover { background: #e0f2fe; border-color: #bae6fd; }
+.table-action-icon-btn.edit { color: #d97706; }
+.table-action-icon-btn.edit:hover { background: #fef3c7; border-color: #fde68a; }
+.table-action-icon-btn.danger { color: #dc2626; }
+.table-action-icon-btn.danger:hover:not(:disabled) { background: #fee2e2; border-color: #fca5a5; }
+.table-action-icon-btn.danger:disabled { opacity: 0.4; cursor: not-allowed; }
 .table-action-icon-btn.neutral { color: #475569; }
 .table-action-icon-btn.neutral:hover { background: #f1f5f9; border-color: #cbd5e1; }
 .empty-state-card, .empty-faculty-state {
