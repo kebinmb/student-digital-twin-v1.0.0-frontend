@@ -48,6 +48,22 @@ export class AnalyticsApiService {
     return this.http.get<AttendanceRecordResponse[]>(`${environment.apiUrl}/v1/attendance/daily`, { params });
   }
 
+  subscribeToSessionStream(sessionId: number): Observable<AttendanceRecordResponse> {
+    return new Observable<AttendanceRecordResponse>(observer => {
+      const eventSource = new EventSource(`${environment.apiUrl}/v1/attendance/stream/${sessionId}`);
+      eventSource.addEventListener('attendance-scan', (event: any) => {
+        try {
+          const data = JSON.parse(event.data);
+          observer.next(data);
+        } catch (err) {
+          console.error('Error parsing SSE event data:', err);
+        }
+      });
+      eventSource.onerror = (err) => observer.error(err);
+      return () => eventSource.close();
+    });
+  }
+
   getStudentRiskProfile(studentId: number): Observable<DigitalTwinRiskProfileDto> {
     return this.http.get<DigitalTwinRiskProfileDto>(`${environment.apiUrl}/v1/analytics/digital-twin/risk/${studentId}`);
   }

@@ -147,6 +147,20 @@
               (onClick)="verifyGrades()"
               styleClass="gb-btn-compact">
             </p-button>
+
+            <p-button 
+              label="Batch Verify All" 
+              icon="pi pi-check-square" 
+              severity="help" 
+              size="small"
+              [outlined]="true"
+              [disabled]="isSaving()"
+              [loading]="isSaving()"
+              pTooltip="Batch verify all submitted sections under this academic term"
+              tooltipPosition="bottom"
+              (onClick)="batchVerifyAllSections()"
+              styleClass="gb-btn-compact">
+            </p-button>
           }
 
           @if (isRegistrar()) {
@@ -160,6 +174,20 @@
               [pTooltip]="sealDisabledTooltip()"
               tooltipPosition="bottom"
               (onClick)="sealGrades()"
+              styleClass="gb-btn-compact">
+            </p-button>
+
+            <p-button 
+              label="Batch Seal All" 
+              icon="pi pi-lock" 
+              severity="danger" 
+              size="small"
+              [outlined]="true"
+              [disabled]="isSaving()"
+              [loading]="isSaving()"
+              pTooltip="Batch seal all verified section grade rosters into permanent transcripts"
+              tooltipPosition="bottom"
+              (onClick)="batchSealAllSections()"
               styleClass="gb-btn-compact">
             </p-button>
           }

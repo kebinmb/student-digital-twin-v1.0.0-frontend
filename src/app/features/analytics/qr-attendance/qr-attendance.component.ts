@@ -1,6 +1,7 @@
-import { Component, inject, signal, computed, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
@@ -42,7 +43,7 @@ export interface ScheduleOption {
   styleUrl: './qr-attendance.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class QrAttendanceScannerComponent implements OnInit {
+export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
   private readonly analyticsApi = inject(AnalyticsApiService);
   private readonly schedulingApi = inject(SchedulingApiService);
   private readonly authService = inject(AuthService);
@@ -262,6 +263,32 @@ export class QrAttendanceScannerComponent implements OnInit {
     this.loadDailyAttendance();
   }
 
+  private sseSub?: Subscription;
+
+  ngOnDestroy(): void {
+    if (this.sseSub) {
+      this.sseSub.unsubscribe();
+    }
+  }
+
+  listenToLiveSessionStream(sessionId: number): void {
+    if (this.sseSub) {
+      this.sseSub.unsubscribe();
+    }
+    this.sseSub = this.analyticsApi.subscribeToSessionStream(sessionId).subscribe({
+      next: (record) => {
+        this.dailyRecords.update(prev => {
+          const exists = prev.some(r => r.recordId === record.recordId);
+          return exists ? prev : [record, ...prev];
+        });
+        this.messageService.add({ severity: 'info', summary: 'Live Student Check-In', detail: `${record.studentName} checked in via QR scan!` });
+      },
+      error: (err) => {
+        console.warn('SSE stream inactive or unseeded:', err);
+      }
+    });
+  }
+
   startClassSession(scheduleId?: number): void {
     const targetId = scheduleId || this.selectedScheduleId() || 1;
     this.isGenerating.set(true);
@@ -278,6 +305,7 @@ export class QrAttendanceScannerComponent implements OnInit {
           this.isGenerating.set(false);
           this.messageService.add({ severity: 'success', summary: 'QR Session Generated', detail: `Dynamic 15-min QR Attendance Session active at (${lat.toFixed(4)}, ${lon.toFixed(4)}).` });
           this.loadDailyAttendance();
+          this.listenToLiveSessionStream(session.sessionId);
         },
         error: () => {
           // Graceful fallback for testing when backend is offline/unseeded

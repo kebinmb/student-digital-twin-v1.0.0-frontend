@@ -1106,12 +1106,12 @@ export class FacultyGradebookComponent implements OnInit {
     if (!sectionId || !ros || ros.gradeStatus !== 'VERIFIED') return;
 
     this.confirmationService.confirm({
-      message: 'CRITICAL: Execute Registrar Sealing Engine? This permanently locks the section gradebook, syncs official grades to student academic records, recalculates cumulative GPA, and satisfies CHED CMO 25 prerequisites for subsequent term enrollment.',
-      header: 'Registrar Grade Sealing & GPA Finalization',
+      message: 'Permanently SEAL section grades into official academic transcript records? Once sealed, grades become permanent and can only be altered via official post-seal grade change request.',
+      header: 'Registrar Official Grade Sealing',
       icon: 'pi pi-lock',
-      acceptLabel: 'Seal & Finalize Records',
+      acceptLabel: 'Seal Section Grades',
       rejectLabel: 'Cancel',
-      acceptButtonStyleClass: 'p-button-success',
+      acceptButtonStyleClass: 'p-button-help',
       accept: () => {
         this.isSaving.set(true);
         this.enrollmentApi.sealSectionGrades(sectionId)
@@ -1120,8 +1120,8 @@ export class FacultyGradebookComponent implements OnInit {
             next: res => {
               this.messageService.add({
                 severity: 'success',
-                summary: 'Grades Sealed & Locked',
-                detail: `Registrar Sealing Engine successfully executed! Student records finalized. Status: ${res.gradeStatus}`
+                summary: 'Grades Sealed',
+                detail: `Section grades permanently sealed into official academic transcripts. Status: ${res.gradeStatus}`
               });
               this.isSaving.set(false);
               this.loadSectionRoster(sectionId);
@@ -1131,6 +1131,84 @@ export class FacultyGradebookComponent implements OnInit {
                 severity: 'error',
                 summary: 'Sealing Blocked',
                 detail: err.error?.detail || 'Failed to seal section grades.'
+              });
+              this.isSaving.set(false);
+            }
+          });
+      }
+    });
+  }
+
+  batchVerifyAllSections(): void {
+    const sectionIds = this.sections().map(s => s.id);
+    if (!sectionIds || sectionIds.length === 0) return;
+
+    this.confirmationService.confirm({
+      message: `Verify all ${sectionIds.length} course sections under this term for academic compliance?`,
+      header: 'Confirm Batch Verification',
+      icon: 'pi pi-verified',
+      acceptLabel: 'Batch Verify All Sections',
+      rejectLabel: 'Cancel',
+      acceptButtonStyleClass: 'p-button-help',
+      accept: () => {
+        this.isSaving.set(true);
+        this.enrollmentApi.batchVerifySectionGrades(sectionIds)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({
+            next: (results) => {
+              this.messageService.add({
+                severity: 'success',
+                summary: 'Batch Verification Completed',
+                detail: `Processed ${results.length} sections for Dean verification.`
+              });
+              this.isSaving.set(false);
+              const activeSec = this.selectedSectionId();
+              if (activeSec) this.loadSectionRoster(activeSec);
+            },
+            error: err => {
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Batch Verification Error',
+                detail: err.error?.detail || 'Failed to execute batch section verification.'
+              });
+              this.isSaving.set(false);
+            }
+          });
+      }
+    });
+  }
+
+  batchSealAllSections(): void {
+    const sectionIds = this.sections().map(s => s.id);
+    if (!sectionIds || sectionIds.length === 0) return;
+
+    this.confirmationService.confirm({
+      message: `Permanently SEAL all ${sectionIds.length} verified section grade rosters into permanent student transcripts and credit records?`,
+      header: 'Confirm Batch Registrar Sealing',
+      icon: 'pi pi-lock',
+      acceptLabel: 'Batch Seal All Sections',
+      rejectLabel: 'Cancel',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        this.isSaving.set(true);
+        this.enrollmentApi.batchSealSectionGrades(sectionIds)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({
+            next: (results) => {
+              this.messageService.add({
+                severity: 'success',
+                summary: 'Batch Sealing Completed',
+                detail: `Sealed ${results.length} section rosters into permanent transcripts with cryptographic hashes.`
+              });
+              this.isSaving.set(false);
+              const activeSec = this.selectedSectionId();
+              if (activeSec) this.loadSectionRoster(activeSec);
+            },
+            error: err => {
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Batch Sealing Error',
+                detail: err.error?.detail || 'Failed to execute batch section sealing.'
               });
               this.isSaving.set(false);
             }

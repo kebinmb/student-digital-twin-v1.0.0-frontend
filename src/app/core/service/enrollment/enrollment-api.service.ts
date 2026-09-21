@@ -144,6 +144,20 @@ export class EnrollmentApiService {
     );
   }
 
+  batchVerifySectionGrades(sectionIds: number[]): Observable<import('../../models/enrollment.model').GradeActionResponse[]> {
+    return this.http.post<import('../../models/enrollment.model').GradeActionResponse[]>(
+      `${environment.apiUrl}/v1/sections/batch/verify`,
+      sectionIds
+    );
+  }
+
+  batchSealSectionGrades(sectionIds: number[]): Observable<import('../../models/enrollment.model').GradeActionResponse[]> {
+    return this.http.post<import('../../models/enrollment.model').GradeActionResponse[]>(
+      `${environment.apiUrl}/v1/sections/batch/seal`,
+      sectionIds
+    );
+  }
+
   // Dynamic Class Record & Assessment Weight Engine Endpoints
   getGradingConfig(sectionId: number): Observable<import('../../models/enrollment.model').SectionGradingConfigResponse> {
     return this.http.get<import('../../models/enrollment.model').SectionGradingConfigResponse>(
