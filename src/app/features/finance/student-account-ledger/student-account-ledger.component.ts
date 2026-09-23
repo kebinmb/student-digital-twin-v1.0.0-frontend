@@ -134,16 +134,22 @@ export class StudentAccountLedgerComponent implements OnInit {
 
   getTransactionTypeSeverity(type: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
     switch (type) {
+      case 'CHARGE':
       case 'GROSS_ASSESSMENT':
         return 'danger';
-      case 'FHE_SUBSIDY_CREDIT':
-      case 'SCHOLARSHIP_CREDIT':
+      case 'PAYMENT':
       case 'CASHIER_PAYMENT':
         return 'success';
-      case 'ADJUSTMENT_DEBIT':
-        return 'warn';
-      case 'ADJUSTMENT_CREDIT':
+      case 'FHE_SUBSIDY':
+      case 'FHE_SUBSIDY_CREDIT':
+      case 'SCHOLARSHIP_CREDIT':
         return 'info';
+      case 'DISCOUNT':
+        return 'secondary';
+      case 'ADJUSTMENT':
+      case 'ADJUSTMENT_DEBIT':
+      case 'ADJUSTMENT_CREDIT':
+        return 'warn';
       default:
         return 'secondary';
     }

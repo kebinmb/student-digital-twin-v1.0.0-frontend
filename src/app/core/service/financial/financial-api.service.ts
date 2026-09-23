@@ -13,7 +13,14 @@ import {
   ProcessPaymentRequest,
   CashierReceiptDto,
   UnifastFheClaimDto,
-  CreateUnifastClaimRequest
+  CreateUnifastClaimRequest,
+  OrBookletDto,
+  CreateOrBookletRequest,
+  VoidOfficialReceiptRequest,
+  VoidedOfficialReceiptDto,
+  EodRcdReportDto,
+  DisallowClaimItemRequest,
+  UnifastClaimItemDto
 } from '../../models/financial.model';
 
 @Injectable({
@@ -37,6 +44,10 @@ export class FinancialApiService {
 
   assessEnrollment(enrollmentId: number): Observable<StudentAssessmentInvoiceDto> {
     return this.http.post<StudentAssessmentInvoiceDto>(`${this.baseUrl}/assess/${enrollmentId}`, {});
+  }
+
+  adjustAssessmentForAddDrop(enrollmentId: number): Observable<StudentAssessmentInvoiceDto> {
+    return this.http.post<StudentAssessmentInvoiceDto>(`${this.baseUrl}/assess/${enrollmentId}/adjust`, {});
   }
 
   getInvoiceByEnrollmentId(enrollmentId: number): Observable<StudentAssessmentInvoiceDto> {
@@ -78,6 +89,24 @@ export class FinancialApiService {
     );
   }
 
+  assignOrBooklet(request: CreateOrBookletRequest): Observable<OrBookletDto> {
+    return this.http.post<OrBookletDto>(`${this.baseUrl}/or-booklets`, request);
+  }
+
+  voidOfficialReceipt(request: VoidOfficialReceiptRequest): Observable<VoidedOfficialReceiptDto> {
+    return this.http.post<VoidedOfficialReceiptDto>(`${this.baseUrl}/or-booklets/void`, request);
+  }
+
+  getActiveBooklet(): Observable<OrBookletDto> {
+    return this.http.get<OrBookletDto>(`${this.baseUrl}/or-booklets/active`);
+  }
+
+  getEodRcdReport(date?: string): Observable<EodRcdReportDto> {
+    const params: Record<string, string> = {};
+    if (date) params['date'] = date;
+    return this.http.get<EodRcdReportDto>(`${this.baseUrl}/cashier/eod-rcd`, { params });
+  }
+
   generateUnifastClaimBatch(request: CreateUnifastClaimRequest): Observable<UnifastFheClaimDto> {
     return this.http.post<UnifastFheClaimDto>(`${this.baseUrl}/unifast/claims`, request);
   }
@@ -89,4 +118,9 @@ export class FinancialApiService {
   getClaimBatchDetails(claimBatchId: number): Observable<UnifastFheClaimDto> {
     return this.http.get<UnifastFheClaimDto>(`${this.baseUrl}/unifast/claims/${claimBatchId}`);
   }
+
+  disallowClaimItem(itemId: number, request: DisallowClaimItemRequest): Observable<UnifastClaimItemDto> {
+    return this.http.put<UnifastClaimItemDto>(`${this.baseUrl}/unifast/claims/items/${itemId}/disallow`, request);
+  }
 }
+

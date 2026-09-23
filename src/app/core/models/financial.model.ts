@@ -40,7 +40,7 @@ export interface StudentAssessmentInvoiceDto {
   netAssessedAmount: number;
   totalPaidAmount: number;
   outstandingBalance: number;
-  status: 'UNPAID' | 'PARTIALLY_PAID' | 'PAID' | 'CANCELLED' | string;
+  status: 'UNPAID' | 'PARTIAL' | 'PAID' | 'FHE_COVERED' | 'CANCELLED' | string;
   fheEligible: boolean;
 }
 
@@ -50,7 +50,7 @@ export interface StudentAccountLedgerDto {
   studentProfileId: number;
   termId: number;
   assessmentInvoiceId?: number | null;
-  transactionType: 'ASSESSMENT' | 'PAYMENT' | 'REFUND' | 'ADJUSTMENT' | 'UNIFAST_SUBSIDY' | 'SCHOLARSHIP' | string;
+  transactionType: 'CHARGE' | 'PAYMENT' | 'ADJUSTMENT' | 'FHE_SUBSIDY' | 'DISCOUNT' | string;
   transactionDate: string;
   description: string;
   debitAmount: number;
@@ -124,3 +124,60 @@ export interface CreateUnifastClaimRequest {
   termId: number;
   campusId: number;
 }
+
+export interface OrBookletDto {
+  id: number;
+  bookletCode: string;
+  startOrNumber: string;
+  endOrNumber: string;
+  currentOrNumber: string;
+  assignedCashierId: number;
+  assignedCashierUsername: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface CreateOrBookletRequest {
+  bookletCode: string;
+  startOrNumber: string;
+  endOrNumber: string;
+  assignedCashierId: number;
+}
+
+export interface VoidOfficialReceiptRequest {
+  orNumber: string;
+  bookletId: number;
+  voidReason: string;
+}
+
+export interface VoidedOfficialReceiptDto {
+  id: number;
+  orNumber: string;
+  bookletId: number;
+  voidedByCashierId: number;
+  voidedByCashierUsername: string;
+  voidReason: string;
+  voidedAt: string;
+}
+
+export interface EodRcdFundClusterSummaryDto {
+  fundClusterCode: string;
+  fundClusterName: string;
+  totalCollected: number;
+  receiptCount: number;
+}
+
+export interface EodRcdReportDto {
+  cashierUserId: number;
+  cashierUsername: string;
+  reportDate: string;
+  totalCollections: number;
+  totalReceiptsIssued: number;
+  fundClusterSummaries: EodRcdFundClusterSummaryDto[];
+  receipts: CashierReceiptDto[];
+}
+
+export interface DisallowClaimItemRequest {
+  reason: string;
+}
+

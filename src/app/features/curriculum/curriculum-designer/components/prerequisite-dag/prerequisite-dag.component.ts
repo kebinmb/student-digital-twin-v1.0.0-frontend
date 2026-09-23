@@ -27,6 +27,7 @@ interface SelectedEdgeInfo {
   sourceCode: string;
   targetCode: string;
   targetCourseId: number;
+  prerequisiteId?: number;
 }
 
 @Component({
@@ -328,10 +329,14 @@ export class PrerequisiteDagComponent implements AfterViewInit, OnDestroy {
     const edge = this.selectedEdge();
     if (!edge) return;
     this.selectedEdge.set(null);
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Dependency Selected',
-      detail: `Prerequisite ${edge.sourceCode} -> ${edge.targetCode} identified for deletion.`
-    });
+    if (edge.prerequisiteId) {
+      this.store.removePrerequisite(edge.prerequisiteId);
+    } else {
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Dependency Edge Selected',
+        detail: `Prerequisite ${edge.sourceCode} -> ${edge.targetCode} identified for deletion.`
+      });
+    }
   }
 }

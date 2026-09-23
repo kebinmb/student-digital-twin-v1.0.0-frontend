@@ -339,7 +339,7 @@
               </span>
             </td>
             <td class="audit-entity-cell">{{ log.entityName }} #{{ log.entityId }}</td>
-            <td class="audit-user-cell">{{ log.performedBy || 'SYSTEM' }}</td>
+            <td class="audit-user-cell">{{ log.username || log.performedBy || (log.userId ? 'User #' + log.userId : 'SYSTEM') }}</td>
             <td class="audit-ip-cell">{{ log.ipAddress || '127.0.0.1' }}</td>
             <td class="audit-details-cell" [title]="log.details">{{ log.details || '-' }}</td>
           </tr>

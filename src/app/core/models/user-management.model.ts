@@ -41,6 +41,8 @@ export interface AuditLogEntry {
   entityId?: string | number | null;
   details?: string | null;
   performedBy?: string | null;
+  username?: string | null;
+  userId?: number | null;
   createdAt: string;
   ipAddress?: string | null;
 }
