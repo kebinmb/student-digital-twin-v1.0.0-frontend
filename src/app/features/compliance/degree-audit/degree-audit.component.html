@@ -13,97 +13,224 @@
     </div>
   </div>
 
+  <!-- Role-Gated Student Self-Service Security Banner -->
+  @if (isStudentRole()) {
+    <div class="student-security-banner">
+      <i class="pi pi-shield banner-shield-icon"></i>
+      <div class="banner-text-block">
+        <span class="banner-title">Viewing Your Official Degree Audit & Graduation Evaluation</span>
+        <span class="banner-desc">
+          Authenticated as <strong>{{ auditResult()?.studentName || currentStudent()?.username }} ({{ currentStudent()?.studentNumber }})</strong>.
+          Degree audit records are securely mapped and locked to your student twin.
+        </span>
+      </div>
+    </div>
+  }
+
   <!-- Search & Action Header Controls -->
   <div class="audit-filter-card">
     <div class="audit-filter-grid">
-      <div class="filter-col">
-        <label class="form-label">Student Profile ID</label>
-        <p-inputNumber [(ngModel)]="searchStudentId" placeholder="Enter Student Profile ID" [useGrouping]="false" (onKeyDown.enter)="runDegreeAudit()"></p-inputNumber>
+      @if (!isStudentRole()) {
+        <div class="filter-col flex-1 min-w-[280px]">
+          <label class="form-label" for="studentSelect">
+            Select Student Profile
+            <span class="required-star">*</span>
+          </label>
+          <p-select
+            id="studentSelect"
+            [options]="studentOptions()"
+            [ngModel]="searchStudentId"
+            (onChange)="onStudentSelect($event.value)"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Search by ID, name, or program..."
+            [filter]="true"
+            filterBy="label"
+            [showClear]="true"
+            styleClass="w-full"
+          >
+            <ng-template pTemplate="selectedItem" let-selected>
+              @if (selected) {
+                <div class="flex items-center gap-2">
+                  <i class="pi pi-user text-emerald-700"></i>
+                  <span class="font-semibold text-slate-800">{{ selected.fullName }}</span>
+                  <span class="font-mono text-xs text-slate-500">({{ selected.studentIdNumber }})</span>
+                  <p-tag [value]="selected.programCode" severity="info" styleClass="text-xs"></p-tag>
+                </div>
+              }
+            </ng-template>
+            <ng-template pTemplate="item" let-item>
+              <div class="flex flex-col py-1">
+                <div class="flex items-center justify-between">
+                  <span class="font-semibold text-slate-800">{{ item.fullName }}</span>
+                  <span class="font-mono text-xs text-slate-500">{{ item.studentIdNumber }}</span>
+                </div>
+                <div class="flex items-center gap-2 mt-1">
+                  <p-tag [value]="item.programCode" severity="secondary" styleClass="text-xs"></p-tag>
+                  <span class="text-xs text-slate-400">• {{ item.academicStatus }}</span>
+                </div>
+              </div>
+            </ng-template>
+          </p-select>
+        </div>
+      }
+
+      <div class="filter-col flex-1 min-w-[240px]">
+        <label class="form-label" for="termSelect">
+          Graduation Academic Term
+          <span class="required-star">*</span>
+        </label>
+        <p-select
+          id="termSelect"
+          [options]="termOptions()"
+          [(ngModel)]="applyTermId"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Select graduation term..."
+          styleClass="w-full"
+        />
       </div>
-      <div class="filter-col">
-        <label class="form-label">Graduation Term ID</label>
-        <p-inputNumber [(ngModel)]="applyTermId" placeholder="Term ID" [useGrouping]="false"></p-inputNumber>
-      </div>
-      <div class="filter-col actions-col">
-        <p-button label="Run Degree Audit" icon="pi pi-shield" [loading]="isLoading()" (onClick)="runDegreeAudit()"></p-button>
-        <p-button label="Apply for Graduation" icon="pi pi-send" severity="success" [loading]="isApplying()" (onClick)="applyForGraduation()"></p-button>
+
+      <div class="filter-col actions-col flex items-end gap-2">
+        <p-button
+          label="Re-evaluate Audit"
+          icon="pi pi-shield"
+          severity="primary"
+          [loading]="isLoading()"
+          [disabled]="!searchStudentId"
+          (onClick)="runDegreeAudit()"
+        />
+        <p-button
+          label="Apply for Graduation"
+          icon="pi pi-send"
+          severity="success"
+          [loading]="isApplying()"
+          [disabled]="!searchStudentId || !applyTermId || (auditResult() && !auditResult()!.qualifiedForGraduation)"
+          (onClick)="applyForGraduation()"
+        />
       </div>
     </div>
   </div>
 
   <!-- Audit Summary Metrics -->
-  <div *ngIf="auditResult() as audit" class="audit-summary-section">
-    <div class="audit-summary-card">
-      <div class="overview-header">
-        <div class="student-meta">
-          <span class="profile-label">STUDENT AUDIT PROFILE</span>
-          <h2 class="student-name">{{ audit.studentName }} ({{ audit.studentNumber }})</h2>
-          <p class="program-subtext">Program: <span class="highlight-text">{{ audit.programCode }}</span> | Curriculum: {{ audit.curriculumCode }}</p>
-        </div>
-        <div class="tag-row">
-          <p-tag [value]="audit.qualifiedForGraduation ? 'QUALIFIED FOR GRADUATION' : 'INCOMPLETE CURRICULUM'" [severity]="audit.qualifiedForGraduation ? 'success' : 'danger'" styleClass="status-badge-lg"></p-tag>
-          <p-tag *ngIf="audit.honorsEligible !== 'NONE'" [value]="audit.honorsEligible" [severity]="getHonorsSeverity(audit.honorsEligible)" styleClass="status-badge-lg"></p-tag>
-        </div>
-      </div>
-
-      <div class="metric-grid">
-        <div class="metric-card">
-          <span class="metric-label">TOTAL CURRICULUM UNITS</span>
-          <span class="metric-val">{{ audit.totalCurriculumUnits }} Units</span>
-        </div>
-        <div class="metric-card">
-          <span class="metric-label">TOTAL UNITS EARNED</span>
-          <span class="metric-val text-green">{{ audit.totalUnitsEarned }} Units</span>
-        </div>
-        <div class="metric-card">
-          <span class="metric-label">CUMULATIVE GPA</span>
-          <span class="metric-val text-blue">{{ audit.cumulativeGpa | number:'1.2-2' }}</span>
-        </div>
-        <div class="metric-card">
-          <span class="metric-label">CHMSU RESIDENCY</span>
-          <p-tag [value]="audit.residencyRequirementMet ? 'SATISFIED (>= 50%)' : 'NOT MET'" [severity]="audit.residencyRequirementMet ? 'success' : 'danger'"></p-tag>
-        </div>
-      </div>
-
-      <!-- Special Order Issuance Section -->
-      <div *hasRole="['ADMIN', 'REGISTRAR']">
-        <div class="so-issuance-bar" *ngIf="audit.qualifiedForGraduation">
-          <div class="so-info">
-            <h4 class="so-title">CHED Special Order (SO) Issuance</h4>
-            <p class="so-subtext">Assign CHED SO clearance tracking number for verified graduate.</p>
+  @if (auditResult(); as audit) {
+    <div class="audit-summary-section">
+      <div class="audit-summary-card">
+        <div class="overview-header">
+          <div class="student-meta">
+            <span class="profile-label">STUDENT AUDIT PROFILE</span>
+            <h2 class="student-name">{{ audit.studentName }} ({{ audit.studentNumber }})</h2>
+            <p class="program-subtext">
+              Program: <span class="highlight-text">{{ audit.programCode }}</span> | Curriculum: {{ audit.curriculumCode }}
+            </p>
           </div>
-          <div class="so-action-group">
-            <input type="text" pInputText placeholder="e.g. CHED-SO-2026-0891" [(ngModel)]="specialOrderNumber" class="full-width-input" />
-            <p-button label="Assign SO" icon="pi pi-check-square" severity="success" [loading]="isIssuingSo()" (onClick)="issueSpecialOrder()"></p-button>
+          <div class="tag-row">
+            <p-tag
+              [value]="audit.qualifiedForGraduation ? 'QUALIFIED FOR GRADUATION' : 'INCOMPLETE CURRICULUM'"
+              [severity]="audit.qualifiedForGraduation ? 'success' : 'danger'"
+              styleClass="status-badge-lg"
+            />
+            @if (audit.honorsEligible && audit.honorsEligible !== 'NONE') {
+              <p-tag
+                [value]="audit.honorsEligible"
+                [severity]="getHonorsSeverity(audit.honorsEligible)"
+                styleClass="status-badge-lg"
+              />
+            }
           </div>
         </div>
-      </div>
 
-      <!-- Audited Courses Table -->
-      <div class="matrix-section">
-        <h3 class="section-title">Curriculum Audit Matrix</h3>
-        <p-table [value]="audit.auditedCourses" [stripedRows]="true" [rows]="10" [paginator]="true" responsiveLayout="scroll" styleClass="institutional-table">
-          <ng-template pTemplate="header">
-            <tr>
-              <th>Course Code</th>
-              <th>Course Title</th>
-              <th class="text-center">Credit Units</th>
-              <th>Grade Earned</th>
-              <th>Completion Status</th>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="body" let-c>
-            <tr>
-              <td class="font-bold-green">{{ c.courseCode }}</td>
-              <td>{{ c.courseTitle }}</td>
-              <td class="text-center font-semibold">{{ c.creditUnits }}</td>
-              <td class="font-bold-blue">{{ c.gradeEarned !== null ? (c.gradeEarned | number:'1.2-2') : '-' }}</td>
-              <td><p-tag [value]="c.status" [severity]="getCourseStatusSeverity(c.status)"></p-tag></td>
-            </tr>
-          </ng-template>
-        </p-table>
+        <div class="metric-grid">
+          <div class="metric-card">
+            <span class="metric-label">TOTAL CURRICULUM UNITS</span>
+            <span class="metric-val">{{ audit.totalCurriculumUnits }} Units</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">TOTAL UNITS EARNED</span>
+            <span class="metric-val text-green">{{ audit.totalUnitsEarned }} Units</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">CUMULATIVE GPA</span>
+            <span class="metric-val text-blue">{{ audit.cumulativeGpa | number:'1.2-2' }}</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">CHMSU RESIDENCY</span>
+            <p-tag
+              [value]="audit.residencyRequirementMet ? 'SATISFIED (>= 50%)' : 'NOT MET'"
+              [severity]="audit.residencyRequirementMet ? 'success' : 'danger'"
+            />
+          </div>
+        </div>
+
+        <!-- Special Order Issuance Section (Restricted to REGISTRAR / ADMIN) -->
+        <div *hasRole="['ADMIN', 'REGISTRAR']">
+          @if (audit.qualifiedForGraduation) {
+            <div class="so-issuance-bar">
+              <div class="so-info">
+                <h4 class="so-title">CHED Special Order (SO) Issuance</h4>
+                <p class="so-subtext">Assign CHED SO clearance tracking number for verified graduate.</p>
+              </div>
+              <div class="so-action-group">
+                <input
+                  type="text"
+                  pInputText
+                  placeholder="e.g. CHED-SO-2026-0891"
+                  [(ngModel)]="specialOrderNumber"
+                  class="full-width-input"
+                />
+                <p-button
+                  label="Assign SO"
+                  icon="pi pi-check-square"
+                  severity="success"
+                  [loading]="isIssuingSo()"
+                  (onClick)="issueSpecialOrder()"
+                />
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Audited Courses Table -->
+        <div class="matrix-section">
+          <h3 class="section-title">Curriculum Audit Matrix</h3>
+          <p-table
+            [value]="audit.auditedCourses"
+            [stripedRows]="true"
+            [rows]="10"
+            [paginator]="true"
+            responsiveLayout="scroll"
+            styleClass="institutional-table"
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Course Code</th>
+                <th>Course Title</th>
+                <th class="text-center">Credit Units</th>
+                <th>Grade Earned</th>
+                <th>Completion Status</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-c>
+              <tr>
+                <td class="font-bold-green">{{ c.courseCode }}</td>
+                <td>{{ c.courseTitle }}</td>
+                <td class="text-center font-semibold">{{ c.creditUnits }}</td>
+                <td class="font-bold-blue">{{ c.gradeEarned !== null ? (c.gradeEarned | number:'1.2-2') : '-' }}</td>
+                <td>
+                  <p-tag [value]="c.status" [severity]="getCourseStatusSeverity(c.status)" />
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="5" class="text-center py-4 text-slate-500">
+                  No courses recorded in curriculum audit.
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
       </div>
     </div>
-  </div>
+  }
 </div>
-

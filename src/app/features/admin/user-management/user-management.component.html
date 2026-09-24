@@ -112,6 +112,7 @@
                 (click)="openEditDialog(u)"
               ></button>
               <button
+                *hasRole="['ADMIN']"
                 pButton
                 icon="pi pi-trash"
                 class="p-button-text p-button-sm p-button-danger action-btn"
@@ -233,17 +234,18 @@
               <span class="required-star">*</span>
             }
           </label>
-          <select
+          <p-select
             id="userCollege"
-            class="custom-select"
-            [value]="selectedCollegeId() ?? ''"
-            (change)="onCollegeChange($event)"
-          >
-            <option value="">-- None / Unrestricted --</option>
-            @for (col of colleges(); track col.id) {
-              <option [value]="col.id">{{ col.code }} - {{ col.name }}</option>
-            }
-          </select>
+            [options]="collegeOptions()"
+            formControlName="collegeId"
+            (onChange)="onCollegeSelect($event.value)"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Select assigned College..."
+            [filter]="true"
+            filterBy="label"
+            styleClass="w-full"
+          />
         </div>
 
         <div class="form-field">
@@ -253,18 +255,19 @@
               <span class="required-star">*</span>
             }
           </label>
-          <select
+          <p-select
             id="userProgram"
-            class="custom-select"
+            [options]="programOptions()"
+            formControlName="programId"
+            (onChange)="onProgramSelect($event.value)"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Select assigned Program..."
             [disabled]="isDeanSelected()"
-            [value]="userForm.controls.programId.value ?? ''"
-            (change)="onProgramChange($event)"
-          >
-            <option value="">-- None / Unassigned --</option>
-            @for (prog of filteredPrograms(); track prog.id) {
-              <option [value]="prog.id">{{ prog.code }} - {{ prog.name }}</option>
-            }
-          </select>
+            [filter]="true"
+            filterBy="label"
+            styleClass="w-full"
+          />
           @if (isDeanSelected()) {
             <small class="field-hint hint-warning">Deans operate college-wide across all programs.</small>
           }

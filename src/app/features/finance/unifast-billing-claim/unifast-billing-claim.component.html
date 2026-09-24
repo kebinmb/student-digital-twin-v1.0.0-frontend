@@ -20,15 +20,67 @@
     </h2>
     <div class="unifast-filter-grid">
       <div class="filter-col">
-        <label class="form-label">Academic Term ID</label>
-        <p-inputNumber [(ngModel)]="searchTermId" placeholder="Term ID" [useGrouping]="false" (onKeyDown.enter)="loadClaimBatches()"></p-inputNumber>
+        <label class="form-label" for="unifast-term-select">
+          <i class="pi pi-calendar mr-1 text-emerald-700"></i> Academic Term
+        </label>
+        <p-select 
+          id="unifast-term-select"
+          [options]="availableTerms()" 
+          [ngModel]="searchTermId()" 
+          (ngModelChange)="onTermChange($event)"
+          optionLabel="termName" 
+          optionValue="id"
+          placeholder="Select Academic Term"
+          styleClass="w-full">
+          <ng-template #selectedItem let-selectedTerm>
+            @if (selectedTerm) {
+              <div class="flex align-items-center gap-2">
+                <i class="pi pi-calendar-check text-emerald-700"></i>
+                <span class="font-bold text-xs">{{ selectedTerm.termName }}</span>
+              </div>
+            }
+          </ng-template>
+          <ng-template #item let-term>
+            <div class="flex justify-content-between align-items-center py-1">
+              <span class="text-xs">{{ term.termName }}</span>
+              @if (term.isActive) {
+                <p-tag value="ACTIVE" severity="success"></p-tag>
+              }
+            </div>
+          </ng-template>
+        </p-select>
       </div>
       <div class="filter-col">
-        <label class="form-label">Campus ID</label>
-        <p-inputNumber [(ngModel)]="createCampusId" placeholder="Campus ID" [useGrouping]="false"></p-inputNumber>
+        <label class="form-label" for="unifast-campus-select">
+          <i class="pi pi-building mr-1 text-emerald-700"></i> SUC Campus
+        </label>
+        <p-select 
+          id="unifast-campus-select"
+          [options]="availableCampuses()" 
+          [ngModel]="createCampusId()"
+          (ngModelChange)="createCampusId.set($event)"
+          optionLabel="name" 
+          optionValue="id"
+          placeholder="Select Campus"
+          styleClass="w-full">
+          <ng-template #selectedItem let-selectedCampus>
+            @if (selectedCampus) {
+              <div class="flex align-items-center gap-2">
+                <i class="pi pi-building text-emerald-700"></i>
+                <span class="font-bold text-xs">{{ selectedCampus.name }} ({{ selectedCampus.code }})</span>
+              </div>
+            }
+          </ng-template>
+          <ng-template #item let-campus>
+            <div class="flex justify-content-between align-items-center py-1">
+              <span class="text-xs font-bold">{{ campus.name }}</span>
+              <p-tag [value]="campus.code" severity="secondary"></p-tag>
+            </div>
+          </ng-template>
+        </p-select>
       </div>
       <div class="filter-col actions-col">
-        <p-button label="Load Term Batches" icon="pi pi-refresh" severity="secondary" [loading]="isLoading()" (onClick)="loadClaimBatches()"></p-button>
+        <p-button label="Load Batches" icon="pi pi-refresh" severity="secondary" [loading]="isLoading()" (onClick)="loadClaimBatches()"></p-button>
         <p-button label="Generate New Batch" icon="pi pi-bolt" severity="success" [loading]="isGenerating()" (onClick)="generateClaimBatch()"></p-button>
       </div>
     </div>
@@ -87,65 +139,100 @@
 
 <!-- Claim Batch Detail Modal -->
 <p-dialog [(visible)]="showDetailModal" [modal]="true" [style]="{width: '90vw', maxWidth: '1200px'}" header="UniFAST Claim Batch Breakdown">
-  <div *ngIf="selectedBatch() as b" class="detail-modal-box">
-    <div class="modal-header-row">
-      <div>
-        <span class="sub-label">BATCH NUMBER</span>
-        <h2 class="batch-num-title">{{ b.claimBatchNumber }}</h2>
+  @if (selectedBatch(); as b) {
+    <div class="detail-modal-box">
+      <div class="modal-header-row">
+        <div>
+          <span class="sub-label">BATCH NUMBER</span>
+          <h2 class="batch-num-title">{{ b.claimBatchNumber }}</h2>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <p-button label="Export Form 2 (Statutory CSV)" icon="pi pi-file-excel" severity="help" (onClick)="exportStatutoryForm2(b.id)"></p-button>
+          <p-button label="Export CHED CSV" icon="pi pi-download" severity="success" (onClick)="exportToCsv(b)"></p-button>
+        </div>
       </div>
-      <p-button label="Export CHED CSV" icon="pi pi-download" severity="success" (onClick)="exportToCsv(b)"></p-button>
-    </div>
 
-    <!-- Summary Metrics -->
-    <div class="metric-grid">
-      <div class="metric-card">
-        <span class="metric-label">BENEFICIARIES</span>
-        <span class="metric-val">{{ b.totalBeneficiaries }} Students</span>
+      <!-- Summary Metrics -->
+      <div class="metric-grid">
+        <div class="metric-card">
+          <span class="metric-label">BENEFICIARIES</span>
+          <span class="metric-val">{{ b.totalBeneficiaries }} Students</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">TUITION CLAIMED</span>
+          <span class="metric-val text-blue">₱{{ b.totalTuitionClaimed | number:'1.2-2' }}</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">TOSF / MISC CLAIMED</span>
+          <span class="metric-val text-orange">₱{{ b.totalTosfClaimed | number:'1.2-2' }}</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">TOTAL CLAIM AMOUNT</span>
+          <span class="metric-val text-green">₱{{ b.totalClaimAmount | number:'1.2-2' }}</span>
+        </div>
       </div>
-      <div class="metric-card">
-        <span class="metric-label">TUITION CLAIMED</span>
-        <span class="metric-val text-blue">₱{{ b.totalTuitionClaimed | number:'1.2-2' }}</span>
-      </div>
-      <div class="metric-card">
-        <span class="metric-label">TOSF / MISC CLAIMED</span>
-        <span class="metric-val text-orange">₱{{ b.totalTosfClaimed | number:'1.2-2' }}</span>
-      </div>
-      <div class="metric-card">
-        <span class="metric-label">TOTAL CLAIM AMOUNT</span>
-        <span class="metric-val text-green">₱{{ b.totalClaimAmount | number:'1.2-2' }}</span>
-      </div>
-    </div>
 
-    <!-- Beneficiary Student Table -->
-    <h3 class="section-subtitle">Beneficiary Student Roster</h3>
-    <p-table [value]="b.items" [rows]="10" [paginator]="true" responsiveLayout="scroll" styleClass="institutional-table">
-      <ng-template pTemplate="header">
-        <tr>
-          <th>Student ID</th>
-          <th>Student Name</th>
-          <th>Program</th>
-          <th class="text-center">Units</th>
-          <th class="text-right">Tuition (₱)</th>
-          <th class="text-right">Misc/TOSF (₱)</th>
-          <th class="text-right">Lab (₱)</th>
-          <th class="text-right">Total Claim (₱)</th>
-          <th>Status</th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-item>
-        <tr>
-          <td class="font-bold-green">{{ item.studentNumber }}</td>
-          <td>{{ item.studentName }}</td>
-          <td><p-tag [value]="item.programCode" severity="info"></p-tag></td>
-          <td class="text-center font-bold">{{ item.enrolledUnits }}</td>
-          <td class="text-right">₱{{ item.tuitionAmount | number:'1.2-2' }}</td>
-          <td class="text-right">₱{{ item.miscAmount | number:'1.2-2' }}</td>
-          <td class="text-right">₱{{ item.labAmount | number:'1.2-2' }}</td>
-          <td class="font-bold-green text-right">₱{{ item.totalClaimedAmount | number:'1.2-2' }}</td>
-          <td><p-tag [value]="item.verificationStatus" [severity]="getStatusSeverity(item.verificationStatus)"></p-tag></td>
-        </tr>
-      </ng-template>
-    </p-table>
-  </div>
+      <!-- Beneficiary Student Table -->
+      <h3 class="section-subtitle">Beneficiary Student Roster</h3>
+      <p-table [value]="b.items" [rows]="10" [paginator]="true" responsiveLayout="scroll" styleClass="institutional-table">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Student ID</th>
+            <th>Student Name</th>
+            <th>Program</th>
+            <th class="text-center">Units</th>
+            <th class="text-right">Tuition (₱)</th>
+            <th class="text-right">Misc/TOSF (₱)</th>
+            <th class="text-right">Lab (₱)</th>
+            <th class="text-right">Total Claim (₱)</th>
+            <th>Status</th>
+            <th class="text-center">Action</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-item>
+          <tr>
+            <td class="font-bold-green">{{ item.studentNumber }}</td>
+            <td>{{ item.studentName }}</td>
+            <td><p-tag [value]="item.programCode" severity="info"></p-tag></td>
+            <td class="text-center font-bold">{{ item.enrolledUnits }}</td>
+            <td class="text-right">₱{{ item.tuitionAmount | number:'1.2-2' }}</td>
+            <td class="text-right">₱{{ item.miscAmount | number:'1.2-2' }}</td>
+            <td class="text-right">₱{{ item.labAmount | number:'1.2-2' }}</td>
+            <td class="font-bold-green text-right">₱{{ item.totalClaimedAmount | number:'1.2-2' }}</td>
+            <td><p-tag [value]="item.verificationStatus" [severity]="getStatusSeverity(item.verificationStatus)"></p-tag></td>
+            <td class="text-center">
+              @if (item.verificationStatus !== 'DISQUALIFIED') {
+                <p-button label="Disallow" icon="pi pi-times-circle" severity="danger" [rounded]="true" [text]="true" size="small" (onClick)="openDisallowModal(item)"></p-button>
+              } @else {
+                <span style="font-size: 0.75rem; color: #dc2626; font-weight: 600;">Disallowed</span>
+              }
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
 </p-dialog>
 
+<!-- Audit Disallowance Confirmation Dialog -->
+<p-dialog [(visible)]="showDisallowModal" [modal]="true" [style]="{width: '480px'}" header="Audit Disallowance of Claim Item">
+  @if (disallowingItem(); as item) {
+    <div style="display: flex; flex-direction: column; gap: 1rem; padding: 0.5rem 0;">
+      <p style="margin: 0; color: #334155;">
+        Disallow FHE subsidy claim for student: <strong style="color: #0f172a;">{{ item.studentNumber }} - {{ item.studentName }}</strong>
+      </p>
+      <div style="background: #fef2f2; border: 1px solid #fecaca; padding: 0.75rem 1rem; border-radius: 8px;">
+        <span style="font-size: 0.8125rem; color: #991b1b; display: block; font-weight: 600;">CLAIM AMOUNT TO REVERT & CHARGE TO LEDGER</span>
+        <span style="font-size: 1.25rem; color: #dc2626; font-weight: 800;">₱{{ item.totalClaimedAmount | number:'1.2-2' }}</span>
+      </div>
+      <div>
+        <label style="display: block; font-size: 0.8125rem; font-weight: 600; color: #475569; margin-bottom: 0.375rem;">Statutory Audit Disallowance Reason (COA / UniFAST)</label>
+        <input type="text" pInputText [(ngModel)]="disallowReason" placeholder="e.g., Exceeded Maximum Residency Rule / Disqualified under RA 10931" style="width: 100%;" />
+      </div>
+    </div>
+  }
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" icon="pi pi-times" severity="secondary" (onClick)="showDisallowModal.set(false)"></p-button>
+    <p-button label="Confirm Disallowance" icon="pi pi-ban" severity="danger" [loading]="isDisallowing()" (onClick)="submitDisallowItem()"></p-button>
+  </ng-template>
+</p-dialog>

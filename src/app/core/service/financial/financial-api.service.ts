@@ -122,5 +122,11 @@ export class FinancialApiService {
   disallowClaimItem(itemId: number, request: DisallowClaimItemRequest): Observable<UnifastClaimItemDto> {
     return this.http.put<UnifastClaimItemDto>(`${this.baseUrl}/unifast/claims/items/${itemId}/disallow`, request);
   }
+
+  exportForm2Csv(claimBatchId: number): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/unifast/claims/${claimBatchId}/form2/export`, {
+      responseType: 'blob'
+    });
+  }
 }
 

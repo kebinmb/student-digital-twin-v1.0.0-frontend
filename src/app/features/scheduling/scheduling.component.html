@@ -35,7 +35,16 @@
     @if (activeTab() === 'sections') {
       <app-section-builder></app-section-builder>
     } @else {
-      <app-timetable-grid (addSchedule)="setTab('sections')"></app-timetable-grid>
+      @defer (on viewport; prefetch on idle) {
+        <app-timetable-grid (addSchedule)="setTab('sections')"></app-timetable-grid>
+      } @placeholder {
+        <div class="p-4 border-round surface-100 flex align-items-center justify-content-center">
+          <i class="pi pi-spin pi-spinner mr-2 text-emerald-700"></i>
+          <span class="text-slate-600 text-sm">Preparing weekly timetable matrix...</span>
+        </div>
+      } @loading (minimum 200ms) {
+        <p-skeleton width="100%" height="450px" borderRadius="12px"></p-skeleton>
+      }
     }
   </div>
 </div>

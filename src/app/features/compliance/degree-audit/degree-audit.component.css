@@ -223,3 +223,35 @@
 .full-width-input {
   width: 100%;
 }
+
+.student-security-banner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: var(--chmsu-border-radius-md, 8px);
+}
+
+.banner-shield-icon {
+  font-size: 1.5rem;
+  color: var(--chmsu-green-main, #116834);
+}
+
+.banner-text-block {
+  display: flex;
+  flex-direction: column;
+}
+
+.banner-title {
+  font-weight: 700;
+  color: #14532d;
+  font-size: 0.9375rem;
+}
+
+.banner-desc {
+  font-size: 0.8125rem;
+  color: #166534;
+  margin-top: 0.15rem;
+}

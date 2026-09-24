@@ -57,6 +57,7 @@ export interface StudentAccountLedgerDto {
   creditAmount: number;
   runningBalance: number;
   referenceNumber?: string | null;
+  fundClusterCode?: string | null;
 }
 
 export interface ProcessPaymentRequest {
@@ -64,9 +65,12 @@ export interface ProcessPaymentRequest {
   assessmentInvoiceId?: number | null;
   amountTendered: number;
   amountPaid: number;
-  paymentMethod: 'CASH' | 'GCASH' | 'MAYA' | 'BANK_TRANSFER' | 'CHECK' | string;
+  paymentMethod: 'CASH' | 'GCASH' | 'MAYA' | 'BANK_TRANSFER' | 'CHECK' | 'LINKBIZ' | string;
   referenceNumber?: string | null;
   remarks?: string | null;
+  checkNumber?: string | null;
+  draweeBank?: string | null;
+  fundClusterCode?: string | null;
 }
 
 export interface CashierReceiptDto {
@@ -86,6 +90,9 @@ export interface CashierReceiptDto {
   cashierUserId: number;
   cashierUsername: string;
   issuedAt: string;
+  checkNumber?: string | null;
+  draweeBank?: string | null;
+  fundClusterCode?: string | null;
 }
 
 export interface UnifastClaimItemDto {
@@ -179,5 +186,36 @@ export interface EodRcdReportDto {
 
 export interface DisallowClaimItemRequest {
   reason: string;
+}
+
+export interface UnifastForm2BeneficiaryDto {
+  seqNo: number;
+  studentNumber: string;
+  lrn: string;
+  lastName: string;
+  firstName: string;
+  middleName: string;
+  extName: string;
+  sex: string;
+  programCode: string;
+  programName: string;
+  yearLevel: number;
+  academicUnits: number;
+  tuitionFee: number;
+  athleticFee: number;
+  computerFee: number;
+  culturalFee: number;
+  developmentFee: number;
+  admissionEntranceFee: number;
+  guidanceFee: number;
+  handbookFee: number;
+  laboratoryFee: number;
+  libraryFee: number;
+  medicalDentalFee: number;
+  registrationFee: number;
+  schoolIdFee: number;
+  totalTosf: number;
+  totalFheAmount: number;
+  remarks: string;
 }
 

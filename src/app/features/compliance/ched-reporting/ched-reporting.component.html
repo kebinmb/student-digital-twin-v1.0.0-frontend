@@ -8,7 +8,7 @@
       </div>
       <div class="header-text-group">
         <h1 class="header-title">CHED Regulatory Compliance Reporting</h1>
-        <p class="header-subtitle">HEMIS data collection generator for Forms E-1, E-3, E-4, and E-5</p>
+        <p class="header-subtitle">Higher Education Management Information System (HEMIS) Data Collection (Forms E-1, E-3, E-4, E-5)</p>
       </div>
     </div>
   </div>
@@ -17,124 +17,250 @@
   <div class="form-selector-card">
     <div class="selector-content">
       <div class="form-tabs-group">
-        <p-button label="Form E-1 (Institutional)" [severity]="activeTab === 'E1' ? 'primary' : 'secondary'" (onClick)="switchTab('E1')"></p-button>
-        <p-button label="Form E-3 (Enrolment)" [severity]="activeTab === 'E3' ? 'primary' : 'secondary'" (onClick)="switchTab('E3')"></p-button>
-        <p-button label="Form E-4 (Graduates)" [severity]="activeTab === 'E4' ? 'primary' : 'secondary'" (onClick)="switchTab('E4')"></p-button>
-        <p-button label="Form E-5 (Faculty Loads)" [severity]="activeTab === 'E5' ? 'primary' : 'secondary'" (onClick)="switchTab('E5')"></p-button>
+        <p-button
+          label="Form E-1 (Institutional)"
+          [severity]="activeTab() === 'E1' ? 'primary' : 'secondary'"
+          (onClick)="switchTab('E1')"
+        />
+        <p-button
+          label="Form E-3 (Enrolment)"
+          [severity]="activeTab() === 'E3' ? 'primary' : 'secondary'"
+          (onClick)="switchTab('E3')"
+        />
+        <p-button
+          label="Form E-4 (Graduates)"
+          [severity]="activeTab() === 'E4' ? 'primary' : 'secondary'"
+          (onClick)="switchTab('E4')"
+        />
+        <p-button
+          label="Form E-5 (Faculty Loads)"
+          [severity]="activeTab() === 'E5' ? 'primary' : 'secondary'"
+          (onClick)="switchTab('E5')"
+        />
       </div>
 
       <div class="export-actions-group">
-        <p-inputNumber *ngIf="activeTab !== 'E1'" [(ngModel)]="termId" placeholder="Term ID" [useGrouping]="false" styleClass="term-id-input"></p-inputNumber>
-        <p-button label="Export CHED CSV" icon="pi pi-download" severity="success" [disabled]="activeTab !== 'E1' && !termId" (onClick)="exportCsv(activeTab)"></p-button>
+        @if (activeTab() === 'E1') {
+          <div class="selector-field">
+            <p-select
+              [options]="campusOptions()"
+              [ngModel]="campusId()"
+              (onChange)="onCampusChange($event.value)"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Select Campus..."
+              styleClass="min-w-[240px]"
+            />
+          </div>
+        } @else {
+          <div class="selector-field">
+            <p-select
+              [options]="termOptions()"
+              [ngModel]="termId()"
+              (onChange)="onTermChange($event.value)"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Select Academic Term..."
+              styleClass="min-w-[280px]"
+            />
+          </div>
+        }
+
+        <p-button
+          label="Export CHED CSV"
+          icon="pi pi-download"
+          severity="success"
+          [disabled]="(activeTab() === 'E1' && !campusId()) || (activeTab() !== 'E1' && !termId())"
+          (onClick)="exportCsv(activeTab())"
+        />
       </div>
     </div>
   </div>
 
-  <!-- Term Required Empty State -->
-  <div *ngIf="activeTab !== 'E1' && !termId">
-    <app-empty-state
-      icon="pi pi-filter-fill"
-      title="Academic Term Selection Required"
-      description="Please specify an Academic Term ID in the input box above to generate and view CHED Form {{ activeTab }} HEMIS statistics.">
-    </app-empty-state>
-  </div>
-
-  <!-- Form E-1 Institutional Profile View -->
-  <div *ngIf="activeTab === 'E1' && formE1() as e1" class="report-card">
-    <h2 class="report-card-title">CHED Form E-1: Institutional Profile</h2>
-    <div class="metric-grid">
-      <div class="metric-card">
-        <span class="metric-label">CHED INSTITUTION CODE</span>
-        <span class="metric-val text-green">{{ e1.chedInstitutionalCode }}</span>
-      </div>
-      <div class="metric-card">
-        <span class="metric-label">OFFERED DEGREE PROGRAMS</span>
-        <span class="metric-val">{{ e1.totalPrograms }} Programs</span>
-      </div>
-      <div class="metric-card">
-        <span class="metric-label">TOTAL ENROLLED STUDENTS</span>
-        <span class="metric-val text-green">{{ e1.totalEnrolledStudents }} Students</span>
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="report-card">
+      <div class="flex flex-col gap-4">
+        <p-skeleton width="30%" height="2rem" />
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <p-skeleton height="6rem" />
+          <p-skeleton height="6rem" />
+          <p-skeleton height="6rem" />
+        </div>
+        <p-skeleton height="15rem" />
       </div>
     </div>
-  </div>
+  } @else {
+    <!-- Form E-1 Institutional Profile View -->
+    @if (activeTab() === 'E1') {
+      @if (formE1(); as e1) {
+        <div class="report-card">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="report-card-title mb-0">CHED Form E-1: Institutional Profile</h2>
+              <p class="text-sm text-slate-500 mt-1">Campus: {{ e1.campusName }} (ID: {{ e1.campusId }})</p>
+            </div>
+            <p-tag [value]="'CHED Code: ' + e1.chedInstitutionalCode" severity="info" styleClass="text-sm px-3 py-1" />
+          </div>
 
-  <!-- Form E-3 Enrolment Statistics View -->
-  <div *ngIf="activeTab === 'E3'" class="report-card">
-    <h2 class="report-card-title">CHED Form E-3: Enrolment Data by Program & Sex</h2>
-    <p-table [value]="formE3()" [rows]="10" [paginator]="true" responsiveLayout="scroll" styleClass="institutional-table">
-      <ng-template pTemplate="header">
-        <tr>
-          <th>Program Code</th>
-          <th>Program Name</th>
-          <th class="text-center">Male Count</th>
-          <th class="text-center">Female Count</th>
-          <th class="text-center">Total Enrolled</th>
-          <th class="text-center">Total Credit Units</th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-row>
-        <tr>
-          <td class="font-bold-green">{{ row.programCode }}</td>
-          <td>{{ row.programName }}</td>
-          <td class="text-center">{{ row.maleCount }}</td>
-          <td class="text-center">{{ row.femaleCount }}</td>
-          <td class="font-bold-green text-center">{{ row.totalEnrolled }}</td>
-          <td class="text-center font-semibold">{{ row.totalUnitsTaken }}</td>
-        </tr>
-      </ng-template>
-    </p-table>
-  </div>
+          <div class="metric-grid">
+            <div class="metric-card">
+              <span class="metric-label">CHED INSTITUTION CODE</span>
+              <span class="metric-val text-green">{{ e1.chedInstitutionalCode }}</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-label">OFFERED DEGREE PROGRAMS</span>
+              <span class="metric-val">{{ e1.totalPrograms }} Programs</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-label">TOTAL ENROLLED STUDENTS</span>
+              <span class="metric-val text-green">{{ e1.totalEnrolledStudents }} Students</span>
+            </div>
+          </div>
+        </div>
+      } @else {
+        <app-empty-state
+          icon="pi pi-building"
+          title="Campus Data Not Found"
+          description="Please select a valid campus from the dropdown above to load the CHED Form E-1 institutional report."
+        />
+      }
+    }
 
-  <!-- Form E-4 Graduate Statistics View -->
-  <div *ngIf="activeTab === 'E4'" class="report-card">
-    <h2 class="report-card-title">CHED Form E-4: Graduate Statistics & Honors</h2>
-    <p-table [value]="formE4()" [rows]="10" [paginator]="true" responsiveLayout="scroll" styleClass="institutional-table">
-      <ng-template pTemplate="header">
-        <tr>
-          <th>Program Code</th>
-          <th class="text-center">Total Graduates</th>
-          <th class="text-center">Summa Cum Laude</th>
-          <th class="text-center">Magna Cum Laude</th>
-          <th class="text-center">Cum Laude</th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-row>
-        <tr>
-          <td class="font-bold-green">{{ row.programCode }}</td>
-          <td class="font-bold-green text-center">{{ row.totalGraduates }}</td>
-          <td class="text-center font-semibold text-gold">{{ row.summaCumLaudeCount }}</td>
-          <td class="text-center font-semibold text-blue">{{ row.magnaCumLaudeCount }}</td>
-          <td class="text-center font-semibold text-green">{{ row.cumLaudeCount }}</td>
-        </tr>
-      </ng-template>
-    </p-table>
-  </div>
+    <!-- Form E-3 Enrolment Statistics View -->
+    @if (activeTab() === 'E3') {
+      <div class="report-card">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="report-card-title mb-0">CHED Form E-3: Enrolment Data by Program & Sex</h2>
+          <span class="text-sm text-slate-500">HEMIS Enrolment Breakdown</span>
+        </div>
 
-  <!-- Form E-5 Faculty Loads View -->
-  <div *ngIf="activeTab === 'E5'" class="report-card">
-    <h2 class="report-card-title">CHED Form E-5: Faculty Profiles & Teaching Loads</h2>
-    <p-table [value]="formE5()" [rows]="10" [paginator]="true" responsiveLayout="scroll" styleClass="institutional-table">
-      <ng-template pTemplate="header">
-        <tr>
-          <th>Faculty ID</th>
-          <th>Faculty Name</th>
-          <th>Highest Degree</th>
-          <th>Status</th>
-          <th class="text-center">Contact Hours</th>
-          <th class="text-center">Assigned Sections</th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-row>
-        <tr>
-          <td class="font-bold-green">#{{ row.facultyId }}</td>
-          <td class="font-bold-navy">{{ row.facultyName }}</td>
-          <td><p-tag [value]="row.highestDegree" severity="info"></p-tag></td>
-          <td><p-tag [value]="row.employmentStatus" severity="success"></p-tag></td>
-          <td class="text-center font-bold">{{ row.teachingLoadContactHours }} hrs</td>
-          <td class="text-center font-semibold">{{ row.assignedSectionsCount }}</td>
-        </tr>
-      </ng-template>
-    </p-table>
-  </div>
+        <p-table
+          [value]="formE3()"
+          [rows]="10"
+          [paginator]="true"
+          responsiveLayout="scroll"
+          styleClass="institutional-table"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Program Code</th>
+              <th>Program Name</th>
+              <th class="text-center">Male Count</th>
+              <th class="text-center">Female Count</th>
+              <th class="text-center">Total Enrolled</th>
+              <th class="text-center">Total Credit Units</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-row>
+            <tr>
+              <td class="font-bold-green">{{ row.programCode }}</td>
+              <td>{{ row.programName }}</td>
+              <td class="text-center font-medium">{{ row.maleCount }}</td>
+              <td class="text-center font-medium">{{ row.femaleCount }}</td>
+              <td class="font-bold-green text-center">{{ row.totalEnrolled }}</td>
+              <td class="text-center font-semibold">{{ row.totalUnitsTaken }}</td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="6" class="text-center py-6 text-slate-500">
+                No enrolment statistics recorded for the selected academic term.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    }
+
+    <!-- Form E-4 Graduate Statistics View -->
+    @if (activeTab() === 'E4') {
+      <div class="report-card">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="report-card-title mb-0">CHED Form E-4: Graduate Statistics & Honors</h2>
+          <span class="text-sm text-slate-500">HEMIS Commencement & Latin Honors Summary</span>
+        </div>
+
+        <p-table
+          [value]="formE4()"
+          [rows]="10"
+          [paginator]="true"
+          responsiveLayout="scroll"
+          styleClass="institutional-table"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Program Code</th>
+              <th class="text-center">Total Graduates</th>
+              <th class="text-center">Summa Cum Laude</th>
+              <th class="text-center">Magna Cum Laude</th>
+              <th class="text-center">Cum Laude</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-row>
+            <tr>
+              <td class="font-bold-green">{{ row.programCode }}</td>
+              <td class="font-bold-green text-center">{{ row.totalGraduates }}</td>
+              <td class="text-center font-semibold text-gold">{{ row.summaCumLaudeCount }}</td>
+              <td class="text-center font-semibold text-blue">{{ row.magnaCumLaudeCount }}</td>
+              <td class="text-center font-semibold text-green">{{ row.cumLaudeCount }}</td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="5" class="text-center py-6 text-slate-500">
+                No graduate statistics recorded for the selected academic term.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    }
+
+    <!-- Form E-5 Faculty Loads View -->
+    @if (activeTab() === 'E5') {
+      <div class="report-card">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="report-card-title mb-0">CHED Form E-5: Faculty Profiles & Teaching Loads</h2>
+          <span class="text-sm text-slate-500">HEMIS Teaching Assignment & Full-Time Equivalent (FTE)</span>
+        </div>
+
+        <p-table
+          [value]="formE5()"
+          [rows]="10"
+          [paginator]="true"
+          responsiveLayout="scroll"
+          styleClass="institutional-table"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Faculty ID</th>
+              <th>Faculty Name</th>
+              <th>Highest Degree</th>
+              <th>Status</th>
+              <th class="text-center">Contact Hours</th>
+              <th class="text-center">Assigned Sections</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-row>
+            <tr>
+              <td class="font-bold-green">#{{ row.facultyId }}</td>
+              <td class="font-bold-navy">{{ row.facultyName }}</td>
+              <td><p-tag [value]="row.highestDegree" severity="info" /></td>
+              <td><p-tag [value]="row.employmentStatus" severity="success" /></td>
+              <td class="text-center font-bold">{{ row.teachingLoadContactHours }} hrs</td>
+              <td class="text-center font-semibold">{{ row.assignedSectionsCount }}</td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="6" class="text-center py-6 text-slate-500">
+                No faculty teaching loads recorded for the selected academic term.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    }
+  }
 </div>
-

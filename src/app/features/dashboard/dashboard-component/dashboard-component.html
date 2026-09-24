@@ -4,11 +4,11 @@
     <div class="welcome-info">
       <div class="welcome-badge">
         <span class="pulse-dot"></span>
-        <span>CHMSU Student Digital Twin • Real-time Academic Telemetry</span>
+        <span>{{ roleBadge() }}</span>
       </div>
-      <h1 class="welcome-title">Welcome back, {{ studentName() }}</h1>
+      <h1 class="welcome-title">Welcome back, {{ userName() }}</h1>
       <p class="welcome-subtitle">
-        Carlos Hilado Memorial State University • BS Information Technology • 3rd Year • AY 2026-2027
+        {{ roleSubtitle() }}
       </p>
     </div>
 
@@ -51,7 +51,7 @@
     <div class="bento-grid">
 
       <!-- Bento Item 1-4: Metric KPI Cards (1x1 Aspect Ratio) -->
-      @for (card of metrics; track card.title) {
+      @for (card of displayedMetrics(); track card.title) {
         <div class="bento-col-3">
           <p-card styleClass="h-full metric-bento-card">
             <div class="metric-header">
@@ -81,10 +81,32 @@
           <ng-template pTemplate="header">
             <div class="card-header-flex">
               <div>
-                <h2 class="card-title">Today's Class Schedule</h2>
-                <p class="card-subtitle">3 enrolled course sessions scheduled today</p>
+                <h2 class="card-title">
+                  @if (isFaculty()) {
+                    Today's Teaching Schedule
+                  } @else if (isCashier() || isAccountant()) {
+                    Fiscal Operations & Collections Desk
+                  } @else if (isRegistrar() || isDean() || isAdmin()) {
+                    Academic Operations & Governance Queue
+                  } @else {
+                    Today's Class Schedule
+                  }
+                </h2>
+                <p class="card-subtitle">
+                  @if (isFaculty()) {
+                    Scheduled instructional sessions and attendance telemetry
+                  } @else if (isCashier() || isAccountant()) {
+                    Official Receipts (Form 51) and billing voucher transactions
+                  } @else if (isRegistrar() || isDean() || isAdmin()) {
+                    Academic periods, clearance gates, and student records
+                  } @else {
+                    3 enrolled course sessions scheduled today
+                  }
+                </p>
               </div>
-              <a routerLink="/dashboard/schedule" class="action-link">View Calendar</a>
+              @if (isStudent()) {
+                <a routerLink="/dashboard/scheduling" class="action-link">View Calendar</a>
+              }
             </div>
           </ng-template>
 
@@ -126,60 +148,107 @@
             <div class="card-header-flex">
               <div>
                 <h2 class="card-title">Quick Actions</h2>
-                <p class="card-subtitle">Fast-access university services</p>
+                <p class="card-subtitle">Role-tailored university shortcuts</p>
               </div>
             </div>
           </ng-template>
 
           <div class="quick-actions-grid">
-            <button type="button" class="action-tile">
-              <i class="pi pi-file-pdf action-tile-icon"></i>
-              <span class="action-tile-label">Download COR</span>
-            </button>
-            <button type="button" class="action-tile">
-              <i class="pi pi-id-card action-tile-icon"></i>
-              <span class="action-tile-label">Digital Student ID</span>
-            </button>
-            <button type="button" class="action-tile">
-              <i class="pi pi-check-square action-tile-icon"></i>
-              <span class="action-tile-label">Clearance Status</span>
-            </button>
-            <button type="button" class="action-tile">
-              <i class="pi pi-headphones action-tile-icon"></i>
-              <span class="action-tile-label">ICT Support</span>
-            </button>
+            @for (action of roleQuickActions(); track action.label) {
+              <a [routerLink]="action.routerLink" class="action-tile" role="button">
+                <i [class]="action.icon + ' action-tile-icon'"></i>
+                <span class="action-tile-label">{{ action.label }}</span>
+              </a>
+            }
           </div>
         </p-card>
       </div>
 
-      <!-- Bento Item 7: Digital Twin Competency Profiling (Col Span 8) -->
+      <!-- Bento Item 7: Digital Twin Competency Profiling / Institutional Quality Assurance (Col Span 8) -->
       <div class="bento-col-8">
-        <p-card styleClass="h-full competency-bento-card">
-          <ng-template pTemplate="header">
-            <div class="card-header-flex">
-              <div>
-                <h2 class="card-title">Digital Twin Competency Profiling</h2>
-                <p class="card-subtitle">AI-synthesized academic performance & skill indices</p>
+        @if (isStudent()) {
+          <p-card styleClass="h-full competency-bento-card">
+            <ng-template pTemplate="header">
+              <div class="card-header-flex">
+                <div>
+                  <h2 class="card-title">Digital Twin Competency Profiling</h2>
+                  <p class="card-subtitle">AI-synthesized academic performance & skill indices</p>
+                </div>
+                <p-tag severity="success" value="Overall Index: 90%"></p-tag>
               </div>
-              <p-tag severity="success" value="Overall Index: 90%"></p-tag>
-            </div>
-          </ng-template>
+            </ng-template>
 
-          <div class="competency-list">
-            @for (item of competencies; track item.skill) {
+            <div class="competency-list">
+              @for (item of competencies; track item.skill) {
+                <div class="competency-item">
+                  <div class="competency-label-row">
+                    <div class="competency-info">
+                      <span class="skill-name">{{ item.skill }}</span>
+                      <span class="skill-category">{{ item.category }}</span>
+                    </div>
+                    <span class="skill-score">{{ item.score }}%</span>
+                  </div>
+                  <p-progressbar [value]="item.score" [showValue]="false" styleClass="h-2 rounded-full"></p-progressbar>
+                </div>
+              }
+            </div>
+          </p-card>
+        } @else {
+          <p-card styleClass="h-full competency-bento-card">
+            <ng-template pTemplate="header">
+              <div class="card-header-flex">
+                <div>
+                  <h2 class="card-title">Institutional Quality Assurance & Compliance Status</h2>
+                  <p class="card-subtitle">Statutory compliance benchmarks across Philippine higher education standards</p>
+                </div>
+                <p-tag severity="success" value="CHED Compliant"></p-tag>
+              </div>
+            </ng-template>
+
+            <div class="competency-list">
               <div class="competency-item">
                 <div class="competency-label-row">
                   <div class="competency-info">
-                    <span class="skill-name">{{ item.skill }}</span>
-                    <span class="skill-category">{{ item.category }}</span>
+                    <span class="skill-name">RA 10931 UniFAST Free Higher Education (FHE)</span>
+                    <span class="skill-category">13 Authorized TOSF Categories & Billing Form 2</span>
                   </div>
-                  <span class="skill-score">{{ item.score }}%</span>
+                  <span class="skill-score">100%</span>
                 </div>
-                <p-progressbar [value]="item.score" [showValue]="false" styleClass="h-2 rounded-full"></p-progressbar>
+                <p-progressbar [value]="100" [showValue]="false" styleClass="h-2 rounded-full"></p-progressbar>
               </div>
-            }
-          </div>
-        </p-card>
+              <div class="competency-item">
+                <div class="competency-label-row">
+                  <div class="competency-info">
+                    <span class="skill-name">COA Accountable Form No. 51 Electronic Receipts</span>
+                    <span class="skill-category">Sequential Booklet Controls & EOD RCD (Form 58-A)</span>
+                  </div>
+                  <span class="skill-score">98%</span>
+                </div>
+                <p-progressbar [value]="98" [showValue]="false" styleClass="h-2 rounded-full"></p-progressbar>
+              </div>
+              <div class="competency-item">
+                <div class="competency-label-row">
+                  <div class="competency-info">
+                    <span class="skill-name">CHED CMO 25 s. 2015 Outcomes-Based Education</span>
+                    <span class="skill-category">DAG Curriculum Prerequisite Validation (Kahn's Sort)</span>
+                  </div>
+                  <span class="skill-score">96%</span>
+                </div>
+                <p-progressbar [value]="96" [showValue]="false" styleClass="h-2 rounded-full"></p-progressbar>
+              </div>
+              <div class="competency-item">
+                <div class="competency-label-row">
+                  <div class="competency-info">
+                    <span class="skill-name">Multi-Department Clearance Gatekeeper</span>
+                    <span class="skill-category">5-Department Sequential Signoffs (Library, Accounting, Lab, OSAS, Dean)</span>
+                  </div>
+                  <span class="skill-score">94%</span>
+                </div>
+                <p-progressbar [value]="94" [showValue]="false" styleClass="h-2 rounded-full"></p-progressbar>
+              </div>
+            </div>
+          </p-card>
+        }
       </div>
 
       <!-- Bento Item 8: Academic Notices & Updates (Col Span 4) -->

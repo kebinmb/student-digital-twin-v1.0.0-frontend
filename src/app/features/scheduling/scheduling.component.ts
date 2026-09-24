@@ -3,6 +3,7 @@ import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { SelectButtonModule } from 'primeng/selectbutton';
+import { SkeletonModule } from 'primeng/skeleton';
 import { SectionBuilderComponent } from './components/section-builder/section-builder.component';
 import { TimetableGridComponent } from './components/timetable-grid/timetable-grid.component';
 
@@ -14,6 +15,7 @@ import { TimetableGridComponent } from './components/timetable-grid/timetable-gr
     FormsModule,
     ButtonModule,
     SelectButtonModule,
+    SkeletonModule,
     SectionBuilderComponent,
     TimetableGridComponent
   ],

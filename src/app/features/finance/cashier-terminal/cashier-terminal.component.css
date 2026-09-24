@@ -26,33 +26,98 @@
 .lookup-card {
   background: var(--chmsu-white, #ffffff);
   border: 1px solid var(--chmsu-slate-200, #e2e8f0);
-  border-radius: var(--chmsu-border-radius-md, 8px);
-  padding: 1.25rem;
-  box-shadow: var(--chmsu-shadow-card);
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 0.875rem 1.25rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
 }
 
 .lookup-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1.2fr;
-  gap: 1rem;
+  grid-template-columns: minmax(320px, 2.2fr) minmax(220px, 1.2fr) auto;
+  gap: 0.875rem;
   align-items: flex-end;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .lookup-grid {
     grid-template-columns: 1fr;
+    gap: 0.75rem;
   }
 }
 
 .lookup-col {
   display: flex;
   flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.lookup-col label.form-label {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.725rem;
+  font-weight: 700;
+  color: var(--chmsu-slate-600, #475569);
+  text-transform: uppercase;
+  letter-spacing: 0.035em;
+  margin-bottom: 0;
+  line-height: 1rem;
+}
+
+.lookup-col ::ng-deep .p-select {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  border: 1px solid var(--chmsu-slate-300, #cbd5e1);
+  background-color: var(--chmsu-white, #ffffff);
+  transition: all 0.15s ease-in-out;
+}
+
+.lookup-col ::ng-deep .p-select:hover {
+  border-color: var(--chmsu-green-main, #116834);
+}
+
+.lookup-col ::ng-deep .p-select:focus-within {
+  border-color: var(--chmsu-green-main, #116834);
+  box-shadow: 0 0 0 2px rgba(17, 104, 52, 0.15);
+}
+
+.lookup-col ::ng-deep .p-select .p-select-label {
+  display: flex;
+  align-items: center;
+  padding: 0 0.75rem;
+  height: 100%;
+  font-size: 0.8125rem;
+  line-height: 1;
 }
 
 .actions-col {
   display: flex;
-  gap: 0.5rem;
+  flex-direction: row;
   align-items: center;
+  gap: 0.5rem;
+  height: 40px;
+}
+
+.actions-col ::ng-deep .lookup-action-btn.p-button {
+  height: 40px;
+  padding: 0 1.25rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  white-space: nowrap;
+}
+
+.actions-col ::ng-deep .lookup-reset-btn.p-button {
+  height: 40px;
+  width: 40px;
+  padding: 0;
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .pos-grid {
@@ -372,6 +437,83 @@
 .full-width-input,
 ::ng-deep .full-width-select {
   width: 100% !important;
+}
+
+/* Booklet Banner */
+.booklet-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0.875rem 1.25rem;
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+}
+
+.booklet-banner.booklet-active {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.booklet-banner.booklet-missing {
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.booklet-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.booklet-icon {
+  font-size: 1.5rem;
+  color: #16a34a;
+}
+
+.booklet-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+}
+
+.booklet-sub {
+  font-size: 0.8125rem;
+  color: var(--chmsu-slate-600, #475569);
+  margin-top: 0.125rem;
+}
+
+.serial-tag {
+  font-family: monospace;
+  font-weight: 700;
+  color: #15803d;
+  background: #dcfce7;
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+}
+
+.booklet-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* RCD Report Styles */
+.rcd-report-box {
+  padding: 0.5rem 0;
+}
+
+.rcd-header {
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.rcd-meta {
+  font-size: 0.8125rem;
+  color: var(--chmsu-slate-600, #475569);
+  margin-top: 0.25rem;
 }
 
 @media print {

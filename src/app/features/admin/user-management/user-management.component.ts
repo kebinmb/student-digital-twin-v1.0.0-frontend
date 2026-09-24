@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 
 // PrimeNG Components
 import { TableModule } from 'primeng/table';
@@ -18,6 +18,9 @@ import { AuthService } from '../../../core/service/authentication/auth-service';
 import { DepartmentService, ProgramService } from '../../../core/services/institution.service';
 import { Department, Program } from '../../../core/models/institution.model';
 
+import { SelectModule } from 'primeng/select';
+import { HasRoleDirective } from '../../../core/directives/has-role.directive';
+
 export const AVAILABLE_ROLES = [
   'ADMIN',
   'REGISTRAR',
@@ -26,6 +29,7 @@ export const AVAILABLE_ROLES = [
   'FACULTY',
   'STUDENT',
   'CASHIER',
+  'ACCOUNTANT',
   'GUIDANCE'
 ];
 
@@ -34,6 +38,7 @@ export const AVAILABLE_ROLES = [
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
     TableModule,
     ButtonModule,
@@ -41,7 +46,9 @@ export const AVAILABLE_ROLES = [
     TagModule,
     InputTextModule,
     ToggleSwitchModule,
-    ConfirmDialogModule
+    ConfirmDialogModule,
+    SelectModule,
+    HasRoleDirective
   ],
   templateUrl: './user-management.component.html',
   styleUrl: './user-management.component.css',
@@ -68,6 +75,16 @@ export class UserManagementComponent implements OnInit {
     if (!cid) return this.allPrograms();
     return this.allPrograms().filter(p => p.departmentId === cid);
   });
+
+  readonly collegeOptions = computed(() => [
+    { label: '-- None / Institutional Unrestricted --', value: null },
+    ...this.colleges().map(col => ({ label: `${col.code} - ${col.name}`, value: col.id }))
+  ]);
+
+  readonly programOptions = computed(() => [
+    { label: '-- None / Unassigned --', value: null },
+    ...this.filteredPrograms().map(prog => ({ label: `${prog.code} - ${prog.name}`, value: prog.id }))
+  ]);
 
   readonly isLoading = signal<boolean>(false);
   readonly isSaving = signal<boolean>(false);
@@ -158,6 +175,10 @@ export class UserManagementComponent implements OnInit {
   onCollegeChange(event: Event): void {
     const value = (event.target as HTMLSelectElement).value;
     const cid = value ? Number(value) : null;
+    this.onCollegeSelect(cid);
+  }
+
+  onCollegeSelect(cid: number | null): void {
     this.selectedCollegeId.set(cid);
     this.userForm.controls.collegeId.setValue(cid);
 
@@ -173,6 +194,10 @@ export class UserManagementComponent implements OnInit {
   onProgramChange(event: Event): void {
     const value = (event.target as HTMLSelectElement).value;
     const pid = value ? Number(value) : null;
+    this.onProgramSelect(pid);
+  }
+
+  onProgramSelect(pid: number | null): void {
     this.userForm.controls.programId.setValue(pid);
 
     if (pid && !this.selectedCollegeId()) {
