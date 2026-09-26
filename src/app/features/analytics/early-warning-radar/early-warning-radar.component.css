@@ -88,3 +88,26 @@
 .text-right {
   text-align: right;
 }
+
+.action-btn-group {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.driver-text {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.risk-vectors-card {
+  background: var(--chmsu-slate-50, #f8fafc);
+}
+
+.case-item {
+  background: var(--chmsu-white, #ffffff);
+}
+

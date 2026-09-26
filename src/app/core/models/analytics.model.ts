@@ -38,6 +38,36 @@ export interface AttendanceRecordResponse {
   deviceFingerprint?: string;
 }
 
+export interface VerifyCreatorAttendanceRequest {
+  qrSeed: string;
+  latitude?: number;
+  longitude?: number;
+  deviceFingerprint?: string;
+}
+
+export interface FacultyAttendanceRecordResponse {
+  recordId: number;
+  sessionId: number;
+  sectionCode?: string;
+  courseCode?: string;
+  facultyUserId: number;
+  facultyName: string;
+  facultyRole: string;
+  attendanceStatus: string;
+  isGeofenceValid: boolean;
+  verifiedAt: string;
+  deviceFingerprint?: string;
+}
+
+export interface ActivityAlertDto {
+  activityTitle: string;
+  categoryName: string;
+  scoreEarned: number;
+  maxPoints: number;
+  percentage: number;
+  suggestion: string;
+}
+
 export interface DigitalTwinRiskProfileDto {
   studentId: number;
   studentNumber: string;
@@ -51,6 +81,7 @@ export interface DigitalTwinRiskProfileDto {
   predictedDropoutProbability: number;
   recommendedInterventions: string[];
   evaluatedAt: string;
+  activityAlerts?: ActivityAlertDto[];
 }
 
 export interface EarlyWarningRadarItemDto {
@@ -64,3 +95,36 @@ export interface EarlyWarningRadarItemDto {
   primaryRiskFactor: string;
   suggestedAction: string;
 }
+
+export interface StudentInterventionDto {
+  id: number;
+  studentId: number;
+  studentNumber: string;
+  studentName: string;
+  riskScoreId?: number;
+  interventionType: 'ACADEMIC_TUTORING' | 'ATTENDANCE_CONFERENCE' | 'FINANCIAL_SUBSIDY_AID' | 'GUIDANCE_COUNSELING' | 'PEER_MENTORING';
+  status: 'OPEN' | 'ASSIGNED' | 'IN_PROGRESS' | 'RESOLVED' | 'ESCALATED';
+  assignedCounselorId?: number;
+  assignedCounselorName?: string;
+  triggerFactor: string;
+  caseNotes?: string;
+  resolutionSummary?: string;
+  dispatchedAt: string;
+  resolvedAt?: string;
+}
+
+export interface DispatchInterventionRequest {
+  studentId: number;
+  riskScoreId?: number;
+  interventionType: string;
+  assignedCounselorId?: number;
+  triggerFactor?: string;
+  notes?: string;
+}
+
+export interface UpdateInterventionStatusRequest {
+  status: string;
+  resolutionSummary?: string;
+  additionalNotes?: string;
+}
+

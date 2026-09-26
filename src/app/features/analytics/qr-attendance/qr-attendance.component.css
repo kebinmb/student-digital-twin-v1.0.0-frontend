@@ -20,11 +20,48 @@
   border: 1px solid var(--chmsu-slate-200, #e2e8f0);
   border-radius: var(--chmsu-border-radius-lg, 12px);
   padding: 1rem 1.25rem;
-  box-shadow: var(--chmsu-shadow-card);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.student-toolbar {
+  border-left: 4px solid #10b981;
+}
+
+.header-branding {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid #a7f3d0;
+}
+
+.student-icon-box {
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  border-color: #bfdbfe;
+}
+
+.student-icon-box .header-icon {
+  color: #2563eb;
+}
+
+.header-icon {
+  font-size: 1.5rem;
+  color: #059669;
 }
 
 .badge-row {
   display: flex;
+  align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.35rem;
 }
@@ -39,17 +76,195 @@
 }
 
 .badge-tag.green {
-  background: var(--status-emerald-bg, #ecfdf5);
-  border: 1px solid var(--status-emerald-border, #a7f3d0);
-  color: var(--status-emerald-text, #047857);
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #047857;
 }
 
 .badge-tag.blue {
-  background: var(--status-blue-bg, #f0f9ff);
-  border: 1px solid var(--status-blue-border, #bae6fd);
-  color: var(--status-blue-text, #0369a1);
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  color: #0369a1;
 }
 
+.badge-tag.emerald {
+  background: #ecfdf5;
+  border: 1px solid #6ee7b7;
+  color: #065f46;
+}
+
+.header-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--p-surface-900, #0f172a);
+  margin: 0;
+}
+
+.header-subtitle {
+  font-size: 0.8125rem;
+  color: var(--p-surface-500, #64748b);
+  margin: 0.25rem 0 0 0;
+}
+
+/* ========================================================================= */
+/* STUDENT SPECIFIC STYLES                                                   */
+/* ========================================================================= */
+.student-attendance-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.student-scanner-card {
+  border-top: 3px solid #0284c7;
+}
+
+.scanner-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.camera-viewport-box {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto 1.25rem auto;
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: #000000;
+  aspect-ratio: 4 / 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.camera-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.scanner-crosshair-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.crosshair-box {
+  width: 220px;
+  height: 220px;
+  border: 2px dashed #10b981;
+  border-radius: 12px;
+  position: relative;
+  box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.4);
+}
+
+.scan-laser-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #10b981, transparent);
+  animation: scanLaser 2s linear infinite;
+}
+
+@keyframes scanLaser {
+  0% { top: 0%; }
+  50% { top: 100%; }
+  100% { top: 0%; }
+}
+
+.camera-hint {
+  position: absolute;
+  bottom: 12px;
+  font-size: 0.75rem;
+  color: #ffffff;
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+}
+
+.input-action-wrapper {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.geofence-status-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--p-surface-600, #475569);
+  background-color: var(--p-surface-50, #f8fafc);
+  border: 1px solid var(--p-surface-200, #e2e8f0);
+  border-radius: 6px;
+  padding: 0.45rem 0.75rem;
+}
+
+.success-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.icon-success {
+  font-size: 1.25rem;
+  color: #059669;
+}
+
+.success-details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #bbf7d0;
+}
+
+@media (max-width: 640px) {
+  .success-details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.detail-label {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  color: #166534;
+  font-weight: 600;
+}
+
+.detail-value {
+  font-size: 0.8125rem;
+  color: #064e3b;
+}
+
+.course-badge {
+  color: #0f172a;
+}
+
+.student-history-card {
+  border-top: 3px solid #10b981;
+}
+
+/* ========================================================================= */
+/* INSTRUCTOR PANEL & SHARED STYLES                                          */
+/* ========================================================================= */
 .qr-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -64,11 +279,11 @@
 }
 
 .qr-panel-card {
-  background: var(--chmsu-white, #ffffff);
-  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
-  border-radius: var(--chmsu-border-radius-lg, 12px);
+  background: var(--p-surface-0, #ffffff);
+  border: 1px solid var(--p-surface-200, #e2e8f0);
+  border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: var(--chmsu-shadow-card);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -83,137 +298,111 @@
 .panel-title {
   font-size: 1.125rem;
   font-weight: 700;
-  color: var(--chmsu-navy-900, #0f172a);
+  color: var(--p-surface-900, #0f172a);
   margin: 0 0 0.35rem 0;
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.icon-green { color: var(--chmsu-green-main, #116834); }
+.icon-green { color: #116834; }
 .icon-blue { color: #0284c7; }
 
 .panel-subtext {
-  font-size: 0.75rem;
-  color: var(--chmsu-slate-500, #64748b);
+  font-size: 0.775rem;
+  color: var(--p-surface-500, #64748b);
   margin: 0 0 1.25rem 0;
 }
 
 .section-select-group {
+  margin-bottom: 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  margin-bottom: 1.25rem;
-  background: var(--chmsu-slate-50, #f8fafc);
-  padding: 0.85rem;
-  border-radius: 8px;
-  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  gap: 0.35rem;
 }
 
 .form-label {
   font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--chmsu-navy-900, #0f172a);
+  color: var(--p-surface-700, #334155);
 }
 
-.full-width-select,
-:host ::ng-deep .full-width-select,
-:host ::ng-deep .full-width-select.p-select {
+:host ::ng-deep .full-width-select {
   width: 100% !important;
-  display: flex !important;
-}
-
-:host ::ng-deep .full-width-select .p-select-label {
-  font-weight: 600;
-  font-size: 0.8125rem;
-  color: var(--chmsu-navy-900, #0f172a);
 }
 
 .qr-active-box {
-  background: var(--chmsu-slate-100, #f1f5f9);
-  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
-  border-radius: var(--chmsu-border-radius-md, 8px);
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
   padding: 1.25rem;
-  text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
+  gap: 0.75rem;
 }
 
 .active-label {
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 700;
+  color: #047857;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--chmsu-slate-500, #64748b);
-  margin-bottom: 0.75rem;
 }
 
 .qr-code-wrapper {
-  display: inline-block;
   padding: 0.75rem;
-  background: #ffffff;
-  border: 1px solid var(--chmsu-slate-300, #cbd5e1);
-  border-radius: 12px;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
-  margin-bottom: 0.75rem;
+  background: #116834;
+  border-radius: 8px;
+  display: inline-block;
 }
 
 .qr-display-box {
-  width: 12rem;
-  height: 12rem;
-  background: var(--chmsu-green-deep, #0c5027);
-  color: #ffffff;
-  font-family: var(--font-family-mono);
-  font-size: 0.75rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  border-radius: 8px;
-  word-break: break-all;
 }
 
-.qr-icon-large {
-  font-size: 2.5rem;
-  margin-bottom: 0.5rem;
+.qr-img-matrix {
+  width: 140px;
+  height: 140px;
+  border-radius: 6px;
+  background-color: #ffffff;
+  padding: 6px;
+  object-fit: contain;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .qr-seed-text {
-  text-align: center;
+  color: #a7f3d0;
 }
 
 .qr-meta-text {
   font-size: 0.75rem;
-  color: var(--chmsu-slate-600, #475569);
+  color: #475569;
   margin: 0;
-}
-
-.font-mono-bold {
-  font-family: var(--font-family-mono);
-  font-weight: 700;
-}
-
-.font-mono-bold.text-green {
-  color: var(--status-emerald-text, #047857);
 }
 
 .input-section {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  margin-bottom: 1.25rem;
 }
 
-.verification-success-box {
-  padding: 1rem;
-  background: var(--status-emerald-bg, #ecfdf5);
-  border: 1px solid var(--status-emerald-border, #a7f3d0);
-  border-radius: var(--chmsu-border-radius-md, 8px);
+.form-field {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+}
+
+.full-width-input {
+  width: 100%;
+}
+
+.verification-success-box {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 8px;
+  padding: 1rem;
 }
 
 .success-header {
@@ -223,33 +412,22 @@
 }
 
 .success-title {
-  font-size: 0.75rem;
   font-weight: 700;
-  color: var(--status-emerald-text, #047857);
+  color: #065f46;
+  font-size: 0.875rem;
 }
 
-.success-text {
-  font-size: 0.75rem;
-  color: var(--status-emerald-text, #047857);
-  margin: 0;
-}
-
-.font-mono {
-  font-family: var(--font-family-mono);
-}
-
-.full-width-input,
-::ng-deep .full-width-btn {
+:host ::ng-deep .full-width-btn {
   width: 100% !important;
 }
 
-/* Daily Student Attendance Section */
+/* Daily Attendance Card */
 .daily-attendance-card {
-  background: var(--chmsu-white, #ffffff);
-  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
-  border-radius: var(--chmsu-border-radius-lg, 12px);
+  background: var(--p-surface-0, #ffffff);
+  border: 1px solid var(--p-surface-200, #e2e8f0);
+  border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: var(--chmsu-shadow-card);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -263,16 +441,10 @@
   gap: 1rem;
 }
 
-.header-left {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
 .table-title {
   font-size: 1.125rem;
   font-weight: 700;
-  color: var(--chmsu-navy-900, #0f172a);
+  color: var(--p-surface-900, #0f172a);
   margin: 0;
   display: flex;
   align-items: center;
@@ -280,36 +452,36 @@
 }
 
 .table-subtitle {
-  font-size: 0.75rem;
-  color: var(--chmsu-slate-500, #64748b);
-  margin: 0;
+  font-size: 0.775rem;
+  color: var(--p-surface-500, #64748b);
+  margin: 0.25rem 0 0 0;
 }
 
 .header-filters {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
   flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 .filter-field {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.4rem;
 }
 
 .filter-label {
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--chmsu-slate-600, #475569);
+  color: var(--p-surface-600, #475569);
 }
 
 .date-input {
   padding: 0.45rem 0.65rem;
-  border: 1px solid var(--chmsu-slate-300, #cbd5e1);
+  border: 1px solid var(--p-surface-300, #cbd5e1);
   border-radius: 6px;
   font-size: 0.8125rem;
-  color: var(--chmsu-navy-900, #0f172a);
+  color: var(--p-surface-900, #0f172a);
   background: #ffffff;
 }
 
@@ -332,8 +504,8 @@
 
 .metric-card {
   padding: 0.85rem 1rem;
-  background: var(--chmsu-slate-50, #f8fafc);
-  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  background: var(--p-surface-50, #f8fafc);
+  border: 1px solid var(--p-surface-200, #e2e8f0);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -345,17 +517,18 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--chmsu-slate-500, #64748b);
+  color: var(--p-surface-500, #64748b);
 }
 
 .metric-value {
   font-size: 1.25rem;
   font-weight: 800;
-  font-family: var(--font-family-mono);
+  font-family: var(--font-mono, monospace);
 }
 
 .metric-value.blue { color: #0284c7; }
 .metric-value.green { color: #047857; }
+.metric-value.emerald { color: #059669; }
 .metric-value.orange { color: #d97706; }
 .metric-value.teal { color: #0d9488; }
 
@@ -367,12 +540,12 @@
 
 .student-name {
   font-weight: 600;
-  color: var(--chmsu-navy-900, #0f172a);
+  color: var(--p-surface-900, #0f172a);
 }
 
 .student-num {
   font-size: 0.75rem;
-  color: var(--chmsu-slate-500, #64748b);
+  color: var(--p-surface-500, #64748b);
 }
 
 .section-cell {

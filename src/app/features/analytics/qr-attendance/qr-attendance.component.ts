@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, OnDestroy, ChangeDetectionStrategy, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
@@ -11,10 +11,13 @@ import { TagModule } from 'primeng/tag';
 import { TableModule } from 'primeng/table';
 import { SelectModule } from 'primeng/select';
 import { SkeletonModule } from 'primeng/skeleton';
+import { TooltipModule } from 'primeng/tooltip';
 
 import { AnalyticsApiService } from '../../../core/service/analytics/analytics-api.service';
 import { SchedulingApiService } from '../../../core/service/scheduling/scheduling-api.service';
-import { AttendanceRecordResponse, AttendanceSessionResponse } from '../../../core/models/analytics.model';
+import { EnrollmentApiService } from '../../../core/service/enrollment/enrollment-api.service';
+import { AttendanceRecordResponse, AttendanceSessionResponse, FacultyAttendanceRecordResponse } from '../../../core/models/analytics.model';
+import { StudentProfileResponse } from '../../../core/models/enrollment.model';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { AuthService } from '../../../core/service/authentication/auth-service';
 
@@ -37,6 +40,7 @@ export interface ScheduleOption {
     TableModule,
     SelectModule,
     SkeletonModule,
+    TooltipModule,
     EmptyStateComponent
   ],
   templateUrl: './qr-attendance.component.html',
@@ -46,100 +50,63 @@ export interface ScheduleOption {
 export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
   private readonly analyticsApi = inject(AnalyticsApiService);
   private readonly schedulingApi = inject(SchedulingApiService);
+  private readonly enrollmentApi = inject(EnrollmentApiService);
   private readonly authService = inject(AuthService);
   private readonly messageService = inject(MessageService);
 
+  @ViewChild('scannerVideo') scannerVideoRef?: ElementRef<HTMLVideoElement>;
+
+  readonly isStudent = computed(() => this.authService.hasRole('STUDENT'));
+  readonly studentProfile = signal<StudentProfileResponse | null>(null);
+
   readonly activeSession = signal<AttendanceSessionResponse | null>(null);
   readonly scanResult = signal<AttendanceRecordResponse | null>(null);
+  readonly creatorScanResult = signal<FacultyAttendanceRecordResponse | null>(null);
+  readonly facultyDailyRecords = signal<FacultyAttendanceRecordResponse[]>([]);
+  readonly isLoadingFaculty = signal<boolean>(false);
+  readonly isVerifyingCreator = signal<boolean>(false);
   readonly qrSeedInput = signal<string>('');
 
   readonly isGenerating = signal<boolean>(false);
   readonly isScanning = signal<boolean>(false);
+  readonly isCameraActive = signal<boolean>(false);
+  private cameraStream: MediaStream | null = null;
+  private cameraScanTimer: any = null;
 
-  // Default class section schedule options for robust fallback visibility
-  readonly defaultScheduleOptions: ScheduleOption[] = [
-    { label: '[BSCS 3-A] CS311 — Operating Systems & System Programming (Mon 08:00-10:00 - Room 201)', value: 1 },
-    { label: '[BSIT 2-B] IT221 — Web Development & Enterprise Frameworks (Tue 13:00-15:00 - Lab 3)', value: 2 },
-    { label: '[BSIS 4-A] IS412 — Enterprise Systems Architecture (Wed 10:00-12:00 - Room 305)', value: 3 },
-    { label: '[BSCS 4-B] CS410 — Artificial Intelligence & Machine Learning (Thu 14:00-16:00 - Lab 1)', value: 4 }
-  ];
+  // Student Personal Attendance History
+  readonly studentHistoryRecords = signal<AttendanceRecordResponse[]>([]);
+  readonly isLoadingHistory = signal<boolean>(false);
 
-  readonly defaultFilterSectionOptions = [
-    { label: 'All Assigned Sections', value: null as number | null },
-    { label: '[BSCS 3-A] CS311', value: 1 },
-    { label: '[BSIT 2-B] IT221', value: 2 },
-    { label: '[BSIS 4-A] IS412', value: 3 },
-    { label: '[BSCS 4-B] CS410', value: 4 }
-  ];
+  // Student Attendance Summary KPIs
+  readonly studentTotalSessions = computed(() => this.studentHistoryRecords().length);
+  readonly studentPresentCount = computed(() => this.studentHistoryRecords().filter(r => r.attendanceStatus === 'PRESENT').length);
+  readonly studentLateCount = computed(() => this.studentHistoryRecords().filter(r => r.attendanceStatus === 'LATE').length);
+  readonly studentOnTimeRate = computed(() => {
+    const total = this.studentTotalSessions();
+    if (total === 0) return 100;
+    return Math.round((this.studentPresentCount() / total) * 100);
+  });
+  readonly studentGeofenceRate = computed(() => {
+    const total = this.studentTotalSessions();
+    if (total === 0) return 100;
+    const valid = this.studentHistoryRecords().filter(r => r.isGeofenceValid).length;
+    return Math.round((valid / total) * 100);
+  });
 
-  // Default telemetry records for immediate visual verification if database is unseeded
-  readonly defaultDailyRecords: AttendanceRecordResponse[] = [
-    {
-      recordId: 101,
-      sessionId: 1,
-      sectionCode: 'BSCS 3-A',
-      courseCode: 'CS311',
-      studentId: 2001,
-      studentNumber: '2023-00101',
-      studentName: 'Juan Dela Cruz',
-      attendanceStatus: 'PRESENT',
-      isGeofenceValid: true,
-      scannedAt: new Date().toISOString(),
-      deviceFingerprint: 'Mozilla/5.0 (Android 14; Mobile)'
-    },
-    {
-      recordId: 102,
-      sessionId: 1,
-      sectionCode: 'BSCS 3-A',
-      courseCode: 'CS311',
-      studentId: 2002,
-      studentNumber: '2023-00102',
-      studentName: 'Maria Clara Santos',
-      attendanceStatus: 'PRESENT',
-      isGeofenceValid: true,
-      scannedAt: new Date(Date.now() - 300000).toISOString(),
-      deviceFingerprint: 'Mozilla/5.0 (iPhone; CPU OS 17_4)'
-    },
-    {
-      recordId: 103,
-      sessionId: 2,
-      sectionCode: 'BSIT 2-B',
-      courseCode: 'IT221',
-      studentId: 2003,
-      studentNumber: '2024-00215',
-      studentName: 'Jose Rizal Mercado',
-      attendanceStatus: 'LATE',
-      isGeofenceValid: true,
-      scannedAt: new Date(Date.now() - 900000).toISOString(),
-      deviceFingerprint: 'Mozilla/5.0 (Windows NT 10.0; Win64)'
-    },
-    {
-      recordId: 104,
-      sessionId: 2,
-      sectionCode: 'BSIT 2-B',
-      courseCode: 'IT221',
-      studentId: 2004,
-      studentNumber: '2024-00218',
-      studentName: 'Andres Bonifacio',
-      attendanceStatus: 'PRESENT',
-      isGeofenceValid: true,
-      scannedAt: new Date(Date.now() - 1200000).toISOString(),
-      deviceFingerprint: 'Mozilla/5.0 (Macintosh; Intel Mac OS X)'
-    }
-  ];
+  // Instructor section schedules (dynamically loaded from active terms & database)
+  readonly scheduleOptions = signal<ScheduleOption[]>([]);
+  readonly selectedScheduleId = signal<number | null>(null);
 
-  // Section schedules for Faculty selection
-  readonly scheduleOptions = signal<ScheduleOption[]>(this.defaultScheduleOptions);
-  readonly selectedScheduleId = signal<number | null>(1);
-
-  // Daily Attendance Filters & Data
+  // Instructor Daily Attendance Filters & Data
   readonly selectedDate = signal<string>(new Date().toISOString().split('T')[0]);
   readonly selectedFilterSectionId = signal<number | null>(null);
-  readonly filterSectionOptions = signal<{ label: string; value: number | null }[]>(this.defaultFilterSectionOptions);
-  readonly dailyRecords = signal<AttendanceRecordResponse[]>(this.defaultDailyRecords);
+  readonly filterSectionOptions = signal<{ label: string; value: number | null }[]>([
+    { label: 'All Assigned Sections', value: null }
+  ]);
+  readonly dailyRecords = signal<AttendanceRecordResponse[]>([]);
   readonly isLoadingDaily = signal<boolean>(false);
 
-  // Daily Metrics
+  // Instructor Daily Metrics
   readonly totalRecords = computed(() => this.dailyRecords().length);
   readonly presentCount = computed(() => this.dailyRecords().filter(r => r.attendanceStatus === 'PRESENT').length);
   readonly lateCount = computed(() => this.dailyRecords().filter(r => r.attendanceStatus === 'LATE').length);
@@ -151,20 +118,300 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
     return Math.round((valid / total) * 100);
   });
 
+  private sseSub?: Subscription;
+
   ngOnInit(): void {
-    this.loadAssignedSchedules();
-    this.loadDailyAttendance();
+    if (this.isStudent()) {
+      // Resolve student profile and personal attendance history only
+      this.loadStudentProfileAndHistory();
+    } else {
+      // Load instructor management schedules and daily section attendance
+      this.loadAssignedSchedules();
+      this.loadDailyAttendance();
+    }
   }
 
+  ngOnDestroy(): void {
+    if (this.sseSub) {
+      this.sseSub.unsubscribe();
+    }
+    this.stopCameraScanner();
+  }
+
+  // =========================================================================
+  // STUDENT SPECIFIC METHODS
+  // =========================================================================
+  loadStudentProfileAndHistory(): void {
+    this.isLoadingHistory.set(true);
+
+    this.enrollmentApi.getCurrentStudentProfile().subscribe({
+      next: (profile) => {
+        this.studentProfile.set(profile);
+        this.loadStudentAttendanceHistory(profile.id);
+      },
+      error: () => {
+        const userId = this.authService.getUserId();
+        if (userId) {
+          this.loadStudentAttendanceHistory(userId);
+        } else {
+          this.isLoadingHistory.set(false);
+          this.studentHistoryRecords.set([]);
+        }
+      }
+    });
+  }
+
+  loadStudentAttendanceHistory(studentId?: number): void {
+    this.isLoadingHistory.set(true);
+
+    // Prefer dedicated /student/me/slice endpoint
+    this.analyticsApi.getCurrentStudentAttendanceSlice(0, 50).subscribe({
+      next: (slice) => {
+        this.studentHistoryRecords.set(slice?.content || []);
+        this.isLoadingHistory.set(false);
+      },
+      error: () => {
+        // Fallback to numeric endpoint
+        const targetId = studentId || this.studentProfile()?.id || this.authService.getUserId() || 1;
+        this.analyticsApi.getStudentAttendanceSlice(targetId, 0, 50).subscribe({
+          next: (slice) => {
+            this.studentHistoryRecords.set(slice?.content || []);
+            this.isLoadingHistory.set(false);
+          },
+          error: () => {
+            this.studentHistoryRecords.set([]);
+            this.isLoadingHistory.set(false);
+          }
+        });
+      }
+    });
+  }
+
+  toggleCameraScanner(): void {
+    if (this.isCameraActive()) {
+      this.stopCameraScanner();
+    } else {
+      this.startCameraScanner();
+    }
+  }
+
+  startCameraScanner(): void {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+        .then((stream) => {
+          this.cameraStream = stream;
+          this.isCameraActive.set(true);
+
+          setTimeout(() => {
+            if (this.scannerVideoRef && this.scannerVideoRef.nativeElement) {
+              const video = this.scannerVideoRef.nativeElement;
+              video.srcObject = stream;
+              video.play();
+              this.startQrDetection(video);
+            }
+          }, 100);
+        })
+        .catch((err) => {
+          console.warn('Camera access denied or unavailable:', err);
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Camera Unavailable',
+            detail: 'Please enter or paste the QR seed code manually in the input field.'
+          });
+          this.isCameraActive.set(false);
+        });
+    } else {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Camera Unsupported',
+        detail: 'Camera access is not supported by your browser. Please enter the QR code manually.'
+      });
+    }
+  }
+
+  stopCameraScanner(): void {
+    if (this.cameraScanTimer) {
+      clearInterval(this.cameraScanTimer);
+      this.cameraScanTimer = null;
+    }
+    if (this.cameraStream) {
+      this.cameraStream.getTracks().forEach(track => track.stop());
+      this.cameraStream = null;
+    }
+    this.isCameraActive.set(false);
+  }
+
+  private startQrDetection(video: HTMLVideoElement): void {
+    if ('BarcodeDetector' in window) {
+      try {
+        const detector = new (window as any).BarcodeDetector({ formats: ['qr_code'] });
+        this.cameraScanTimer = setInterval(async () => {
+          try {
+            const barcodes = await detector.detect(video);
+            if (barcodes && barcodes.length > 0) {
+              const rawValue = barcodes[0].rawValue;
+              if (rawValue) {
+                this.qrSeedInput.set(rawValue);
+                this.stopCameraScanner();
+                this.scanAttendance();
+              }
+            }
+          } catch {
+            // Ignore frame detection errors
+          }
+        }, 500);
+      } catch {
+        // BarcodeDetector initialization fallback
+      }
+    }
+  }
+
+  scanAttendance(): void {
+    if (!this.isStudent()) {
+      this.verifyCreatorAttendance();
+      return;
+    }
+
+    const seed = this.qrSeedInput().trim();
+    if (!seed) {
+      this.messageService.add({ severity: 'warn', summary: 'Input Required', detail: 'Please enter or scan a valid QR attendance seed.' });
+      return;
+    }
+
+    const currentProfile = this.studentProfile();
+    if (!currentProfile) {
+      this.isScanning.set(true);
+      this.enrollmentApi.getCurrentStudentProfile().subscribe({
+        next: (profile) => {
+          this.studentProfile.set(profile);
+          this.performScanRequest(seed, profile.id);
+        },
+        error: () => {
+          const userId = this.authService.getUserId();
+          if (userId) {
+            this.performScanRequest(seed, userId);
+          } else {
+            this.isScanning.set(false);
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Authentication Required',
+              detail: 'Unable to identify current student profile for attendance scan.'
+            });
+          }
+        }
+      });
+      return;
+    }
+
+    this.performScanRequest(seed, currentProfile.id);
+  }
+
+  verifyCreatorAttendance(): void {
+    const seed = this.qrSeedInput().trim();
+    if (!seed) {
+      this.messageService.add({ severity: 'warn', summary: 'Input Required', detail: 'Please enter or scan a valid QR attendance seed.' });
+      return;
+    }
+
+    const fingerprint = navigator.userAgent || 'Conductor-Console';
+    this.isScanning.set(true);
+    this.isVerifyingCreator.set(true);
+
+    this.obtainGeolocation((lat, lon) => {
+      this.analyticsApi.verifyCreatorAttendance({
+        qrSeed: seed,
+        latitude: lat,
+        longitude: lon,
+        deviceFingerprint: fingerprint
+      }).subscribe({
+        next: (res) => {
+          this.creatorScanResult.set(res);
+          this.isScanning.set(false);
+          this.isVerifyingCreator.set(false);
+          this.qrSeedInput.set('');
+
+          // Update faculty records idempotently
+          this.facultyDailyRecords.update(prev => {
+            const filtered = prev.filter(r => r.recordId !== res.recordId);
+            return [res, ...filtered];
+          });
+
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Conductor Attendance Verified',
+            detail: `Verified attendance for ${res.facultyName} (${res.facultyRole}) in ${res.courseCode || 'Section'} (${res.sectionCode || 'Session'}) with GPS Geofencing!`
+          });
+        },
+        error: (err) => {
+          this.isScanning.set(false);
+          this.isVerifyingCreator.set(false);
+          const errorMsg = err?.error?.detail || err?.error?.message || 'Geofence verification failed or QR code expired.';
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Verification Failed',
+            detail: errorMsg
+          });
+        }
+      });
+    });
+  }
+
+  private performScanRequest(seed: string, studentId: number): void {
+    const fingerprint = navigator.userAgent || 'Browser-Client';
+
+    this.isScanning.set(true);
+    this.obtainGeolocation((lat, lon) => {
+      this.analyticsApi.scanAttendance({
+        qrSeed: seed,
+        studentId: studentId,
+        latitude: lat,
+        longitude: lon,
+        deviceFingerprint: fingerprint
+      }).subscribe({
+        next: (res) => {
+          this.scanResult.set(res);
+          this.isScanning.set(false);
+          this.qrSeedInput.set('');
+
+          // Prepend verified record to student's personal attendance history
+          this.studentHistoryRecords.update(prev => [res, ...prev.filter(r => r.recordId !== res.recordId)]);
+
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Attendance Verified',
+            detail: `Checked in for ${res.courseCode} (${res.sectionCode}) with GPS Geofence Verification!`
+          });
+        },
+        error: (err) => {
+          this.isScanning.set(false);
+          const errorMsg = err?.error?.detail || err?.error?.message || 'Geofence verification failed or QR code expired.';
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Check-In Failed',
+            detail: errorMsg
+          });
+        }
+      });
+    });
+  }
+
+  // =========================================================================
+  // INSTRUCTOR / FACULTY SPECIFIC METHODS
+  // =========================================================================
   loadAssignedSchedules(): void {
     this.schedulingApi.getSchedulingTerms().subscribe({
       next: (terms) => {
         const activeTerm = terms && terms.length > 0 ? (terms.find(t => t.isActive) || terms[0]) : null;
-        const termId = activeTerm ? activeTerm.id : 1;
-        this.fetchSectionsForTerm(termId);
+        if (activeTerm) {
+          this.fetchSectionsForTerm(activeTerm.id);
+        } else {
+          this.scheduleOptions.set([]);
+          this.selectedScheduleId.set(null);
+        }
       },
       error: () => {
-        this.fetchSectionsForTerm(1);
+        this.scheduleOptions.set([]);
+        this.selectedScheduleId.set(null);
       }
     });
   }
@@ -206,21 +453,15 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
             this.selectedScheduleId.set(options[0].value);
           }
         } else {
-          this.useDefaultSchedules();
+          this.scheduleOptions.set([]);
+          this.filterSectionOptions.set([{ label: 'All Assigned Sections', value: null }]);
         }
       },
       error: () => {
-        this.useDefaultSchedules();
+        this.scheduleOptions.set([]);
+        this.filterSectionOptions.set([{ label: 'All Assigned Sections', value: null }]);
       }
     });
-  }
-
-  private useDefaultSchedules(): void {
-    this.scheduleOptions.set(this.defaultScheduleOptions);
-    this.filterSectionOptions.set(this.defaultFilterSectionOptions);
-    if (!this.selectedScheduleId()) {
-      this.selectedScheduleId.set(1);
-    }
   }
 
   loadDailyAttendance(): void {
@@ -229,23 +470,30 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
     const sectionId = this.selectedFilterSectionId();
     this.analyticsApi.getDailyAttendance(dateStr, sectionId || undefined).subscribe({
       next: (records) => {
-        if (records && records.length > 0) {
-          this.dailyRecords.set(records);
-        } else {
-          // Keep default records if backend query returns empty array so UI shows telemetry table
-          const filtered = sectionId
-            ? this.defaultDailyRecords.filter(r => r.sessionId === sectionId)
-            : this.defaultDailyRecords;
-          this.dailyRecords.set(filtered.length > 0 ? filtered : this.defaultDailyRecords);
-        }
+        this.dailyRecords.set(records || []);
         this.isLoadingDaily.set(false);
       },
       error: () => {
-        const filtered = sectionId
-          ? this.defaultDailyRecords.filter(r => r.sessionId === sectionId)
-          : this.defaultDailyRecords;
-        this.dailyRecords.set(filtered.length > 0 ? filtered : this.defaultDailyRecords);
+        this.dailyRecords.set([]);
         this.isLoadingDaily.set(false);
+      }
+    });
+
+    this.loadDailyFacultyAttendance();
+  }
+
+  loadDailyFacultyAttendance(): void {
+    this.isLoadingFaculty.set(true);
+    const dateStr = this.selectedDate();
+    const sectionId = this.selectedFilterSectionId();
+    this.analyticsApi.getDailyFacultyAttendance(dateStr, sectionId || undefined).subscribe({
+      next: (records) => {
+        this.facultyDailyRecords.set(records || []);
+        this.isLoadingFaculty.set(false);
+      },
+      error: () => {
+        this.facultyDailyRecords.set([]);
+        this.isLoadingFaculty.set(false);
       }
     });
   }
@@ -261,14 +509,6 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
   onFilterSectionChange(sectionId: number | null): void {
     this.selectedFilterSectionId.set(sectionId);
     this.loadDailyAttendance();
-  }
-
-  private sseSub?: Subscription;
-
-  ngOnDestroy(): void {
-    if (this.sseSub) {
-      this.sseSub.unsubscribe();
-    }
   }
 
   listenToLiveSessionStream(sessionId: number): void {
@@ -290,7 +530,15 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
   }
 
   startClassSession(scheduleId?: number): void {
-    const targetId = scheduleId || this.selectedScheduleId() || 1;
+    const targetId = scheduleId || this.selectedScheduleId();
+    if (!targetId) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Schedule Required',
+        detail: 'Please select an assigned class schedule before generating QR attendance.'
+      });
+      return;
+    }
     this.isGenerating.set(true);
     this.obtainGeolocation((lat, lon) => {
       this.analyticsApi.startAttendanceSession({
@@ -307,101 +555,16 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
           this.loadDailyAttendance();
           this.listenToLiveSessionStream(session.sessionId);
         },
-        error: () => {
-          // Graceful fallback for testing when backend is offline/unseeded
-          const mockSeed = 'QR-ATT-' + Math.random().toString(36).substring(2, 10).toUpperCase();
-          const mockSession: AttendanceSessionResponse = {
-            sessionId: Math.floor(Math.random() * 1000) + 1,
-            sectionScheduleId: targetId,
-            qrSeed: mockSeed,
-            expiresAt: new Date(Date.now() + 15 * 60000).toISOString(),
-            latitude: lat,
-            longitude: lon,
-            allowedRadiusMeters: 50,
-            qrCodeDataUrl: ''
-          };
-          this.activeSession.set(mockSession);
-          this.qrSeedInput.set(mockSeed);
+        error: (err) => {
           this.isGenerating.set(false);
-          this.messageService.add({ severity: 'success', summary: 'QR Session Generated', detail: `Dynamic 15-min QR Attendance Session active at (${lat.toFixed(4)}, ${lon.toFixed(4)}).` });
-          this.loadDailyAttendance();
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Session Failed',
+            detail: err?.error?.detail || err?.error?.message || 'Could not start attendance session.'
+          });
         }
       });
     });
-  }
-
-  scanAttendance(): void {
-    const seed = this.qrSeedInput().trim();
-    if (!seed) {
-      this.messageService.add({ severity: 'warn', summary: 'Input Required', detail: 'Please enter or scan a valid QR attendance seed.' });
-      return;
-    }
-
-    const studentId = this.authService.getUserId() || 1;
-    const fingerprint = navigator.userAgent || 'Browser-Client';
-
-    this.isScanning.set(true);
-    this.obtainGeolocation((lat, lon) => {
-      this.analyticsApi.scanAttendance({
-        qrSeed: seed,
-        studentId: studentId,
-        latitude: lat,
-        longitude: lon,
-        deviceFingerprint: fingerprint
-      }).subscribe({
-        next: (res) => {
-          this.scanResult.set(res);
-          this.isScanning.set(false);
-          this.messageService.add({ severity: 'success', summary: 'Attendance Verified', detail: `Marked ${res.attendanceStatus} with GPS Geofence Verification!` });
-          this.loadDailyAttendance();
-        },
-        error: () => {
-          // Graceful fallback for student scan verification
-          const selectedOption = this.scheduleOptions().find(o => o.value === this.selectedScheduleId());
-          const sectionLabel = selectedOption ? selectedOption.label : '[BSCS 3-A] CS311';
-          const matchSec = sectionLabel.match(/\[(.*?)\]\s*([^:]+)/);
-
-          const mockRecord: AttendanceRecordResponse = {
-            recordId: Math.floor(Math.random() * 9000) + 1000,
-            sessionId: this.selectedScheduleId() || 1,
-            sectionCode: matchSec ? matchSec[1] : 'BSCS 3-A',
-            courseCode: matchSec ? matchSec[2] : 'CS311',
-            studentId: studentId,
-            studentNumber: '2024-' + String(studentId).padStart(5, '0'),
-            studentName: this.authService.currentUser()?.username || 'Authenticated Student',
-            attendanceStatus: 'PRESENT',
-            isGeofenceValid: true,
-            scannedAt: new Date().toISOString(),
-            deviceFingerprint: fingerprint
-          };
-          this.scanResult.set(mockRecord);
-          this.dailyRecords.update(prev => [mockRecord, ...prev]);
-          this.isScanning.set(false);
-          this.messageService.add({ severity: 'success', summary: 'Attendance Verified', detail: `Marked PRESENT with GPS Geofence Verification!` });
-        }
-      });
-    });
-  }
-
-  private obtainGeolocation(callback: (lat: number, lon: number) => void): void {
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => callback(pos.coords.latitude, pos.coords.longitude),
-        () => callback(10.7202, 122.5621),
-        { timeout: 5000, enableHighAccuracy: true }
-      );
-    } else {
-      callback(10.7202, 122.5621);
-    }
-  }
-
-  getStatusSeverity(status: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' {
-    switch (status) {
-      case 'PRESENT': return 'success';
-      case 'LATE': return 'warn';
-      case 'ABSENT': return 'danger';
-      default: return 'info';
-    }
   }
 
   exportAttendanceCsv(): void {
@@ -432,5 +595,42 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
     link.click();
     document.body.removeChild(link);
     this.messageService.add({ severity: 'success', summary: 'CSV Exported', detail: `Downloaded ${records.length} telemetry records as CSV.` });
+  }
+
+  // =========================================================================
+  // UTILITY METHODS
+  // =========================================================================
+  private obtainGeolocation(callback: (lat: number, lon: number) => void): void {
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => callback(pos.coords.latitude, pos.coords.longitude),
+        (err) => {
+          console.warn('Geolocation lookup failed:', err.message);
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'GPS Location Unavailable',
+            detail: 'Could not acquire precise GPS telemetry. Geofencing may fail without active coordinates.'
+          });
+          callback(0, 0);
+        },
+        { timeout: 5000, enableHighAccuracy: true }
+      );
+    } else {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Geolocation Unsupported',
+        detail: 'Browser geolocation is unavailable on this device.'
+      });
+      callback(0, 0);
+    }
+  }
+
+  getStatusSeverity(status: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' {
+    switch (status) {
+      case 'PRESENT': return 'success';
+      case 'LATE': return 'warn';
+      case 'ABSENT': return 'danger';
+      default: return 'info';
+    }
   }
 }

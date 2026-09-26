@@ -8,8 +8,13 @@ import {
   AttendanceSessionResponse,
   DigitalTwinRiskProfileDto,
   EarlyWarningRadarItemDto,
+  FacultyAttendanceRecordResponse,
   ScanAttendanceRequest,
-  StartAttendanceSessionRequest
+  StartAttendanceSessionRequest,
+  StudentInterventionDto,
+  DispatchInterventionRequest,
+  UpdateInterventionStatusRequest,
+  VerifyCreatorAttendanceRequest
 } from '../../models/analytics.model';
 
 @Injectable({
@@ -26,6 +31,17 @@ export class AnalyticsApiService {
     return this.http.post<AttendanceRecordResponse>(`${environment.apiUrl}/v1/attendance/scan`, request);
   }
 
+  verifyCreatorAttendance(request: VerifyCreatorAttendanceRequest): Observable<FacultyAttendanceRecordResponse> {
+    return this.http.post<FacultyAttendanceRecordResponse>(`${environment.apiUrl}/v1/attendance/creator/verify`, request);
+  }
+
+  getDailyFacultyAttendance(date?: string, sectionId?: number): Observable<FacultyAttendanceRecordResponse[]> {
+    let params = new HttpParams();
+    if (date) params = params.set('date', date);
+    if (sectionId) params = params.set('sectionId', sectionId.toString());
+    return this.http.get<FacultyAttendanceRecordResponse[]>(`${environment.apiUrl}/v1/attendance/creator/daily`, { params });
+  }
+
   getStudentAttendanceSlice(
     studentId: number,
     page = 0,
@@ -37,6 +53,20 @@ export class AnalyticsApiService {
     if (sortBy) params = params.set('sortBy', sortBy);
     return this.http.get<SliceResponse<AttendanceRecordResponse>>(
       `${environment.apiUrl}/v1/attendance/student/${studentId}/slice`,
+      { params }
+    );
+  }
+
+  getCurrentStudentAttendanceSlice(
+    page = 0,
+    size = 50,
+    sortBy?: string,
+    sortDir = 'DESC'
+  ): Observable<SliceResponse<AttendanceRecordResponse>> {
+    let params = new HttpParams().set('page', page.toString()).set('size', size.toString()).set('sortDir', sortDir);
+    if (sortBy) params = params.set('sortBy', sortBy);
+    return this.http.get<SliceResponse<AttendanceRecordResponse>>(
+      `${environment.apiUrl}/v1/attendance/student/me/slice`,
       { params }
     );
   }
@@ -68,6 +98,10 @@ export class AnalyticsApiService {
     return this.http.get<DigitalTwinRiskProfileDto>(`${environment.apiUrl}/v1/analytics/digital-twin/risk/${studentId}`);
   }
 
+  getCurrentStudentRiskProfile(): Observable<DigitalTwinRiskProfileDto> {
+    return this.http.get<DigitalTwinRiskProfileDto>(`${environment.apiUrl}/v1/analytics/digital-twin/risk/me`);
+  }
+
   getEarlyWarningRadar(): Observable<EarlyWarningRadarItemDto[]> {
     return this.http.get<EarlyWarningRadarItemDto[]>(`${environment.apiUrl}/v1/analytics/digital-twin/early-warning/radar`);
   }
@@ -84,5 +118,17 @@ export class AnalyticsApiService {
       `${environment.apiUrl}/v1/analytics/digital-twin/early-warning/slice`,
       { params }
     );
+  }
+
+  dispatchIntervention(request: DispatchInterventionRequest): Observable<StudentInterventionDto> {
+    return this.http.post<StudentInterventionDto>(`${environment.apiUrl}/v1/analytics/interventions/dispatch`, request);
+  }
+
+  updateInterventionStatus(id: number, request: UpdateInterventionStatusRequest): Observable<StudentInterventionDto> {
+    return this.http.patch<StudentInterventionDto>(`${environment.apiUrl}/v1/analytics/interventions/${id}/status`, request);
+  }
+
+  getStudentInterventions(studentId: number): Observable<StudentInterventionDto[]> {
+    return this.http.get<StudentInterventionDto[]>(`${environment.apiUrl}/v1/analytics/interventions/student/${studentId}`);
   }
 }

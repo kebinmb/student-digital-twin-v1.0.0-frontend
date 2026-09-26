@@ -1,91 +1,383 @@
 <div class="dt-dashboard-container">
+  <p-toast></p-toast>
+
   <!-- Sticky Header Toolbar Card -->
-  <div class="dt-toolbar-card">
+  <div class="dt-toolbar-card" [class.student-toolbar]="isStudent()">
     <div class="header-branding">
-      <div class="header-icon-box">
-        <i class="pi pi-compass header-icon"></i>
+      <div class="header-icon-box" [class.student-icon-box]="isStudent()">
+        <i class="pi" [ngClass]="isStudent() ? 'pi-user' : 'pi-compass'" class="header-icon"></i>
       </div>
       <div class="header-text-group">
         <div class="header-badge-row">
-          <span class="module-badge">STUDENT DIGITAL TWIN ENGINE</span>
-          <span class="engine-badge">ML PREDICTIVE ANALYTICS</span>
+          <span class="module-badge">{{ isStudent() ? 'PERSONAL ACADEMIC TWIN' : 'STUDENT DIGITAL TWIN ENGINE' }}</span>
+          <span class="engine-badge">{{ isStudent() ? 'TELEMETRY RADAR' : 'ML PREDICTIVE ANALYTICS' }}</span>
+          @if (isStudent() && studentProfile(); as sp) {
+            <span class="status-pill">{{ sp.enrollmentStatus || 'ENROLLED' }}</span>
+          }
         </div>
-        <h1 class="header-title">Visual Digital Twin & Risk Radar</h1>
+        <h1 class="header-title">{{ isStudent() ? 'My Academic Digital Twin & Telemetry' : 'Visual Digital Twin & Risk Radar' }}</h1>
         <p class="header-subtitle">
-          Multi-vector academic, attendance, and socioeconomic risk profile for <span class="highlight-student">{{ riskProfile()?.studentName || 'Student #1' }}</span>
+          @if (isStudent()) {
+            Real-time multidimensional academic progress, attendance telemetry, and guidance plan for
+            <span class="highlight-student">{{ riskProfile()?.studentName || studentProfile()?.username || 'You' }}</span>
+            <span class="student-id-tag">({{ riskProfile()?.studentNumber || studentProfile()?.studentNumber || 'Student' }})</span>
+          } @else {
+            Multi-vector academic, attendance, and socioeconomic risk profile for
+            <span class="highlight-student">{{ riskProfile()?.studentName || ('Student #' + (currentStudentId() || '...')) }}</span>
+          }
         </p>
       </div>
     </div>
     <div class="header-actions-group">
-      <p-button label="Recalculate ML Model" icon="pi pi-bolt" severity="success" size="small" (onClick)="loadRiskProfile(1)" />
+      @if (!isStudent()) {
+        <p-button label="Back to Radar" icon="pi pi-arrow-left" severity="secondary" [outlined]="true" size="small" routerLink="/dashboard/analytics/early-warning" />
+      }
+      <p-button
+        [label]="isStudent() ? 'Refresh My Telemetry' : 'Recalculate ML Model'"
+        [icon]="isStudent() ? 'pi pi-refresh' : 'pi pi-bolt'"
+        severity="success"
+        size="small"
+        [loading]="isLoading()"
+        (onClick)="recalculateMLModel()" />
     </div>
   </div>
 
   @if (isLoading()) {
     <div class="risk-cards-grid">
-      <p-skeleton height="200px" borderRadius="16px"></p-skeleton>
-      <p-skeleton height="200px" borderRadius="16px"></p-skeleton>
-      <p-skeleton height="200px" borderRadius="16px"></p-skeleton>
+      <p-skeleton height="220px" borderRadius="16px"></p-skeleton>
+      <p-skeleton height="220px" borderRadius="16px"></p-skeleton>
+      <p-skeleton height="220px" borderRadius="16px"></p-skeleton>
     </div>
   } @else if (riskProfile(); as rp) {
-    <!-- Top Row Risk Overview -->
-    <div class="risk-cards-grid">
-      <div class="risk-overview-card">
-        <div>
-          <span class="card-section-label">Composite Risk Level</span>
-          <div class="risk-level-row">
-            <p-tag [value]="rp.compositeRiskLevel" [severity]="getRiskSeverity(rp.compositeRiskLevel)" styleClass="risk-tag"></p-tag>
-            <span class="evaluation-date">Evaluated {{ rp.evaluatedAt | date:'short' }}</span>
-          </div>
+
+    <!-- ========================================================================= -->
+    <!-- STUDENT-SPECIFIC VIEW                                                     -->
+    <!-- ========================================================================= -->
+    @if (isStudent()) {
+      <!-- Student Academic Identity Strip -->
+      <div class="student-meta-strip">
+        <div class="meta-item">
+          <span class="meta-label">Student ID</span>
+          <span class="meta-value font-mono">{{ rp.studentNumber || studentProfile()?.studentNumber || 'N/A' }}</span>
         </div>
-        <div class="dropout-risk-box">
-          <span class="card-section-label">Predicted Failure / Dropout Risk</span>
-          <div class="progress-bar-wrapper">
-            <p-progressBar [value]="rp.predictedDropoutProbability * 100" [showValue]="true" styleClass="dropout-progress-bar"></p-progressBar>
+        <div class="meta-divider"></div>
+        <div class="meta-item">
+          <span class="meta-label">Degree Program</span>
+          <span class="meta-value">{{ studentProfile()?.programCode || rp.programCode || 'N/A' }} — {{ studentProfile()?.programName || 'Curriculum Degree' }}</span>
+        </div>
+        <div class="meta-divider"></div>
+        <div class="meta-item">
+          <span class="meta-label">Year & Classification</span>
+          <span class="meta-value">Year {{ rp.yearLevel || studentProfile()?.yearLevel || 1 }} ({{ studentProfile()?.classification || 'Regular' }})</span>
+        </div>
+        <div class="meta-divider"></div>
+        <div class="meta-item">
+          <span class="meta-label">Cumulative GPA</span>
+          <span class="meta-value font-mono highlight-gpa">{{ studentProfile()?.cumulativeGpa ? (studentProfile()?.cumulativeGpa | number:'1.2-2') : '3.00' }}</span>
+        </div>
+        <div class="meta-divider"></div>
+        <div class="meta-item">
+          <span class="meta-label">Clearance</span>
+          <div class="clearance-tags">
+            <p-tag [value]="'Fin: ' + (studentProfile()?.financialClearance || 'CLEARED')" [severity]="studentProfile()?.financialClearance === 'PENDING' ? 'warn' : 'success'"></p-tag>
+            <p-tag [value]="'Dept: ' + (studentProfile()?.departmentalClearance || 'CLEARED')" [severity]="studentProfile()?.departmentalClearance === 'PENDING' ? 'warn' : 'success'"></p-tag>
           </div>
         </div>
       </div>
 
-      <!-- Vector Scores -->
-      <div class="vector-scores-card">
-        <h3 class="card-section-title">Multi-Vector Risk Diagnostics</h3>
-        <div class="vector-item">
-          <div class="vector-label-row">
-            <span class="vector-name">Academic Deficit Risk</span>
-            <span class="vector-score-val">{{ rp.academicRiskScore }} / 100</span>
+      <!-- Core Student Health Cards -->
+      <div class="student-overview-grid">
+        <!-- Standing & Retention Card -->
+        <div class="student-status-card">
+          <div class="status-card-header">
+            <span class="card-section-label">Academic Progress & Twin Health</span>
+            <div class="status-tag-row">
+              <p-tag [value]="getStudentStatusLabel(rp.compositeRiskLevel)" [severity]="getRiskSeverity(rp.compositeRiskLevel)" styleClass="status-pill-large"></p-tag>
+              <span class="evaluation-date">Updated {{ rp.evaluatedAt | date:'medium' }}</span>
+            </div>
           </div>
-          <p-progressBar [value]="rp.academicRiskScore" [showValue]="false" styleClass="vector-progress-bar"></p-progressBar>
+          <div class="retention-metric-box">
+            <div class="retention-label-row">
+              <span class="retention-title">Projected Completion / Retention Rate</span>
+              <span class="retention-percentage">{{ retentionRate() }}%</span>
+            </div>
+            <p-progressBar [value]="retentionRate()" [showValue]="false" styleClass="retention-progress-bar"></p-progressBar>
+            <p class="retention-hint">
+              <i class="pi pi-info-circle"></i>
+              Calculated dynamically from verified classroom attendance, course gradebook telemetry, and statutory indicators.
+            </p>
+          </div>
         </div>
-        <div class="vector-item">
-          <div class="vector-label-row">
-            <span class="vector-name">Attendance Absenteeism Risk</span>
-            <span class="vector-score-val">{{ rp.attendanceRiskScore }} / 100</span>
+
+        <!-- Multi-Vector Dimensions Grid -->
+        <div class="student-dimensions-grid">
+          <!-- Academic Mastery -->
+          <div class="dimension-card">
+            <div class="dimension-header">
+              <div class="dimension-icon-box academic-icon">
+                <i class="pi pi-book"></i>
+              </div>
+              <div class="dimension-titles">
+                <span class="dimension-label">Academic Mastery (50%)</span>
+                <span class="dimension-score">{{ academicHealthScore() }} / 100</span>
+              </div>
+            </div>
+            <p-progressBar [value]="academicHealthScore()" [showValue]="false" styleClass="dimension-progress-bar"></p-progressBar>
+            <div class="dimension-footer">
+              <span class="risk-deficit-note">Risk Factor: {{ rp.academicRiskScore }}%</span>
+              <span class="dimension-hint">GPA & retake metrics</span>
+            </div>
           </div>
-          <p-progressBar [value]="rp.attendanceRiskScore" [showValue]="false" styleClass="vector-progress-bar"></p-progressBar>
-        </div>
-        <div class="vector-item">
-          <div class="vector-label-row">
-            <span class="vector-name">Socioeconomic Vulnerability (RA 10931)</span>
-            <span class="vector-score-val">{{ rp.socioeconomicRiskScore }} / 100</span>
+
+          <!-- Attendance Telemetry -->
+          <div class="dimension-card">
+            <div class="dimension-header">
+              <div class="dimension-icon-box attendance-icon">
+                <i class="pi pi-calendar-check"></i>
+              </div>
+              <div class="dimension-titles">
+                <span class="dimension-label">Attendance Engagement (30%)</span>
+                <span class="dimension-score">{{ attendanceHealthScore() }} / 100</span>
+              </div>
+            </div>
+            <p-progressBar [value]="attendanceHealthScore()" [showValue]="false" styleClass="dimension-progress-bar attendance-bar"></p-progressBar>
+            <div class="dimension-footer">
+              <span class="risk-deficit-note">Risk Factor: {{ rp.attendanceRiskScore }}%</span>
+              <span class="dimension-hint">Geofenced QR scans</span>
+            </div>
           </div>
-          <p-progressBar [value]="rp.socioeconomicRiskScore" [showValue]="false" styleClass="vector-progress-bar"></p-progressBar>
+
+          <!-- Statutory Equity Support -->
+          <div class="dimension-card">
+            <div class="dimension-header">
+              <div class="dimension-icon-box equity-icon">
+                <i class="pi pi-heart"></i>
+              </div>
+              <div class="dimension-titles">
+                <span class="dimension-label">Statutory Support Index (20%)</span>
+                <span class="dimension-score">{{ rp.socioeconomicRiskScore }} / 100</span>
+              </div>
+            </div>
+            <p-progressBar [value]="rp.socioeconomicRiskScore" [showValue]="false" styleClass="dimension-progress-bar equity-bar"></p-progressBar>
+            <div class="dimension-footer">
+              <span class="risk-deficit-note">RA 10931 Coverage</span>
+              <span class="dimension-hint">Free Higher Ed / TES</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Recommended Interventions -->
-      <div class="interventions-card">
-        <h3 class="card-section-title flex-title">
-          <i class="pi pi-compass icon-interventions"></i> Dispatched AI Interventions
-        </h3>
-        <ul class="interventions-list">
-          @for (rec of rp.recommendedInterventions; track rec) {
-            <li class="intervention-item">
-              <i class="pi pi-check-circle icon-check"></i>
-              <span>{{ rec }}</span>
-            </li>
-          }
-        </ul>
+      <!-- Dynamic Activity Review Recommendations (Low/Failing Assessment Scores) -->
+      @if (rp.activityAlerts && rp.activityAlerts.length > 0) {
+        <div class="activity-alerts-container">
+          <div class="activity-alerts-header">
+            <div class="activity-alerts-title-wrap">
+              <i class="pi pi-exclamation-circle activity-alert-main-icon"></i>
+              <div>
+                <h4 class="activity-alerts-title">Curriculum Activity Review Recommendations</h4>
+                <p class="activity-alerts-desc">
+                  Low or failing scores detected across your dynamic class record activities (< 75.0% passing threshold). Review these specific topics to boost your academic standing:
+                </p>
+              </div>
+            </div>
+            <span class="activity-alert-count-pill">{{ rp.activityAlerts.length }} Action Items</span>
+          </div>
+
+          <div class="activity-alerts-grid">
+            @for (alert of rp.activityAlerts; track alert.activityTitle) {
+              <div class="activity-alert-card">
+                <div class="activity-card-top">
+                  <span class="activity-category-tag">{{ alert.categoryName }}</span>
+                  <span class="activity-score-tag">{{ alert.scoreEarned }} / {{ alert.maxPoints }} ({{ alert.percentage }}%)</span>
+                </div>
+                <div class="activity-name">{{ alert.activityTitle }}</div>
+                <div class="activity-action-box">
+                  <i class="pi pi-lightbulb activity-bulb-icon"></i>
+                  <span class="activity-suggestion-label">{{ alert.suggestion }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Action Plan & Quick Navigation Row -->
+      <div class="student-bottom-grid">
+        <!-- Personalized Academic Action Plan -->
+        <div class="student-action-card">
+          <h3 class="card-section-title flex-title">
+            <i class="pi pi-sparkles icon-action-plan"></i> Your Personalized Academic Action Plan
+          </h3>
+          <p class="action-card-subtitle">
+            Proactive recommendations and institutional resources tailored to keep you ahead in your curriculum:
+          </p>
+
+          <ul class="action-items-list">
+            @for (rec of rp.recommendedInterventions; track rec) {
+              <li class="action-item">
+                <div class="action-bullet">
+                  <i class="pi pi-check"></i>
+                </div>
+                <div class="action-content">
+                  <span class="action-text">{{ rec }}</span>
+                  <span class="action-tag">Recommended Support</span>
+                </div>
+              </li>
+            } @empty {
+              <li class="action-item-empty">
+                <i class="pi pi-verified icon-optimal"></i>
+                <div class="empty-action-text">
+                  <strong>Optimal Standing!</strong> All telemetry vectors indicate strong academic progress. No immediate interventions required.
+                </div>
+              </li>
+            }
+          </ul>
+        </div>
+
+        <!-- Quick Services Hub -->
+        <div class="student-services-card">
+          <h3 class="card-section-title flex-title">
+            <i class="pi pi-th-large icon-services"></i> Quick Student Services
+          </h3>
+          <p class="action-card-subtitle">Instant access to core academic self-service tools:</p>
+
+          <div class="services-buttons-grid">
+            <a routerLink="/dashboard/analytics/qr-attendance" class="service-tile">
+              <div class="service-icon qr-tile"><i class="pi pi-qrcode"></i></div>
+              <div class="service-info">
+                <span class="service-name">QR Attendance</span>
+                <span class="service-desc">Scan session barcode</span>
+              </div>
+            </a>
+
+            <a routerLink="/dashboard/portal/student" class="service-tile">
+              <div class="service-icon portal-tile"><i class="pi pi-book"></i></div>
+              <div class="service-info">
+                <span class="service-name">Classes & Grades</span>
+                <span class="service-desc">View gradebook records</span>
+              </div>
+            </a>
+
+            <a routerLink="/dashboard/compliance/degree-audit" class="service-tile">
+              <div class="service-icon audit-tile"><i class="pi pi-graduation-cap"></i></div>
+              <div class="service-info">
+                <span class="service-name">Degree Audit</span>
+                <span class="service-desc">Curriculum requirements</span>
+              </div>
+            </a>
+
+            <a routerLink="/dashboard/finance/ledger" class="service-tile">
+              <div class="service-icon finance-tile"><i class="pi pi-wallet"></i></div>
+              <div class="service-info">
+                <span class="service-name">Student Ledger</span>
+                <span class="service-desc">UniFAST & tuition balance</span>
+              </div>
+            </a>
+          </div>
+        </div>
       </div>
-    </div>
+
+      <!-- Data Privacy Assurance Notice -->
+      <div class="privacy-notice-strip">
+        <i class="pi pi-shield privacy-icon"></i>
+        <span>
+          <strong>Data Privacy Notice (Republic Act No. 10173):</strong> Your Digital Twin Telemetry is securely processed exclusively to provide student retention assistance, guidance, and statutory welfare under RA 10931. Access is strictly governed by institutional privacy guidelines.
+        </span>
+      </div>
+
+    } @else {
+      <!-- ========================================================================= -->
+      <!-- INSTITUTIONAL / FACULTY / ADVISOR VIEW                                    -->
+      <!-- ========================================================================= -->
+      <div class="risk-cards-grid">
+        <div class="risk-overview-card">
+          <div>
+            <span class="card-section-label">Composite Risk Level</span>
+            <div class="risk-level-row">
+              <p-tag [value]="rp.compositeRiskLevel" [severity]="getRiskSeverity(rp.compositeRiskLevel)" styleClass="risk-tag"></p-tag>
+              <span class="evaluation-date">Evaluated {{ rp.evaluatedAt | date:'short' }}</span>
+            </div>
+          </div>
+          <div class="dropout-risk-box">
+            <span class="card-section-label">Predicted Failure / Dropout Risk</span>
+            <div class="progress-bar-wrapper">
+              <p-progressBar [value]="rp.predictedDropoutProbability * 100" [showValue]="true" styleClass="dropout-progress-bar"></p-progressBar>
+            </div>
+          </div>
+        </div>
+
+        <!-- Vector Scores -->
+        <div class="vector-scores-card">
+          <h3 class="card-section-title">Multi-Vector Risk Diagnostics</h3>
+          <div class="vector-item">
+            <div class="vector-label-row">
+              <span class="vector-name">Academic Deficit Risk</span>
+              <span class="vector-score-val">{{ rp.academicRiskScore }} / 100</span>
+            </div>
+            <p-progressBar [value]="rp.academicRiskScore" [showValue]="false" styleClass="vector-progress-bar"></p-progressBar>
+          </div>
+          <div class="vector-item">
+            <div class="vector-label-row">
+              <span class="vector-name">Attendance Absenteeism Risk</span>
+              <span class="vector-score-val">{{ rp.attendanceRiskScore }} / 100</span>
+            </div>
+            <p-progressBar [value]="rp.attendanceRiskScore" [showValue]="false" styleClass="vector-progress-bar"></p-progressBar>
+          </div>
+          <div class="vector-item">
+            <div class="vector-label-row">
+              <span class="vector-name">Socioeconomic Vulnerability (RA 10931)</span>
+              <span class="vector-score-val">{{ rp.socioeconomicRiskScore }} / 100</span>
+            </div>
+            <p-progressBar [value]="rp.socioeconomicRiskScore" [showValue]="false" styleClass="vector-progress-bar"></p-progressBar>
+          </div>
+        </div>
+
+        <!-- Recommended Interventions -->
+        <div class="interventions-card">
+          <h3 class="card-section-title flex-title">
+            <i class="pi pi-compass icon-interventions"></i> Dispatched AI Interventions
+          </h3>
+          <ul class="interventions-list">
+            @for (rec of rp.recommendedInterventions; track rec) {
+              <li class="intervention-item">
+                <i class="pi pi-check-circle icon-check"></i>
+                <span>{{ rec }}</span>
+              </li>
+            } @empty {
+              <li class="intervention-item">
+                <i class="pi pi-info-circle"></i>
+                <span>No active interventions triggered for this student.</span>
+              </li>
+            }
+          </ul>
+        </div>
+
+        <!-- Activity Alerts & Review Targets for Advisors -->
+        @if (rp.activityAlerts && rp.activityAlerts.length > 0) {
+          <div class="advisor-activity-card">
+            <h3 class="card-section-title flex-title">
+              <i class="pi pi-file-edit" style="color: #ea580c;"></i> Low-Scoring Activities & Targeted Review Actions
+            </h3>
+            <p class="action-card-subtitle">Detailed breakdown of assessments below the 75% passing mark from the dynamic class record:</p>
+            <div class="activity-alerts-grid">
+              @for (alert of rp.activityAlerts; track alert.activityTitle) {
+                <div class="activity-alert-card">
+                  <div class="activity-card-top">
+                    <span class="activity-category-tag">{{ alert.categoryName }}</span>
+                    <span class="activity-score-tag">{{ alert.scoreEarned }} / {{ alert.maxPoints }} ({{ alert.percentage }}%)</span>
+                  </div>
+                  <div class="activity-name">{{ alert.activityTitle }}</div>
+                  <div class="activity-action-box">
+                    <i class="pi pi-lightbulb activity-bulb-icon"></i>
+                    <span class="activity-suggestion-label">{{ alert.suggestion }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+
   }
 </div>

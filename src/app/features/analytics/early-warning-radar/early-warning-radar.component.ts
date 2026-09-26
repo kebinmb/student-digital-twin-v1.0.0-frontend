@@ -1,15 +1,24 @@
 import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
+import { SkeletonModule } from 'primeng/skeleton';
+import { DrawerModule } from 'primeng/drawer';
+import { DialogModule } from 'primeng/dialog';
+import { SelectModule } from 'primeng/select';
+import { TextareaModule } from 'primeng/textarea';
+import { ProgressBarModule } from 'primeng/progressbar';
 import { MessageService } from 'primeng/api';
 
 import { AnalyticsApiService } from '../../../core/service/analytics/analytics-api.service';
-import { EarlyWarningRadarItemDto } from '../../../core/models/analytics.model';
-
-import { SkeletonModule } from 'primeng/skeleton';
+import {
+  EarlyWarningRadarItemDto,
+  DigitalTwinRiskProfileDto,
+  StudentInterventionDto
+} from '../../../core/models/analytics.model';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 
 @Component({
@@ -17,11 +26,17 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     TableModule,
     ButtonModule,
     TagModule,
     ToastModule,
     SkeletonModule,
+    DrawerModule,
+    DialogModule,
+    SelectModule,
+    TextareaModule,
+    ProgressBarModule,
     EmptyStateComponent
   ],
   templateUrl: './early-warning-radar.component.html',
@@ -32,44 +47,30 @@ export class EarlyWarningRadarComponent implements OnInit {
   private readonly analyticsApi = inject(AnalyticsApiService);
   private readonly messageService = inject(MessageService);
 
-  readonly defaultRadarItems: EarlyWarningRadarItemDto[] = [
-    {
-      studentId: 101,
-      studentNumber: '2023-00101',
-      studentName: 'Juan Dela Cruz',
-      programCode: 'BSCS',
-      yearLevel: 3,
-      riskLevel: 'CRITICAL',
-      dropoutProbability: 0.78,
-      primaryRiskFactor: 'Attendance & Midterm Grade Deficit',
-      suggestedAction: 'Schedule Academic Counseling & Peer Tutoring'
-    },
-    {
-      studentId: 102,
-      studentNumber: '2023-00142',
-      studentName: 'Maria Clara Santos',
-      programCode: 'BSIT',
-      yearLevel: 2,
-      riskLevel: 'HIGH',
-      dropoutProbability: 0.54,
-      primaryRiskFactor: 'Low Quiz & Lab Performance',
-      suggestedAction: 'Faculty Remedial Session Required'
-    },
-    {
-      studentId: 103,
-      studentNumber: '2024-00215',
-      studentName: 'Jose Rizal Mercado',
-      programCode: 'BSIS',
-      yearLevel: 4,
-      riskLevel: 'MODERATE',
-      dropoutProbability: 0.32,
-      primaryRiskFactor: 'Unsettled Tuition Balance',
-      suggestedAction: 'Refer to Student Finance & Scholarship Office'
-    }
-  ];
-
-  readonly radarItems = signal<EarlyWarningRadarItemDto[]>(this.defaultRadarItems);
+  readonly radarItems = signal<EarlyWarningRadarItemDto[]>([]);
   readonly isLoading = signal<boolean>(false);
+
+  // Detail Drawer state
+  readonly isDetailDrawerOpen = signal<boolean>(false);
+  readonly selectedStudent = signal<EarlyWarningRadarItemDto | null>(null);
+  readonly selectedRiskProfile = signal<DigitalTwinRiskProfileDto | null>(null);
+  readonly isLoadingProfile = signal<boolean>(false);
+  readonly studentInterventions = signal<StudentInterventionDto[]>([]);
+
+  // Dispatch Case Modal state
+  readonly isDispatchModalOpen = signal<boolean>(false);
+  readonly targetStudent = signal<EarlyWarningRadarItemDto | null>(null);
+  readonly selectedInterventionType = signal<string>('ACADEMIC_TUTORING');
+  readonly counselorNotes = signal<string>('');
+  readonly isDispatching = signal<boolean>(false);
+
+  readonly interventionTypeOptions = [
+    { label: 'Academic Tutoring & Remediation', value: 'ACADEMIC_TUTORING' },
+    { label: 'Attendance Advisory Conference', value: 'ATTENDANCE_CONFERENCE' },
+    { label: 'UniFAST / Financial Emergency Subsidy', value: 'FINANCIAL_SUBSIDY_AID' },
+    { label: 'Guidance & Psychosocial Counseling', value: 'GUIDANCE_COUNSELING' },
+    { label: 'Peer Mentoring Session', value: 'PEER_MENTORING' }
+  ];
 
   ngOnInit(): void {
     this.loadRadar();
@@ -79,25 +80,96 @@ export class EarlyWarningRadarComponent implements OnInit {
     this.isLoading.set(true);
     this.analyticsApi.getEarlyWarningRadar().subscribe({
       next: (items) => {
-        if (items && items.length > 0) {
-          this.radarItems.set(items);
-        } else {
-          this.radarItems.set(this.defaultRadarItems);
-        }
+        // Enforce uniqueness by studentId, ensuring no duplicate student rows appear on radar
+        const uniqueItems = Array.from(
+          new Map((items || []).map(item => [item.studentId, item])).values()
+        );
+        this.radarItems.set(uniqueItems);
         this.isLoading.set(false);
       },
       error: () => {
-        this.radarItems.set(this.defaultRadarItems);
+        this.radarItems.set([]);
         this.isLoading.set(false);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Radar Ingestion Error',
+          detail: 'Unable to fetch early warning telemetry roster from backend.'
+        });
       }
     });
   }
 
-  dispatchIntervention(studentName: string): void {
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Intervention Dispatched',
-      detail: `Academic guidance counselor intervention notification dispatched for ${studentName}.`
+  openDetail(item: EarlyWarningRadarItemDto): void {
+    this.selectedStudent.set(item);
+    this.isDetailDrawerOpen.set(true);
+    this.isLoadingProfile.set(true);
+    this.selectedRiskProfile.set(null);
+
+    this.analyticsApi.getStudentRiskProfile(item.studentId).subscribe({
+      next: (profile) => {
+        this.selectedRiskProfile.set(profile);
+        this.isLoadingProfile.set(false);
+      },
+      error: () => {
+        this.isLoadingProfile.set(false);
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Profile Telemetry Unavailable',
+          detail: `Could not retrieve detailed risk metrics for student #${item.studentNumber}`
+        });
+      }
+    });
+
+    this.analyticsApi.getStudentInterventions(item.studentId).subscribe({
+      next: (interventions) => {
+        this.studentInterventions.set(interventions || []);
+      },
+      error: () => {
+        this.studentInterventions.set([]);
+      }
+    });
+  }
+
+  openDispatchModal(item: EarlyWarningRadarItemDto): void {
+    this.targetStudent.set(item);
+    this.selectedInterventionType.set('ACADEMIC_TUTORING');
+    this.counselorNotes.set(item.suggestedAction || '');
+    this.isDispatchModalOpen.set(true);
+  }
+
+  confirmDispatch(): void {
+    const student = this.targetStudent();
+    if (!student) return;
+
+    this.isDispatching.set(true);
+    this.analyticsApi.dispatchIntervention({
+      studentId: student.studentId,
+      interventionType: this.selectedInterventionType(),
+      triggerFactor: student.primaryRiskFactor || 'Early Warning Radar Alert',
+      notes: this.counselorNotes()
+    }).subscribe({
+      next: (savedCase) => {
+        this.isDispatching.set(false);
+        this.isDispatchModalOpen.set(false);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Intervention Dispatched',
+          detail: `Case #${savedCase.id} created for ${student.studentName}. Status: ${savedCase.status}`
+        });
+        if (this.selectedStudent()?.studentId === student.studentId) {
+          this.analyticsApi.getStudentInterventions(student.studentId).subscribe(list => {
+            this.studentInterventions.set(list || []);
+          });
+        }
+      },
+      error: (err) => {
+        this.isDispatching.set(false);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Dispatch Failed',
+          detail: err?.error?.detail || 'Could not record intervention case.'
+        });
+      }
     });
   }
 
