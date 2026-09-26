@@ -31,7 +31,7 @@
   <div class="audit-filter-card">
     <div class="audit-filter-grid">
       @if (!isStudentRole()) {
-        <div class="filter-col flex-1 min-w-[280px]">
+        <div class="filter-col">
           <label class="form-label" for="studentSelect">
             Select Student Profile
             <span class="required-star">*</span>
@@ -51,23 +51,23 @@
           >
             <ng-template pTemplate="selectedItem" let-selected>
               @if (selected) {
-                <div class="flex items-center gap-2">
-                  <i class="pi pi-user text-emerald-700"></i>
-                  <span class="font-semibold text-slate-800">{{ selected.fullName }}</span>
-                  <span class="font-mono text-xs text-slate-500">({{ selected.studentIdNumber }})</span>
-                  <p-tag [value]="selected.programCode" severity="info" styleClass="text-xs"></p-tag>
+                <div class="student-select-item">
+                  <i class="pi pi-user icon-green"></i>
+                  <span class="student-select-name">{{ selected.fullName }}</span>
+                  <span class="student-select-id font-mono">({{ selected.studentIdNumber }})</span>
+                  <p-tag [value]="selected.programCode" severity="info" size="small"></p-tag>
                 </div>
               }
             </ng-template>
             <ng-template pTemplate="item" let-item>
-              <div class="flex flex-col py-1">
-                <div class="flex items-center justify-between">
-                  <span class="font-semibold text-slate-800">{{ item.fullName }}</span>
-                  <span class="font-mono text-xs text-slate-500">{{ item.studentIdNumber }}</span>
+              <div class="student-option-block">
+                <div class="student-option-row">
+                  <span class="student-select-name">{{ item.fullName }}</span>
+                  <span class="student-select-id font-mono">{{ item.studentIdNumber }}</span>
                 </div>
-                <div class="flex items-center gap-2 mt-1">
-                  <p-tag [value]="item.programCode" severity="secondary" styleClass="text-xs"></p-tag>
-                  <span class="text-xs text-slate-400">• {{ item.academicStatus }}</span>
+                <div class="student-option-sub">
+                  <p-tag [value]="item.programCode" severity="secondary" size="small"></p-tag>
+                  <span class="status-subtext">&bull; {{ item.academicStatus }}</span>
                 </div>
               </div>
             </ng-template>
@@ -75,7 +75,7 @@
         </div>
       }
 
-      <div class="filter-col flex-1 min-w-[240px]">
+      <div class="filter-col">
         <label class="form-label" for="termSelect">
           Graduation Academic Term
           <span class="required-star">*</span>
@@ -91,7 +91,7 @@
         />
       </div>
 
-      <div class="filter-col actions-col flex items-end gap-2">
+      <div class="filter-col actions-col">
         <p-button
           label="Re-evaluate Audit"
           icon="pi pi-shield"
@@ -223,7 +223,7 @@
             </ng-template>
             <ng-template pTemplate="emptymessage">
               <tr>
-                <td colspan="5" class="text-center py-4 text-slate-500">
+                <td colspan="5" class="text-center empty-matrix-text">
                   No courses recorded in curriculum audit.
                 </td>
               </tr>

@@ -18,26 +18,26 @@
     <div class="student-locked-profile-card">
       <div class="locked-profile-header">
         <div class="locked-icon-badge">
-          <i class="pi pi-lock text-emerald-700"></i>
+          <i class="pi pi-lock field-label-icon"></i>
         </div>
         <div class="locked-profile-info">
-          <div class="flex align-items-center gap-2 flex-wrap mb-1">
-            <span class="student-name font-bold text-base text-slate-800">{{ currentStudentProfile()?.username || 'Enrolled Student' }}</span>
+          <div class="student-profile-tags">
+            <span class="student-profile-name">{{ currentStudentProfile()?.username || 'Enrolled Student' }}</span>
             <p-tag [value]="'Student No: ' + (currentStudentProfile()?.studentNumber || 'Loading...')" severity="info"></p-tag>
             <p-tag [value]="currentStudentProfile()?.programCode || 'BSIT'" severity="secondary"></p-tag>
             <p-tag [value]="'Year ' + (currentStudentProfile()?.yearLevel || '1')" severity="secondary"></p-tag>
             <p-tag [value]="'Clearance: ' + (currentStudentProfile()?.financialClearance || 'CLEARED')" severity="success"></p-tag>
           </div>
-          <p class="locked-security-note text-xs text-slate-500 m-0">
-            <i class="pi pi-shield mr-1 text-emerald-600"></i>
+          <p class="locked-security-note">
+            <i class="pi pi-shield security-icon"></i>
             Authenticated Student Account (Multi-Tenant Isolation enforced under RA 10173 & SDT RBAC). Account view is strictly locked to your records.
           </p>
         </div>
       </div>
       @if (availableTerms().length > 0) {
-        <div class="term-picker-row flex align-items-center gap-2 mt-3 pt-2 border-top-1 surface-border">
-          <label class="text-xs font-bold text-slate-600 flex align-items-center gap-1">
-            <i class="pi pi-calendar text-emerald-700"></i> Academic Term Filter:
+        <div class="term-picker-row">
+          <label class="term-picker-label">
+            <i class="pi pi-calendar field-label-icon"></i> Academic Term Filter:
           </label>
           <p-select 
             [options]="availableTerms()" 
@@ -57,8 +57,8 @@
       <!-- Card 1: Assess Student Tuition Fee -->
       <div class="action-card assess-card" *hasRole="['ADMIN', 'ACCOUNTANT', 'REGISTRAR', 'CASHIER']">
         <div class="action-card-header">
-          <div class="card-header-icon-box bg-emerald-50 text-emerald-700">
-            <i class="pi pi-calculator text-lg"></i>
+          <div class="card-header-icon-box assess-icon">
+            <i class="pi pi-calculator"></i>
           </div>
           <div class="card-header-titles">
             <h3 class="action-card-title">Assess Student Tuition Fee</h3>
@@ -70,7 +70,7 @@
           <!-- Student Search Dropdown -->
           <div class="form-field-group">
             <label class="field-label" for="assess-student-select">
-              <i class="pi pi-user text-emerald-700"></i> Student Record (ID / Last Name / First Name)
+              <i class="pi pi-user field-label-icon"></i> Student Record (ID / Last Name / First Name)
             </label>
             <p-select 
               id="assess-student-select" 
@@ -88,25 +88,25 @@
               styleClass="w-full">
               <ng-template #selectedItem let-selectedOption>
                 @if (selectedOption) {
-                  <div class="flex align-items-center gap-2 overflow-hidden text-overflow-ellipsis white-space-nowrap">
-                    <i class="pi pi-user text-emerald-700 text-xs shrink-0"></i>
-                    <span class="font-semibold text-xs text-slate-800 truncate">{{ selectedOption.fullName }}</span>
-                    <span class="text-xs text-slate-500 font-mono shrink-0">({{ selectedOption.studentIdNumber }})</span>
-                    <p-tag [value]="selectedOption.programCode" severity="info" styleClass="text-xs px-1.5 py-0 shrink-0"></p-tag>
+                  <div class="student-selected-item">
+                    <i class="pi pi-user field-label-icon student-item-icon"></i>
+                    <span class="student-item-name">{{ selectedOption.fullName }}</span>
+                    <span class="student-item-sn">({{ selectedOption.studentIdNumber }})</span>
+                    <p-tag [value]="selectedOption.programCode" severity="info" styleClass="student-item-tag"></p-tag>
                   </div>
                 } @else {
-                  <span class="text-slate-400 text-xs">Select student to assess...</span>
+                  <span class="student-placeholder-text">Select student to assess...</span>
                 }
               </ng-template>
               <ng-template #item let-student>
-                <div class="student-dropdown-option py-1 w-full">
-                  <div class="flex justify-content-between align-items-center">
-                    <span class="font-bold text-sm text-slate-800">{{ student.fullName }}</span>
+                <div class="student-dropdown-option">
+                  <div class="student-option-header">
+                    <span class="student-option-name">{{ student.fullName }}</span>
                     <p-tag [value]="student.programCode + (student.yearLevel ? ' • Yr ' + student.yearLevel : '')" severity="secondary" styleClass="text-xs"></p-tag>
                   </div>
-                  <div class="flex justify-content-between align-items-center text-xs text-slate-500 mt-1">
-                    <span class="font-mono">SN: <strong class="text-slate-700">{{ student.studentIdNumber }}</strong></span>
-                    <span class="text-slate-600 font-medium">{{ student.academicStatus }}</span>
+                  <div class="student-option-meta">
+                    <span class="student-option-sn">SN: <strong>{{ student.studentIdNumber }}</strong></span>
+                    <span class="student-option-status">{{ student.academicStatus }}</span>
                   </div>
                 </div>
               </ng-template>
@@ -115,31 +115,31 @@
 
           <!-- Enrollment Status Context Pill -->
           @if (isResolvingEnrollment()) {
-            <div class="enrollment-status-pill resolving-state flex align-items-center gap-2">
-              <i class="pi pi-spin pi-spinner text-emerald-600"></i>
-              <span class="text-xs text-slate-600">Resolving student term enrollment...</span>
+            <div class="enrollment-status-pill resolving-state">
+              <i class="pi pi-spin pi-spinner form-label-icon"></i>
+              <span>Resolving student term enrollment...</span>
             </div>
           } @else if (assessEnrollment(); as enrollment) {
-            <div class="enrollment-status-pill resolved-state flex align-items-center justify-content-between">
-              <div class="flex align-items-center gap-2 text-xs flex-wrap">
-                <i class="pi pi-check-circle text-emerald-700 font-bold"></i>
+            <div class="enrollment-status-pill resolved-state">
+              <div class="resolved-info-row">
+                <i class="pi pi-check-circle form-label-icon font-bold"></i>
                 <span>Enrollment <strong>#{{ enrollment.enrollmentId }}</strong></span>
-                <span class="text-slate-400">|</span>
+                <span class="divider-dot">|</span>
                 <span>{{ enrollment.totalCreditUnits }} Units</span>
-                <span class="text-slate-400">|</span>
+                <span class="divider-dot">|</span>
                 <p-tag [value]="enrollment.status" [severity]="enrollment.status === 'ASSESSED' ? 'success' : (enrollment.status === 'ENLISTED' ? 'info' : 'warn')" styleClass="text-xs px-1.5 py-0"></p-tag>
               </div>
-              <span class="text-xs font-mono text-slate-500">{{ enrollment.termName }}</span>
+              <span class="resolved-term-name">{{ enrollment.termName }}</span>
             </div>
           } @else if (assessStudentId() && !isResolvingEnrollment()) {
-            <div class="enrollment-status-pill empty-state-pill flex align-items-center gap-2">
-              <i class="pi pi-exclamation-circle text-amber-700"></i>
-              <span class="text-xs text-amber-800">No active enlistment record for this term. Student must enlist courses first.</span>
+            <div class="enrollment-status-pill empty-state-pill">
+              <i class="pi pi-exclamation-circle text-warning"></i>
+              <span class="text-warning">No active enlistment record for this term. Student must enlist courses first.</span>
             </div>
           }
 
           <!-- Assessment Trigger & Fallback Manual Input -->
-          <div class="action-footer-row flex align-items-center gap-2 mt-auto pt-2">
+          <div class="action-footer-row">
             @if (!manualEnrollmentMode()) {
               <p-button 
                 label="Assess Tuition" 
@@ -152,13 +152,13 @@
               </p-button>
               <button 
                 type="button" 
-                class="p-button p-button-text p-button-sm text-slate-500 text-xs white-space-nowrap" 
+                class="manual-id-btn" 
                 pTooltip="Enter Enrollment ID manually"
                 (click)="toggleManualEnrollmentMode()">
-                <i class="pi pi-pencil mr-1"></i> Manual ID
+                <i class="pi pi-pencil"></i> Manual ID
               </button>
             } @else {
-              <div class="flex align-items-center gap-2 w-full">
+              <div class="manual-input-box">
                 <p-inputNumber 
                   [(ngModel)]="assessEnrollmentId" 
                   placeholder="Enrollment ID" 
@@ -189,8 +189,8 @@
       <!-- Card 2: Query Student Financial Ledger -->
       <div class="action-card query-card">
         <div class="action-card-header">
-          <div class="card-header-icon-box bg-blue-50 text-blue-700">
-            <i class="pi pi-book text-lg"></i>
+          <div class="card-header-icon-box query-icon">
+            <i class="pi pi-book"></i>
           </div>
           <div class="card-header-titles">
             <h3 class="action-card-title">Query Student Financial Ledger</h3>
@@ -202,7 +202,7 @@
           <!-- Student Search Dropdown -->
           <div class="form-field-group">
             <label class="field-label" for="ledger-student-select">
-              <i class="pi pi-user text-emerald-700"></i> Student Record (ID / Last Name / First Name)
+              <i class="pi pi-user field-label-icon"></i> Student Record (ID / Last Name / First Name)
             </label>
             <p-select 
               id="ledger-student-select" 
@@ -220,25 +220,25 @@
               styleClass="w-full">
               <ng-template #selectedItem let-selectedOption>
                 @if (selectedOption) {
-                  <div class="flex align-items-center gap-2 overflow-hidden text-overflow-ellipsis white-space-nowrap">
-                    <i class="pi pi-user text-emerald-700 text-xs shrink-0"></i>
-                    <span class="font-semibold text-xs text-slate-800 truncate">{{ selectedOption.fullName }}</span>
-                    <span class="text-xs text-slate-500 font-mono shrink-0">({{ selectedOption.studentIdNumber }})</span>
-                    <p-tag [value]="selectedOption.programCode" severity="info" styleClass="text-xs px-1.5 py-0 shrink-0"></p-tag>
+                  <div class="student-selected-item">
+                    <i class="pi pi-user field-label-icon student-item-icon"></i>
+                    <span class="student-item-name">{{ selectedOption.fullName }}</span>
+                    <span class="student-item-sn">({{ selectedOption.studentIdNumber }})</span>
+                    <p-tag [value]="selectedOption.programCode" severity="info" styleClass="student-item-tag"></p-tag>
                   </div>
                 } @else {
-                  <span class="text-slate-400 text-xs">Search student name or ID number...</span>
+                  <span class="student-placeholder-text">Search student name or ID number...</span>
                 }
               </ng-template>
               <ng-template #item let-student>
-                <div class="student-dropdown-option py-1 w-full">
-                  <div class="flex justify-content-between align-items-center">
-                    <span class="font-bold text-sm text-slate-800">{{ student.fullName }}</span>
+                <div class="student-dropdown-option">
+                  <div class="student-option-header">
+                    <span class="student-option-name">{{ student.fullName }}</span>
                     <p-tag [value]="student.programCode + (student.yearLevel ? ' • Yr ' + student.yearLevel : '')" severity="secondary" styleClass="text-xs"></p-tag>
                   </div>
-                  <div class="flex justify-content-between align-items-center text-xs text-slate-500 mt-1">
-                    <span class="font-mono">SN: <strong class="text-slate-700">{{ student.studentIdNumber }}</strong></span>
-                    <span class="text-slate-600 font-medium">{{ student.academicStatus }}</span>
+                  <div class="student-option-meta">
+                    <span class="student-option-sn">SN: <strong>{{ student.studentIdNumber }}</strong></span>
+                    <span class="student-option-status">{{ student.academicStatus }}</span>
                   </div>
                 </div>
               </ng-template>
@@ -249,7 +249,7 @@
           <div class="term-and-action-row">
             <div class="term-picker-box">
               <label class="field-label" for="query-term-select">
-                <i class="pi pi-calendar text-emerald-700"></i> Academic Term Filter
+                <i class="pi pi-calendar field-label-icon"></i> Academic Term Filter
               </label>
               <p-select 
                 id="query-term-select"

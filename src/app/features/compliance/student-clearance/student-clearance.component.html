@@ -25,7 +25,7 @@
         <h3 class="filter-title">Lookup Student Record</h3>
       </div>
       <div class="active-term-pill">
-        <i class="pi pi-calendar-clock text-emerald-700"></i>
+        <i class="pi pi-calendar-clock form-label-icon"></i>
         <span class="term-pill-label">Active Term:</span>
         <span class="term-pill-val font-mono">{{ activeTermDisplay() }}</span>
         <span class="term-pill-lock" pTooltip="Term configuration locked by institutional policy" tooltipPosition="bottom">
@@ -45,12 +45,12 @@
         @if (isStudentUser()) {
           <div class="identity-card-readonly">
             <div class="identity-avatar">
-              <i class="pi pi-user text-emerald-800"></i>
+              <i class="pi pi-user form-label-icon"></i>
             </div>
             <div class="identity-details">
               <span class="identity-name font-mono">{{ searchStudentNumber }}</span>
               <span class="identity-meta">
-                <i class="pi pi-shield text-xs mr-1 text-emerald-700"></i>Authenticated Student Session
+                <i class="pi pi-shield security-icon"></i>Authenticated Student Session
               </span>
             </div>
           </div>
@@ -70,7 +70,7 @@
             <ng-template pTemplate="selectedItem" let-selected>
               @if (selected) {
                 <div class="select-item-selected">
-                  <i class="pi pi-user text-emerald-700 mr-2 text-sm"></i>
+                  <i class="pi pi-user form-label-icon mr-2 text-sm"></i>
                   <span class="font-semibold-navy">{{ selected.suggestion?.studentName || selected.label }}</span>
                   <span class="code-badge ml-2 font-mono">{{ selected.value }}</span>
                 </div>
@@ -80,7 +80,7 @@
             <ng-template pTemplate="item" let-item>
               <div class="suggestion-item-row">
                 <div class="suggestion-avatar">
-                  <i class="pi pi-id-card text-slate-500"></i>
+                  <i class="pi pi-id-card suggestion-icon"></i>
                 </div>
                 <div class="suggestion-text">
                   <span class="suggestion-name">{{ item.suggestion.studentName }}</span>
@@ -117,14 +117,14 @@
           <ng-template pTemplate="selectedItem" let-selected>
             @if (selected) {
               <div class="purpose-pill">
-                <i [class]="selected.icon + ' text-emerald-700 mr-2 text-sm'"></i>
+                <i [class]="selected.icon + ' form-label-icon mr-2 text-sm'"></i>
                 <span class="font-semibold-navy">{{ selected.label }}</span>
               </div>
             }
           </ng-template>
           <ng-template pTemplate="item" let-item>
             <div class="purpose-option-row">
-              <i [class]="item.icon + ' text-emerald-700 text-sm'"></i>
+              <i [class]="item.icon + ' form-label-icon text-sm'"></i>
               <span class="purpose-option-text">{{ item.label }}</span>
             </div>
           </ng-template>

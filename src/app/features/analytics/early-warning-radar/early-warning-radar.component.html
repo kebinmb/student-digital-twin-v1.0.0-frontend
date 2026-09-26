@@ -1,4 +1,6 @@
 <!-- File: src/app/features/analytics/early-warning-radar/early-warning-radar.component.html -->
+<p-toast></p-toast>
+
 <div class="radar-container">
   <!-- Institutional Sticky Header Toolbar -->
   <div class="radar-toolbar-card">
@@ -18,8 +20,8 @@
       </div>
     </div>
     <div class="header-actions-group">
-      <p-button label="Refresh Radar Roster" icon="pi pi-refresh" severity="secondary" [outlined]="true" (onClick)="loadRadar()"></p-button>
-      <p-button label="Export CSV" icon="pi pi-download" severity="success" (onClick)="exportRadarCsv()"></p-button>
+      <p-button label="Refresh Radar Roster" icon="pi pi-refresh" severity="secondary" [outlined]="true" size="small" (onClick)="loadRadar()"></p-button>
+      <p-button label="Export CSV" icon="pi pi-download" severity="success" size="small" (onClick)="exportRadarCsv()"></p-button>
     </div>
   </div>
 
@@ -47,10 +49,10 @@
             <p-tag [value]="item.riskLevel" [severity]="item.riskLevel === 'CRITICAL' ? 'danger' : (item.riskLevel === 'HIGH' ? 'warn' : 'info')"></p-tag>
           </td>
           <td class="dropout-prob-text text-center">{{ (item.dropoutProbability * 100) | number:'1.1-1' }}%</td>
-          <td class="driver-text text-sm text-surface-600">{{ item.primaryRiskFactor || 'General Academic Concern' }}</td>
+          <td class="driver-text">{{ item.primaryRiskFactor || 'General Academic Concern' }}</td>
           <td class="text-right">
             <div class="action-btn-group">
-              <p-button icon="pi pi-chart-line" severity="secondary" [outlined]="true" size="small" pTooltip="Inspect Multi-Vector Telemetry" (onClick)="openDetail(item)"></p-button>
+              <p-button icon="pi pi-chart-line" severity="secondary" [outlined]="true" [rounded]="true" [text]="true" size="small" pTooltip="Inspect Multi-Vector Telemetry" (onClick)="openDetail(item)"></p-button>
               <p-button label="Dispatch" icon="pi pi-send" severity="danger" size="small" (onClick)="openDispatchModal(item)"></p-button>
             </div>
           </td>
@@ -74,15 +76,15 @@
 </div>
 
 <!-- Multi-Vector Telemetry Drawer -->
-<p-drawer [(visible)]="isDetailDrawerOpen" position="right" [style]="{ width: '480px' }" header="Student Risk Telemetry">
+<p-drawer [(visible)]="isDetailDrawerOpen" position="right" [style]="{ width: '480px' }" styleClass="institutional-drawer" header="Student Risk Telemetry">
   @if (selectedStudent(); as student) {
     <div class="drawer-content flex flex-col gap-4">
-      <div class="p-3 bg-surface-50 dark:bg-surface-800 rounded-lg border border-surface-200 dark:border-surface-700">
+      <div class="drawer-profile-card">
         <div class="flex justify-between items-center mb-1">
-          <h3 class="font-bold text-lg m-0">{{ student.studentName }}</h3>
+          <h3 class="drawer-student-name">{{ student.studentName }}</h3>
           <p-tag [value]="student.riskLevel" [severity]="student.riskLevel === 'CRITICAL' ? 'danger' : 'warn'"></p-tag>
         </div>
-        <p class="text-xs text-surface-500 m-0">{{ student.studentNumber }} &bull; {{ student.programCode }} &bull; Year {{ student.yearLevel }}</p>
+        <p class="drawer-student-sub">{{ student.studentNumber }} &bull; {{ student.programCode }} &bull; Year {{ student.yearLevel }}</p>
       </div>
 
       <!-- Risk Vector Breakdown -->
@@ -90,41 +92,41 @@
         <p-skeleton width="100%" height="180px"></p-skeleton>
       } @else if (selectedRiskProfile(); as profile) {
         <div class="risk-vectors-card p-3 rounded-lg border border-surface-200 dark:border-surface-700 flex flex-col gap-3">
-          <h4 class="font-semibold text-sm m-0 text-surface-700 dark:text-surface-300">Multi-Vector Dimension Telemetry</h4>
+          <h4 class="vector-card-title">Multi-Vector Dimension Telemetry</h4>
 
           <div>
             <div class="flex justify-between text-xs mb-1">
               <span>Academic Dimension (GPA & In-Term)</span>
-              <span class="font-bold">{{ profile.academicRiskScore }}%</span>
+              <span class="font-mono font-bold">{{ profile.academicRiskScore }}%</span>
             </div>
-            <p-progressBar [value]="profile.academicRiskScore" [showValue]="false" [style]="{ height: '8px' }"></p-progressBar>
+            <p-progressBar [value]="profile.academicRiskScore" [showValue]="false" [style]="{ height: '6px' }"></p-progressBar>
           </div>
 
           <div>
             <div class="flex justify-between text-xs mb-1">
               <span>Attendance Dimension (Velocity & Absences)</span>
-              <span class="font-bold">{{ profile.attendanceRiskScore }}%</span>
+              <span class="font-mono font-bold">{{ profile.attendanceRiskScore }}%</span>
             </div>
-            <p-progressBar [value]="profile.attendanceRiskScore" [showValue]="false" [style]="{ height: '8px' }"></p-progressBar>
+            <p-progressBar [value]="profile.attendanceRiskScore" [showValue]="false" [style]="{ height: '6px' }"></p-progressBar>
           </div>
 
           <div>
             <div class="flex justify-between text-xs mb-1">
               <span>Socioeconomic Equity Dimension (UniFAST RA 10931)</span>
-              <span class="font-bold">{{ profile.socioeconomicRiskScore }}%</span>
+              <span class="font-mono font-bold">{{ profile.socioeconomicRiskScore }}%</span>
             </div>
-            <p-progressBar [value]="profile.socioeconomicRiskScore" [showValue]="false" [style]="{ height: '8px' }"></p-progressBar>
+            <p-progressBar [value]="profile.socioeconomicRiskScore" [showValue]="false" [style]="{ height: '6px' }"></p-progressBar>
           </div>
 
-          <div class="pt-2 border-t border-surface-200 dark:border-surface-700 flex justify-between items-center text-xs">
+          <div class="pt-2 border-t border-surface-200 flex justify-between items-center text-xs">
             <span>Predicted Dropout Risk:</span>
-            <span class="font-bold text-rose-600">{{ (profile.predictedDropoutProbability * 100) | number:'1.1-1' }}%</span>
+            <span class="font-mono font-bold text-rose-600">{{ (profile.predictedDropoutProbability * 100) | number:'1.1-1' }}%</span>
           </div>
         </div>
 
         <!-- Prescribed Interventions -->
         <div class="interventions-box">
-          <h4 class="font-semibold text-sm mb-2 text-surface-700 dark:text-surface-300">Recommended Action Plan</h4>
+          <h4 class="vector-card-title">Recommended Action Plan</h4>
           <ul class="intervention-list pl-4 m-0 text-xs text-surface-600 flex flex-col gap-1">
             @for (action of profile.recommendedInterventions; track action) {
               <li>{{ action }}</li>
@@ -135,16 +137,16 @@
 
       <!-- Case Management History -->
       <div class="cases-box mt-2">
-        <h4 class="font-semibold text-sm mb-2 text-surface-700 dark:text-surface-300">Closed-Loop Intervention Cases</h4>
+        <h4 class="vector-card-title">Closed-Loop Intervention Cases</h4>
         @if (studentInterventions().length === 0) {
           <p class="text-xs text-surface-500 italic">No formal intervention cases dispatched yet.</p>
         } @else {
           <div class="case-list flex flex-col gap-2">
             @for (c of studentInterventions(); track c.id) {
-              <div class="case-item p-2 rounded border border-surface-200 dark:border-surface-700 text-xs">
+              <div class="case-item p-2 rounded border border-surface-200 text-xs">
                 <div class="flex justify-between items-center mb-1">
-                  <span class="font-semibold">{{ c.interventionType }}</span>
-                  <p-tag [value]="c.status" [severity]="c.status === 'RESOLVED' ? 'success' : (c.status === 'IN_PROGRESS' ? 'info' : 'warn')"></p-tag>
+                  <span class="font-semibold">{{ humanizeInterventionType(c.interventionType) }}</span>
+                  <p-tag [value]="c.status" [severity]="c.status === 'RESOLVED' ? 'success' : (c.status === 'IN_PROGRESS' ? 'info' : 'warn')" size="small"></p-tag>
                 </div>
                 <p class="text-surface-500 m-0">{{ c.caseNotes || c.triggerFactor }}</p>
                 @if (c.resolutionSummary) {
@@ -156,9 +158,9 @@
         }
       </div>
 
-      <div class="flex justify-end gap-2 pt-4 mt-auto border-t border-surface-200">
-        <p-button label="Close" severity="secondary" [outlined]="true" (onClick)="isDetailDrawerOpen.set(false)"></p-button>
-        <p-button label="Dispatch New Case" icon="pi pi-send" severity="danger" (onClick)="openDispatchModal(student)"></p-button>
+      <div class="drawer-actions flex justify-end gap-2 pt-4 mt-auto border-t border-surface-200">
+        <p-button label="Close" severity="secondary" [outlined]="true" size="small" (onClick)="isDetailDrawerOpen.set(false)"></p-button>
+        <p-button label="Dispatch New Case" icon="pi pi-send" severity="danger" size="small" (onClick)="openDispatchModal(student)"></p-button>
       </div>
     </div>
   }
@@ -195,8 +197,8 @@
 
   <ng-template pTemplate="footer">
     <div class="flex justify-end gap-2">
-      <p-button label="Cancel" severity="secondary" [outlined]="true" (onClick)="isDispatchModalOpen.set(false)"></p-button>
-      <p-button label="Confirm & Dispatch" icon="pi pi-check" severity="danger" [loading]="isDispatching()" (onClick)="confirmDispatch()"></p-button>
+      <p-button label="Cancel" severity="secondary" [outlined]="true" size="small" (onClick)="isDispatchModalOpen.set(false)"></p-button>
+      <p-button label="Confirm & Dispatch" icon="pi pi-check" severity="danger" size="small" [loading]="isDispatching()" (onClick)="confirmDispatch()"></p-button>
     </div>
   </ng-template>
 </p-dialog>

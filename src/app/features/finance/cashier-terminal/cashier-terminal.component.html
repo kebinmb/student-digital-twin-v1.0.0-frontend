@@ -52,7 +52,7 @@
       <!-- 1. Searchable Student Profile Dropdown -->
       <div class="lookup-col student-col">
         <label class="form-label" for="cashier-student-select">
-          <i class="pi pi-user text-emerald-700"></i> Student Profile
+          <i class="pi pi-user form-label-icon"></i> Student Profile
         </label>
         <p-select 
           id="cashier-student-select" 
@@ -70,25 +70,25 @@
           styleClass="w-full">
           <ng-template #selectedItem let-selectedOption>
             @if (selectedOption) {
-              <div class="flex items-center gap-2 overflow-hidden text-ellipsis whitespace-nowrap">
-                <i class="pi pi-user text-emerald-700 text-xs shrink-0"></i>
-                <span class="font-semibold text-xs text-slate-800 truncate">{{ selectedOption.fullName }}</span>
-                <span class="text-xs text-slate-500 font-mono shrink-0">({{ selectedOption.studentIdNumber }})</span>
-                <p-tag [value]="selectedOption.programCode" severity="info" styleClass="text-xs px-1.5 py-0 shrink-0"></p-tag>
+              <div class="student-selected-item">
+                <i class="pi pi-user form-label-icon student-item-icon"></i>
+                <span class="student-item-name">{{ selectedOption.fullName }}</span>
+                <span class="student-item-sn">({{ selectedOption.studentIdNumber }})</span>
+                <p-tag [value]="selectedOption.programCode" severity="info" styleClass="student-item-tag"></p-tag>
               </div>
             } @else {
-              <span class="text-slate-400 text-xs">Search by student name, ID number, or program...</span>
+              <span class="student-placeholder-text">Search by student name, ID number, or program...</span>
             }
           </ng-template>
           <ng-template #item let-student>
-            <div class="student-dropdown-option py-1 w-full">
-              <div class="flex justify-between items-center">
-                <span class="font-bold text-sm text-slate-800">{{ student.fullName }}</span>
+            <div class="student-dropdown-option">
+              <div class="student-option-header">
+                <span class="student-option-name">{{ student.fullName }}</span>
                 <p-tag [value]="student.programCode + (student.yearLevel ? ' • Yr ' + student.yearLevel : '')" severity="secondary" styleClass="text-xs"></p-tag>
               </div>
-              <div class="flex justify-between items-center text-xs text-slate-500 mt-1">
-                <span class="font-mono">SN: <strong class="text-slate-700">{{ student.studentIdNumber }}</strong></span>
-                <span class="text-slate-600 font-medium">{{ student.academicStatus }}</span>
+              <div class="student-option-meta">
+                <span class="student-option-sn">SN: <strong>{{ student.studentIdNumber }}</strong></span>
+                <span class="student-option-status">{{ student.academicStatus }}</span>
               </div>
             </div>
           </ng-template>
@@ -98,7 +98,7 @@
       <!-- 2. Academic Term Selector Dropdown -->
       <div class="lookup-col term-col">
         <label class="form-label" for="cashier-term-select">
-          <i class="pi pi-calendar text-emerald-700"></i> Academic Term
+          <i class="pi pi-calendar form-label-icon"></i> Academic Term
         </label>
         <p-select 
           id="cashier-term-select" 
@@ -111,15 +111,15 @@
           styleClass="w-full">
           <ng-template #selectedItem let-selectedTerm>
             @if (selectedTerm) {
-              <div class="flex items-center gap-2 overflow-hidden text-ellipsis whitespace-nowrap">
-                <i class="pi pi-calendar text-emerald-700 text-xs shrink-0"></i>
-                <span class="font-semibold text-xs text-slate-800 truncate">{{ selectedTerm.termName }}</span>
+              <div class="term-selected-item">
+                <i class="pi pi-calendar form-label-icon student-item-icon"></i>
+                <span class="student-item-name">{{ selectedTerm.termName }}</span>
               </div>
             }
           </ng-template>
           <ng-template #item let-term>
-            <div class="flex justify-between items-center py-1 w-full">
-              <span class="text-xs font-medium text-slate-800">{{ term.termName }}</span>
+            <div class="term-option-header">
+              <span class="term-option-name">{{ term.termName }}</span>
               @if (term.isActive) {
                 <p-tag value="ACTIVE" severity="success" styleClass="text-xs"></p-tag>
               }

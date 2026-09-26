@@ -16,23 +16,52 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 1rem;
-  background: var(--chmsu-white, #ffffff);
-  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  background: var(--p-surface-0, #ffffff);
+  border: 1px solid var(--p-surface-200, #e2e8f0);
   border-radius: var(--chmsu-border-radius-lg, 12px);
-  padding: 1rem 1.25rem;
+  padding: 0.875rem 1.25rem;
   box-shadow: var(--chmsu-shadow-card);
+  min-height: 52px;
+}
+
+.header-branding {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.header-icon-box {
+  width: 36px;
+  height: 36px;
+  background: var(--chmsu-green-main, #116834);
+  color: var(--p-surface-0, #ffffff);
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: var(--chmsu-shadow-subtle);
+}
+
+.header-icon {
+  font-size: 1.125rem;
+}
+
+.header-text-group {
+  display: flex;
+  flex-direction: column;
 }
 
 .badge-row {
   display: flex;
   gap: 0.5rem;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.25rem;
 }
 
 .badge-tag {
-  padding: 0.15rem 0.65rem;
+  padding: 0.15rem 0.5rem;
   border-radius: 4px;
-  font-size: 0.6875rem;
+  font-size: 0.625rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -41,7 +70,7 @@
 .badge-tag.rose {
   background: var(--status-rose-bg, #fef2f2);
   border: 1px solid var(--status-rose-border, #fecaca);
-  color: #b91c1c;
+  color: var(--status-rose-text, #b91c1c);
 }
 
 .badge-tag.amber {
@@ -50,9 +79,30 @@
   color: var(--status-amber-text, #b45309);
 }
 
+.header-title {
+  font-family: var(--font-family-heading);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--p-surface-900, #0f172a);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.header-subtitle {
+  font-size: 0.75rem;
+  color: var(--p-surface-500, #64748b);
+  margin: 0.15rem 0 0 0;
+}
+
+.header-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .table-card {
-  background: var(--chmsu-white, #ffffff);
-  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  background: var(--p-surface-0, #ffffff);
+  border: 1px solid var(--p-surface-200, #e2e8f0);
   border-radius: var(--chmsu-border-radius-lg, 12px);
   padding: 1.25rem;
   box-shadow: var(--chmsu-shadow-card);
@@ -62,23 +112,23 @@
   font-family: var(--font-family-mono);
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--chmsu-navy-900, #0f172a);
+  color: var(--p-surface-900, #0f172a);
 }
 
 .student-name-text {
   font-weight: 700;
-  color: var(--chmsu-navy-900, #0f172a);
+  color: var(--p-surface-900, #0f172a);
 }
 
 .program-text {
   font-size: 0.75rem;
-  color: var(--chmsu-slate-500, #64748b);
+  color: var(--p-surface-500, #64748b);
 }
 
 .dropout-prob-text {
   font-family: var(--font-family-mono);
   font-weight: 700;
-  color: #b91c1c;
+  color: var(--status-rose-text, #b91c1c);
 }
 
 .text-center {
@@ -93,7 +143,13 @@
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.35rem;
+}
+
+:host ::ng-deep .action-btn-group .p-button.p-button-icon-only {
+  width: 28px !important;
+  height: 28px !important;
+  padding: 0 !important;
 }
 
 .driver-text {
@@ -101,13 +157,66 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-size: 0.75rem;
+  color: var(--p-surface-500, #64748b);
+}
+
+.drawer-profile-card {
+  background: var(--p-surface-50, #f8fafc);
+  border: 1px solid var(--p-surface-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  padding: 0.875rem 1rem;
+}
+
+.drawer-student-name {
+  font-family: var(--font-family-heading);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--p-surface-900, #0f172a);
+  margin: 0;
+}
+
+.drawer-student-sub {
+  font-family: var(--font-family-mono);
+  font-size: 0.75rem;
+  color: var(--p-surface-500, #64748b);
+  margin: 0;
+}
+
+.vector-card-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--p-surface-700, #334155);
+  margin: 0 0 0.5rem 0;
 }
 
 .risk-vectors-card {
-  background: var(--chmsu-slate-50, #f8fafc);
+  background: var(--p-surface-50, #f8fafc);
+  border: 1px solid var(--p-surface-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-md, 8px);
 }
 
 .case-item {
-  background: var(--chmsu-white, #ffffff);
+  background: var(--p-surface-0, #ffffff);
+  border: 1px solid var(--p-surface-200, #e2e8f0);
+  border-radius: 6px;
 }
 
+@media (max-width: 768px) {
+  .radar-container {
+    padding: 0.75rem;
+  }
+  .radar-toolbar-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .header-actions-group {
+    width: 100%;
+    flex-direction: column;
+  }
+  :host ::ng-deep .header-actions-group .p-button {
+    width: 100% !important;
+  }
+}

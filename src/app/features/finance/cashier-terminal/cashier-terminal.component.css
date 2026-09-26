@@ -453,13 +453,13 @@
 }
 
 .booklet-banner.booklet-active {
-  background: #f0fdf4;
-  border-color: #86efac;
+  background: var(--status-emerald-bg, #f0fdf4);
+  border-color: var(--status-emerald-border, #86efac);
 }
 
 .booklet-banner.booklet-missing {
-  background: #fffbeb;
-  border-color: #fde68a;
+  background: var(--status-amber-bg, #fffbeb);
+  border-color: var(--status-amber-border, #fde68a);
 }
 
 .booklet-info {
@@ -470,7 +470,7 @@
 
 .booklet-icon {
   font-size: 1.5rem;
-  color: #16a34a;
+  color: var(--status-emerald-text, #16a34a);
 }
 
 .booklet-title {
@@ -488,8 +488,8 @@
 .serial-tag {
   font-family: monospace;
   font-weight: 700;
-  color: #15803d;
-  background: #dcfce7;
+  color: var(--status-emerald-text, #15803d);
+  background: var(--status-emerald-bg, #dcfce7);
   padding: 0.125rem 0.375rem;
   border-radius: 4px;
 }
@@ -498,6 +498,84 @@
   display: flex;
   gap: 0.5rem;
   align-items: center;
+}
+
+/* Form Label & Dropdown Styles */
+.form-label-icon {
+  color: var(--chmsu-green-main, #116834);
+}
+
+.student-selected-item,
+.term-selected-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.student-item-icon {
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.student-item-name {
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: var(--chmsu-navy-900, #0f172a);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.student-item-sn {
+  font-size: 0.75rem;
+  color: var(--chmsu-slate-500, #64748b);
+  font-family: monospace;
+  flex-shrink: 0;
+}
+
+.student-placeholder-text {
+  color: var(--chmsu-slate-400, #94a3b8);
+  font-size: 0.75rem;
+}
+
+.student-dropdown-option {
+  padding: 0.25rem 0;
+  width: 100%;
+}
+
+.student-option-header,
+.term-option-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.student-option-name,
+.term-option-name {
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: var(--chmsu-navy-900, #0f172a);
+}
+
+.student-option-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--chmsu-slate-500, #64748b);
+  margin-top: 0.25rem;
+}
+
+.student-option-sn {
+  font-family: monospace;
+}
+
+.student-option-status {
+  color: var(--chmsu-slate-600, #475569);
+  font-weight: 500;
 }
 
 /* RCD Report Styles */

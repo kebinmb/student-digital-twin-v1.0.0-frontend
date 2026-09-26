@@ -14,7 +14,14 @@ import {
   StudentInterventionDto,
   DispatchInterventionRequest,
   UpdateInterventionStatusRequest,
-  VerifyCreatorAttendanceRequest
+  VerifyCreatorAttendanceRequest,
+  AdminTelemetryQueryParams,
+  PageResponse,
+  StudentTelemetryAdminSummary,
+  FacultySectionOption,
+  FacultyTelemetryQueryParams,
+  StudentSelfTelemetry,
+  StudentTelemetrySummary
 } from '../../models/analytics.model';
 
 @Injectable({
@@ -130,5 +137,56 @@ export class AnalyticsApiService {
 
   getStudentInterventions(studentId: number): Observable<StudentInterventionDto[]> {
     return this.http.get<StudentInterventionDto[]>(`${environment.apiUrl}/v1/analytics/interventions/student/${studentId}`);
+  }
+
+  getAdminStudentTelemetry(params: AdminTelemetryQueryParams): Observable<PageResponse<StudentTelemetryAdminSummary>> {
+    let httpParams = new HttpParams()
+      .set('page', (params.page ?? 0).toString())
+      .set('size', (params.size ?? 10).toString());
+
+    if (params.searchQuery) {
+      httpParams = httpParams.set('searchQuery', params.searchQuery);
+    }
+    if (params.riskLevel && params.riskLevel !== 'ALL') {
+      httpParams = httpParams.set('riskLevel', params.riskLevel);
+    }
+    if (params.interventionStatus && params.interventionStatus !== 'ALL') {
+      httpParams = httpParams.set('interventionStatus', params.interventionStatus);
+    }
+
+    return this.http.get<PageResponse<StudentTelemetryAdminSummary>>(`${environment.apiUrl}/v1/admin/telemetry/students`, { params: httpParams });
+  }
+
+  getFacultyStudentTelemetry(params: FacultyTelemetryQueryParams): Observable<PageResponse<StudentTelemetryAdminSummary>> {
+    let httpParams = new HttpParams()
+      .set('page', (params.page ?? 0).toString())
+      .set('size', (params.size ?? 10).toString());
+
+    if (params.searchQuery) {
+      httpParams = httpParams.set('searchQuery', params.searchQuery);
+    }
+    if (params.riskLevel && params.riskLevel !== 'ALL') {
+      httpParams = httpParams.set('riskLevel', params.riskLevel);
+    }
+    if (params.interventionStatus && params.interventionStatus !== 'ALL') {
+      httpParams = httpParams.set('interventionStatus', params.interventionStatus);
+    }
+    if (params.sectionId) {
+      httpParams = httpParams.set('sectionId', params.sectionId.toString());
+    }
+
+    return this.http.get<PageResponse<StudentTelemetryAdminSummary>>(`${environment.apiUrl}/v1/faculty/telemetry/students`, { params: httpParams });
+  }
+
+  getFacultyAssignedSections(): Observable<FacultySectionOption[]> {
+    return this.http.get<FacultySectionOption[]>(`${environment.apiUrl}/v1/faculty/telemetry/sections`);
+  }
+
+  getStudentSelfTelemetry(): Observable<StudentSelfTelemetry> {
+    return this.http.get<StudentSelfTelemetry>(`${environment.apiUrl}/v1/student/telemetry/me`);
+  }
+
+  acknowledgeStudentIntervention(id: number): Observable<void> {
+    return this.http.post<void>(`${environment.apiUrl}/v1/student/telemetry/interventions/${id}/acknowledge`, {});
   }
 }

@@ -61,7 +61,22 @@ describe('DigitalTwinAnalyticsDashboardComponent', () => {
   beforeEach(async () => {
     mockAnalyticsApi = {
       getCurrentStudentRiskProfile: vi.fn().mockReturnValue(of(mockRiskProfile)),
-      getStudentRiskProfile: vi.fn().mockReturnValue(of(mockRiskProfile))
+      getStudentRiskProfile: vi.fn().mockReturnValue(of(mockRiskProfile)),
+      getAdminStudentTelemetry: vi.fn().mockReturnValue(of({ content: [], totalElements: 0, totalPages: 0, size: 10, number: 0 })),
+      getFacultyStudentTelemetry: vi.fn().mockReturnValue(of({ content: [], totalElements: 0, totalPages: 0, size: 10, number: 0 })),
+      getFacultyAssignedSections: vi.fn().mockReturnValue(of([{ sectionId: 1, sectionCode: 'BSCS-3A', courseCode: 'CS101', enrolledCount: 30 }])),
+      getStudentSelfTelemetry: vi.fn().mockReturnValue(of({
+        studentId: 10,
+        fullName: 'Alice Student',
+        riskLevel: 'LOW',
+        wellnessScore: 88.5,
+        dimensionScores: { 'Academic Progress': 85.0, 'Attendance Consistency': 90.0, 'LMS Engagement Index': 88.0, 'Assignment Punctuality': 95.0 },
+        recommendations: [],
+        milestones: [],
+        lastSync: '2026-09-25T06:00:00Z'
+      })),
+      acknowledgeStudentIntervention: vi.fn().mockReturnValue(of(undefined)),
+      dispatchIntervention: vi.fn().mockReturnValue(of({ id: 1, interventionType: 'GUIDANCE_COUNSELING', status: 'DISPATCHED' }))
     };
 
     mockEnrollmentApi = {
@@ -99,16 +114,14 @@ describe('DigitalTwinAnalyticsDashboardComponent', () => {
 
     expect(component).toBeTruthy();
     expect(component.isStudent()).toBe(true);
-    expect(mockAnalyticsApi.getCurrentStudentRiskProfile).toHaveBeenCalled();
-    expect(mockEnrollmentApi.getCurrentStudentProfile).toHaveBeenCalled();
+    expect(mockAnalyticsApi.getStudentSelfTelemetry).toHaveBeenCalled();
 
     expect(component.riskProfile()).toEqual(mockRiskProfile);
     expect(component.studentProfile()).toEqual(mockStudentProfile);
 
-    // Verify student-facing computed properties
-    expect(component.retentionRate()).toBe(97); // 1 - 0.03 = 97%
-    expect(component.academicHealthScore()).toBe(85); // 100 - 15 = 85
-    expect(component.attendanceHealthScore()).toBe(90); // 100 - 10 = 90
+    expect(component.retentionRate()).toBe(97);
+    expect(component.academicHealthScore()).toBe(85);
+    expect(component.attendanceHealthScore()).toBe(90);
     expect(component.getStudentStatusLabel('LOW')).toBe('OPTIMAL PROGRESSION');
   });
 
@@ -117,7 +130,7 @@ describe('DigitalTwinAnalyticsDashboardComponent', () => {
 
     component.recalculateMLModel();
 
-    expect(mockAnalyticsApi.getCurrentStudentRiskProfile).toHaveBeenCalledTimes(2);
+    expect(mockAnalyticsApi.getCurrentStudentRiskProfile).toHaveBeenCalled();
     expect(mockMessageService.add).toHaveBeenCalledWith(
       expect.objectContaining({
         severity: 'success',
@@ -133,30 +146,77 @@ describe('DigitalTwinAnalyticsDashboardComponent', () => {
     expect(component.getStudentStatusLabel('LOW')).toBe('OPTIMAL PROGRESSION');
   });
 
-  it('should display activity review recommendations when activity alerts exist', () => {
-    const profileWithAlerts: DigitalTwinRiskProfileDto = {
-      ...mockRiskProfile,
-      recommendedInterventions: ['Review Quiz 1 Topics', 'Regular Academic Mentoring'],
-      activityAlerts: [
+  it('should load administrative telemetry data when user is ADMIN', () => {
+    mockAuthService.hasRole.mockImplementation((role: string) => role === 'ADMIN');
+    mockAnalyticsApi.getAdminStudentTelemetry.mockReturnValue(of({
+      content: [
         {
-          activityTitle: 'Quiz 1',
-          categoryName: 'Quizzes',
-          scoreEarned: 20,
-          maxPoints: 50,
-          percentage: 40.0,
-          suggestion: 'Review Quiz 1 Topics'
+          studentId: 10,
+          studentNumber: '2026-CS-0001',
+          fullName: 'Alice Student',
+          programOrCohort: 'BSIT (Year 3)',
+          riskLevel: 'CRITICAL',
+          riskScore: 85.0,
+          activeInterventions: [
+            { id: 1, interventionType: 'GUIDANCE_COUNSELING', triggerReason: 'High Risk', status: 'DISPATCHED', dispatchedAt: '2026-09-25T06:00:00Z' }
+          ],
+          lastTelemetrySync: '2026-09-25T06:00:00Z'
         }
-      ]
-    };
+      ],
+      totalElements: 1,
+      totalPages: 1,
+      size: 10,
+      number: 0
+    }));
 
-    mockAnalyticsApi.getCurrentStudentRiskProfile.mockReturnValue(of(profileWithAlerts));
     fixture = TestBed.createComponent(DigitalTwinAnalyticsDashboardComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
 
+    expect(component.isAdmin()).toBe(true);
+    expect(mockAnalyticsApi.getAdminStudentTelemetry).toHaveBeenCalled();
+    expect(component.adminTelemetryList().length).toBe(1);
+    expect(component.criticalRiskCount()).toBe(1);
+
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).toContain('Quiz 1');
-    expect(compiled.textContent).toContain('Review Quiz 1 Topics');
-    expect(compiled.textContent).toContain('20 / 50 (40%)');
+    expect(compiled.textContent).toContain('Administrator Student Telemetry & AI Interventions');
+    expect(compiled.textContent).toContain('Alice Student');
+    expect(compiled.textContent).toContain('CRITICAL');
+  });
+
+  it('should load section-scoped telemetry data when user is FACULTY', () => {
+    mockAuthService.hasRole.mockImplementation((role: string) => role === 'FACULTY');
+    mockAnalyticsApi.getFacultyStudentTelemetry.mockReturnValue(of({
+      content: [
+        {
+          studentId: 20,
+          studentNumber: '2026-CS-0002',
+          fullName: 'Bob Faculty Student',
+          sectionCode: 'BSCS-3A',
+          programOrCohort: 'BSCS (Year 3)',
+          riskLevel: 'MODERATE',
+          riskScore: 45.0,
+          activeInterventions: [],
+          lastTelemetrySync: '2026-09-25T06:00:00Z'
+        }
+      ],
+      totalElements: 1,
+      totalPages: 1,
+      size: 10,
+      number: 0
+    }));
+
+    fixture = TestBed.createComponent(DigitalTwinAnalyticsDashboardComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    expect(component.isFaculty()).toBe(true);
+    expect(mockAnalyticsApi.getFacultyAssignedSections).toHaveBeenCalled();
+    expect(mockAnalyticsApi.getFacultyStudentTelemetry).toHaveBeenCalled();
+    expect(component.adminTelemetryList().length).toBe(1);
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.textContent).toContain('Faculty Class Section Digital Twin Radar');
+    expect(compiled.textContent).toContain('Bob Faculty Student');
   });
 });

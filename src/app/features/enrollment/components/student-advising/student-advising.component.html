@@ -2,8 +2,8 @@
 
   <!-- Advising Banner & Student Profile Header -->
   <header class="header-card">
-    <div class="header-main flex-between flex-wrap gap-md">
-      <div class="header-title-area flex-1 min-w-[280px]">
+    <div class="header-main">
+      <div class="header-title-area">
         <h2 class="module-title font-bold-navy">
           <i class="pi pi-user-edit header-icon-emerald"></i>
           Academic Advising & Subject Enlistment
@@ -14,7 +14,7 @@
       </div>
 
       <!-- Primary Actions Grouped on Top-Right -->
-      <div class="header-actions flex-row gap-sm flex-wrap items-center">
+      <div class="header-actions">
         <p-button label="Refresh" icon="pi pi-refresh" severity="secondary" size="small" [loading]="store.isLoading()"
           (onClick)="store.refreshAdvising()">
         </p-button>
@@ -36,7 +36,7 @@
     </div>
 
     @if (store.advising(); as adv) {
-    <div class="student-meta-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mt-4">
+    <div class="student-meta-grid">
       <div class="meta-item">
         <span class="meta-label">Student Name</span>
         <span class="meta-val font-bold-navy truncate">{{ adv.studentName }}</span>
@@ -55,7 +55,7 @@
       </div>
       <div class="meta-item">
         <span class="meta-label">Academic Standing</span>
-        <div class="flex-row gap-xs">
+        <div class="meta-tag-row">
           <p-tag [value]="adv.enrollmentStatus" severity="info"></p-tag>
           @if (adv.isGraduating) {
           <p-tag value="GRADUATING SENIOR" severity="warn"></p-tag>
@@ -68,14 +68,14 @@
       </div>
       <div class="meta-item">
         <span class="meta-label">Financial Clearance</span>
-        <div class="mt-1">
+        <div class="meta-tag-row">
           <p-tag [value]="adv.financialClearance || 'CLEARED'"
             [severity]="(adv.financialClearance || 'CLEARED') === 'CLEARED' ? 'success' : ((adv.financialClearance) === 'PENDING' ? 'warn' : 'danger')" />
         </div>
       </div>
       <div class="meta-item">
         <span class="meta-label">Dept. Clearance</span>
-        <div class="mt-1">
+        <div class="meta-tag-row">
           <p-tag [value]="adv.departmentalClearance || 'CLEARED'"
             [severity]="(adv.departmentalClearance || 'CLEARED') === 'CLEARED' ? 'success' : ((adv.departmentalClearance) === 'PENDING' ? 'warn' : 'danger')" />
         </div>
@@ -99,15 +99,15 @@
 
     <!-- Unit Cap Progress Bar -->
     <div class="unit-cap-container mt-4">
-      <div class="unit-cap-header flex-between mb-2">
-        <span class="unit-text text-xs sm:text-sm text-slate-700">
+      <div class="unit-cap-header">
+        <span class="unit-text">
           <strong>Credit Units Loaded:</strong> <span class="font-mono font-bold">{{ store.totalUnits() }}</span> /
           <span class="font-mono">{{ store.maxUnits() }}</span> Units
           @if (adv.isGraduating) {
           <span class="text-xs text-muted ms-1">(Graduating Overload Allowed up to 27)</span>
           }
         </span>
-        <span class="unit-percentage text-xs sm:text-sm font-semibold font-mono text-emerald-800"
+        <span class="unit-percentage font-mono"
           [class.cap-danger]="store.isUnitCapReached()">
           {{ store.unitPercentage() }}% of Term Maximum
         </span>
@@ -121,12 +121,11 @@
 
   <!-- Filter Strip Toolbar Card -->
   @if (!isStudentUser()) {
-  <section class="filter-strip-card flex-between flex-wrap gap-md surface-slate"
-    aria-label="Student Profile and Term Filter Strip">
-    <div class="filter-controls-group flex-row flex-wrap gap-md items-center flex-1">
-      <div class="student-switcher-box flex-col gap-xs w-full sm:w-80">
-        <label for="student-select" class="form-label flex-row gap-xs items-center">
-          <i class="pi pi-user text-emerald-700 text-xs"></i>
+  <section class="filter-strip-card" aria-label="Student Profile and Term Filter Strip">
+    <div class="filter-controls-group">
+      <div class="student-switcher-box">
+        <label for="student-select" class="form-label">
+          <i class="pi pi-user form-label-icon text-xs"></i>
           <span>Select Student Profile:</span>
         </label>
         <p-select id="student-select" [options]="store.searchedStudents()" [ngModel]="store.studentId()"
@@ -137,11 +136,11 @@
           <ng-template #selectedItem let-selectedOption>
             @if (selectedOption) {
             <div class="student-selected-item">
-              <i class="pi pi-user student-item-icon text-emerald-700"></i>
-              <span class="student-item-name font-bold font-bold-navy text-xs">{{ selectedOption.fullName }}</span>
-              <span class="student-item-id font-mono text-xs text-slate-500 font-semibold">({{ selectedOption.studentIdNumber }})</span>
+              <i class="pi pi-user student-item-icon"></i>
+              <span class="student-item-name font-bold">{{ selectedOption.fullName }}</span>
+              <span class="student-item-id font-mono">({{ selectedOption.studentIdNumber }})</span>
               @if (selectedOption.academicStatus === 'INCOMING_FIRST_YEAR') {
-              <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-900 border border-emerald-300">
+              <span class="first-year-badge">
                 INCOMING 1ST YEAR
               </span>
               }
@@ -149,23 +148,23 @@
             }
           </ng-template>
           <ng-template #item let-option>
-            <div class="student-option-item flex-col gap-xs py-1.5 px-1 border-b border-slate-100 last:border-0">
-              <div class="flex-between gap-sm">
-                <span class="text-xs font-bold font-bold-navy">{{ option.fullName }}</span>
-                <span class="text-xs font-mono font-bold text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">
+            <div class="student-option-item">
+              <div class="student-option-main">
+                <span class="student-name font-bold">{{ option.fullName }}</span>
+                <span class="student-sn-tag font-mono font-bold">
                   {{ option.studentIdNumber }}
                 </span>
               </div>
-              <div class="flex-row gap-sm text-xs text-slate-600">
-                <span class="font-semibold text-slate-800">{{ option.programCode }}</span>
-                <span class="text-slate-400">&bull;</span>
+              <div class="student-option-meta">
+                <span class="font-semibold">{{ option.programCode }}</span>
+                <span class="divider-dot">&bull;</span>
                 <span>Year {{ option.yearLevel }}</span>
-                <span class="text-slate-400">&bull;</span>
-                <span class="px-1.5 py-0.5 text-[10px] font-bold rounded" [ngClass]="{
-                          'bg-emerald-50 text-emerald-700 border border-emerald-200': option.academicStatus === 'REGULAR',
-                          'bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold': option.academicStatus === 'INCOMING_FIRST_YEAR',
-                          'bg-amber-50 text-amber-700 border border-amber-200': option.academicStatus === 'PROBATION' || option.academicStatus === 'IRREGULAR' || option.academicStatus === 'TRANSFEREE',
-                          'bg-blue-50 text-blue-700 border border-blue-200': option.academicStatus === 'GRADUATED'
+                <span class="divider-dot">&bull;</span>
+                <span class="status-badge-compact" [ngClass]="{
+                          'regular-badge': option.academicStatus === 'REGULAR',
+                          'incoming-badge': option.academicStatus === 'INCOMING_FIRST_YEAR',
+                          'probation-badge': option.academicStatus === 'PROBATION' || option.academicStatus === 'IRREGULAR' || option.academicStatus === 'TRANSFEREE',
+                          'graduated-badge': option.academicStatus === 'GRADUATED'
                         }">
                   {{ option.academicStatus === 'INCOMING_FIRST_YEAR' ? 'INCOMING 1ST YEAR' : option.academicStatus }}
                 </span>
@@ -176,9 +175,9 @@
       </div>
 
       <!-- Academic Term Selector -->
-      <div class="term-selector-box flex-col gap-xs w-full sm:w-64">
-        <label for="term-select" class="form-label flex-row gap-xs items-center">
-          <i class="pi pi-calendar text-emerald-700 text-xs"></i>
+      <div class="term-selector-box">
+        <label for="term-select" class="form-label">
+          <i class="pi pi-calendar form-label-icon text-xs"></i>
           <span>Academic Term:</span>
         </label>
         <p-select id="term-select" [options]="store.terms()" [ngModel]="store.selectedTermId()"
@@ -750,20 +749,20 @@
 
       <!-- Row 1: Student ID & Classification -->
       <div class="form-row-2col">
-        <div class="form-field flex-col gap-xs">
+        <div class="form-field">
           <label class="form-label">Student ID / LRN Number <span class="required-star">*</span></label>
           <input pInputText formControlName="studentNumber" maxlength="30" placeholder="e.g. 2026-0001"
-            class="w-full text-xs font-mono" (input)="onAdmitNameOrIdChange()"
+            class="full-width-input font-mono" (input)="onAdmitNameOrIdChange()"
             [invalid]="isAdmissionsControlInvalid('studentNumber')" />
           @if (isAdmissionsControlInvalid('studentNumber')) {
           <small class="form-field-error">{{ getAdmissionsControlError('studentNumber') }}</small>
           }
         </div>
 
-        <div class="form-field flex-col gap-xs">
+        <div class="form-field">
           <label class="form-label">Student Classification <span class="required-star">*</span></label>
           <p-select [options]="classificationOptions" formControlName="classification" optionLabel="label"
-            optionValue="value" [invalid]="isAdmissionsControlInvalid('classification')" styleClass="w-full text-xs">
+            optionValue="value" [invalid]="isAdmissionsControlInvalid('classification')" styleClass="full-width-select text-xs">
           </p-select>
           @if (isAdmissionsControlInvalid('classification')) {
           <small class="form-field-error">{{ getAdmissionsControlError('classification') }}</small>
@@ -773,18 +772,18 @@
 
       <!-- Row 2: Name Fields -->
       <div class="form-row-2col">
-        <div class="form-field flex-col gap-xs">
+        <div class="form-field">
           <label class="form-label">First Name <span class="required-star">*</span></label>
-          <input pInputText formControlName="firstName" maxlength="50" placeholder="e.g. Maria" class="w-full text-xs"
+          <input pInputText formControlName="firstName" maxlength="50" placeholder="e.g. Maria" class="full-width-input"
             (input)="onAdmitNameOrIdChange()" [invalid]="isAdmissionsControlInvalid('firstName')" />
           @if (isAdmissionsControlInvalid('firstName')) {
           <small class="form-field-error">{{ getAdmissionsControlError('firstName') }}</small>
           }
         </div>
 
-        <div class="form-field flex-col gap-xs">
+        <div class="form-field">
           <label class="form-label">Last Name <span class="required-star">*</span></label>
-          <input pInputText formControlName="lastName" maxlength="50" placeholder="e.g. Santos" class="w-full text-xs"
+          <input pInputText formControlName="lastName" maxlength="50" placeholder="e.g. Santos" class="full-width-input"
             (input)="onAdmitNameOrIdChange()" [invalid]="isAdmissionsControlInvalid('lastName')" />
           @if (isAdmissionsControlInvalid('lastName')) {
           <small class="form-field-error">{{ getAdmissionsControlError('lastName') }}</small>
@@ -794,11 +793,11 @@
 
       <!-- Row 3: Program & Curriculum -->
       <div class="form-row-2col">
-        <div class="form-field flex-col gap-xs">
+        <div class="form-field">
           <label class="form-label">Degree Program <span class="required-star">*</span></label>
           <p-select [options]="programOptions()" formControlName="programId"
             (onChange)="onAdmitProgramChange($event.value)" optionLabel="label" optionValue="value"
-            placeholder="Select Degree Program" styleClass="w-full text-xs"
+            placeholder="Select Degree Program" styleClass="full-width-select text-xs"
             [invalid]="isAdmissionsControlInvalid('programId')">
           </p-select>
           @if (isAdmissionsControlInvalid('programId')) {
@@ -806,10 +805,10 @@
           }
         </div>
 
-        <div class="form-field flex-col gap-xs">
+        <div class="form-field">
           <label class="form-label">Active Curriculum Catalog <span class="required-star">*</span></label>
           <p-select [options]="curriculumOptions()" formControlName="curriculumId" optionLabel="label"
-            optionValue="value" placeholder="Select Curriculum Catalog" styleClass="w-full text-xs"
+            optionValue="value" placeholder="Select Curriculum Catalog" styleClass="full-width-select text-xs"
             [disabled]="curriculumOptions().length === 0" [invalid]="isAdmissionsControlInvalid('curriculumId')">
           </p-select>
           @if (isAdmissionsControlInvalid('curriculumId')) {
@@ -820,20 +819,20 @@
 
       <!-- Row 4: Year Level & Auth Username -->
       <div class="form-row-2col">
-        <div class="form-field flex-col gap-xs">
+        <div class="form-field">
           <label class="form-label">Year Level <span class="required-star">*</span></label>
           <p-select [options]="yearLevelOptions" formControlName="yearLevel" optionLabel="label" optionValue="value"
-            [invalid]="isAdmissionsControlInvalid('yearLevel')" styleClass="w-full text-xs">
+            [invalid]="isAdmissionsControlInvalid('yearLevel')" styleClass="full-width-select text-xs">
           </p-select>
           @if (isAdmissionsControlInvalid('yearLevel')) {
           <small class="form-field-error">{{ getAdmissionsControlError('yearLevel') }}</small>
           }
         </div>
 
-        <div class="form-field flex-col gap-xs">
+        <div class="form-field">
           <label class="form-label">Username / Auth Handle</label>
           <input pInputText formControlName="username" maxlength="50" placeholder="Auto-generated if empty"
-            class="w-full text-xs font-mono" [invalid]="isAdmissionsControlInvalid('username')" />
+            class="full-width-input font-mono" [invalid]="isAdmissionsControlInvalid('username')" />
           @if (isAdmissionsControlInvalid('username')) {
           <small class="form-field-error">{{ getAdmissionsControlError('username') }}</small>
           }
@@ -841,10 +840,10 @@
       </div>
 
       <!-- Row 5: Institutional Email -->
-      <div class="form-field flex-col gap-xs">
+      <div class="form-field">
         <label class="form-label">Institutional Email Address <span class="required-star">*</span></label>
         <input pInputText formControlName="email" maxlength="100" placeholder="e.g. 20260001@student.university.edu.ph"
-          class="w-full text-xs font-mono" [invalid]="isAdmissionsControlInvalid('email')" />
+          class="full-width-input font-mono" [invalid]="isAdmissionsControlInvalid('email')" />
         @if (isAdmissionsControlInvalid('email')) {
         <small class="form-field-error">{{ getAdmissionsControlError('email') }}</small>
         }
@@ -852,7 +851,7 @@
     </form>
 
     <ng-template #footer>
-      <div class="dialog-footer-content flex-between">
+      <div class="dialog-footer-content">
         <div class="footer-validation-feedback">
           @if (admissionsForm.valid) {
           <span class="footer-status-badge success">
@@ -884,12 +883,12 @@
 
     <ng-template #header>
       <div class="dialog-header-layout">
-        <div class="dialog-header-icon flex-center bg-amber-50 text-amber-800 border border-amber-200">
+        <div class="dialog-header-icon flex-center crediting-icon">
           <i class="pi pi-verified text-lg"></i>
         </div>
         <div class="dialog-header-title-group flex-col">
           <div class="flex-row items-center gap-xs">
-            <span class="section-badge-code font-mono bg-amber-100 text-amber-900 border-amber-300">CMO 25</span>
+            <span class="section-badge-code font-mono cmo-badge">CMO 25</span>
             <span class="dialog-header-subtitle">Curriculum Articulation & Prerequisite Equivalency</span>
           </div>
           <h3 class="dialog-header-title font-bold-navy m-0">
@@ -929,19 +928,19 @@
     </div>
     } @else {
     <form [formGroup]="creditingForm" (ngSubmit)="submitCrediting()" class="flex-col gap-md pt-1" novalidate>
-      <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg flex-row items-start gap-sm">
-        <i class="pi pi-file-edit text-amber-700 mt-0.5 text-base"></i>
-        <div class="flex-col gap-xs text-xs text-amber-900">
+      <div class="crediting-notice-banner">
+        <i class="pi pi-file-edit notice-icon"></i>
+        <div class="notice-info">
           <span class="font-bold">CMO No. 25 Course Articulation & Prerequisite Policy</span>
           <span>External collegiate credits earn prerequisite units immediately upon institutional registrar approval.</span>
         </div>
       </div>
 
       <!-- Row 1: External Institution -->
-      <div class="form-field flex-col gap-xs">
+      <div class="form-field">
         <label class="form-label">Originating School / University <span class="required-star">*</span></label>
         <input pInputText formControlName="externalInstitution" maxlength="150"
-          placeholder="e.g. Polytechnic State University" class="w-full text-xs"
+          placeholder="e.g. Polytechnic State University" class="full-width-input"
           [invalid]="isCreditingControlInvalid('externalInstitution')" />
         @if (isCreditingControlInvalid('externalInstitution')) {
         <small class="form-field-error">{{ getCreditingControlError('externalInstitution') }}</small>
@@ -950,19 +949,19 @@
 
       <!-- Row 2: Course Identifiers -->
       <div class="form-row-2col">
-        <div class="form-field flex-col gap-xs">
+        <div class="form-field">
           <label class="form-label">Originating Course Code <span class="required-star">*</span></label>
           <input pInputText formControlName="externalCourseCode" maxlength="30" placeholder="e.g. CS 101"
-            class="w-full text-xs font-mono" [invalid]="isCreditingControlInvalid('externalCourseCode')" />
+            class="full-width-input font-mono" [invalid]="isCreditingControlInvalid('externalCourseCode')" />
           @if (isCreditingControlInvalid('externalCourseCode')) {
           <small class="form-field-error">{{ getCreditingControlError('externalCourseCode') }}</small>
           }
         </div>
 
-        <div class="form-field flex-col gap-xs">
+        <div class="form-field">
           <label class="form-label">Originating Course Title <span class="required-star">*</span></label>
           <input pInputText formControlName="externalCourseTitle" maxlength="150"
-            placeholder="e.g. Intro to Computer Science" class="w-full text-xs"
+            placeholder="e.g. Intro to Computer Science" class="full-width-input"
             [invalid]="isCreditingControlInvalid('externalCourseTitle')" />
           @if (isCreditingControlInvalid('externalCourseTitle')) {
           <small class="form-field-error">{{ getCreditingControlError('externalCourseTitle') }}</small>
@@ -971,11 +970,11 @@
       </div>
 
       <!-- Row 3: Target Curriculum Course -->
-      <div class="form-field flex-col gap-xs">
+      <div class="form-field">
         <label class="form-label">Equivalent Internal Course <span class="required-star">*</span></label>
         <p-select [options]="availableCurriculumCourses()" formControlName="internalCourseId"
           (onChange)="onCreditingInternalCourseChange($event.value)" optionLabel="label" optionValue="value"
-          placeholder="Select Equivalent Institutional Course" styleClass="w-full text-xs" [filter]="true"
+          placeholder="Select Equivalent Institutional Course" styleClass="full-width-select text-xs" [filter]="true"
           filterBy="label" [invalid]="isCreditingControlInvalid('internalCourseId')">
         </p-select>
         @if (isCreditingControlInvalid('internalCourseId')) {
@@ -985,21 +984,21 @@
 
       <!-- Row 4: Grade and Credits -->
       <div class="form-row-2col">
-        <div class="form-field flex-col gap-xs">
+        <div class="form-field">
           <label class="form-label">External Numerical Grade (1.00 - 3.00) <span class="required-star">*</span></label>
           <p-inputnumber formControlName="externalNumericalGrade" [min]="1.00" [max]="3.00" [step]="0.25"
             [minFractionDigits]="2" [maxFractionDigits]="2" placeholder="Passing grade"
-            styleClass="w-full text-xs font-mono" [invalid]="isCreditingControlInvalid('externalNumericalGrade')">
+            styleClass="full-width-select font-mono text-xs" [invalid]="isCreditingControlInvalid('externalNumericalGrade')">
           </p-inputnumber>
           @if (isCreditingControlInvalid('externalNumericalGrade')) {
           <small class="form-field-error">{{ getCreditingControlError('externalNumericalGrade') }}</small>
           }
         </div>
 
-        <div class="form-field flex-col gap-xs">
+        <div class="form-field">
           <label class="form-label">Credits Granted (1.0 - 6.0) <span class="required-star">*</span></label>
           <p-inputnumber formControlName="creditsGranted" [min]="1.0" [max]="6.0" [step]="1.0" [minFractionDigits]="1"
-            [maxFractionDigits]="1" placeholder="Units" styleClass="w-full text-xs font-mono"
+            [maxFractionDigits]="1" placeholder="Units" styleClass="full-width-select font-mono text-xs"
             [invalid]="isCreditingControlInvalid('creditsGranted')">
           </p-inputnumber>
           @if (isCreditingControlInvalid('creditsGranted')) {
@@ -1009,10 +1008,10 @@
       </div>
 
       <!-- Row 5: Remarks -->
-      <div class="form-field flex-col gap-xs">
+      <div class="form-field">
         <label class="form-label">Accreditation Remarks</label>
         <input pInputText formControlName="remarks" maxlength="255"
-          placeholder="e.g. Syllabi verified per CMO 25 compliance" class="w-full text-xs"
+          placeholder="e.g. Syllabi verified per CMO 25 compliance" class="full-width-input"
           [invalid]="isCreditingControlInvalid('remarks')" />
         @if (isCreditingControlInvalid('remarks')) {
         <small class="form-field-error">{{ getCreditingControlError('remarks') }}</small>
@@ -1023,17 +1022,16 @@
       <div class="equivalency-preview-card flex-col gap-sm p-3 rounded-lg mt-1">
         <div class="flex-between">
           <span class="text-xs font-bold font-bold-navy flex-row gap-xs">
-            <i class="pi pi-arrows-alt text-emerald-700"></i>
+            <i class="pi pi-arrows-alt form-label-icon"></i>
             Interactive Articulation Preview
           </span>
           <span class="badge-green text-[10px] font-bold px-2 py-0.5 rounded">CMO 25 Validated</span>
         </div>
 
-        <div class="equivalency-comparison-grid grid grid-cols-1 sm:grid-cols-5 items-center gap-2">
+        <div class="equivalency-comparison-grid">
           <!-- Source Course -->
-          <div
-            class="course-node external-node sm:col-span-2 p-2.5 rounded border border-slate-200 bg-white flex-col gap-xs">
-            <span class="node-label text-[10px] uppercase font-bold text-slate-400">Originating Source</span>
+          <div class="course-node external-node">
+            <span class="node-label">Originating Source</span>
             <span class="node-code font-mono font-bold font-bold-navy text-xs">
               {{ creditingForm.get('externalCourseCode')?.value || 'EXT-CODE' }}
             </span>
@@ -1044,29 +1042,26 @@
               <span class="text-[10px] font-bold font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">
                 {{ creditingForm.get('creditsGranted')?.value || 3 }} Units
               </span>
-              <span
-                class="text-[10px] font-bold font-mono bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.5 rounded">
+              <span class="node-grade-tag">
                 Grade: {{ creditingForm.get('externalNumericalGrade')?.value | number:'1.2-2' }}
               </span>
             </div>
           </div>
 
           <!-- Direction Indicator -->
-          <div class="flow-arrow sm:col-span-1 flex-center text-emerald-700 font-bold">
+          <div class="flow-arrow">
             <i class="pi pi-arrow-right hidden sm:inline text-base"></i>
             <i class="pi pi-arrow-down sm:hidden text-base"></i>
           </div>
 
           <!-- Internal Target -->
-          <div
-            class="course-node internal-node sm:col-span-2 p-2.5 rounded border border-slate-200 bg-white flex-col gap-xs">
-            <span class="node-label text-[10px] uppercase font-bold text-slate-400">Institutional Equivalent</span>
+          <div class="course-node internal-node">
+            <span class="node-label">Institutional Equivalent</span>
             @if (selectedInternalCourse(); as target) {
             <span class="node-code font-mono font-bold text-emerald-900 text-xs">{{ target.code }}</span>
             <span class="node-title text-slate-700 text-xs truncate">{{ target.title }}</span>
             <div class="flex-row gap-sm mt-1">
-              <span
-                class="text-[10px] font-bold font-mono bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded border border-emerald-300">
+              <span class="units-granted-tag font-mono">
                 {{ target.creditUnits }} Institutional Units
               </span>
               <span class="text-[10px] font-semibold text-slate-600">Year {{ target.yearLevel }}</span>
@@ -1077,9 +1072,9 @@
           </div>
         </div>
 
-        <div class="prerequisite-impact-box p-2 rounded bg-emerald-50/60 border border-emerald-200 flex-col gap-xs">
-          <div class="flex-row gap-xs text-xs font-bold text-emerald-900">
-            <i class="pi pi-key text-emerald-700"></i>
+        <div class="prerequisite-impact-box">
+          <div class="prereq-impact-header">
+            <i class="pi pi-key form-label-icon"></i>
             <span>Prerequisite Gate Unlock Impact:</span>
           </div>
           @if (dependentCoursesToUnlock().length > 0) {
@@ -1106,7 +1101,7 @@
     }
 
     <ng-template #footer>
-      <div class="dialog-footer-content flex-between">
+      <div class="dialog-footer-content">
         <div class="footer-validation-feedback">
           @if (creditingForm.valid) {
           <span class="footer-status-badge success">

@@ -32,13 +32,13 @@ export class EmptyStateComponent {
   getIconColorClass(): string {
     switch (this.severity()) {
       case 'success':
-        return 'text-green-600 bg-green-50 border-green-200';
+        return 'severity-success';
       case 'warn':
-        return 'text-orange-600 bg-orange-50 border-orange-200';
+        return 'severity-warn';
       case 'danger':
-        return 'text-red-600 bg-red-50 border-red-200';
+        return 'severity-danger';
       default:
-        return 'text-primary bg-green-50 border-green-200';
+        return 'severity-info';
     }
   }
 }

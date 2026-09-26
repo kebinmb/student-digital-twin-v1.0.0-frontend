@@ -7,28 +7,29 @@
 .faculty-mgmt-toolbar-card {
   background: var(--p-surface-0, #ffffff);
   border: 1px solid var(--p-surface-200, #e2e8f0);
-  border-radius: 12px;
-  padding: 1rem 1.25rem;
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 0.875rem 1.25rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--chmsu-shadow-card);
+  min-height: 52px;
 }
 
 .card-table-wrapper {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  background: var(--p-surface-0, #ffffff);
+  border: 1px solid var(--p-surface-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-lg, 12px);
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--chmsu-shadow-card);
 }
 
 .faculty-id-badge {
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-family-mono);
   font-weight: 700;
   color: var(--p-surface-800, #1e293b);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
 }
 
 .faculty-identity {
@@ -58,7 +59,7 @@
 }
 
 .faculty-name {
-  font-weight: 600;
+  font-weight: 700;
   color: var(--p-surface-900, #0f172a);
 }
 
@@ -69,8 +70,8 @@
 
 .faculty-email-text {
   color: var(--p-surface-700, #334155);
-  font-size: 0.875rem;
-  font-family: var(--font-mono, monospace);
+  font-size: 0.8125rem;
+  font-family: var(--font-family-mono);
 }
 
 .affiliation-cell {
@@ -83,17 +84,17 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.775rem;
-  color: #334155;
+  font-size: 0.75rem;
+  color: var(--p-surface-700, #334155);
 }
 
 .icon-college {
   font-size: 0.75rem;
-  color: #0284c7;
+  color: var(--status-blue-text, #0369a1);
 }
 
 .college-code-text {
-  font-weight: 600;
+  font-weight: 700;
   color: var(--p-surface-800, #1e293b);
 }
 
@@ -104,11 +105,11 @@
 
 .icon-program {
   font-size: 0.75rem;
-  color: #059669;
+  color: var(--status-emerald-text, #047857);
 }
 
 .program-code-text {
-  font-weight: 600;
+  font-weight: 700;
   color: var(--p-surface-700, #334155);
 }
 
@@ -129,8 +130,8 @@
 }
 
 .rank-title {
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: 0.8125rem;
+  font-weight: 600;
   color: var(--p-surface-800, #1e293b);
 }
 
@@ -191,31 +192,33 @@
 }
 
 .field-label {
-  font-size: 0.825rem;
-  font-weight: 600;
-  color: #1e293b;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--p-surface-800, #1e293b);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .field-hint {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--p-surface-500, #64748b);
   margin: 0;
 }
 
 .custom-select {
   width: 100%;
   padding: 0.5rem 0.75rem;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  background-color: #ffffff;
-  color: #1e293b;
+  border: 1px solid var(--p-surface-300, #cbd5e1);
+  background-color: var(--p-surface-0, #ffffff);
+  color: var(--p-surface-800, #1e293b);
   outline: none;
 }
 
 .custom-select:focus {
-  border-color: #15803d;
-  box-shadow: 0 0 0 0.2rem rgba(21, 128, 61, 0.15);
+  border-color: var(--chmsu-green-main, #116834);
+  box-shadow: 0 0 0 0.2rem rgba(17, 104, 52, 0.15);
 }
 
 .form-field-switch {
@@ -224,14 +227,14 @@
   align-items: center;
   padding: 0.75rem;
   border-radius: 6px;
-  background-color: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background-color: var(--p-surface-50, #f8fafc);
+  border: 1px solid var(--p-surface-200, #e2e8f0);
 }
 
 .switch-title {
-  font-size: 0.85rem;
+  font-size: 0.8125rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--p-surface-800, #1e293b);
 }
 
 .dialog-footer {
@@ -240,5 +243,5 @@
   gap: 0.5rem;
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--p-surface-200, #e2e8f0);
 }

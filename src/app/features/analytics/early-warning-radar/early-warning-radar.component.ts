@@ -202,4 +202,16 @@ export class EarlyWarningRadarComponent implements OnInit {
     document.body.removeChild(link);
     this.messageService.add({ severity: 'success', summary: 'Radar Exported', detail: `Downloaded ${items.length} at-risk records as CSV.` });
   }
+
+  humanizeInterventionType(type: string | undefined): string {
+    if (!type) return 'Support Advisory';
+    switch (type) {
+      case 'GUIDANCE_COUNSELING': return 'Guidance Counseling';
+      case 'ACADEMIC_TUTORING': return 'Academic Peer Tutoring';
+      case 'ATTENDANCE_CONFERENCE': return 'Attendance Conference';
+      case 'FINANCIAL_SUBSIDY_AID': return 'UniFAST Financial Aid Review';
+      case 'PEER_MENTORING': return 'Peer Mentoring Assignment';
+      default: return type.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+    }
+  }
 }

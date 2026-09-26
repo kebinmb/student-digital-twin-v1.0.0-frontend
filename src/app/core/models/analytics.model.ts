@@ -128,3 +128,86 @@ export interface UpdateInterventionStatusRequest {
   additionalNotes?: string;
 }
 
+export type RiskLevel = 'LOW' | 'MODERATE' | 'HIGH' | 'CRITICAL';
+export type InterventionStatus = 'PENDING' | 'DISPATCHED' | 'ACKNOWLEDGED' | 'RESOLVED' | 'FAILED' | 'OPEN' | 'ASSIGNED' | 'IN_PROGRESS' | 'ESCALATED';
+
+export interface DispatchedIntervention {
+  id: number;
+  interventionType: string;
+  triggerReason: string;
+  status: InterventionStatus;
+  dispatchedAt: string;
+}
+
+export interface StudentTelemetryAdminSummary {
+  studentId: number;
+  studentNumber: string;
+  fullName: string;
+  programOrCohort: string;
+  sectionCode?: string;
+  riskLevel: RiskLevel;
+  riskScore: number;
+  activeInterventions: DispatchedIntervention[];
+  lastTelemetrySync: string;
+}
+
+export interface AdminTelemetryQueryParams {
+  page?: number;
+  size?: number;
+  searchQuery?: string;
+  riskLevel?: string;
+  interventionStatus?: string;
+}
+
+export interface FacultyTelemetryQueryParams extends AdminTelemetryQueryParams {
+  sectionId?: number;
+}
+
+export interface MilestoneDto {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  achievedAt: string;
+}
+
+export interface StudentSelfTelemetry {
+  studentId: number;
+  fullName: string;
+  riskLevel: RiskLevel;
+  wellnessScore: number;
+  dimensionScores: { [key: string]: number };
+  recommendations: DispatchedIntervention[];
+  milestones: MilestoneDto[];
+  lastSync: string;
+}
+
+export interface FacultySectionOption {
+  sectionId: number;
+  sectionCode: string;
+  courseCode: string;
+  courseTitle?: string;
+  enrolledCount?: number;
+}
+
+export interface StudentTelemetrySummary {
+  studentId: number;
+  studentNumber: string;
+  fullName: string;
+  sectionCode: string;
+  program: string;
+  riskLevel: RiskLevel;
+  riskScore: number;
+  activeInterventions: DispatchedIntervention[];
+  lastTelemetrySync: string;
+}
+
+export interface PageResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+}
+
+

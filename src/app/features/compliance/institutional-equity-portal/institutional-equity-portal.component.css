@@ -111,19 +111,19 @@
 }
 
 .kpi-card.border-blue {
-  border-left: 4px solid #0284c7;
+  border-left: 4px solid var(--status-blue-text, #0284c7);
 }
 
 .kpi-card.border-purple {
-  border-left: 4px solid #7c3aed;
+  border-left: 4px solid var(--status-purple-text, #7c3aed);
 }
 
 .kpi-card.border-orange {
-  border-left: 4px solid #ea580c;
+  border-left: 4px solid var(--status-amber-text, #ea580c);
 }
 
 .kpi-card.border-amber {
-  border-left: 4px solid #d97706;
+  border-left: 4px solid var(--status-amber-text, #d97706);
 }
 
 .kpi-title {
@@ -141,10 +141,10 @@
   margin-top: 0.25rem;
 }
 
-.kpi-value.text-blue { color: #0284c7; }
-.kpi-value.text-purple { color: #7c3aed; }
-.kpi-value.text-orange { color: #ea580c; }
-.kpi-value.text-amber { color: #d97706; }
+.kpi-value.text-blue { color: var(--status-blue-text, #0284c7); }
+.kpi-value.text-purple { color: var(--status-purple-text, #7c3aed); }
+.kpi-value.text-orange { color: var(--status-amber-text, #ea580c); }
+.kpi-value.text-amber { color: var(--status-amber-text, #d97706); }
 
 .kpi-subtext {
   font-size: 0.75rem;
@@ -323,7 +323,7 @@
 }
 
 .text-rose {
-  color: #e11d48;
+  color: var(--status-rose-text, #e11d48);
 }
 
 .font-bold {
@@ -413,9 +413,9 @@
   font-family: monospace;
   font-size: 0.8125rem;
   font-weight: 700;
-  color: #0284c7;
-  background: #f0f9ff;
-  border: 1px solid #bae6fd;
+  color: var(--status-blue-text, #0284c7);
+  background: var(--status-blue-bg, #f0f9ff);
+  border: 1px solid var(--status-blue-border, #bae6fd);
   border-radius: 4px;
   padding: 0.1rem 0.4rem;
   margin-top: 0.2rem;
@@ -454,10 +454,10 @@
   letter-spacing: 0.02em;
 }
 
-.text-green { color: #16a34a; }
-.text-amber { color: #d97706; }
-.text-rose { color: #e11d48; }
-.text-slate { color: #64748b; }
+.text-green { color: var(--status-emerald-text, #16a34a); }
+.text-amber { color: var(--status-amber-text, #d97706); }
+.text-rose { color: var(--status-rose-text, #e11d48); }
+.text-slate { color: var(--chmsu-slate-500, #64748b); }
 
 /* Applicant Assessment Card in Modal */
 .applicant-assessment-card {
@@ -490,9 +490,9 @@
   transition: width 0.3s ease;
 }
 
-.bg-rose { background: #e11d48; }
-.bg-amber { background: #d97706; }
-.bg-blue { background: #0284c7; }
+.bg-rose { background: var(--status-rose-text, #e11d48); }
+.bg-amber { background: var(--status-amber-text, #d97706); }
+.bg-blue { background: var(--status-blue-text, #0284c7); }
 
 .assessment-details-grid {
   display: grid;

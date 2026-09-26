@@ -52,11 +52,11 @@
 }
 
 .legend-chip.lecture {
-  color: #1d4ed8;
+  color: var(--status-blue-text, #1d4ed8);
 }
 
 .legend-chip.lab {
-  color: #b45309;
+  color: var(--status-amber-text, #b45309);
 }
 
 .grid-container {
@@ -111,11 +111,11 @@
 }
 
 .timetable-card {
-  background: #ffffff;
-  border-left: 4px solid #2563eb;
-  border-top: 1px solid #e2e8f0;
-  border-right: 1px solid #e2e8f0;
-  border-bottom: 1px solid #e2e8f0;
+  background: var(--chmsu-white, #ffffff);
+  border-left: 4px solid var(--status-blue-text, #2563eb);
+  border-top: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-right: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-bottom: 1px solid var(--chmsu-slate-200, #e2e8f0);
   border-radius: 6px;
   padding: 0.625rem 0.75rem;
   display: flex;
@@ -131,7 +131,7 @@
 }
 
 .timetable-card.lab-card {
-  border-left-color: #d97706;
+  border-left-color: var(--status-amber-text, #d97706);
 }
 
 .card-time {
