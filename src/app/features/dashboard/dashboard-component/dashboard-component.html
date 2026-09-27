@@ -1,357 +1,756 @@
-<div class="dashboard-page">
-  <!-- Top Welcome & Institutional Status Banner -->
-  <section class="welcome-banner" aria-label="Student Digital Twin Overview">
-    <div class="welcome-info">
-      <div class="welcome-badge">
-        <span class="pulse-dot"></span>
-        <span>{{ roleBadge() }}</span>
+<p-toast></p-toast>
+
+<div class="dashboard-container">
+  <!-- Top Cockpit Header Toolbar -->
+  <div class="dashboard-toolbar-card">
+    <div class="header-branding">
+      <div class="header-icon-box">
+        <i [class]="roleIcon() + ' header-icon'"></i>
       </div>
-      <h1 class="welcome-title">Welcome back, {{ userName() }}</h1>
-      <p class="welcome-subtitle">
-        {{ roleSubtitle() }}
-      </p>
+      <div class="header-text-group">
+        <div class="badge-row">
+          <span class="badge-tag green">
+            <i class="pi pi-circle-fill live-dot"></i>
+            LIVE TELEMETRY
+          </span>
+          <span class="badge-tag" [ngClass]="roleTagClass()">
+            {{ roleBadge() }}
+          </span>
+        </div>
+        <h1 class="header-title">{{ roleTitle() }}</h1>
+        <p class="header-subtitle">{{ roleSubtitle() }}</p>
+      </div>
     </div>
 
-    <div class="welcome-meta">
-      <div class="date-chip">
-        <i class="pi pi-calendar"></i>
-        <span>{{ currentTime() }}</span>
+    <div class="header-actions-group">
+      <!-- Role View Switcher Dropdown (Allows testing & previewing all 10 role perspectives) -->
+      <div class="role-selector-wrapper flex items-center gap-2">
+        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider hidden md:inline">Role View:</span>
+        <p-select
+          [options]="roleOptions"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="activeRole()"
+          (ngModelChange)="onRoleOverrideChange($event)"
+          placeholder="Switch Role Perspective"
+          size="small"
+          styleClass="role-select-control w-full sm:w-16rem"
+        ></p-select>
       </div>
-      <p-button type="button" icon="pi pi-sync" label="Sync Telemetry" severity="secondary" [outlined]="true"
-        [rounded]="true">
-      </p-button>
-    </div>
-  </section>
 
-  <!-- Bento Grid Container -->
-  @if (isLoading()) {
-    <!-- Skeleton Loaders -->
-    <div class="bento-grid">
-      @for (i of [1, 2, 3, 4]; track i) {
-        <div class="bento-col-3">
-          <div class="bento-card">
-            <p-skeleton width="60%" height="1.2rem" styleClass="mb-2"></p-skeleton>
-            <p-skeleton width="40%" height="2.5rem" styleClass="mb-2"></p-skeleton>
-            <p-skeleton width="80%" height="1rem"></p-skeleton>
+      <p-button
+        label="Sync Telemetry"
+        icon="pi pi-refresh"
+        severity="secondary"
+        [outlined]="true"
+        size="small"
+        [loading]="isLoading()"
+      ></p-button>
+    </div>
+  </div>
+
+  <!-- Executive Metrics Ribbon (4 Cards for Active Role) -->
+  <div class="kpi-grid" aria-label="Executive Role Metrics Summary">
+    @for (card of displayedMetrics(); track card.title; let i = $index) {
+      <div class="kpi-card" [ngClass]="i === 0 ? 'border-green' : (i === 1 ? 'border-blue' : (i === 2 ? 'border-amber' : 'border-rose'))">
+        <div class="kpi-card-inner">
+          <div class="kpi-icon-box" [ngClass]="i === 0 ? 'green' : (i === 1 ? 'blue' : (i === 2 ? 'amber' : 'rose'))">
+            <i [class]="card.icon"></i>
           </div>
-        </div>
-      }
-      <div class="bento-col-8">
-        <div class="bento-card">
-          <p-skeleton width="100%" height="200px"></p-skeleton>
-        </div>
-      </div>
-      <div class="bento-col-4">
-        <div class="bento-card">
-          <p-skeleton width="100%" height="200px"></p-skeleton>
-        </div>
-      </div>
-    </div>
-  } @else {
-    <div class="bento-grid">
-
-      <!-- Bento Item 1-4: Metric KPI Cards (1x1 Aspect Ratio) -->
-      @for (card of displayedMetrics(); track card.title) {
-        <div class="bento-col-3">
-          <p-card styleClass="h-full metric-bento-card">
-            <div class="metric-header">
-              <span class="metric-title">{{ card.title }}</span>
-              <div class="metric-icon-box">
-                <i [class]="card.icon"></i>
-              </div>
-            </div>
-            <div class="metric-body">
-              <span class="metric-value">{{ card.value }}</span>
-              <div class="metric-footer">
-                <span class="metric-subtext">{{ card.subtext }}</span>
-                @if (card.trend) {
-                  <span class="metric-trend" [class.trend-positive]="card.trendUp">
-                    {{ card.trend }}
-                  </span>
-                }
-              </div>
-            </div>
-          </p-card>
-        </div>
-      }
-
-      <!-- Bento Item 5: Today's Schedule Card (Col Span 8, Row Span 2) -->
-      <div class="bento-col-8">
-        <p-card styleClass="h-full schedule-bento-card">
-          <ng-template pTemplate="header">
-            <div class="card-header-flex">
-              <div>
-                <h2 class="card-title">
-                  @if (isFaculty()) {
-                    Today's Teaching Schedule
-                  } @else if (isCashier() || isAccountant()) {
-                    Fiscal Operations & Collections Desk
-                  } @else if (isRegistrar() || isDean() || isAdmin()) {
-                    Academic Operations & Governance Queue
-                  } @else {
-                    Today's Class Schedule
-                  }
-                </h2>
-                <p class="card-subtitle">
-                  @if (isFaculty()) {
-                    Scheduled instructional sessions and attendance telemetry
-                  } @else if (isCashier() || isAccountant()) {
-                    Official Receipts (Form 51) and billing voucher transactions
-                  } @else if (isRegistrar() || isDean() || isAdmin()) {
-                    Academic periods, clearance gates, and student records
-                  } @else {
-                    3 enrolled course sessions scheduled today
-                  }
-                </p>
-              </div>
-              @if (isStudent()) {
-                <a routerLink="/dashboard/scheduling" class="action-link">View Calendar</a>
+          <div class="kpi-body">
+            <div class="kpi-header">
+              <span class="kpi-title">{{ card.title }}</span>
+              @if (card.trend) {
+                <span class="badge-tag" [ngClass]="card.trendUp !== false ? 'green' : 'rose'">{{ card.trend }}</span>
               }
             </div>
-          </ng-template>
-
-          <div class="schedule-list">
-            @for (session of todayClasses; track session.courseCode) {
-              <div class="schedule-item" [class.current-session]="session.status === 'In Progress'">
-                <div class="session-time-col">
-                  <span class="session-time">{{ session.time }}</span>
-                  <p-tag
-                    [value]="session.status"
-                    [severity]="session.status === 'In Progress' ? 'success' : (session.status === 'Completed' ? 'secondary' : 'info')">
-                  </p-tag>
-                </div>
-
-                <div class="session-detail-col">
-                  <div class="session-code-row">
-                    <span class="session-code">{{ session.courseCode }}</span>
-                    <span class="session-room">
-                      <i class="pi pi-map-marker"></i>
-                      {{ session.room }}
-                    </span>
-                  </div>
-                  <h3 class="session-title">{{ session.courseTitle }}</h3>
-                  <span class="session-instructor">
-                    <i class="pi pi-user"></i>
-                    {{ session.instructor }}
-                  </span>
-                </div>
-              </div>
-            }
+            <div class="kpi-value" [ngClass]="i === 0 ? 'text-green' : (i === 1 ? 'text-blue' : (i === 2 ? 'text-amber' : 'text-rose'))">
+              {{ card.value }}
+            </div>
+            <div class="kpi-subtext">{{ card.subtext }}</div>
           </div>
-        </p-card>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Dynamic Role-Based Workspaces & Purpose Views -->
+
+  <!-- 1. SUPER_ADMIN WORKSPACE: Actuator & Virtual Threads Infrastructure Console -->
+  @if (isSuperAdmin()) {
+    <div class="table-card">
+      <div class="table-toolbar">
+        <div class="toolbar-heading">
+          <h2 class="section-title">
+            <i class="pi pi-server header-icon-sm"></i>
+            Spring Boot Actuator Telemetry & Virtual Thread Monitoring
+          </h2>
+          <p-tag value="Management Port 8081 Active" severity="danger" [rounded]="true"></p-tag>
+        </div>
+        <div class="toolbar-controls">
+          <p-tag value="JVM Loom Threads: OK" severity="success"></p-tag>
+          <p-tag value="MySQL 8.0 V100" severity="info"></p-tag>
+        </div>
       </div>
 
-      <!-- Bento Item 6: Quick Actions Grid (Col Span 4) -->
-      <div class="bento-col-4">
-        <p-card styleClass="h-full actions-bento-card">
-          <ng-template pTemplate="header">
-            <div class="card-header-flex">
-              <div>
-                <h2 class="card-title">Quick Actions</h2>
-                <p class="card-subtitle">Role-tailored university shortcuts</p>
-              </div>
-            </div>
-          </ng-template>
-
-          <div class="quick-actions-grid">
-            @for (action of roleQuickActions(); track action.label) {
-              <a [routerLink]="action.routerLink" class="action-tile" role="button">
-                <i [class]="action.icon + ' action-tile-icon'"></i>
-                <span class="action-tile-label">{{ action.label }}</span>
-              </a>
-            }
-          </div>
-        </p-card>
-      </div>
-
-      <!-- Bento Item 7: Digital Twin Competency Profiling / Institutional Quality Assurance (Col Span 8) -->
-      <div class="bento-col-8">
-        @if (isStudent()) {
-          <p-card styleClass="h-full competency-bento-card">
-            <ng-template pTemplate="header">
-              <div class="card-header-flex">
-                <div>
-                  <h2 class="card-title">Digital Twin Competency Profiling</h2>
-                  <p class="card-subtitle">AI-synthesized academic performance & skill indices</p>
-                </div>
-                <p-tag severity="success" value="Overall Index: 90%"></p-tag>
-              </div>
-            </ng-template>
-
-            <div class="competency-list">
-              @for (item of competencies; track item.skill) {
-                <div class="competency-item">
-                  <div class="competency-label-row">
-                    <div class="competency-info">
-                      <span class="skill-name">{{ item.skill }}</span>
-                      <span class="skill-category">{{ item.category }}</span>
-                    </div>
-                    <span class="skill-score">{{ item.score }}%</span>
-                  </div>
-                  <p-progressbar [value]="item.score" [showValue]="false" styleClass="h-2 rounded-full"></p-progressbar>
-                </div>
-              }
-            </div>
-          </p-card>
-        } @else {
-          <p-card styleClass="h-full competency-bento-card">
-            <ng-template pTemplate="header">
-              <div class="card-header-flex">
-                <div>
-                  <h2 class="card-title">Institutional Quality Assurance & Compliance Status</h2>
-                  <p class="card-subtitle">Statutory compliance benchmarks across Philippine higher education standards</p>
-                </div>
-                <p-tag severity="success" value="CHED Compliant"></p-tag>
-              </div>
-            </ng-template>
-
-            <div class="competency-list">
-              <div class="competency-item">
-                <div class="competency-label-row">
-                  <div class="competency-info">
-                    <span class="skill-name">RA 10931 UniFAST Free Higher Education (FHE)</span>
-                    <span class="skill-category">13 Authorized TOSF Categories & Billing Form 2</span>
-                  </div>
-                  <span class="skill-score">100%</span>
-                </div>
-                <p-progressbar [value]="100" [showValue]="false" styleClass="h-2 rounded-full"></p-progressbar>
-              </div>
-              <div class="competency-item">
-                <div class="competency-label-row">
-                  <div class="competency-info">
-                    <span class="skill-name">COA Accountable Form No. 51 Electronic Receipts</span>
-                    <span class="skill-category">Sequential Booklet Controls & EOD RCD (Form 58-A)</span>
-                  </div>
-                  <span class="skill-score">98%</span>
-                </div>
-                <p-progressbar [value]="98" [showValue]="false" styleClass="h-2 rounded-full"></p-progressbar>
-              </div>
-              <div class="competency-item">
-                <div class="competency-label-row">
-                  <div class="competency-info">
-                    <span class="skill-name">CHED CMO 25 s. 2015 Outcomes-Based Education</span>
-                    <span class="skill-category">DAG Curriculum Prerequisite Validation (Kahn's Sort)</span>
-                  </div>
-                  <span class="skill-score">96%</span>
-                </div>
-                <p-progressbar [value]="96" [showValue]="false" styleClass="h-2 rounded-full"></p-progressbar>
-              </div>
-              <div class="competency-item">
-                <div class="competency-label-row">
-                  <div class="competency-info">
-                    <span class="skill-name">Multi-Department Clearance Gatekeeper</span>
-                    <span class="skill-category">5-Department Sequential Signoffs (Library, Accounting, Lab, OSAS, Dean)</span>
-                  </div>
-                  <span class="skill-score">94%</span>
-                </div>
-                <p-progressbar [value]="94" [showValue]="false" styleClass="h-2 rounded-full"></p-progressbar>
-              </div>
-            </div>
-          </p-card>
-        }
-      </div>
-
-      <!-- Bento Item 8: Academic Notices & Updates (Col Span 4) -->
-      <div class="bento-col-4">
-        <p-card styleClass="h-full notices-bento-card">
-          <ng-template pTemplate="header">
-            <div class="card-header-flex">
-              <div>
-                <h2 class="card-title">Academic Notices</h2>
-                <p class="card-subtitle">Official announcements & advisories</p>
-              </div>
-              <p-tag severity="danger" value="3 New"></p-tag>
-            </div>
-          </ng-template>
-
-          <div class="notices-list">
-            @for (notice of notices; track notice.id) {
-              <div class="notice-item" [class.unread]="notice.unread" (click)="openNoticeDetail(notice)" (keydown.enter)="openNoticeDetail(notice)" (keydown.space)="openNoticeDetail(notice); $event.preventDefault()" tabindex="0" role="button" [attr.aria-label]="'View notice: ' + notice.title">
-                <div class="notice-meta">
-                  <span class="notice-category">{{ notice.category }}</span>
-                  <span class="notice-date">{{ notice.date }}</span>
-                </div>
-                <h3 class="notice-title">{{ notice.title }}</h3>
-              </div>
-            }
-          </div>
-        </p-card>
-      </div>
-
+      <p-table [value]="actuatorEndpoints" styleClass="institutional-table" [scrollable]="true">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Telemetry Endpoint</th>
+            <th>URI Path</th>
+            <th>Port</th>
+            <th>Protocol / Engine</th>
+            <th>Latency</th>
+            <th class="text-center">Status</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-act>
+          <tr>
+            <td>
+              <div class="font-bold text-slate-800">{{ act.name }}</div>
+            </td>
+            <td><code class="text-xs bg-slate-100 px-2 py-1 rounded text-rose-700 font-mono">{{ act.path }}</code></td>
+            <td><span class="font-mono text-xs font-bold text-slate-600">{{ act.port }}</span></td>
+            <td><span class="text-xs text-slate-600">{{ act.type }}</span></td>
+            <td><span class="font-mono text-xs text-emerald-700 font-bold">{{ act.latencyMs }} ms</span></td>
+            <td class="text-center">
+              <p-tag [value]="act.status" severity="success" [rounded]="true"></p-tag>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
     </div>
   }
 
-  <!-- Master-Detail Drawer for Notice Details -->
-  <p-drawer
-    [(visible)]="isNoticeDrawerOpen"
-    position="right"
-    [modal]="true"
-    [blockScroll]="true"
-    ariaLabelledBy="notice-drawer-title"
-    styleClass="notice-drawer"
-    (onHide)="isNoticeDrawerOpen.set(false)">
-    <ng-template pTemplate="header">
-      <div class="notice-drawer-header">
-        <i class="pi pi-bell notice-bell-icon"></i>
-        <div>
-          <span class="notice-drawer-title-sub">CHMSU Official Advisory</span>
-          <h3 id="notice-drawer-title" class="notice-drawer-title-text">{{ selectedNotice()?.title }}</h3>
+  <!-- 2. ADMIN WORKSPACE: Master System User Directory & Provisioning -->
+  @else if (isAdmin()) {
+    <div class="table-card">
+      <div class="table-toolbar">
+        <div class="toolbar-heading">
+          <h2 class="section-title">
+            <i class="pi pi-users header-icon-sm"></i>
+            Institutional System User Provisioning & RBAC Matrix
+          </h2>
+          <p-tag value="1,480 Active Accounts" severity="info" [rounded]="true"></p-tag>
+        </div>
+        <div class="toolbar-controls">
+          <a routerLink="/dashboard/users" class="action-link text-xs font-bold text-emerald-700">Open User Directory &rarr;</a>
         </div>
       </div>
-    </ng-template>
 
-    <ng-template pTemplate="content">
-      @if (selectedNotice()) {
-        <div class="drawer-content-body">
-          <div class="drawer-profile-card">
-            <div class="drawer-meta-row">
-              <p-tag severity="info" [value]="selectedNotice()!.category"></p-tag>
-              <span class="notice-date">{{ selectedNotice()!.date }}</span>
-            </div>
-            <p class="drawer-notice-text">
-              This official notice was issued by the {{ selectedNotice()!.category }} for student records and academic schedule adherence. Please verify any prerequisites or clearances required before the end of the term.
-            </p>
+      <p-table [value]="monitoredStudents" styleClass="institutional-table" [scrollable]="true">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>User Account</th>
+            <th>Institutional Scope</th>
+            <th>Risk Level</th>
+            <th>Attendance Scan</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-user>
+          <tr>
+            <td>
+              <div class="student-profile-cell">
+                <p-avatar [label]="getInitials(user.fullName)" shape="circle" size="normal" styleClass="student-avatar"></p-avatar>
+                <div class="student-meta">
+                  <span class="student-name">{{ user.fullName }}</span>
+                  <span class="student-number">{{ user.studentNumber }}</span>
+                </div>
+              </div>
+            </td>
+            <td><span class="font-bold text-xs text-slate-700">{{ user.programOrSection }}</span></td>
+            <td>
+              <p-tag [value]="user.riskLevel" [severity]="getRiskSeverity(user.riskLevel)" [rounded]="true"></p-tag>
+            </td>
+            <td>
+              <span class="font-mono text-xs font-bold text-slate-700">{{ user.attendanceRate }}%</span>
+            </td>
+            <td class="text-center">
+              <p-button icon="pi pi-user-edit" severity="secondary" [text]="true" [rounded]="true" size="small" pTooltip="Edit User Account"></p-button>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+
+  <!-- 3. REGISTRAR WORKSPACE: Academic Period & SHA-256 Grade Sealing Engine -->
+  @else if (isRegistrar()) {
+    <div class="table-card">
+      <div class="table-toolbar">
+        <div class="toolbar-heading">
+          <h2 class="section-title">
+            <i class="pi pi-lock header-icon-sm"></i>
+            University Registrar Grade Sealing Engine & Academic Windows
+          </h2>
+          <p-tag value="AY 2026-2027 1st Semester" severity="success" [rounded]="true"></p-tag>
+        </div>
+        <div class="toolbar-controls">
+          <a routerLink="/dashboard/grades" class="action-link text-xs font-bold text-emerald-700">Open Grade Sealing Console &rarr;</a>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+          <div class="text-xs font-bold text-slate-500 uppercase">Enrolment Window</div>
+          <div class="text-sm font-bold text-emerald-700 mt-1"><i class="pi pi-circle-fill text-xs mr-1 text-emerald-500"></i> OPEN (Self-Service)</div>
+        </div>
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+          <div class="text-xs font-bold text-slate-500 uppercase">Grade Submission Gate</div>
+          <div class="text-sm font-bold text-amber-700 mt-1"><i class="pi pi-clock text-xs mr-1"></i> MIDTERM ENCODING</div>
+        </div>
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+          <div class="text-xs font-bold text-slate-500 uppercase">SHA-256 Grade Ledger</div>
+          <div class="text-sm font-bold text-blue-700 mt-1"><i class="pi pi-lock text-xs mr-1"></i> 148 / 180 SEALS ACTIVE</div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- 4. CASHIER WORKSPACE: Cashier POS & COA Form 51 Collections -->
+  @else if (isCashier()) {
+    <div class="table-card">
+      <div class="table-toolbar">
+        <div class="toolbar-heading">
+          <h2 class="section-title">
+            <i class="pi pi-calculator header-icon-sm"></i>
+            Cashier POS Terminal & Official Receipt (Form 51) Booklet Inventory
+          </h2>
+          <p-tag value="Shift Desk 01 Active" severity="warn" [rounded]="true"></p-tag>
+        </div>
+        <div class="toolbar-controls">
+          <a routerLink="/dashboard/finance/cashier" class="action-link text-xs font-bold text-emerald-700">Launch POS Terminal &rarr;</a>
+        </div>
+      </div>
+
+      <p-table [value]="cashierBooklets" styleClass="institutional-table" [scrollable]="true">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Booklet #</th>
+            <th>Form Standard</th>
+            <th>Assigned Cashier</th>
+            <th>Receipt Range</th>
+            <th>Current O.R.</th>
+            <th>Remaining</th>
+            <th class="text-center">Status</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-bkl>
+          <tr>
+            <td><span class="font-mono font-bold text-xs text-blue-800">{{ bkl.bookletNumber }}</span></td>
+            <td><span class="text-xs text-slate-600">{{ bkl.formType }}</span></td>
+            <td><span class="text-xs font-bold text-slate-800">{{ bkl.assignedCashier }}</span></td>
+            <td><span class="font-mono text-xs text-slate-500">{{ bkl.startOr }} – {{ bkl.endOr }}</span></td>
+            <td><span class="font-mono text-xs font-bold text-emerald-700">{{ bkl.currentOr }}</span></td>
+            <td><span class="font-bold text-xs" [ngClass]="bkl.remainingCount < 10 ? 'text-rose-600' : 'text-slate-700'">{{ bkl.remainingCount }} Receipts</span></td>
+            <td class="text-center">
+              <p-tag [value]="bkl.status" [severity]="bkl.status === 'ACTIVE' ? 'success' : 'secondary'" [rounded]="true"></p-tag>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+
+  <!-- 5. FACULTY WORKSPACE: Instructional Class Record & Attendance Telemetry -->
+  @else if (isFaculty()) {
+    <div class="table-card">
+      <div class="table-toolbar">
+        <div class="toolbar-heading">
+          <h2 class="section-title">
+            <i class="pi pi-id-card header-icon-sm"></i>
+            Faculty Assigned Sections & Class Attendance Telemetry Radar
+          </h2>
+          <p-tag value="18.0 Contact Units Assigned" severity="success" [rounded]="true"></p-tag>
+        </div>
+        <div class="toolbar-controls">
+          <a routerLink="/dashboard/grades" class="action-link text-xs font-bold text-emerald-700">Open Section Gradebook &rarr;</a>
+        </div>
+      </div>
+
+      <p-table [value]="todayClasses" styleClass="institutional-table" [scrollable]="true">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Course Session</th>
+            <th>Schedule & Room</th>
+            <th>Instructor</th>
+            <th>Attendance QR Scan</th>
+            <th class="text-center">Status</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-cls>
+          <tr>
+            <td>
+              <div class="font-bold text-xs text-emerald-800">{{ cls.courseCode }}</div>
+              <div class="text-xs text-slate-600">{{ cls.courseTitle }}</div>
+            </td>
+            <td>
+              <div class="text-xs font-bold text-slate-800">{{ cls.time }}</div>
+              <div class="text-xs text-slate-500"><i class="pi pi-map-marker"></i> {{ cls.room }}</div>
+            </td>
+            <td><span class="text-xs text-slate-700">{{ cls.instructor }}</span></td>
+            <td><span class="font-mono text-xs font-bold text-emerald-700">96.2% Scan Rate</span></td>
+            <td class="text-center">
+              <p-tag [value]="cls.status" [severity]="cls.status === 'In Progress' ? 'success' : (cls.status === 'Completed' ? 'secondary' : 'info')" [rounded]="true"></p-tag>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+
+  <!-- 6. DEAN WORKSPACE: College Executive Leadership & Faculty Overload Radar -->
+  @else if (isDean()) {
+    <div class="table-card">
+      <div class="table-toolbar">
+        <div class="toolbar-heading">
+          <h2 class="section-title">
+            <i class="pi pi-briefcase header-icon-sm"></i>
+            College Faculty Workload Compliance & Overload Approval Radar
+          </h2>
+          <p-tag value="College of Computer Studies" severity="info" [rounded]="true"></p-tag>
+        </div>
+        <div class="toolbar-controls">
+          <a routerLink="/dashboard/scheduling" class="action-link text-xs font-bold text-emerald-700">View All Faculty Loads &rarr;</a>
+        </div>
+      </div>
+
+      <p-table [value]="facultyWorkloadList" styleClass="institutional-table" [scrollable]="true">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Faculty Member</th>
+            <th>Department</th>
+            <th>Assigned Contact Units</th>
+            <th>Max Unit Cap</th>
+            <th class="text-center">Overload Status</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-fac>
+          <tr>
+            <td><span class="font-bold text-xs text-slate-800">{{ fac.fullName }}</span></td>
+            <td><span class="text-xs text-slate-600">{{ fac.department }}</span></td>
+            <td>
+              <span class="font-mono text-xs font-bold" [ngClass]="fac.assignedUnits > fac.maxUnits ? 'text-rose-600' : 'text-emerald-700'">
+                {{ fac.assignedUnits }} / {{ fac.maxUnits }} Units
+              </span>
+            </td>
+            <td><span class="text-xs text-slate-500">21.0 Units Cap</span></td>
+            <td class="text-center">
+              <p-tag
+                [value]="fac.status"
+                [severity]="fac.status === 'NORMAL' ? 'success' : (fac.status === 'OVERLOAD_APPROVED' ? 'info' : 'warn')"
+                [rounded]="true"
+              ></p-tag>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+
+  <!-- 7. CHAIRPERSON WORKSPACE: Department Curriculum & Timetable Console -->
+  @else if (isChairperson()) {
+    <div class="table-card">
+      <div class="table-toolbar">
+        <div class="toolbar-heading">
+          <h2 class="section-title">
+            <i class="pi pi-sitemap header-icon-sm"></i>
+            Department Curriculum & CILO-PILO Outcome Alignment Heatmap
+          </h2>
+          <p-tag value="BSIT Degree Program" severity="success" [rounded]="true"></p-tag>
+        </div>
+        <div class="toolbar-controls">
+          <a routerLink="/dashboard/curriculum/designer/1" class="action-link text-xs font-bold text-emerald-700">Launch Curriculum Designer &rarr;</a>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+          <div class="text-xs font-bold text-slate-500 uppercase">CILO-PILO Matrix Alignment</div>
+          <div class="text-sm font-bold text-emerald-700 mt-1"><i class="pi pi-check-circle text-xs mr-1"></i> 96.4% Mapped</div>
+        </div>
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+          <div class="text-xs font-bold text-slate-500 uppercase">Timetable Section Slots</div>
+          <div class="text-sm font-bold text-blue-700 mt-1"><i class="pi pi-calendar text-xs mr-1"></i> 28 Sections Built</div>
+        </div>
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+          <div class="text-xs font-bold text-slate-500 uppercase">Grade Verification Queue</div>
+          <div class="text-sm font-bold text-amber-700 mt-1"><i class="pi pi-clock text-xs mr-1"></i> 4 Sheets Pending</div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- 8. STUDENT WORKSPACE: Personal Academic Digital Twin Telemetry -->
+  @else if (isStudent()) {
+    <div class="student-cockpit">
+      <!-- Fused Identity Strip -->
+      <div class="identity-card">
+        <div class="identity-profile">
+          <p-avatar [label]="getInitials(userName())" shape="circle" size="large" styleClass="identity-avatar"></p-avatar>
+          <div class="identity-meta">
+            <h2 class="identity-name">{{ userName() }}</h2>
+            <p class="identity-sub">2023-0142-S — BSIT (Year 3) • CHMSU Scholar</p>
           </div>
+        </div>
 
-          <!-- Section: Notice Metadata -->
-          <div class="drawer-section">
-            <h4 class="drawer-section-title">
-              <i class="pi pi-info-circle"></i>
-              <span>Advisory Specifications</span>
-            </h4>
-            <div class="drawer-def-grid">
-              <div class="drawer-def-item">
-                <span class="drawer-def-label">Issuing Office</span>
-                <span class="drawer-def-val">{{ selectedNotice()!.category }}</span>
-              </div>
-              <div class="drawer-def-item">
-                <span class="drawer-def-label">Priority Level</span>
-                <span class="drawer-def-val amber-val">High Advisory</span>
-              </div>
+        <div class="identity-stats">
+          <div class="stat-unit">
+            <span class="stat-label">Cumulative GWA</span>
+            <span class="stat-val gpa-val">1.38</span>
+          </div>
+          <div class="hairline-divider"></div>
+          <div class="stat-unit">
+            <span class="stat-label">Earned Units</span>
+            <span class="stat-val">84 / 142</span>
+          </div>
+          <div class="hairline-divider"></div>
+          <div class="stat-unit">
+            <span class="stat-label">Clearance Gate</span>
+            <span class="clearance-pill">CLEARED</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Health Gauge Card & Bento Grid -->
+      <div class="grid-section">
+        <div class="stat-card health-card">
+          <div class="knob-container">
+            <p-knob
+              [ngModel]="98"
+              [readonly]="true"
+              [size]="70"
+              valueTemplate="{value}%"
+              valueColor="var(--chmsu-green-main, #116834)"
+              rangeColor="var(--p-surface-200, #e2e8f0)"
+            ></p-knob>
+          </div>
+          <div class="health-meta">
+            <span class="stat-label">Diagnostic Health Summary</span>
+            <span class="stat-val health-rate-val">98.4% Retention Index</span>
+            <div class="tag-row">
+              <p-tag value="OPTIMAL PROGRESSION" severity="success" size="small"></p-tag>
             </div>
           </div>
         </div>
-      }
-    </ng-template>
 
-    <ng-template pTemplate="footer">
-      <div class="drawer-footer-row">
+        <div class="bento-grid-4col">
+          <div class="stat-card bento-tile accent-green">
+            <div class="tile-header">
+              <span class="stat-label">Academic Health</span>
+              <div class="tile-icon-box green"><i class="pi pi-book"></i></div>
+            </div>
+            <div class="stat-val">94.2%</div>
+            <p-progressBar [value]="94" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">+3.2% vs target threshold</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-blue">
+            <div class="tile-header">
+              <span class="stat-label">Attendance Rate</span>
+              <div class="tile-icon-box blue"><i class="pi pi-calendar"></i></div>
+            </div>
+            <div class="stat-val">98.4%</div>
+            <p-progressBar [value]="98" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">Geofenced QR Presence Verified</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-amber">
+            <div class="tile-header">
+              <span class="stat-label">Socioeconomic Index</span>
+              <div class="tile-icon-box amber"><i class="pi pi-shield"></i></div>
+            </div>
+            <div class="stat-val">100%</div>
+            <p-progressBar [value]="100" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">UniFAST Subsidy Verified</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-rose">
+            <div class="tile-header">
+              <span class="stat-label">Composite Risk Level</span>
+              <div class="tile-icon-box rose"><i class="pi pi-chart-line"></i></div>
+            </div>
+            <div class="tag-wrapper">
+              <p-tag value="LOW RISK" severity="success" [rounded]="true"></p-tag>
+            </div>
+            <div class="tile-caption">Evaluated via AI Risk Engine</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- 9. GUIDANCE WORKSPACE: Student Body Dropout Risk Radar & AI Intervention Cockpit -->
+  @else if (isGuidance()) {
+    <div class="table-card">
+      <div class="table-toolbar">
+        <div class="toolbar-heading">
+          <h2 class="section-title">
+            <i class="pi pi-heart-fill header-icon-amber"></i>
+            Student Risk Radar & AI Intervention Dispatch Console
+          </h2>
+          <p-tag value="14 Critical & High Risk Cases" severity="danger" [rounded]="true"></p-tag>
+        </div>
+        <div class="toolbar-controls">
+          <p-button
+            label="Dispatch AI Intervention"
+            icon="pi pi-send"
+            severity="warn"
+            size="small"
+            (onClick)="openDispatchModal(monitoredStudents[0])"
+          ></p-button>
+        </div>
+      </div>
+
+      <p-table [value]="monitoredStudents" styleClass="institutional-table" [scrollable]="true">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Student Profile</th>
+            <th>Section / Program</th>
+            <th>Risk Level & Score</th>
+            <th>Active Interventions</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-student>
+          <tr>
+            <td>
+              <div class="student-profile-cell">
+                <p-avatar [label]="getInitials(student.fullName)" shape="circle" size="normal" styleClass="student-avatar"></p-avatar>
+                <div class="student-meta">
+                  <span class="student-name">{{ student.fullName }}</span>
+                  <span class="student-number">{{ student.studentNumber }}</span>
+                </div>
+              </div>
+            </td>
+            <td><span class="font-bold text-xs text-slate-800">{{ student.programOrSection }}</span></td>
+            <td>
+              <div class="risk-score-wrapper">
+                <p-tag [value]="student.riskLevel" [severity]="getRiskSeverity(student.riskLevel)" [rounded]="true"></p-tag>
+                <span class="risk-percentage">{{ student.riskScore }}%</span>
+              </div>
+            </td>
+            <td>
+              @if (student.activeInterventions.length > 0) {
+                <div class="interventions-list">
+                  @for (action of student.activeInterventions; track action) {
+                    <p-tag [value]="action" severity="warn" size="small"></p-tag>
+                  }
+                </div>
+              } @else {
+                <span class="no-interventions">No Dispatches</span>
+              }
+            </td>
+            <td class="text-center">
+              <p-button
+                icon="pi pi-send"
+                severity="warn"
+                [text]="true"
+                [rounded]="true"
+                size="small"
+                pTooltip="Dispatch Intervention"
+                (onClick)="openDispatchModal(student)"
+              ></p-button>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+
+  <!-- 10. ACCOUNTANT WORKSPACE: Accounting Office & UniFAST FHE Billing Claims -->
+  @else if (isAccountant()) {
+    <div class="table-card">
+      <div class="table-toolbar">
+        <div class="toolbar-heading">
+          <h2 class="section-title">
+            <i class="pi pi-file-export header-icon-sm"></i>
+            Accounting Office & UniFAST FHE Billing Claim Ledger
+          </h2>
+          <p-tag value="RA 10931 Compliant" severity="success" [rounded]="true"></p-tag>
+        </div>
+        <div class="toolbar-controls">
+          <a routerLink="/dashboard/finance/unifast" class="action-link text-xs font-bold text-emerald-700">Open UniFAST FHE Claims Portal &rarr;</a>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+          <div class="text-xs font-bold text-slate-500 uppercase">FHE Claim Batches</div>
+          <div class="text-sm font-bold text-blue-700 mt-1"><i class="pi pi-file-export text-xs mr-1"></i> 4 Batches Audited</div>
+        </div>
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+          <div class="text-xs font-bold text-slate-500 uppercase">Total Subsidy Billed</div>
+          <div class="text-sm font-bold text-emerald-700 mt-1"><i class="pi pi-dollar text-xs mr-1"></i> ₱1,280,450.00</div>
+        </div>
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+          <div class="text-xs font-bold text-slate-500 uppercase">Double-Entry Ledgers</div>
+          <div class="text-sm font-bold text-slate-700 mt-1"><i class="pi pi-history text-xs mr-1"></i> 1,420 Enrollees Synchronized</div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Bottom Split Grid: Quick Actions & Academic Notices -->
+  <div class="two-column-grid">
+    <!-- Left: Role-Tailored Quick Actions -->
+    <div class="content-card">
+      <h3 class="section-title mb-3">
+        <i class="pi pi-th-large header-icon-green"></i>
+        Role-Tailored University Shortcuts
+      </h3>
+
+      <div class="quick-actions-grid">
+        @for (action of roleQuickActions(); track action.label) {
+          <a [routerLink]="action.routerLink" class="action-tile" role="button">
+            <i [class]="action.icon + ' action-tile-icon'"></i>
+            <span class="action-tile-label">{{ action.label }}</span>
+          </a>
+        }
+      </div>
+    </div>
+
+    <!-- Right: Official Announcements & Advisories -->
+    <div class="content-card">
+      <h3 class="section-title mb-3">
+        <i class="pi pi-bell header-icon-amber"></i>
+        Institutional Announcements & Advisories
+      </h3>
+
+      <div class="notices-list">
+        @for (notice of notices; track notice.id) {
+          <div class="notice-item" [class.unread]="notice.unread" (click)="openNoticeDetail(notice)" tabindex="0" role="button">
+            <div class="notice-meta">
+              <span class="notice-category">{{ notice.category }}</span>
+              <span class="notice-date">{{ notice.date }}</span>
+            </div>
+            <h4 class="notice-title">{{ notice.title }}</h4>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Dispatch AI Intervention Drawer for Guidance Counselor & Admin -->
+<p-drawer
+  [(visible)]="isDispatchModalOpen"
+  position="right"
+  [style]="{ width: '480px' }"
+  styleClass="institutional-drawer"
+  header="Dispatch AI Support Intervention"
+>
+  @if (selectedStudentForDispatch(); as student) {
+    <div [formGroup]="dispatchForm" class="drawer-content flex flex-col gap-4 p-2">
+      <div class="target-student-banner p-3 bg-slate-50 border border-slate-200 rounded-lg flex items-center gap-3">
+        <p-avatar [label]="getInitials(student.fullName)" shape="circle" styleClass="target-avatar"></p-avatar>
+        <div class="target-student-info">
+          <div class="target-student-name font-bold text-slate-800 text-sm">{{ student.fullName }}</div>
+          <div class="target-student-sub text-xs text-slate-500">{{ student.studentNumber }} — {{ student.programOrSection }}</div>
+          <div class="target-student-risk mt-1">
+            <span class="risk-label text-xs mr-1 text-slate-500 font-bold">Risk Level:</span>
+            <p-tag [value]="student.riskLevel" [severity]="getRiskSeverity(student.riskLevel)" size="small"></p-tag>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-field flex flex-col gap-1">
+        <label for="interventionType" class="field-label text-xs font-bold text-slate-700 uppercase">SUPPORT ACTION TYPE <span class="text-rose-600">*</span></label>
+        <p-select
+          id="interventionType"
+          [options]="interventionTypeOptions"
+          optionLabel="label"
+          optionValue="value"
+          formControlName="interventionType"
+          placeholder="Select Support Action"
+          styleClass="w-full"
+        ></p-select>
+      </div>
+
+      <div class="form-field flex flex-col gap-1">
+        <label for="triggerReason" class="field-label text-xs font-bold text-slate-700 uppercase">TRIGGER REASON <span class="text-rose-600">*</span></label>
+        <input
+          pInputText
+          id="triggerReason"
+          type="text"
+          formControlName="triggerReason"
+          placeholder="Enter specific risk factor or rationale..."
+          class="p-inputtext-sm w-full"
+        />
+      </div>
+
+      <div class="form-field flex flex-col gap-1">
+        <label for="notes" class="field-label text-xs font-bold text-slate-700 uppercase">COUNSELOR NOTES</label>
+        <textarea
+          id="notes"
+          pInputText
+          formControlName="notes"
+          rows="3"
+          placeholder="Optional clinical guidance notes..."
+          class="p-inputtext-sm w-full"
+        ></textarea>
+      </div>
+
+      <div class="drawer-actions flex items-center justify-end gap-2 mt-4">
         <p-button
-          label="Dismiss"
-          icon="pi pi-times"
+          label="Cancel"
           severity="secondary"
           [outlined]="true"
           size="small"
-          (onClick)="isNoticeDrawerOpen.set(false)">
-        </p-button>
+          (onClick)="isDispatchModalOpen.set(false)"
+        ></p-button>
         <p-button
-          label="Acknowledge Notice"
-          icon="pi pi-check"
-          severity="primary"
+          label="Dispatch Action"
+          icon="pi pi-send"
+          severity="warn"
           size="small"
-          (onClick)="isNoticeDrawerOpen.set(false)">
-        </p-button>
+          [loading]="isDispatching()"
+          (onClick)="confirmDispatchIntervention()"
+        ></p-button>
       </div>
-    </ng-template>
-  </p-drawer>
-</div>
+    </div>
+  }
+</p-drawer>
+
+<!-- Notice Detail Drawer -->
+<p-drawer
+  [(visible)]="isNoticeDrawerOpen"
+  position="right"
+  [modal]="true"
+  styleClass="notice-drawer"
+  (onHide)="isNoticeDrawerOpen.set(false)"
+>
+  <ng-template pTemplate="header">
+    <div class="notice-drawer-header flex items-center gap-2">
+      <i class="pi pi-bell text-emerald-700"></i>
+      <div>
+        <span class="notice-drawer-title-sub text-xs font-bold text-emerald-800 uppercase block">CHMSU Official Advisory</span>
+        <h3 class="notice-drawer-title-text font-bold text-slate-900 text-sm m-0">{{ selectedNotice()?.title }}</h3>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="content">
+    @if (selectedNotice()) {
+      <div class="drawer-content-body flex flex-col gap-3">
+        <div class="drawer-profile-card p-3 bg-slate-50 border border-slate-200 rounded-lg">
+          <div class="drawer-meta-row flex items-center gap-2 mb-2">
+            <p-tag severity="info" [value]="selectedNotice()!.category"></p-tag>
+            <span class="notice-date text-xs text-slate-500">{{ selectedNotice()!.date }}</span>
+          </div>
+          <p class="drawer-notice-text text-xs text-slate-700 leading-relaxed margin-0">
+            This official notice was issued by the {{ selectedNotice()!.category }} for student records and academic schedule adherence. Please verify any prerequisites or clearances required before the end of the term.
+          </p>
+        </div>
+      </div>
+    }
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <div class="drawer-footer-row flex items-center justify-between w-full">
+      <p-button label="Dismiss" icon="pi pi-times" severity="secondary" [outlined]="true" size="small" (onClick)="isNoticeDrawerOpen.set(false)"></p-button>
+      <p-button label="Acknowledge Notice" icon="pi pi-check" severity="primary" size="small" (onClick)="isNoticeDrawerOpen.set(false)"></p-button>
+    </div>
+  </ng-template>
+</p-drawer>
