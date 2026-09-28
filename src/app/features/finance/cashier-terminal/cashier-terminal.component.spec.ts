@@ -8,9 +8,11 @@ import { CashierTerminalComponent } from './cashier-terminal.component';
 import { FinancialApiService } from '../../../core/service/financial/financial-api.service';
 import { TermService } from '../../../core/services/institution.service';
 import { EnrollmentApiService } from '../../../core/service/enrollment/enrollment-api.service';
+import { UserApiService } from '../../../core/service/user/user-api.service';
 import { OrBookletDto, EodRcdReportDto } from '../../../core/models/financial.model';
 import { Term } from '../../../core/models/institution.model';
 import { StudentSearchResultDto } from '../../../core/models/enrollment.model';
+import { UserDetail } from '../../../core/models/user-management.model';
 
 describe('CashierTerminalComponent', () => {
   let component: CashierTerminalComponent;
@@ -18,6 +20,7 @@ describe('CashierTerminalComponent', () => {
   let mockFinancialApi: any;
   let mockTermService: any;
   let mockEnrollmentApi: any;
+  let mockUserApi: any;
 
   const mockTerm: Term = {
     id: 1,
@@ -63,6 +66,24 @@ describe('CashierTerminalComponent', () => {
     receipts: []
   };
 
+  const mockUserCashier: UserDetail = {
+    id: 10,
+    username: 'cashier_bob',
+    email: 'bob@university.edu',
+    roles: ['CASHIER'],
+    enabled: true,
+    createdAt: '2026-01-01'
+  };
+
+  const mockUserAdmin: UserDetail = {
+    id: 99,
+    username: 'admin_alice',
+    email: 'alice@university.edu',
+    roles: ['ADMIN'],
+    enabled: true,
+    createdAt: '2026-01-01'
+  };
+
   beforeEach(async () => {
     mockFinancialApi = {
       getActiveBooklet: vi.fn().mockReturnValue(of(mockBooklet)),
@@ -84,6 +105,10 @@ describe('CashierTerminalComponent', () => {
       searchStudents: vi.fn().mockReturnValue(of([mockStudent]))
     };
 
+    mockUserApi = {
+      getUsers: vi.fn().mockReturnValue(of([mockUserCashier, mockUserAdmin]))
+    };
+
     await TestBed.configureTestingModule({
       imports: [CashierTerminalComponent],
       providers: [
@@ -93,7 +118,8 @@ describe('CashierTerminalComponent', () => {
         ConfirmationService,
         { provide: FinancialApiService, useValue: mockFinancialApi },
         { provide: TermService, useValue: mockTermService },
-        { provide: EnrollmentApiService, useValue: mockEnrollmentApi }
+        { provide: EnrollmentApiService, useValue: mockEnrollmentApi },
+        { provide: UserApiService, useValue: mockUserApi }
       ]
     }).compileComponents();
 
@@ -106,6 +132,13 @@ describe('CashierTerminalComponent', () => {
     expect(component).toBeTruthy();
     expect(component.activeBooklet()).toEqual(mockBooklet);
     expect(component.fundClusterCode()).toBe('FUND_164');
+  });
+
+  it('should load cashier users with CASHIER role for dropdown', () => {
+    expect(mockUserApi.getUsers).toHaveBeenCalled();
+    expect(component.cashierUsers().length).toBe(1);
+    expect(component.cashierUsers()[0].value).toBe(10);
+    expect(component.cashierUsers()[0].label).toContain('cashier_bob');
   });
 
   it('should calculate change amount correctly', () => {

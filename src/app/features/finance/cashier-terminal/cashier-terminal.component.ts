@@ -23,6 +23,7 @@ import { MessageService } from 'primeng/api';
 import { FinancialApiService } from '../../../core/service/financial/financial-api.service';
 import { TermService } from '../../../core/services/institution.service';
 import { EnrollmentApiService } from '../../../core/service/enrollment/enrollment-api.service';
+import { UserApiService } from '../../../core/service/user/user-api.service';
 import { Term } from '../../../core/models/institution.model';
 import { StudentSearchResultDto } from '../../../core/models/enrollment.model';
 import {
@@ -66,12 +67,16 @@ export class CashierTerminalComponent implements OnInit {
   private readonly financialApi = inject(FinancialApiService);
   private readonly termService = inject(TermService);
   private readonly enrollmentApi = inject(EnrollmentApiService);
+  private readonly userApi = inject(UserApiService);
   private readonly messageService = inject(MessageService);
 
   // Search Controls Signals
   readonly searchStudentId = signal<number | null>(null);
   readonly searchTermId = signal<number>(1);
   readonly searchOrNumber = signal<string>('');
+
+  // Cashier Users Dropdown Options Signal
+  readonly cashierUsers = signal<{ label: string; value: number }[]>([]);
 
   // Term & Student Autocomplete Signals
   readonly availableTerms = signal<Term[]>([]);
@@ -142,6 +147,37 @@ export class CashierTerminalComponent implements OnInit {
     this.loadActiveBooklet();
     this.loadTerms();
     this.searchStudents('');
+    this.loadCashierUsers();
+  }
+
+  loadCashierUsers(): void {
+    this.userApi.getUsers().subscribe({
+      next: (users) => {
+        const cashiers = (users || [])
+          .filter((u) => u.roles && u.roles.some((r) => r === 'CASHIER' || r === 'ROLE_CASHIER'))
+          .map((u) => ({
+            label: `${u.username} (${u.email || 'ID: ' + u.id})`,
+            value: u.id
+          }));
+
+        if (cashiers.length > 0) {
+          this.cashierUsers.set(cashiers);
+          if (!cashiers.some((c) => c.value === this.newAssignedCashierId())) {
+            this.newAssignedCashierId.set(cashiers[0].value);
+          }
+        } else {
+          const allUsers = (users || []).map((u) => ({
+            label: `${u.username} (${u.email || 'ID: ' + u.id})`,
+            value: u.id
+          }));
+          const fallback = allUsers.length > 0 ? allUsers : [{ label: 'Default Cashier (ID: 1)', value: 1 }];
+          this.cashierUsers.set(fallback);
+        }
+      },
+      error: () => {
+        this.cashierUsers.set([{ label: 'Default Cashier (ID: 1)', value: 1 }]);
+      }
+    });
   }
 
   loadTerms(): void {

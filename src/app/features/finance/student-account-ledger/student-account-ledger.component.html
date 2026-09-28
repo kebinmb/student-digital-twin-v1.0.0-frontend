@@ -312,6 +312,165 @@
     </div>
   }
 
+  <!-- Institutional Billing & UniFAST Benefit Assessment Breakdown Card -->
+  @if (displayInvoice(); as inv) {
+    <div class="assessment-breakdown-card">
+      <div class="breakdown-header">
+        <div class="header-left">
+          <i class="pi pi-receipt card-header-icon icon-green"></i>
+          <div>
+            <h2 class="breakdown-title">Institutional Statement of Account & Fee Assessment</h2>
+            <p class="breakdown-subtitle">
+              Detailed billing breakdown based on Institutional Registry Fee Schedule & CHED-UniFAST Free Higher Education (FHE) Benefits (RA 10931)
+            </p>
+          </div>
+        </div>
+        <div class="header-right">
+          <p-tag 
+            [value]="inv.fheEligible ? 'UniFAST FHE COVERED (RA 10931)' : 'REGULAR / SELF-PAYING'" 
+            [severity]="inv.fheEligible ? 'success' : 'info'" 
+            styleClass="text-sm px-3 py-1 font-bold">
+          </p-tag>
+        </div>
+      </div>
+
+      <div class="breakdown-meta-bar">
+        <div class="meta-pill">
+          <span class="meta-label">STATEMENT / INVOICE #</span>
+          <span class="meta-val font-mono">{{ inv.invoiceNumber }}</span>
+        </div>
+        <div class="meta-pill">
+          <span class="meta-label">ACADEMIC TERM</span>
+          <span class="meta-val">{{ inv.termName }}</span>
+        </div>
+        <div class="meta-pill">
+          <span class="meta-label">STUDENT NAME</span>
+          <span class="meta-val">{{ inv.studentName }}</span>
+        </div>
+        <div class="meta-pill">
+          <span class="meta-label">ASSESSMENT STATUS</span>
+          <p-tag [value]="inv.status" severity="success" styleClass="text-xs"></p-tag>
+        </div>
+      </div>
+
+      <div class="fee-breakdown-grid">
+        <!-- Column 1: Institutional Assessed Fees (Financial Foundations Catalog) -->
+        <div class="breakdown-column fee-schedule-col">
+          <h3 class="col-title">
+            <i class="pi pi-list-check icon-green"></i> Institutional Assessed Fees (Gross Charges)
+          </h3>
+          <div class="fee-line-items">
+            <div class="fee-line">
+              <span class="fee-name">Tuition & Matriculation Fee <small class="text-secondary">(Lecture Rate per Unit)</small></span>
+              <span class="fee-amount">₱{{ inv.totalTuitionFee | number:'1.2-2' }}</span>
+            </div>
+            <div class="fee-line">
+              <span class="fee-name">Laboratory & Computer Fees <small class="text-secondary">(Lab Rate per Unit)</small></span>
+              <span class="fee-amount">₱{{ inv.totalLabFee | number:'1.2-2' }}</span>
+            </div>
+            <div class="fee-line">
+              <span class="fee-name">Mandatory Miscellaneous & Other School Fees (TOSF) <small class="text-secondary">(Athletic, Library, IT, Med/Dent)</small></span>
+              <span class="fee-amount">₱{{ inv.totalMiscFee | number:'1.2-2' }}</span>
+            </div>
+            <div class="fee-line gross-total-line">
+              <span class="fee-name font-bold">Total Gross Institutional Assessment</span>
+              <span class="fee-amount font-bold">₱{{ inv.totalGrossAssessment | number:'1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 2: Government Benefits & Net Balance (UniFAST Subsidy) -->
+        <div class="breakdown-column subsidy-benefit-col">
+          <h3 class="col-title">
+            <i class="pi pi-shield-check text-emerald-700"></i> Government Subsidies & UniFAST Benefits
+          </h3>
+          <div class="fee-line-items">
+            @if (inv.fheSubsidyAmount > 0 || inv.fheEligible) {
+              <div class="fee-line subsidy-highlight">
+                <div class="subsidy-label-group">
+                  <span class="fee-name font-bold text-emerald-700">CHED-UniFAST Free Higher Education (FHE) Benefit</span>
+                  <span class="subsidy-subtext">100% Tuition & TOSF Subsidized under Republic Act 10931</span>
+                </div>
+                <span class="fee-amount font-bold text-emerald-700">-₱{{ inv.fheSubsidyAmount | number:'1.2-2' }}</span>
+              </div>
+            }
+            @if (inv.scholarshipDiscountAmount > 0) {
+              <div class="fee-line discount-line">
+                <span class="fee-name font-bold text-emerald-700">Institutional Scholarship Grant / Discount</span>
+                <span class="fee-amount font-bold text-emerald-700">-₱{{ inv.scholarshipDiscountAmount | number:'1.2-2' }}</span>
+              </div>
+            }
+            <div class="fee-line net-assessed-line">
+              <span class="fee-name font-bold">Net Assessed Amount (Student Out-of-Pocket Due)</span>
+              <span class="fee-amount font-bold text-primary">₱{{ inv.netAssessedAmount | number:'1.2-2' }}</span>
+            </div>
+            <div class="fee-line">
+              <span class="fee-name">Total Payments & Credits Applied</span>
+              <span class="fee-amount font-bold text-green">₱{{ inv.totalPaidAmount | number:'1.2-2' }}</span>
+            </div>
+            <div class="fee-line balance-due-line">
+              <span class="fee-name font-bold">Current Net Outstanding Balance</span>
+              <span class="fee-amount font-bold" [ngClass]="{'text-orange': inv.outstandingBalance > 0, 'text-green': inv.outstandingBalance <= 0}">
+                ₱{{ inv.outstandingBalance | number:'1.2-2' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Installment Payment Schedule Matrix (Financial Foundations Installment Template) -->
+      <div class="installment-matrix-box">
+        <div class="installment-header">
+          <span class="installment-title">
+            <i class="pi pi-calendar-times mr-1 text-primary"></i> Institutional Payment Schedule (Financial Foundations Installment Matrix)
+          </span>
+          @if (inv.fheEligible) {
+            <span class="installment-fhe-note text-emerald-700">
+              <i class="pi pi-check-circle mr-1"></i> All 5 Installment periods 100% Covered by UniFAST FHE Grant (₱0.00 Student Out-of-Pocket Due)
+            </span>
+          }
+        </div>
+        <div class="installment-grid">
+          <div class="installment-card">
+            <span class="inst-label">DOWNPAYMENT (20%)</span>
+            <span class="inst-val">₱{{ (inv.netAssessedAmount * 0.20) | number:'1.2-2' }}</span>
+            <span class="inst-status" [class.status-waived]="inv.fheEligible">
+              {{ inv.fheEligible ? 'FHE WAIVED' : 'DUE AT REGISTRATION' }}
+            </span>
+          </div>
+          <div class="installment-card">
+            <span class="inst-label">PRELIM EXAM (20%)</span>
+            <span class="inst-val">₱{{ (inv.netAssessedAmount * 0.20) | number:'1.2-2' }}</span>
+            <span class="inst-status" [class.status-waived]="inv.fheEligible">
+              {{ inv.fheEligible ? 'FHE WAIVED' : 'PRELIM PERIOD' }}
+            </span>
+          </div>
+          <div class="installment-card">
+            <span class="inst-label">MIDTERM EXAM (20%)</span>
+            <span class="inst-val">₱{{ (inv.netAssessedAmount * 0.20) | number:'1.2-2' }}</span>
+            <span class="inst-status" [class.status-waived]="inv.fheEligible">
+              {{ inv.fheEligible ? 'FHE WAIVED' : 'MIDTERM PERIOD' }}
+            </span>
+          </div>
+          <div class="installment-card">
+            <span class="inst-label">SEMIFINAL EXAM (20%)</span>
+            <span class="inst-val">₱{{ (inv.netAssessedAmount * 0.20) | number:'1.2-2' }}</span>
+            <span class="inst-status" [class.status-waived]="inv.fheEligible">
+              {{ inv.fheEligible ? 'FHE WAIVED' : 'SEMIFINAL PERIOD' }}
+            </span>
+          </div>
+          <div class="installment-card">
+            <span class="inst-label">FINAL EXAM (20%)</span>
+            <span class="inst-val">₱{{ (inv.netAssessedAmount * 0.20) | number:'1.2-2' }}</span>
+            <span class="inst-status" [class.status-waived]="inv.fheEligible">
+              {{ inv.fheEligible ? 'FHE WAIVED' : 'FINAL PERIOD' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
   <!-- Ledger Transaction History Table -->
   <div class="table-card">
     <h2 class="table-card-title">Transaction History Ledger</h2>

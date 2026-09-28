@@ -107,7 +107,7 @@ export const routes: Routes = [
       },
       {
         path: 'portal/student',
-        canActivate: [roleGuard(['ADMIN', 'STUDENT', 'REGISTRAR'])],
+        canActivate: [roleGuard(['STUDENT'])],
         loadComponent: () =>
           import('./features/portal/student-self-service-portal/student-self-service-portal.component').then(m => m.StudentSelfServicePortalComponent)
       },

@@ -78,7 +78,7 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
       title: 'Overview & Portals',
       items: [
         { label: 'Dashboard Overview', icon: 'pi pi-home', routerLink: '/dashboard', exact: true },
-        { label: 'Student Self-Service', icon: 'pi pi-user-edit', routerLink: '/dashboard/portal/student', roles: ['ADMIN', 'STUDENT', 'REGISTRAR'] },
+        { label: 'Student Self-Service', icon: 'pi pi-user-edit', routerLink: '/dashboard/portal/student', roles: ['STUDENT'] },
         { label: 'Digital Twin Telemetry', icon: 'pi pi-sparkles', routerLink: '/dashboard/analytics/digital-twin', badge: 'AI', roles: ['ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE', 'STUDENT'] },
         { label: 'QR Attendance Check-In', icon: 'pi pi-qrcode', routerLink: '/dashboard/analytics/qr-attendance', roles: ['ADMIN', 'FACULTY', 'STUDENT'] }
       ]

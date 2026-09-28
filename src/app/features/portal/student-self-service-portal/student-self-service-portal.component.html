@@ -58,6 +58,41 @@
       <p-skeleton height="200px" borderRadius="8px"></p-skeleton>
     </div>
   } @else if (portalData(); as data) {
+    <!-- Self-Service Enrolment & Academic Advising Action Banner -->
+    <div class="enrolment-card mb-4 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex flex-wrap items-center justify-between gap-3 shadow-sm">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-emerald-700 text-white flex items-center justify-center font-bold text-lg flex-shrink-0">
+          <i class="pi pi-user-plus"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 class="text-base font-bold text-slate-900 m-0">Self-Service Enrolment & Course Advising</h2>
+            <p-tag
+              [value]="data.financialClearance === 'CLEARED' && data.departmentalClearance === 'CLEARED' ? 'CLEARED FOR ENROLMENT' : 'CLEARANCE PENDING'"
+              [severity]="data.financialClearance === 'CLEARED' && data.departmentalClearance === 'CLEARED' ? 'success' : 'warn'"
+              [rounded]="true"
+              size="small"
+            ></p-tag>
+          </div>
+          <p class="text-xs text-slate-600 m-0 mt-1">
+            Enlist in active term class sections, evaluate CHED CMO 25 prerequisites, and confirm official enrollment.
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <p-button
+          label="Proceed to Self-Enrolment"
+          icon="pi pi-arrow-right"
+          severity="success"
+          size="small"
+          [routerLink]="'/dashboard/enrollment'"
+          pTooltip="Select section slots & confirm term enrollment"
+          tooltipPosition="left"
+        ></p-button>
+      </div>
+    </div>
+
     <!-- Academic Snapshot Metrics Bento Grid -->
     <div class="stat-grid">
       <!-- Cumulative GPA Card -->

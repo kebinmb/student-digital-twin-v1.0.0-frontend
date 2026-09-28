@@ -3,6 +3,7 @@
 import { Component, OnInit, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
@@ -32,6 +33,7 @@ export interface StandingInfo {
   imports: [
     CommonModule,
     FormsModule,
+    RouterLink,
     TableModule,
     ButtonModule,
     TagModule,
@@ -65,7 +67,7 @@ export class StudentSelfServicePortalComponent implements OnInit {
     const query = this.searchQuery().trim().toLowerCase();
     if (!query) return data.currentCourses;
 
-    return data.currentCourses.filter(c =>
+    return data.currentCourses.filter((c: EnrolledCourseSummaryDto) =>
       c.courseCode.toLowerCase().includes(query) ||
       c.courseTitle.toLowerCase().includes(query) ||
       c.scheduleText.toLowerCase().includes(query) ||
@@ -76,7 +78,7 @@ export class StudentSelfServicePortalComponent implements OnInit {
   // Computed total active enrolled credit units
   readonly totalActiveUnits = computed<number>(() => {
     const courses = this.portalData()?.currentCourses || [];
-    return courses.reduce((acc, c) => {
+    return courses.reduce((acc: number, c: EnrolledCourseSummaryDto) => {
       const units = parseFloat(c.creditUnits) || 0;
       return acc + units;
     }, 0);

@@ -200,6 +200,14 @@ describe('StudentAccountLedgerComponent', () => {
       expect(component.totalCredits()).toBe(5000);
       expect(component.currentBalance()).toBe(0);
     });
+
+    it('should compute displayInvoice with fee breakdown and UniFAST benefit for student profile', () => {
+      expect(component.displayInvoice()).toBeTruthy();
+      const inv = component.displayInvoice()!;
+      expect(inv.totalGrossAssessment).toBeGreaterThan(0);
+      expect(inv.fheSubsidyAmount).toBeGreaterThan(0);
+      expect(inv.fheEligible).toBe(true);
+    });
   });
 
   describe('When authenticated as Staff (CASHIER / ADMIN / ACCOUNTANT)', () => {

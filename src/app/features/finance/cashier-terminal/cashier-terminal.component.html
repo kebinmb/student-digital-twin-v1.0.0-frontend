@@ -452,8 +452,17 @@
       <input type="text" pInputText [(ngModel)]="newEndOrNumber" placeholder="e.g., OR-2026-00050" class="full-width-input" />
     </div>
     <div class="form-field">
-      <label class="form-label">Assigned Cashier User ID</label>
-      <p-inputNumber [(ngModel)]="newAssignedCashierId" [useGrouping]="false" styleClass="full-width-input"></p-inputNumber>
+      <label class="form-label">Assigned Cashier User</label>
+      <p-select
+        id="assigned-cashier-select"
+        [options]="cashierUsers()"
+        [(ngModel)]="newAssignedCashierId"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Select Cashier User"
+        styleClass="full-width-input"
+        [style]="{ width: '100%' }"
+      ></p-select>
     </div>
   </div>
   <ng-template pTemplate="footer">

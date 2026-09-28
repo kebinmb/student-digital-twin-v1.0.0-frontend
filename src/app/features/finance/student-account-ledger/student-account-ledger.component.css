@@ -418,3 +418,237 @@
 .selected-student-banner {
   border: 1px solid var(--chmsu-slate-200, #e2e8f0);
 }
+
+/* Fee Assessment & UniFAST Benefit Breakdown Styling */
+.assessment-breakdown-card {
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 1.5rem;
+  box-shadow: var(--chmsu-shadow-card, 0 1px 3px rgba(0, 0, 0, 0.05));
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.breakdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--chmsu-slate-200, #e2e8f0);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.card-header-icon {
+  font-size: 1.75rem;
+}
+
+.breakdown-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+  margin: 0;
+}
+
+.breakdown-subtitle {
+  font-size: 0.775rem;
+  color: var(--chmsu-slate-500, #64748b);
+  margin: 0.15rem 0 0 0;
+}
+
+.breakdown-meta-bar {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  background: var(--p-surface-50, #f8fafc);
+  border: 1px solid var(--p-surface-200, #e2e8f0);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+}
+
+.meta-pill {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.meta-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--chmsu-slate-500, #64748b);
+  letter-spacing: 0.03em;
+}
+
+.meta-val {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--chmsu-navy-900, #0f172a);
+}
+
+.fee-breakdown-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+@media (max-width: 900px) {
+  .fee-breakdown-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.breakdown-column {
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: 10px;
+  padding: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.col-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px dashed var(--chmsu-slate-200, #e2e8f0);
+}
+
+.fee-line-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.fee-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.825rem;
+  color: var(--chmsu-slate-700, #334155);
+}
+
+.gross-total-line, .net-assessed-line, .balance-due-line {
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  font-size: 0.875rem;
+}
+
+.subsidy-highlight {
+  background: var(--status-emerald-bg, #f0fdf4);
+  border: 1px solid var(--status-emerald-border, #bbf7d0);
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+}
+
+.subsidy-label-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.subsidy-subtext {
+  font-size: 0.7rem;
+  color: var(--status-emerald-text, #047857);
+}
+
+.text-emerald-700 {
+  color: #047857 !important;
+}
+
+.text-secondary {
+  color: var(--chmsu-slate-500, #64748b);
+}
+
+.installment-matrix-box {
+  background: var(--p-surface-50, #f8fafc);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: 10px;
+  padding: 1rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.installment-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.825rem;
+}
+
+.installment-title {
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+}
+
+.installment-fhe-note {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.installment-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+@media (max-width: 900px) {
+  .installment-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.installment-card {
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: 8px;
+  padding: 0.65rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.25rem;
+}
+
+.inst-label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: var(--chmsu-slate-500, #64748b);
+}
+
+.inst-val {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+}
+
+.inst-status {
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: var(--chmsu-slate-500, #64748b);
+}
+
+.inst-status.status-waived {
+  color: #047857;
+  background: #dcfce7;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+}
