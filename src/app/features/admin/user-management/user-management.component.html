@@ -22,21 +22,22 @@
       <p-button
         label="Provision New User"
         icon="pi pi-user-plus"
-        styleClass="p-button-primary provision-btn"
+        severity="success"
+        size="small"
         (onClick)="openCreateDialog()"
       />
     </div>
   </div>
 
   <!-- Content Table Card -->
-  <div class="card-table-wrapper">
+  <div class="table-card">
     <p-table
       [value]="users()"
       [loading]="isLoading()"
       [paginator]="true"
       [rows]="10"
-      [rowsPerPageOptions]="[10, 25, 50]"
-      styleClass="p-datatable-striped user-table"
+      [rowsPerPageOptions]="[5, 10, 20]"
+      styleClass="institutional-table user-table"
       responsiveLayout="scroll"
     >
       <ng-template pTemplate="header">
@@ -317,9 +318,9 @@
         [value]="auditLogs()"
         [loading]="isAuditLoading()"
         [paginator]="true"
-        [rows]="10"
-        [rowsPerPageOptions]="[10, 25, 50]"
-        styleClass="p-datatable-striped"
+        [rows]="5"
+        [rowsPerPageOptions]="[5, 10, 20]"
+        styleClass="institutional-table"
         responsiveLayout="scroll"
       >
         <ng-template pTemplate="header">

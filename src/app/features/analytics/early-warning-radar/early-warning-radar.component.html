@@ -27,7 +27,7 @@
 
   <!-- Telemetry Table -->
   <div class="table-card">
-    <p-table [value]="radarItems()" [loading]="isLoading()" [stripedRows]="true" styleClass="institutional-table" responsiveLayout="scroll">
+    <p-table [value]="radarItems()" [loading]="isLoading()" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 20]" [stripedRows]="true" styleClass="institutional-table" responsiveLayout="scroll">
       <ng-template pTemplate="header">
         <tr>
           <th>Student Number</th>

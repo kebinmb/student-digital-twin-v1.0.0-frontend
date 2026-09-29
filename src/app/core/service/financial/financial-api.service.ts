@@ -101,6 +101,10 @@ export class FinancialApiService {
     return this.http.get<OrBookletDto>(`${this.baseUrl}/or-booklets/active`);
   }
 
+  getCashierBooklets(): Observable<OrBookletDto[]> {
+    return this.http.get<OrBookletDto[]>(`${this.baseUrl}/or-booklets`);
+  }
+
   getEodRcdReport(date?: string): Observable<EodRcdReportDto> {
     const params: Record<string, string> = {};
     if (date) params['date'] = date;

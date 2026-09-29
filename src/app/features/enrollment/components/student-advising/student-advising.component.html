@@ -703,7 +703,7 @@
 
         @if (availableApplications().length > 0) {
         <div class="border rounded overflow-hidden bg-white shadow-xs">
-          <p-table [value]="availableApplications()" [paginator]="availableApplications().length > 3" [rows]="3"
+          <p-table [value]="availableApplications()" [paginator]="availableApplications().length > 3" [rows]="3" [rowsPerPageOptions]="[3, 5, 10]"
             styleClass="p-datatable-sm institutional-table text-xs">
             <ng-template pTemplate="header">
               <tr>

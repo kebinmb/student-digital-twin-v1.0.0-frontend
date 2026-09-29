@@ -32,9 +32,9 @@
       </div>
     } @else {
       <div class="booklet-info">
-        <i class="pi pi-exclamation-triangle booklet-icon text-orange"></i>
+        <i class="pi pi-exclamation-triangle booklet-icon text-amber-600"></i>
         <div>
-          <div class="booklet-title text-orange">NO ACTIVE O.R. BOOKLET ASSIGNED</div>
+          <div class="booklet-title text-amber-600">NO ACTIVE O.R. BOOKLET ASSIGNED</div>
           <div class="booklet-sub">Assign an Accountable Form 51 booklet to issue official receipts sequentially under COA regulations.</div>
         </div>
       </div>
@@ -42,7 +42,7 @@
     <div class="booklet-actions">
       <p-button label="Assign Booklet" icon="pi pi-plus" severity="primary" size="small" (onClick)="openAssignBookletModal()"></p-button>
       <p-button label="Void O.R." icon="pi pi-ban" severity="danger" size="small" [disabled]="!activeBooklet()" (onClick)="openVoidReceiptModal()"></p-button>
-      <p-button label="EOD RCD Report" icon="pi pi-file" severity="help" size="small" (onClick)="openEodRcdModal()"></p-button>
+      <p-button label="EOD RCD Report" icon="pi pi-file" severity="secondary" size="small" (onClick)="openEodRcdModal()"></p-button>
     </div>
   </div>
 
@@ -261,7 +261,7 @@
             </div>
             <div class="kpi-mini-card">
               <span class="kpi-mini-label">OUTSTANDING BALANCE</span>
-              <span class="kpi-mini-val text-orange">₱{{ inv.outstandingBalance | number:'1.2-2' }}</span>
+              <span class="kpi-mini-val text-amber-600">₱{{ inv.outstandingBalance | number:'1.2-2' }}</span>
             </div>
           </div>
         </div>
@@ -269,7 +269,7 @@
         <!-- Receipt History Card -->
         <div class="card-box">
           <h3 class="section-subtitle">Payment Receipts History</h3>
-          <p-table [value]="studentReceipts()" [rows]="5" [paginator]="true" responsiveLayout="scroll" styleClass="institutional-table">
+          <p-table [value]="studentReceipts()" [rows]="5" [paginator]="true" [rowsPerPageOptions]="[5, 10, 20]" responsiveLayout="scroll" styleClass="institutional-table">
             <ng-template pTemplate="header">
               <tr>
                 <th>OR Number</th>
@@ -537,7 +537,7 @@
       </p-table>
 
       <h4 class="section-subtitle">Official Receipts Line Items</h4>
-      <p-table [value]="rcd.receipts" [rows]="5" [paginator]="true" responsiveLayout="scroll" styleClass="institutional-table">
+      <p-table [value]="rcd.receipts" [rows]="5" [paginator]="true" [rowsPerPageOptions]="[5, 10, 20]" responsiveLayout="scroll" styleClass="institutional-table">
         <ng-template pTemplate="header">
           <tr>
             <th>OR Number</th>

@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { SliceResponse } from '../../models/institution.model';
 import {
@@ -137,6 +138,12 @@ export class AnalyticsApiService {
 
   getStudentInterventions(studentId: number): Observable<StudentInterventionDto[]> {
     return this.http.get<StudentInterventionDto[]>(`${environment.apiUrl}/v1/analytics/interventions/student/${studentId}`);
+  }
+
+  getInterventionTypes(): Observable<string[]> {
+    return this.http.get<string[]>(`${environment.apiUrl}/v1/analytics/interventions/types`).pipe(
+      catchError(() => of(['GUIDANCE_COUNSELING', 'ACADEMIC_TUTORING', 'ATTENDANCE_CONFERENCE', 'FINANCIAL_SUBSIDY_AID', 'PEER_MENTORING']))
+    );
   }
 
   getAdminStudentTelemetry(params: AdminTelemetryQueryParams): Observable<PageResponse<StudentTelemetryAdminSummary>> {

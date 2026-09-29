@@ -1,4 +1,4 @@
-<main class="gradebook-container" aria-label="Faculty Gradebook & Sealing Engine">
+<main class="gradebook-container" aria-label="Faculty Gradebook & Grade Management">
   <p-confirmdialog></p-confirmdialog>
 
   <!-- 1. Header Card with Academic Term & Class Section Pickers -->
@@ -10,7 +10,7 @@
           <span class="gb-meta-dot" aria-hidden="true">•</span>
           <span class="gb-cmo-notice">CHED CMO No. 25, s. 2015</span>
         </div>
-        <h1 class="gb-module-title">Section Gradebook & Registrar Sealing Engine</h1>
+        <h1 class="gb-module-title">Section Gradebook & Grade Submission</h1>
       </div>
 
       <!-- Term & Section Pickers -->
@@ -417,8 +417,11 @@
         [value]="$any(isLoading() ? [{}, {}, {}, {}, {}] : editableStudents())" 
         dataKey="enrollmentItemId"
         [rowHover]="true"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[10, 25, 50]"
         responsiveLayout="scroll"
-        styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped">
+        styleClass="p-datatable-sm institutional-table p-datatable-striped">
         
         <ng-template pTemplate="header">
           <tr>
@@ -596,7 +599,7 @@
         [scrollable]="true"
         scrollHeight="calc(100vh - 340px)"
         responsiveLayout="scroll"
-        styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped gb-matrix-table">
+        styleClass="p-datatable-sm institutional-table p-datatable-gridlines p-datatable-striped gb-matrix-table">
         
         <ng-template pTemplate="header">
           <tr>
@@ -843,7 +846,7 @@
             <p class="gb-empty-subtext">There are currently no pending post-seal grade correction requests awaiting review.</p>
           </div>
         } @else {
-          <p-table [value]="pendingRequests()" [loading]="isLoadingPendingRequests()" styleClass="p-datatable-sm p-datatable-gridlines">
+          <p-table [value]="pendingRequests()" [loading]="isLoadingPendingRequests()" [paginator]="true" [rows]="5" [rowsPerPageOptions]="[5, 10, 20]" styleClass="p-datatable-sm institutional-table">
             <ng-template pTemplate="header">
               <tr>
                 <th>Student</th>

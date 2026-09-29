@@ -4,15 +4,8 @@
   <!-- Top Cockpit Header Toolbar -->
   <div class="dashboard-toolbar-card">
     <div class="header-branding">
-      <div class="header-icon-box">
-        <i [class]="roleIcon() + ' header-icon'"></i>
-      </div>
       <div class="header-text-group">
         <div class="badge-row">
-          <span class="badge-tag green">
-            <i class="pi pi-circle-fill live-dot"></i>
-            LIVE TELEMETRY
-          </span>
           <span class="badge-tag" [ngClass]="roleTagClass()">
             {{ roleBadge() }}
           </span>
@@ -24,9 +17,13 @@
 
     <div class="header-actions-group">
       <!-- Role View Switcher Dropdown (Allows testing & previewing all 10 role perspectives) -->
-      <div class="role-selector-wrapper flex items-center gap-2">
-        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider hidden md:inline">Role View:</span>
+      <div class="role-selector-wrapper">
+        <label for="roleViewSelect" class="role-view-badge" title="Active Role Perspective">
+          <i class="pi pi-id-card role-view-icon" aria-hidden="true"></i>
+          <span class="role-view-text">Role View</span>
+        </label>
         <p-select
+          id="roleViewSelect"
           [options]="roleOptions"
           optionLabel="label"
           optionValue="value"
@@ -34,17 +31,19 @@
           (ngModelChange)="onRoleOverrideChange($event)"
           placeholder="Switch Role Perspective"
           size="small"
-          styleClass="role-select-control w-full sm:w-16rem"
+          styleClass="role-select-control"
+          aria-label="Switch Role Perspective"
         ></p-select>
       </div>
 
       <p-button
-        label="Sync Telemetry"
+        label="Refresh Dashboard"
         icon="pi pi-refresh"
         severity="secondary"
         [outlined]="true"
         size="small"
         [loading]="isLoading()"
+        (onClick)="refreshMetrics()"
       ></p-button>
     </div>
   </div>
@@ -60,9 +59,7 @@
           <div class="kpi-body">
             <div class="kpi-header">
               <span class="kpi-title">{{ card.title }}</span>
-              @if (card.trend) {
-                <span class="badge-tag" [ngClass]="card.trendUp !== false ? 'green' : 'rose'">{{ card.trend }}</span>
-              }
+             
             </div>
             <div class="kpi-value" [ngClass]="i === 0 ? 'text-green' : (i === 1 ? 'text-blue' : (i === 2 ? 'text-amber' : 'text-rose'))">
               {{ card.value }}
@@ -76,286 +73,33 @@
 
   <!-- Dynamic Role-Based Workspaces & Purpose Views -->
 
-  <!-- 1. SUPER_ADMIN WORKSPACE: Actuator & Virtual Threads Infrastructure Console -->
+  <!-- 1. SUPER_ADMIN WORKSPACE: Server & System Infrastructure Health -->
   @if (isSuperAdmin()) {
-    <div class="table-card">
-      <div class="table-toolbar">
-        <div class="toolbar-heading">
-          <h2 class="section-title">
-            <i class="pi pi-server header-icon-sm"></i>
-            Spring Boot Actuator Telemetry & Virtual Thread Monitoring
-          </h2>
-          <p-tag value="Management Port 8081 Active" severity="danger" [rounded]="true"></p-tag>
-        </div>
-        <div class="toolbar-controls">
-          <p-tag value="JVM Loom Threads: OK" severity="success"></p-tag>
-          <p-tag value="MySQL 8.0 V100" severity="info"></p-tag>
-        </div>
-      </div>
-
-      <p-table [value]="actuatorEndpoints" styleClass="institutional-table" [scrollable]="true">
-        <ng-template pTemplate="header">
-          <tr>
-            <th>Telemetry Endpoint</th>
-            <th>URI Path</th>
-            <th>Port</th>
-            <th>Protocol / Engine</th>
-            <th>Latency</th>
-            <th class="text-center">Status</th>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-act>
-          <tr>
-            <td>
-              <div class="font-bold text-slate-800">{{ act.name }}</div>
-            </td>
-            <td><code class="text-xs bg-slate-100 px-2 py-1 rounded text-rose-700 font-mono">{{ act.path }}</code></td>
-            <td><span class="font-mono text-xs font-bold text-slate-600">{{ act.port }}</span></td>
-            <td><span class="text-xs text-slate-600">{{ act.type }}</span></td>
-            <td><span class="font-mono text-xs text-emerald-700 font-bold">{{ act.latencyMs }} ms</span></td>
-            <td class="text-center">
-              <p-tag [value]="act.status" severity="success" [rounded]="true"></p-tag>
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
-    </div>
-  }
-
-  <!-- 3. REGISTRAR WORKSPACE: Academic Period & SHA-256 Grade Sealing Engine -->
-  @else if (isRegistrar()) {
-    <div class="table-card">
-      <div class="table-toolbar">
-        <div class="toolbar-heading">
-          <h2 class="section-title">
-            <i class="pi pi-lock header-icon-sm"></i>
-            University Registrar Grade Sealing Engine & Academic Windows
-          </h2>
-          <p-tag value="AY 2026-2027 1st Semester" severity="success" [rounded]="true"></p-tag>
-        </div>
-        <div class="toolbar-controls">
-          <a routerLink="/dashboard/grades" class="action-link text-xs font-bold text-emerald-700">Open Grade Sealing Console &rarr;</a>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
-          <div class="text-xs font-bold text-slate-500 uppercase">Enrolment Window</div>
-          <div class="text-sm font-bold text-emerald-700 mt-1"><i class="pi pi-circle-fill text-xs mr-1 text-emerald-500"></i> OPEN (Self-Service)</div>
-        </div>
-        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
-          <div class="text-xs font-bold text-slate-500 uppercase">Grade Submission Gate</div>
-          <div class="text-sm font-bold text-amber-700 mt-1"><i class="pi pi-clock text-xs mr-1"></i> MIDTERM ENCODING</div>
-        </div>
-        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
-          <div class="text-xs font-bold text-slate-500 uppercase">SHA-256 Grade Ledger</div>
-          <div class="text-sm font-bold text-blue-700 mt-1"><i class="pi pi-lock text-xs mr-1"></i> 148 / 180 SEALS ACTIVE</div>
-        </div>
-      </div>
-    </div>
-  }
-
-  <!-- 4. CASHIER WORKSPACE: Cashier POS & COA Form 51 Collections -->
-  @else if (isCashier()) {
-    <div class="table-card">
-      <div class="table-toolbar">
-        <div class="toolbar-heading">
-          <h2 class="section-title">
-            <i class="pi pi-calculator header-icon-sm"></i>
-            Cashier POS Terminal & Official Receipt (Form 51) Booklet Inventory
-          </h2>
-          <p-tag value="Shift Desk 01 Active" severity="warn" [rounded]="true"></p-tag>
-        </div>
-        <div class="toolbar-controls">
-          <a routerLink="/dashboard/finance/cashier" class="action-link text-xs font-bold text-emerald-700">Launch POS Terminal &rarr;</a>
-        </div>
-      </div>
-
-      <p-table [value]="cashierBooklets" styleClass="institutional-table" [scrollable]="true">
-        <ng-template pTemplate="header">
-          <tr>
-            <th>Booklet #</th>
-            <th>Form Standard</th>
-            <th>Assigned Cashier</th>
-            <th>Receipt Range</th>
-            <th>Current O.R.</th>
-            <th>Remaining</th>
-            <th class="text-center">Status</th>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-bkl>
-          <tr>
-            <td><span class="font-mono font-bold text-xs text-blue-800">{{ bkl.bookletNumber }}</span></td>
-            <td><span class="text-xs text-slate-600">{{ bkl.formType }}</span></td>
-            <td><span class="text-xs font-bold text-slate-800">{{ bkl.assignedCashier }}</span></td>
-            <td><span class="font-mono text-xs text-slate-500">{{ bkl.startOr }} – {{ bkl.endOr }}</span></td>
-            <td><span class="font-mono text-xs font-bold text-emerald-700">{{ bkl.currentOr }}</span></td>
-            <td><span class="font-bold text-xs" [ngClass]="bkl.remainingCount < 10 ? 'text-rose-600' : 'text-slate-700'">{{ bkl.remainingCount }} Receipts</span></td>
-            <td class="text-center">
-              <p-tag [value]="bkl.status" [severity]="bkl.status === 'ACTIVE' ? 'success' : 'secondary'" [rounded]="true"></p-tag>
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
-    </div>
-  }
-
-  <!-- 5. FACULTY WORKSPACE: Instructional Class Record & Attendance Telemetry -->
-  @else if (isFaculty()) {
-    <div class="table-card">
-      <div class="table-toolbar">
-        <div class="toolbar-heading">
-          <h2 class="section-title">
-            <i class="pi pi-id-card header-icon-sm"></i>
-            Faculty Assigned Sections & Class Attendance Telemetry Radar
-          </h2>
-          <p-tag value="18.0 Contact Units Assigned" severity="success" [rounded]="true"></p-tag>
-        </div>
-        <div class="toolbar-controls">
-          <a routerLink="/dashboard/grades" class="action-link text-xs font-bold text-emerald-700">Open Section Gradebook &rarr;</a>
-        </div>
-      </div>
-
-      <p-table [value]="todayClasses" styleClass="institutional-table" [scrollable]="true">
-        <ng-template pTemplate="header">
-          <tr>
-            <th>Course Session</th>
-            <th>Schedule & Room</th>
-            <th>Instructor</th>
-            <th>Attendance QR Scan</th>
-            <th class="text-center">Status</th>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-cls>
-          <tr>
-            <td>
-              <div class="font-bold text-xs text-emerald-800">{{ cls.courseCode }}</div>
-              <div class="text-xs text-slate-600">{{ cls.courseTitle }}</div>
-            </td>
-            <td>
-              <div class="text-xs font-bold text-slate-800">{{ cls.time }}</div>
-              <div class="text-xs text-slate-500"><i class="pi pi-map-marker"></i> {{ cls.room }}</div>
-            </td>
-            <td><span class="text-xs text-slate-700">{{ cls.instructor }}</span></td>
-            <td><span class="font-mono text-xs font-bold text-emerald-700">96.2% Scan Rate</span></td>
-            <td class="text-center">
-              <p-tag [value]="cls.status" [severity]="cls.status === 'In Progress' ? 'success' : (cls.status === 'Completed' ? 'secondary' : 'info')" [rounded]="true"></p-tag>
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
-    </div>
-  }
-
-  <!-- 6. DEAN WORKSPACE: College Executive Leadership & Faculty Overload Radar -->
-  @else if (isDean()) {
-    <div class="table-card">
-      <div class="table-toolbar">
-        <div class="toolbar-heading">
-          <h2 class="section-title">
-            <i class="pi pi-briefcase header-icon-sm"></i>
-            College Faculty Workload Compliance & Overload Approval Radar
-          </h2>
-          <p-tag value="College of Computer Studies" severity="info" [rounded]="true"></p-tag>
-        </div>
-        <div class="toolbar-controls">
-          <a routerLink="/dashboard/scheduling" class="action-link text-xs font-bold text-emerald-700">View All Faculty Loads &rarr;</a>
-        </div>
-      </div>
-
-      <p-table [value]="facultyWorkloadList" styleClass="institutional-table" [scrollable]="true">
-        <ng-template pTemplate="header">
-          <tr>
-            <th>Faculty Member</th>
-            <th>Department</th>
-            <th>Assigned Contact Units</th>
-            <th>Max Unit Cap</th>
-            <th class="text-center">Overload Status</th>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-fac>
-          <tr>
-            <td><span class="font-bold text-xs text-slate-800">{{ fac.fullName }}</span></td>
-            <td><span class="text-xs text-slate-600">{{ fac.department }}</span></td>
-            <td>
-              <span class="font-mono text-xs font-bold" [ngClass]="fac.assignedUnits > fac.maxUnits ? 'text-rose-600' : 'text-emerald-700'">
-                {{ fac.assignedUnits }} / {{ fac.maxUnits }} Units
-              </span>
-            </td>
-            <td><span class="text-xs text-slate-500">21.0 Units Cap</span></td>
-            <td class="text-center">
-              <p-tag
-                [value]="fac.status"
-                [severity]="fac.status === 'NORMAL' ? 'success' : (fac.status === 'OVERLOAD_APPROVED' ? 'info' : 'warn')"
-                [rounded]="true"
-              ></p-tag>
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
-    </div>
-  }
-
-  <!-- 7. CHAIRPERSON WORKSPACE: Department Curriculum & Timetable Console -->
-  @else if (isChairperson()) {
-    <div class="table-card">
-      <div class="table-toolbar">
-        <div class="toolbar-heading">
-          <h2 class="section-title">
-            <i class="pi pi-sitemap header-icon-sm"></i>
-            Department Curriculum & CILO-PILO Outcome Alignment Heatmap
-          </h2>
-          <p-tag value="BSIT Degree Program" severity="success" [rounded]="true"></p-tag>
-        </div>
-        <div class="toolbar-controls">
-          <a routerLink="/dashboard/curriculum/designer/1" class="action-link text-xs font-bold text-emerald-700">Launch Curriculum Designer &rarr;</a>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
-          <div class="text-xs font-bold text-slate-500 uppercase">CILO-PILO Matrix Alignment</div>
-          <div class="text-sm font-bold text-emerald-700 mt-1"><i class="pi pi-check-circle text-xs mr-1"></i> 96.4% Mapped</div>
-        </div>
-        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
-          <div class="text-xs font-bold text-slate-500 uppercase">Timetable Section Slots</div>
-          <div class="text-sm font-bold text-blue-700 mt-1"><i class="pi pi-calendar text-xs mr-1"></i> 28 Sections Built</div>
-        </div>
-        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
-          <div class="text-xs font-bold text-slate-500 uppercase">Grade Verification Queue</div>
-          <div class="text-sm font-bold text-amber-700 mt-1"><i class="pi pi-clock text-xs mr-1"></i> 4 Sheets Pending</div>
-        </div>
-      </div>
-    </div>
-  }
-
-  <!-- 8. STUDENT WORKSPACE: Personal Academic Digital Twin Telemetry -->
-  @else if (isStudent()) {
     <div class="student-cockpit">
       <!-- Fused Identity Strip -->
       <div class="identity-card">
         <div class="identity-profile">
-          <p-avatar [label]="getInitials(userName())" shape="circle" size="large" styleClass="identity-avatar"></p-avatar>
+          <p-avatar icon="pi pi-server" shape="circle" size="large" styleClass="identity-avatar"></p-avatar>
           <div class="identity-meta">
-            <h2 class="identity-name">{{ userName() }}</h2>
-            <p class="identity-sub">2023-0142-S — BSIT (Year 3) • CHMSU Scholar</p>
+            <h2 class="identity-name">Super Administrator Control Center</h2>
+            <p class="identity-sub">Carlos Hilado Memorial State University • Multi-Tenant Cluster & Service Gateway</p>
           </div>
         </div>
 
         <div class="identity-stats">
           <div class="stat-unit">
-            <span class="stat-label">Cumulative GWA</span>
-            <span class="stat-val gpa-val">1.38</span>
+            <span class="stat-label">Registered Accounts</span>
+            <span class="stat-val">{{ usersList().length }} Users</span>
           </div>
           <div class="hairline-divider"></div>
           <div class="stat-unit">
-            <span class="stat-label">Earned Units</span>
-            <span class="stat-val">84 / 142</span>
+            <span class="stat-label">Audit Log Events</span>
+            <span class="stat-val">{{ auditLogsList().length }} Recorded</span>
           </div>
           <div class="hairline-divider"></div>
           <div class="stat-unit">
-            <span class="stat-label">Clearance Gate</span>
-            <span class="clearance-pill">CLEARED</span>
+            <span class="stat-label">Infrastructure</span>
+            <span class="clearance-pill">100% OPERATIONAL</span>
           </div>
         </div>
       </div>
@@ -365,7 +109,7 @@
         <div class="stat-card health-card">
           <div class="knob-container">
             <p-knob
-              [ngModel]="98"
+              [ngModel]="100"
               [readonly]="true"
               [size]="70"
               valueTemplate="{value}%"
@@ -374,10 +118,10 @@
             ></p-knob>
           </div>
           <div class="health-meta">
-            <span class="stat-label">Diagnostic Health Summary</span>
-            <span class="stat-val health-rate-val">98.4% Retention Index</span>
+            <span class="stat-label">System Health Index</span>
+            <span class="stat-val health-rate-val">All Services Online</span>
             <div class="tag-row">
-              <p-tag value="OPTIMAL PROGRESSION" severity="success" size="small"></p-tag>
+              <p-tag value="OPTIMAL" severity="success" size="small"></p-tag>
             </div>
           </div>
         </div>
@@ -385,12 +129,1207 @@
         <div class="bento-grid-4col">
           <div class="stat-card bento-tile accent-green">
             <div class="tile-header">
-              <span class="stat-label">Academic Health</span>
+              <span class="stat-label">Service Nodes</span>
+              <div class="tile-icon-box green"><i class="pi pi-server"></i></div>
+            </div>
+            <div class="stat-val">4 Online</div>
+            <p-progressBar [value]="100" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">REST APIs & actuator services running</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-blue">
+            <div class="tile-header">
+              <span class="stat-label">Campus Network</span>
+              <div class="tile-icon-box blue"><i class="pi pi-building"></i></div>
+            </div>
+            <div class="stat-val">{{ campusesList().length || 4 }} Campuses</div>
+            <p-progressBar [value]="100" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">Synchronized university campus network</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-amber">
+            <div class="tile-header">
+              <span class="stat-label">Security Audit Trail</span>
+              <div class="tile-icon-box amber"><i class="pi pi-shield"></i></div>
+            </div>
+            <div class="stat-val">{{ auditLogsList().length }} Events</div>
+            <p-progressBar [value]="95" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">Tamper-evident audit trail logged</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-rose">
+            <div class="tile-header">
+              <span class="stat-label">System Latency</span>
+              <div class="tile-icon-box rose"><i class="pi pi-bolt"></i></div>
+            </div>
+            <div class="tag-wrapper">
+              <p-tag value="4ms Response" severity="success" [rounded]="true"></p-tag>
+            </div>
+            <div class="tile-caption">Optimal gateway response latency</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Institutional Security Audit Log Table -->
+      <div class="table-card">
+        <div class="table-toolbar">
+          <div class="toolbar-heading">
+            <h2 class="section-title">
+              <i class="pi pi-shield text-emerald-700"></i>
+              System Security Audit Trail & Activity Log
+            </h2>
+            <p-tag value="Database Audited" severity="success" [rounded]="true"></p-tag>
+          </div>
+          <div class="toolbar-controls">
+            <a routerLink="/dashboard/institution" class="action-link text-xs font-bold text-emerald-700">Open Campus Management &rarr;</a>
+          </div>
+        </div>
+
+        <p-table
+          [value]="auditLogsList()"
+          styleClass="institutional-table"
+          [scrollable]="true"
+          [paginator]="true"
+          [rows]="5"
+          [rowsPerPageOptions]="[5, 10, 20]"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Timestamp</th>
+              <th>Performed By</th>
+              <th>Action</th>
+              <th>Target Entity</th>
+              <th>IP / Host</th>
+              <th>Details</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-log>
+            <tr>
+              <td>
+                <span class="font-mono text-xs text-slate-500">{{ log.createdAt | date:'short' }}</span>
+              </td>
+              <td>
+                <span class="font-bold text-xs text-slate-800">{{ log.performedBy || log.username || 'System' }}</span>
+              </td>
+              <td>
+                <p-tag [value]="log.action" severity="info" size="small"></p-tag>
+              </td>
+              <td>
+                <span class="text-xs font-medium text-slate-700">{{ log.entityName }}</span>
+              </td>
+              <td>
+                <span class="font-mono text-xs text-slate-600">{{ log.ipAddress || '127.0.0.1' }}</span>
+              </td>
+              <td>
+                <span class="text-xs text-slate-600 truncate max-w-xs">{{ log.details || 'System operation executed' }}</span>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="6" class="text-center py-6 text-slate-500 text-xs">
+                No security audit logs recorded in database.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+  }
+
+  <!-- 2. ADMIN WORKSPACE: System Administration & User Provisioning -->
+  @else if (isAdmin()) {
+    <div class="student-cockpit">
+      <!-- Fused Identity Strip -->
+      <div class="identity-card">
+        <div class="identity-profile">
+          <p-avatar icon="pi pi-building" shape="circle" size="large" styleClass="identity-avatar"></p-avatar>
+          <div class="identity-meta">
+            <h2 class="identity-name">System Administration & Campus Setup</h2>
+            <p class="identity-sub">Carlos Hilado Memorial State University • User Accounts, Campuses, & Role-Based Access Controls</p>
+          </div>
+        </div>
+
+        <div class="identity-stats">
+          <div class="stat-unit">
+            <span class="stat-label">User Accounts</span>
+            <span class="stat-val">{{ usersList().length }} Total</span>
+          </div>
+          <div class="hairline-divider"></div>
+          <div class="stat-unit">
+            <span class="stat-label">Campuses</span>
+            <span class="stat-val">{{ campusesList().length || 4 }} Campuses</span>
+          </div>
+          <div class="hairline-divider"></div>
+          <div class="stat-unit">
+            <span class="stat-label">Security Access</span>
+            <span class="clearance-pill">RBAC ACTIVE</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Health Gauge Card & Bento Grid -->
+      <div class="grid-section">
+        <div class="stat-card health-card">
+          <div class="knob-container">
+            <p-knob
+              [ngModel]="adminUserActiveRate()"
+              [readonly]="true"
+              [size]="70"
+              valueTemplate="{value}%"
+              valueColor="var(--chmsu-green-main, #116834)"
+              rangeColor="var(--p-surface-200, #e2e8f0)"
+            ></p-knob>
+          </div>
+          <div class="health-meta">
+            <span class="stat-label">Account Provisioning Rate</span>
+            <span class="stat-val health-rate-val">{{ usersList().length }} Accounts Managed</span>
+            <div class="tag-row">
+              <p-tag value="RBAC ENFORCED" severity="success" size="small"></p-tag>
+            </div>
+          </div>
+        </div>
+
+        <div class="bento-grid-4col">
+          <div class="stat-card bento-tile accent-green">
+            <div class="tile-header">
+              <span class="stat-label">Registered Users</span>
+              <div class="tile-icon-box green"><i class="pi pi-users"></i></div>
+            </div>
+            <div class="stat-val">{{ usersList().length }} Active</div>
+            <p-progressBar [value]="100" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">Students, faculty, and administrative staff</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-blue">
+            <div class="tile-header">
+              <span class="stat-label">Academic Campuses</span>
+              <div class="tile-icon-box blue"><i class="pi pi-map-marker"></i></div>
+            </div>
+            <div class="stat-val">{{ campusesList().length || 4 }} Campuses</div>
+            <p-progressBar [value]="100" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">Talisay, Fortune Towne, Alijis, Binalbagan</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-amber">
+            <div class="tile-header">
+              <span class="stat-label">Security Logs</span>
+              <div class="tile-icon-box amber"><i class="pi pi-shield"></i></div>
+            </div>
+            <div class="stat-val">{{ auditLogsList().length }} Audited</div>
+            <p-progressBar [value]="90" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">Account authentications and modifications</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-rose">
+            <div class="tile-header">
+              <span class="stat-label">Degree Programs</span>
+              <div class="tile-icon-box rose"><i class="pi pi-sitemap"></i></div>
+            </div>
+            <div class="tag-wrapper">
+              <p-tag [value]="(curriculaList().length || 8) + ' Curricula'" severity="success" [rounded]="true"></p-tag>
+            </div>
+            <div class="tile-caption">Active college degree program curricula</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Institutional User Directory Table -->
+      <div class="table-card">
+        <div class="table-toolbar">
+          <div class="toolbar-heading">
+            <h2 class="section-title">
+              <i class="pi pi-users text-emerald-700"></i>
+              Institutional User Directory & Account Provisioning
+            </h2>
+            <p-tag value="RBAC Enabled" severity="success" [rounded]="true"></p-tag>
+          </div>
+          <div class="toolbar-controls">
+            <a routerLink="/dashboard/users" class="action-link text-xs font-bold text-emerald-700">Manage User Accounts &rarr;</a>
+          </div>
+        </div>
+
+        <p-table
+          [value]="usersList()"
+          styleClass="institutional-table"
+          [scrollable]="true"
+          [paginator]="true"
+          [rows]="5"
+          [rowsPerPageOptions]="[5, 10, 20]"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Username</th>
+              <th>Email Address</th>
+              <th>Assigned Roles</th>
+              <th>College / Program</th>
+              <th class="text-center">Account Status</th>
+              <th class="text-center">Action</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-u>
+            <tr>
+              <td>
+                <span class="font-bold text-xs text-slate-800">{{ u.username }}</span>
+              </td>
+              <td>
+                <span class="text-xs text-slate-600">{{ u.email }}</span>
+              </td>
+              <td>
+                <div class="flex flex-wrap gap-1">
+                  @for (r of u.roles; track r) {
+                    <p-tag [value]="r.replace('ROLE_', '')" severity="secondary" size="small"></p-tag>
+                  }
+                </div>
+              </td>
+              <td>
+                <span class="text-xs text-slate-600">{{ u.collegeCode || u.programCode || 'Institutional' }}</span>
+              </td>
+              <td class="text-center">
+                <p-tag
+                  [value]="u.enabled ? 'ACTIVE' : 'DISABLED'"
+                  [severity]="u.enabled ? 'success' : 'warn'"
+                  [rounded]="true"
+                ></p-tag>
+              </td>
+              <td class="text-center">
+                <a routerLink="/dashboard/users" class="action-link text-xs font-bold text-emerald-700">
+                  Edit
+                </a>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="6" class="text-center py-6 text-slate-500 text-xs">
+                No user accounts registered in database.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+  }
+
+  <!-- 3. REGISTRAR WORKSPACE: Academic Period & Grade Records -->
+  @else if (isRegistrar()) {
+    <div class="student-cockpit">
+      <!-- Fused Identity Strip -->
+      <div class="identity-card">
+        <div class="identity-profile">
+          <p-avatar icon="pi pi-lock" shape="circle" size="large" styleClass="identity-avatar"></p-avatar>
+          <div class="identity-meta">
+            <h2 class="identity-name">Office of the University Registrar</h2>
+            <p class="identity-sub">{{ activeTermName() || 'Academic Year 2026-2027 1st Semester' }} • Academic Window Controls & SHA-256 Grade Sealing</p>
+          </div>
+        </div>
+
+        <div class="identity-stats">
+          <div class="stat-unit">
+            <span class="stat-label">Enrolment Period</span>
+            <span class="clearance-pill" [class.pill-closed]="!isEnrollmentOpen()">
+              {{ isEnrollmentOpen() ? 'OPEN' : 'CLOSED' }}
+            </span>
+          </div>
+          <div class="hairline-divider"></div>
+          <div class="stat-unit">
+            <span class="stat-label">Grade Window</span>
+            <span class="clearance-pill" [class.pill-warn]="isGradingOpen()">
+              {{ isGradingOpen() ? 'SUBMISSIONS OPEN' : 'LOCKED' }}
+            </span>
+          </div>
+          <div class="hairline-divider"></div>
+          <div class="stat-unit">
+            <span class="stat-label">Sealed Records</span>
+            <span class="stat-val gpa-val">{{ sealedGradeCount() }} / {{ totalRegistrarSections() || 1 }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Health Gauge Card & Bento Grid -->
+      <div class="grid-section">
+        <div class="stat-card health-card">
+          <div class="knob-container">
+            <p-knob
+              [ngModel]="registrarSealingRate()"
+              [readonly]="true"
+              [size]="70"
+              valueTemplate="{value}%"
+              valueColor="var(--chmsu-green-main, #116834)"
+              rangeColor="var(--p-surface-200, #e2e8f0)"
+            ></p-knob>
+          </div>
+          <div class="health-meta">
+            <span class="stat-label">Grade Sealing Progress</span>
+            <span class="stat-val health-rate-val">{{ sealedGradeCount() }} of {{ totalRegistrarSections() || 1 }} Sealed</span>
+            <div class="tag-row">
+              <p-tag
+                [value]="pendingGradeReviewCount() === 0 ? 'ALL VERIFIED' : pendingGradeReviewCount() + ' PENDING REVIEW'"
+                [severity]="pendingGradeReviewCount() === 0 ? 'success' : 'warn'"
+                size="small"
+              ></p-tag>
+            </div>
+          </div>
+        </div>
+
+        <div class="bento-grid-4col">
+          <div class="stat-card bento-tile accent-green">
+            <div class="tile-header">
+              <span class="stat-label">Enrolment Period</span>
+              <div class="tile-icon-box green"><i class="pi pi-calendar-plus"></i></div>
+            </div>
+            <div class="stat-val">{{ isEnrollmentOpen() ? 'Active' : 'Closed' }}</div>
+            <p-progressBar [value]="isEnrollmentOpen() ? 100 : 0" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">{{ activeTermDates() || 'Regular Academic Calendar' }}</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-amber">
+            <div class="tile-header">
+              <span class="stat-label">Grade Submission</span>
+              <div class="tile-icon-box amber"><i class="pi pi-file-edit"></i></div>
+            </div>
+            <div class="stat-val">{{ isGradingOpen() ? 'Open' : 'Locked' }}</div>
+            <p-progressBar [value]="registrarSubmissionProgress()" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">{{ pendingGradeReviewCount() }} awaiting verification</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-blue">
+            <div class="tile-header">
+              <span class="stat-label">Verified Grade Records</span>
+              <div class="tile-icon-box blue"><i class="pi pi-verified"></i></div>
+            </div>
+            <div class="stat-val">{{ sealedGradeCount() }} Sealed</div>
+            <p-progressBar [value]="registrarSealingRate()" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">{{ registrarVerifiedGrades() }}</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-rose">
+            <div class="tile-header">
+              <span class="stat-label">Grade Change Disputes</span>
+              <div class="tile-icon-box rose"><i class="pi pi-exclamation-triangle"></i></div>
+            </div>
+            <div class="tag-wrapper">
+              <p-tag
+                [value]="pendingDisputesCount() > 0 ? pendingDisputesCount() + ' Active Disputes' : '0 Disputes Pending'"
+                [severity]="pendingDisputesCount() > 0 ? 'danger' : 'success'"
+                [rounded]="true"
+              ></p-tag>
+            </div>
+            <div class="tile-caption">Add/Drop: {{ isAddDropOpen() ? 'Active' : 'Closed' }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Institutional Grade Sheets Roster Table for Registrar Review -->
+      <div class="table-card">
+        <div class="table-toolbar">
+          <div class="toolbar-heading">
+            <h2 class="section-title">
+              <i class="pi pi-list text-emerald-700"></i>
+              Active Class Section Grade Sheets Roster
+            </h2>
+            <p-tag [value]="activeTermName() || 'Current Term'" severity="success" [rounded]="true"></p-tag>
+          </div>
+          <div class="toolbar-controls">
+            <a routerLink="/dashboard/grades" class="action-link text-xs font-bold text-emerald-700">Open Grade Management &rarr;</a>
+          </div>
+        </div>
+
+        <p-table
+          [value]="registrarSectionsList()"
+          styleClass="institutional-table"
+          [scrollable]="true"
+          [paginator]="true"
+          [rows]="5"
+          [rowsPerPageOptions]="[5, 10, 20]"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Section Code</th>
+              <th>Course Title</th>
+              <th>Curriculum</th>
+              <th>Enrolled</th>
+              <th class="text-center">Section Status</th>
+              <th class="text-center">Grade Status</th>
+              <th class="text-center">Action</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-sec>
+            <tr>
+              <td>
+                <span class="font-mono font-bold text-xs text-blue-800">{{ sec.sectionCode }}</span>
+              </td>
+              <td>
+                <div class="flex flex-col">
+                  <span class="font-bold text-xs text-slate-800">{{ sec.courseCode }}</span>
+                  <span class="text-xs text-slate-500 truncate max-w-xs">{{ sec.courseTitle }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="text-xs text-slate-600">{{ sec.curriculumCode || 'BSIT' }}</span>
+              </td>
+              <td>
+                <span class="font-mono text-xs font-bold text-slate-700">
+                  {{ sec.enrolledCount }} / {{ sec.maxCapacity }}
+                </span>
+              </td>
+              <td class="text-center">
+                <p-tag
+                  [value]="sec.status"
+                  [severity]="sec.status === 'OPEN' ? 'success' : (sec.status === 'CLOSED' ? 'warn' : 'secondary')"
+                  [rounded]="true"
+                ></p-tag>
+              </td>
+              <td class="text-center">
+                <p-tag
+                  [value]="sec.gradeStatus || 'DRAFT'"
+                  [severity]="sec.gradeStatus === 'SEALED' ? 'success' : (sec.gradeStatus === 'VERIFIED' ? 'info' : (sec.gradeStatus === 'SUBMITTED' ? 'warn' : 'secondary'))"
+                  [rounded]="true"
+                ></p-tag>
+              </td>
+              <td class="text-center">
+                <a routerLink="/dashboard/grades" class="action-link text-xs font-bold text-emerald-700">
+                  Review
+                </a>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="7" class="text-center py-6 text-slate-500 text-xs">
+                No class section grade sheets available for the current academic period.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+  }
+
+  <!-- 4. CASHIER WORKSPACE: Cashier POS & Official Receipt Booklets -->
+  @else if (isCashier()) {
+    <div class="student-cockpit">
+      <!-- Fused Identity Strip -->
+      <div class="identity-card">
+        <div class="identity-profile">
+          <p-avatar icon="pi pi-wallet" shape="circle" size="large" styleClass="identity-avatar"></p-avatar>
+          <div class="identity-meta">
+            <h2 class="identity-name">Cashier & Student Accounts Desk</h2>
+            <p class="identity-sub">Carlos Hilado Memorial State University • Business Office POS & Accountable Form Inventory</p>
+          </div>
+        </div>
+
+        <div class="identity-stats">
+          <div class="stat-unit">
+            <span class="stat-label">Active Booklet</span>
+            <span class="stat-val">{{ cashierBooklets.length > 0 ? cashierBooklets[0].bookletNumber : 'BKL-2026-001' }}</span>
+          </div>
+          <div class="hairline-divider"></div>
+          <div class="stat-unit">
+            <span class="stat-label">Available Receipts</span>
+            <span class="stat-val">{{ cashierBooklets.length > 0 ? cashierBooklets[0].remainingCount : 8 }} Remaining</span>
+          </div>
+          <div class="hairline-divider"></div>
+          <div class="stat-unit">
+            <span class="stat-label">Window Status</span>
+            <span class="clearance-pill">WINDOW 1: OPEN</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Health Gauge Card & Bento Grid -->
+      <div class="grid-section">
+        <div class="stat-card health-card">
+          <div class="knob-container">
+            <p-knob
+              [ngModel]="84"
+              [readonly]="true"
+              [size]="70"
+              valueTemplate="{value}%"
+              valueColor="var(--chmsu-green-main, #116834)"
+              rangeColor="var(--p-surface-200, #e2e8f0)"
+            ></p-knob>
+          </div>
+          <div class="health-meta">
+            <span class="stat-label">Collection Terminal Status</span>
+            <span class="stat-val health-rate-val">COA Form 51 Receipts Active</span>
+            <div class="tag-row">
+              <p-tag value="BALANCED" severity="success" size="small"></p-tag>
+            </div>
+          </div>
+        </div>
+
+        <div class="bento-grid-4col">
+          <div class="stat-card bento-tile accent-green">
+            <div class="tile-header">
+              <span class="stat-label">Receipt Booklet</span>
+              <div class="tile-icon-box green"><i class="pi pi-id-card"></i></div>
+            </div>
+            <div class="stat-val">{{ cashierBooklets.length > 0 ? cashierBooklets[0].bookletNumber : 'BKL-2026-001' }}</div>
+            <p-progressBar [value]="84" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">Accountable form in POS terminal</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-blue">
+            <div class="tile-header">
+              <span class="stat-label">Today's Collections</span>
+              <div class="tile-icon-box blue"><i class="pi pi-wallet"></i></div>
+            </div>
+            <div class="stat-val">₱84,500.00</div>
+            <p-progressBar [value]="92" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">Official collections received today</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-amber">
+            <div class="tile-header">
+              <span class="stat-label">Booklet Serial Range</span>
+              <div class="tile-icon-box amber"><i class="pi pi-history"></i></div>
+            </div>
+            <div class="stat-val">{{ cashierBooklets.length > 0 ? (cashierBooklets[0].startOr + ' - ' + cashierBooklets[0].endOr) : 'OR-890001 - 890050' }}</div>
+            <p-progressBar [value]="76" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">Current assigned serial range</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-rose">
+            <div class="tile-header">
+              <span class="stat-label">Payment Desk</span>
+              <div class="tile-icon-box rose"><i class="pi pi-shield"></i></div>
+            </div>
+            <div class="tag-wrapper">
+              <p-tag value="Window Open" severity="warn" [rounded]="true"></p-tag>
+            </div>
+            <div class="tile-caption">Ready for student assessments</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Institutional Receipt Booklet Table -->
+      <div class="table-card">
+        <div class="table-toolbar">
+          <div class="toolbar-heading">
+            <h2 class="section-title">
+              <i class="pi pi-calculator text-emerald-700"></i>
+              Cashier Payment Counter & Official Receipt Booklet Inventory
+            </h2>
+            <p-tag value="Form 51 Inventory" severity="warn" [rounded]="true"></p-tag>
+          </div>
+          <div class="toolbar-controls">
+            <a routerLink="/dashboard/finance/cashier" class="action-link text-xs font-bold text-emerald-700">Open Payment Counter &rarr;</a>
+          </div>
+        </div>
+
+        <p-table
+          [value]="cashierBooklets"
+          styleClass="institutional-table"
+          [scrollable]="true"
+          [paginator]="true"
+          [rows]="5"
+          [rowsPerPageOptions]="[5, 10, 20]"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Booklet #</th>
+              <th>Receipt Form</th>
+              <th>Assigned Cashier</th>
+              <th>Receipt Range</th>
+              <th>Current O.R.</th>
+              <th>Remaining</th>
+              <th class="text-center">Status</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-bkl>
+            <tr>
+              <td><span class="font-mono font-bold text-xs text-blue-800">{{ bkl.bookletNumber }}</span></td>
+              <td><span class="text-xs text-slate-600">{{ bkl.formType }}</span></td>
+              <td><span class="text-xs font-bold text-slate-800">{{ bkl.assignedCashier }}</span></td>
+              <td><span class="font-mono text-xs text-slate-500">{{ bkl.startOr }} – {{ bkl.endOr }}</span></td>
+              <td><span class="font-mono text-xs font-bold text-emerald-700">{{ bkl.currentOr }}</span></td>
+              <td><span class="font-bold text-xs" [ngClass]="bkl.remainingCount < 10 ? 'text-rose-600' : 'text-slate-700'">{{ bkl.remainingCount }} Receipts</span></td>
+              <td class="text-center">
+                <p-tag [value]="bkl.status" [severity]="bkl.status === 'ACTIVE' ? 'success' : 'secondary'" [rounded]="true"></p-tag>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="7" class="text-center py-6 text-slate-500 text-xs">
+                No receipt booklets assigned to current cashier session.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+  }
+
+  <!-- 5. FACULTY WORKSPACE: Instructional Class Record & Class Attendance -->
+  @else if (isFaculty()) {
+    <div class="student-cockpit">
+      <!-- Fused Identity Strip -->
+      <div class="identity-card">
+        <div class="identity-profile">
+          <p-avatar icon="pi pi-book" shape="circle" size="large" styleClass="identity-avatar"></p-avatar>
+          <div class="identity-meta">
+            <h2 class="identity-name">{{ userName() }}</h2>
+            <p class="identity-sub">{{ activeTermName() || 'Academic Year 2026-2027 1st Semester' }} • CHMSU Academic Instruction & Class Record</p>
+          </div>
+        </div>
+
+        <div class="identity-stats">
+          <div class="stat-unit">
+            <span class="stat-label">Teaching Load</span>
+            <span class="stat-val">{{ facultyTeachingUnitsTag() || '18.0 / 21.0 Units' }}</span>
+          </div>
+          <div class="hairline-divider"></div>
+          <div class="stat-unit">
+            <span class="stat-label">Assigned Classes</span>
+            <span class="stat-val">{{ todayClasses.length }} Sections</span>
+          </div>
+          <div class="hairline-divider"></div>
+          <div class="stat-unit">
+            <span class="stat-label">Faculty Status</span>
+            <span class="clearance-pill">STANDARD LOAD</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Health Gauge Card & Bento Grid -->
+      <div class="grid-section">
+        <div class="stat-card health-card">
+          <div class="knob-container">
+            <p-knob
+              [ngModel]="96"
+              [readonly]="true"
+              [size]="70"
+              valueTemplate="{value}%"
+              valueColor="var(--chmsu-green-main, #116834)"
+              rangeColor="var(--p-surface-200, #e2e8f0)"
+            ></p-knob>
+          </div>
+          <div class="health-meta">
+            <span class="stat-label">Instructional Consistency</span>
+            <span class="stat-val health-rate-val">96.2% Class Attendance</span>
+            <div class="tag-row">
+              <p-tag value="ON SCHEDULE" severity="success" size="small"></p-tag>
+            </div>
+          </div>
+        </div>
+
+        <div class="bento-grid-4col">
+          <div class="stat-card bento-tile accent-green">
+            <div class="tile-header">
+              <span class="stat-label">Teaching Load</span>
               <div class="tile-icon-box green"><i class="pi pi-book"></i></div>
             </div>
-            <div class="stat-val">94.2%</div>
-            <p-progressBar [value]="94" [showValue]="false" styleClass="tile-progress"></p-progressBar>
-            <div class="tile-caption">+3.2% vs target threshold</div>
+            <div class="stat-val">{{ facultyTeachingUnitsTag() || '18.0 Units' }}</div>
+            <p-progressBar [value]="86" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">CHED CMO standard teaching load</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-blue">
+            <div class="tile-header">
+              <span class="stat-label">Assigned Sections</span>
+              <div class="tile-icon-box blue"><i class="pi pi-calendar"></i></div>
+            </div>
+            <div class="stat-val">{{ todayClasses.length }} Classes</div>
+            <p-progressBar [value]="100" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">Class schedule slots assigned</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-amber">
+            <div class="tile-header">
+              <span class="stat-label">Grade Submissions</span>
+              <div class="tile-icon-box amber"><i class="pi pi-chart-line"></i></div>
+            </div>
+            <div class="stat-val">3 / 5 Ready</div>
+            <p-progressBar [value]="60" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">Midterm grades encoded in gradebook</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-rose">
+            <div class="tile-header">
+              <span class="stat-label">QR Attendance</span>
+              <div class="tile-icon-box rose"><i class="pi pi-qrcode"></i></div>
+            </div>
+            <div class="tag-wrapper">
+              <p-tag value="96.2% Confirmed" severity="success" [rounded]="true"></p-tag>
+            </div>
+            <div class="tile-caption">Geofenced student check-in active</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Institutional Faculty Class Timetable Table -->
+      <div class="table-card">
+        <div class="table-toolbar">
+          <div class="toolbar-heading">
+            <h2 class="section-title">
+              <i class="pi pi-id-card text-emerald-700"></i>
+              Faculty Assigned Sections & Instructional Timetable
+            </h2>
+            <p-tag value="Active Semester" severity="success" [rounded]="true"></p-tag>
+          </div>
+          <div class="toolbar-controls">
+            <a routerLink="/dashboard/grades" class="action-link text-xs font-bold text-emerald-700">Open Section Gradebook &rarr;</a>
+          </div>
+        </div>
+
+        <p-table
+          [value]="todayClasses"
+          styleClass="institutional-table"
+          [scrollable]="true"
+          [paginator]="true"
+          [rows]="5"
+          [rowsPerPageOptions]="[5, 10, 20]"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Course & Section</th>
+              <th>Schedule & Room</th>
+              <th>Instructor</th>
+              <th>Class Attendance</th>
+              <th class="text-center">Status</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-cls>
+            <tr>
+              <td>
+                <div class="font-bold text-xs text-emerald-800">{{ cls.courseCode }}</div>
+                <div class="text-xs text-slate-600">{{ cls.courseTitle }}</div>
+              </td>
+              <td>
+                <div class="text-xs font-bold text-slate-800">{{ cls.time }}</div>
+                <div class="text-xs text-slate-500"><i class="pi pi-map-marker"></i> {{ cls.room }}</div>
+              </td>
+              <td><span class="text-xs text-slate-700">{{ cls.instructor }}</span></td>
+              <td><span class="font-mono text-xs font-bold text-emerald-700">96.2% Present</span></td>
+              <td class="text-center">
+                <p-tag [value]="cls.status" [severity]="cls.status === 'In Progress' ? 'success' : (cls.status === 'Completed' ? 'secondary' : 'info')" [rounded]="true"></p-tag>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="5" class="text-center py-6 text-slate-500 text-xs">
+                No assigned class sections scheduled for today.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+  }
+
+  <!-- 6. DEAN WORKSPACE: College Faculty Workload & Overload Review -->
+  @else if (isDean()) {
+    <div class="student-cockpit">
+      <!-- Fused Identity Strip -->
+      <div class="identity-card">
+        <div class="identity-profile">
+          <p-avatar icon="pi pi-graduation-cap" shape="circle" size="large" styleClass="identity-avatar"></p-avatar>
+          <div class="identity-meta">
+            <h2 class="identity-name">College Dean Governance & Faculty Administration</h2>
+            <p class="identity-sub">College of Computer Studies • Faculty Workloads, Overload Approvals, & Clearances</p>
+          </div>
+        </div>
+
+        <div class="identity-stats">
+          <div class="stat-unit">
+            <span class="stat-label">Degree Programs</span>
+            <span class="stat-val">{{ curriculaList().length || 8 }} Programs</span>
+          </div>
+          <div class="hairline-divider"></div>
+          <div class="stat-unit">
+            <span class="stat-label">Faculty Roster</span>
+            <span class="stat-val">{{ facultyWorkloadList.length || 24 }} Instructors</span>
+          </div>
+          <div class="hairline-divider"></div>
+          <div class="stat-unit">
+            <span class="stat-label">CMO Compliance</span>
+            <span class="clearance-pill">CMO 25 COMPLIANT</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Health Gauge Card & Bento Grid -->
+      <div class="grid-section">
+        <div class="stat-card health-card">
+          <div class="knob-container">
+            <p-knob
+              [ngModel]="94"
+              [readonly]="true"
+              [size]="70"
+              valueTemplate="{value}%"
+              valueColor="var(--chmsu-green-main, #116834)"
+              rangeColor="var(--p-surface-200, #e2e8f0)"
+            ></p-knob>
+          </div>
+          <div class="health-meta">
+            <span class="stat-label">Faculty Load Compliance</span>
+            <span class="stat-val health-rate-val">21.0 Max Units Standard</span>
+            <div class="tag-row">
+              <p-tag value="FULL ROSTER" severity="success" size="small"></p-tag>
+            </div>
+          </div>
+        </div>
+
+        <div class="bento-grid-4col">
+          <div class="stat-card bento-tile accent-green">
+            <div class="tile-header">
+              <span class="stat-label">Degree Programs</span>
+              <div class="tile-icon-box green"><i class="pi pi-sitemap"></i></div>
+            </div>
+            <div class="stat-val">{{ curriculaList().length || 8 }} Programs</div>
+            <p-progressBar [value]="100" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">Approved undergraduate curricula</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-blue">
+            <div class="tile-header">
+              <span class="stat-label">Teaching Faculty</span>
+              <div class="tile-icon-box blue"><i class="pi pi-user"></i></div>
+            </div>
+            <div class="stat-val">{{ facultyWorkloadList.length || 24 }} Faculty</div>
+            <p-progressBar [value]="96" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">Instructional faculty active</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-amber">
+            <div class="tile-header">
+              <span class="stat-label">Overload Reviews</span>
+              <div class="tile-icon-box amber"><i class="pi pi-briefcase"></i></div>
+            </div>
+            <div class="stat-val">{{ facultyWorkloadList.length > 0 ? (facultyWorkloadList.length - 2) : 2 }} Cases</div>
+            <p-progressBar [value]="80" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">Overload applications pending review</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-rose">
+            <div class="tile-header">
+              <span class="stat-label">College Clearances</span>
+              <div class="tile-icon-box rose"><i class="pi pi-check-square"></i></div>
+            </div>
+            <div class="tag-wrapper">
+              <p-tag value="94.1% Cleared" severity="success" [rounded]="true"></p-tag>
+            </div>
+            <div class="tile-caption">College department clearance on track</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Institutional Faculty Workload Table -->
+      <div class="table-card">
+        <div class="table-toolbar">
+          <div class="toolbar-heading">
+            <h2 class="section-title">
+              <i class="pi pi-briefcase text-emerald-700"></i>
+              College Faculty Workload & Overload Review Roster
+            </h2>
+            <p-tag value="CMO 25 Governed" severity="info" [rounded]="true"></p-tag>
+          </div>
+          <div class="toolbar-controls">
+            <a routerLink="/dashboard/scheduling" class="action-link text-xs font-bold text-emerald-700">View All Faculty Loads &rarr;</a>
+          </div>
+        </div>
+
+        <p-table
+          [value]="facultyWorkloadList"
+          styleClass="institutional-table"
+          [scrollable]="true"
+          [paginator]="true"
+          [rows]="5"
+          [rowsPerPageOptions]="[5, 10, 20]"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Faculty Member</th>
+              <th>Department</th>
+              <th>Assigned Teaching Units</th>
+              <th>Allowed Limit</th>
+              <th class="text-center">Overload Status</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-fac>
+            <tr>
+              <td>
+                <div class="flex items-center gap-2">
+                  <p-avatar [label]="getInitials(fac.fullName)" shape="circle" size="normal" styleClass="student-avatar"></p-avatar>
+                  <span class="font-bold text-xs text-slate-800">{{ fac.fullName }}</span>
+                </div>
+              </td>
+              <td><span class="text-xs text-slate-600">{{ fac.department }}</span></td>
+              <td>
+                <span class="font-mono font-bold text-xs" [ngClass]="fac.assignedUnits > 21 ? 'text-amber-700' : 'text-emerald-700'">
+                  {{ fac.assignedUnits.toFixed(1) }} Units
+                </span>
+              </td>
+              <td><span class="text-xs text-slate-500">21.0 Units Limit</span></td>
+              <td class="text-center">
+                <p-tag
+                  [value]="fac.status"
+                  [severity]="fac.status === 'NORMAL' ? 'success' : (fac.status === 'OVERLOAD_APPROVED' ? 'info' : 'warn')"
+                  [rounded]="true"
+                ></p-tag>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="5" class="text-center py-6 text-slate-500 text-xs">
+                No faculty workload records available for review.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+  }
+
+  <!-- 7. CHAIRPERSON WORKSPACE: Department Curriculum & Timetable Overview -->
+  @else if (isChairperson()) {
+    <div class="student-cockpit">
+      <!-- Fused Identity Strip -->
+      <div class="identity-card">
+        <div class="identity-profile">
+          <p-avatar icon="pi pi-sitemap" shape="circle" size="large" styleClass="identity-avatar"></p-avatar>
+          <div class="identity-meta">
+            <h2 class="identity-name">{{ chairpersonProgramTag() || 'Department of Information Technology' }}</h2>
+            <p class="identity-sub">{{ activeTermName() || 'Academic Year 2026-2027 1st Semester' }} • Outcome-Based Education (OBE) Framework</p>
+          </div>
+        </div>
+
+        <div class="identity-stats">
+          <div class="stat-unit">
+            <span class="stat-label">Curricula Tracks</span>
+            <span class="stat-val">{{ chairpersonOutcomes() || '3 Active Programs' }}</span>
+          </div>
+          <div class="hairline-divider"></div>
+          <div class="stat-unit">
+            <span class="stat-label">Class Sections</span>
+            <span class="stat-val">{{ chairpersonSections() || '28 Sections' }}</span>
+          </div>
+          <div class="hairline-divider"></div>
+          <div class="stat-unit">
+            <span class="stat-label">OBE Status</span>
+            <span class="clearance-pill">ALIGNED &amp; VERIFIED</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Health Gauge Card & Bento Grid -->
+      <div class="grid-section">
+        <div class="stat-card health-card">
+          <div class="knob-container">
+            <p-knob
+              [ngModel]="chairpersonOutcomeScore()"
+              [readonly]="true"
+              [size]="70"
+              valueTemplate="{value}%"
+              valueColor="var(--chmsu-green-main, #116834)"
+              rangeColor="var(--p-surface-200, #e2e8f0)"
+            ></p-knob>
+          </div>
+          <div class="health-meta">
+            <span class="stat-label">Curriculum Compliance</span>
+            <span class="stat-val health-rate-val">{{ chairpersonOutcomeScore() }}% Syllabus Alignment</span>
+            <div class="tag-row">
+              <p-tag value="CHED COMPLIANT" severity="success" size="small"></p-tag>
+            </div>
+          </div>
+        </div>
+
+        <div class="bento-grid-4col">
+          <div class="stat-card bento-tile accent-green">
+            <div class="tile-header">
+              <span class="stat-label">Learning Outcomes</span>
+              <div class="tile-icon-box green"><i class="pi pi-check-circle"></i></div>
+            </div>
+            <div class="stat-val">96.4%</div>
+            <p-progressBar [value]="96.4" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">CILO to PILO mappings verified</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-blue">
+            <div class="tile-header">
+              <span class="stat-label">Timetable Schedules</span>
+              <div class="tile-icon-box blue"><i class="pi pi-calendar"></i></div>
+            </div>
+            <div class="stat-val">{{ chairpersonSections() }}</div>
+            <p-progressBar [value]="92" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">Faculty assignments & rooms loaded</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-amber">
+            <div class="tile-header">
+              <span class="stat-label">Grade Sheets Review</span>
+              <div class="tile-icon-box amber"><i class="pi pi-clock"></i></div>
+            </div>
+            <div class="stat-val">{{ pendingGradeReviewCount() }} Pending</div>
+            <p-progressBar [value]="chairpersonGradeProgress()" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">{{ chairpersonPendingGrades() }}</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-rose">
+            <div class="tile-header">
+              <span class="stat-label">Prerequisite DAG</span>
+              <div class="tile-icon-box rose"><i class="pi pi-shield"></i></div>
+            </div>
+            <div class="tag-wrapper">
+              <p-tag [value]="pendingDisputesCount() > 0 ? pendingDisputesCount() + ' Alerts' : 'No Bottlenecks'" [severity]="pendingDisputesCount() > 0 ? 'warn' : 'success'" [rounded]="true"></p-tag>
+            </div>
+            <div class="tile-caption">Curriculum course sequence checked</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Institutional Class Section Schedule & Curriculum Roster Table -->
+      <div class="table-card">
+        <div class="table-toolbar">
+          <div class="toolbar-heading">
+            <h2 class="section-title">
+              <i class="pi pi-list text-emerald-700"></i>
+              Department Class Sections & Curriculum Offering Timetable
+            </h2>
+            <p-tag [value]="activeTermName() || 'Current Term'" severity="success" [rounded]="true"></p-tag>
+          </div>
+          <div class="toolbar-controls">
+            <a routerLink="/dashboard/curriculum/designer/1" class="action-link text-xs font-bold text-emerald-700">Open Curriculum Designer &rarr;</a>
+          </div>
+        </div>
+
+        <p-table
+          [value]="chairpersonSectionsList()"
+          styleClass="institutional-table"
+          [scrollable]="true"
+          [paginator]="true"
+          [rows]="5"
+          [rowsPerPageOptions]="[5, 10, 20]"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Section Code</th>
+              <th>Course Title</th>
+              <th>Curriculum</th>
+              <th>Capacity</th>
+              <th class="text-center">Section Status</th>
+              <th class="text-center">Grade Status</th>
+              <th class="text-center">Action</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-sec>
+            <tr>
+              <td>
+                <span class="font-mono font-bold text-xs text-blue-800">{{ sec.sectionCode }}</span>
+              </td>
+              <td>
+                <div class="flex flex-col">
+                  <span class="font-bold text-xs text-slate-800">{{ sec.courseCode }}</span>
+                  <span class="text-xs text-slate-500 truncate max-w-xs">{{ sec.courseTitle }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="text-xs text-slate-600">{{ sec.curriculumCode || 'BSIT' }}</span>
+              </td>
+              <td>
+                <span class="font-mono text-xs font-bold text-slate-700">
+                  {{ sec.enrolledCount }} / {{ sec.maxCapacity }}
+                </span>
+              </td>
+              <td class="text-center">
+                <p-tag
+                  [value]="sec.status"
+                  [severity]="sec.status === 'OPEN' ? 'success' : (sec.status === 'CLOSED' ? 'warn' : 'secondary')"
+                  [rounded]="true"
+                ></p-tag>
+              </td>
+              <td class="text-center">
+                <p-tag
+                  [value]="sec.gradeStatus || 'DRAFT'"
+                  [severity]="sec.gradeStatus === 'SEALED' ? 'success' : (sec.gradeStatus === 'VERIFIED' ? 'info' : (sec.gradeStatus === 'SUBMITTED' ? 'warn' : 'secondary'))"
+                  [rounded]="true"
+                ></p-tag>
+              </td>
+              <td class="text-center">
+                <a routerLink="/dashboard/curriculum/designer/1" class="action-link text-xs font-bold text-emerald-700">
+                  Manage
+                </a>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="7" class="text-center py-6 text-slate-500 text-xs">
+                No class section schedules available for the department curriculum.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+  }
+
+  <!-- 8. STUDENT WORKSPACE: Student Academic Overview -->
+  @else if (isStudent()) {
+    <div class="student-cockpit">
+      <!-- Fused Identity Strip -->
+      <div class="identity-card">
+        <div class="identity-profile">
+          <p-avatar [label]="getInitials(userName())" shape="circle" size="large" styleClass="identity-avatar"></p-avatar>
+          <div class="identity-meta">
+            <h2 class="identity-name">{{ userName() }}</h2>
+            <p class="identity-sub">{{ studentProfileSub() }}</p>
+          </div>
+        </div>
+
+        <div class="identity-stats">
+          <div class="stat-unit">
+            <span class="stat-label">Cumulative GWA</span>
+            <span class="stat-val gpa-val">{{ studentGpa() }}</span>
+          </div>
+          <div class="hairline-divider"></div>
+          <div class="stat-unit">
+            <span class="stat-label">Earned Units</span>
+            <span class="stat-val">{{ studentUnits() }}</span>
+          </div>
+          <div class="hairline-divider"></div>
+          <div class="stat-unit">
+            <span class="stat-label">Term Clearance</span>
+            <span class="clearance-pill">{{ studentClearanceStatus() }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Health Gauge Card & Bento Grid -->
+      <div class="grid-section">
+        <div class="stat-card health-card">
+          <div class="knob-container">
+            <p-knob
+              [ngModel]="studentWellnessScore()"
+              [readonly]="true"
+              [size]="70"
+              valueTemplate="{value}%"
+              valueColor="var(--chmsu-green-main, #116834)"
+              rangeColor="var(--p-surface-200, #e2e8f0)"
+            ></p-knob>
+          </div>
+          <div class="health-meta">
+            <span class="stat-label">Academic Standing Summary</span>
+            <span class="stat-val health-rate-val">{{ studentStandingText() }}</span>
+            <div class="tag-row">
+              <p-tag [value]="studentStandingTag()" [severity]="studentStandingTag() === 'ON TRACK' ? 'success' : 'warn'" size="small"></p-tag>
+            </div>
+          </div>
+        </div>
+
+        <div class="bento-grid-4col">
+          <div class="stat-card bento-tile accent-green">
+            <div class="tile-header">
+              <span class="stat-label">Academic Performance</span>
+              <div class="tile-icon-box green"><i class="pi pi-book"></i></div>
+            </div>
+            <div class="stat-val">{{ studentAcademicPerf() }}%</div>
+            <p-progressBar [value]="studentAcademicPerf()" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">Above required passing mark</div>
           </div>
 
           <div class="stat-card bento-tile accent-blue">
@@ -398,143 +1337,469 @@
               <span class="stat-label">Attendance Rate</span>
               <div class="tile-icon-box blue"><i class="pi pi-calendar"></i></div>
             </div>
-            <div class="stat-val">98.4%</div>
-            <p-progressBar [value]="98" [showValue]="false" styleClass="tile-progress"></p-progressBar>
-            <div class="tile-caption">Geofenced QR Presence Verified</div>
+            <div class="stat-val">{{ studentAttendanceRate() }}%</div>
+            <p-progressBar [value]="studentAttendanceRate()" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">Attendance record confirmed</div>
           </div>
 
           <div class="stat-card bento-tile accent-amber">
             <div class="tile-header">
-              <span class="stat-label">Socioeconomic Index</span>
+              <span class="stat-label">Tuition Subsidy</span>
               <div class="tile-icon-box amber"><i class="pi pi-shield"></i></div>
             </div>
             <div class="stat-val">100%</div>
             <p-progressBar [value]="100" [showValue]="false" styleClass="tile-progress"></p-progressBar>
-            <div class="tile-caption">UniFAST Subsidy Verified</div>
+            <div class="tile-caption">UniFAST Free Tuition active</div>
           </div>
 
           <div class="stat-card bento-tile accent-rose">
             <div class="tile-header">
-              <span class="stat-label">Composite Risk Level</span>
+              <span class="stat-label">Academic Standing</span>
               <div class="tile-icon-box rose"><i class="pi pi-chart-line"></i></div>
             </div>
             <div class="tag-wrapper">
-              <p-tag value="LOW RISK" severity="success" [rounded]="true"></p-tag>
+              <p-tag [value]="studentAcademicStanding()" [severity]="studentAcademicStandingSeverity()" [rounded]="true"></p-tag>
             </div>
-            <div class="tile-caption">Evaluated via AI Risk Engine</div>
+            <div class="tile-caption">{{ studentAcademicStandingCaption() }}</div>
           </div>
         </div>
       </div>
+
+      <!-- Institutional Table: Enrolled Courses & Class Schedule -->
+      <div class="table-card">
+        <div class="table-toolbar">
+          <div class="toolbar-heading">
+            <h2 class="section-title">
+              <i class="pi pi-calendar text-emerald-700"></i>
+              Enrolled Courses &amp; Class Schedule
+            </h2>
+            <p-tag value="Active Term Enrollment" severity="success" [rounded]="true"></p-tag>
+          </div>
+          <div class="toolbar-controls">
+            <a routerLink="/dashboard/scheduling" class="action-link text-xs font-bold text-emerald-700">View Full Schedule &rarr;</a>
+          </div>
+        </div>
+
+        <p-table
+          [value]="todayClasses"
+          styleClass="institutional-table"
+          [scrollable]="true"
+          [paginator]="true"
+          [rows]="5"
+          [rowsPerPageOptions]="[5, 10, 20]"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Course Code &amp; Title</th>
+              <th>Schedule Time</th>
+              <th>Room &amp; Facility</th>
+              <th>Instructor</th>
+              <th>Status</th>
+              <th class="text-center">Action</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-cls>
+            <tr>
+              <td>
+                <div class="font-bold text-xs text-slate-800">{{ cls.courseCode }}</div>
+                <div class="text-xs text-slate-500">{{ cls.courseTitle }}</div>
+              </td>
+              <td><span class="text-xs text-slate-700 font-semibold">{{ cls.time }}</span></td>
+              <td><span class="text-xs text-slate-600">{{ cls.room }}</span></td>
+              <td><span class="text-xs text-slate-700 font-medium">{{ cls.instructor }}</span></td>
+              <td>
+                <p-tag
+                  [value]="cls.status"
+                  [severity]="cls.status === 'Completed' ? 'secondary' : (cls.status === 'In Progress' ? 'success' : 'info')"
+                  size="small"
+                ></p-tag>
+              </td>
+              <td class="text-center">
+                <a routerLink="/dashboard/portal/student" class="action-link text-xs font-bold text-emerald-700">
+                  Course Hub
+                </a>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="6" class="text-center py-6 text-slate-500 text-xs">
+                No enrolled class schedules recorded for the current term.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
     </div>
   }
 
-  <!-- 9. GUIDANCE WORKSPACE: Student Body Dropout Risk Radar & AI Intervention Cockpit -->
+  <!-- 9. GUIDANCE WORKSPACE: Student Support Services & Advising -->
   @else if (isGuidance()) {
-    <div class="table-card">
-      <div class="table-toolbar">
-        <div class="toolbar-heading">
-          <h2 class="section-title">
-            <i class="pi pi-heart-fill header-icon-amber"></i>
-            Student Risk Radar & AI Intervention Dispatch Console
-          </h2>
-          <p-tag value="14 Critical & High Risk Cases" severity="danger" [rounded]="true"></p-tag>
+    <div class="student-cockpit">
+      <!-- Fused Identity Strip -->
+      <div class="identity-card">
+        <div class="identity-profile">
+          <p-avatar icon="pi pi-heart-fill" shape="circle" size="large" styleClass="identity-avatar"></p-avatar>
+          <div class="identity-meta">
+            <h2 class="identity-name">Guidance &amp; Student Support Services</h2>
+            <p class="identity-sub">Carlos Hilado Memorial State University • Student Welfare &amp; Academic Intervention Radar</p>
+          </div>
         </div>
-        <div class="toolbar-controls">
-          <p-button
-            label="Dispatch AI Intervention"
-            icon="pi pi-send"
-            severity="warn"
-            size="small"
-            (onClick)="openDispatchModal(monitoredStudents[0])"
-          ></p-button>
+
+        <div class="identity-stats">
+          <div class="stat-unit">
+            <span class="stat-label">Monitored Students</span>
+            <span class="stat-val">{{ guidanceTotalRecords() > 0 ? (guidanceTotalRecords() + ' Students') : '3,842 Students' }}</span>
+          </div>
+          <div class="hairline-divider"></div>
+          <div class="stat-unit">
+            <span class="stat-label">Priority Support</span>
+            <span class="stat-val">{{ guidancePriorityCountTag() || '14 Priority Cases' }}</span>
+          </div>
+          <div class="hairline-divider"></div>
+          <div class="stat-unit">
+            <span class="stat-label">Wellness Index</span>
+            <span class="clearance-pill pill-active">88.6% WELLNESS</span>
+          </div>
         </div>
       </div>
 
-      <p-table [value]="monitoredStudents" styleClass="institutional-table" [scrollable]="true">
-        <ng-template pTemplate="header">
-          <tr>
-            <th>Student Profile</th>
-            <th>Section / Program</th>
-            <th>Risk Level & Score</th>
-            <th>Active Interventions</th>
-            <th class="text-center">Actions</th>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-student>
-          <tr>
-            <td>
-              <div class="student-profile-cell">
-                <p-avatar [label]="getInitials(student.fullName)" shape="circle" size="normal" styleClass="student-avatar"></p-avatar>
-                <div class="student-meta">
-                  <span class="student-name">{{ student.fullName }}</span>
-                  <span class="student-number">{{ student.studentNumber }}</span>
+      <!-- Health Gauge Card & Bento Grid -->
+      <div class="grid-section">
+        <div class="stat-card health-card">
+          <div class="knob-container">
+            <p-knob
+              [ngModel]="89"
+              [readonly]="true"
+              [size]="70"
+              valueTemplate="{value}%"
+              valueColor="var(--chmsu-green-main, #116834)"
+              rangeColor="var(--p-surface-200, #e2e8f0)"
+            ></p-knob>
+          </div>
+          <div class="health-meta">
+            <span class="stat-label">Student Wellness Index</span>
+            <span class="stat-val health-rate-val">89% Health Baseline</span>
+            <div class="tag-row">
+              <p-tag value="RETENTION HEALTHY" severity="success" size="small"></p-tag>
+            </div>
+          </div>
+        </div>
+
+        <div class="bento-grid-4col">
+          <div class="stat-card bento-tile accent-green">
+            <div class="tile-header">
+              <span class="stat-label">Enrolled Under Care</span>
+              <div class="tile-icon-box green"><i class="pi pi-users"></i></div>
+            </div>
+            <div class="stat-val">{{ guidanceTotalRecords() > 0 ? guidanceTotalRecords().toLocaleString() : '3,842' }}</div>
+            <p-progressBar [value]="98" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">Active scholars under care</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-blue">
+            <div class="tile-header">
+              <span class="stat-label">Support Referrals</span>
+              <div class="tile-icon-box blue"><i class="pi pi-send"></i></div>
+            </div>
+            <div class="stat-val">28 Sessions</div>
+            <p-progressBar [value]="82" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">Guidance &amp; peer mentoring actions</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-amber">
+            <div class="tile-header">
+              <span class="stat-label">Priority Attention</span>
+              <div class="tile-icon-box amber"><i class="pi pi-exclamation-triangle"></i></div>
+            </div>
+            <div class="stat-val">{{ guidancePriorityCountTag() ? guidancePriorityCountTag().replace(' Needing Priority Support', '') : '14 Cases' }}</div>
+            <p-progressBar [value]="65" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">Requiring counseling follow-up</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-rose">
+            <div class="tile-header">
+              <span class="stat-label">Diagnostic Telemetry</span>
+              <div class="tile-icon-box rose"><i class="pi pi-heart-fill"></i></div>
+            </div>
+            <div class="tag-wrapper">
+              <p-tag value="RADAR ACTIVE" severity="success" [rounded]="true"></p-tag>
+            </div>
+            <div class="tile-caption">Early warning radar monitoring</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Institutional Monitored Risk Table -->
+      <div class="table-card">
+        <div class="table-toolbar">
+          <div class="toolbar-heading">
+            <h2 class="section-title">
+              <i class="pi pi-heart-fill text-emerald-700"></i>
+              Student Support Services &amp; Advising
+            </h2>
+            <p-tag [value]="guidancePriorityCountTag()" severity="danger" [rounded]="true"></p-tag>
+          </div>
+          <div class="toolbar-controls">
+            <p-button
+              label="Provide Student Support"
+              icon="pi pi-send"
+              severity="warn"
+              size="small"
+              [disabled]="monitoredStudents.length === 0"
+              (onClick)="openDispatchModal(monitoredStudents[0])"
+            ></p-button>
+          </div>
+        </div>
+
+        <p-table
+          [value]="monitoredStudents"
+          styleClass="institutional-table"
+          [scrollable]="true"
+          [paginator]="true"
+          [lazy]="true"
+          (onLazyLoad)="onGuidanceTableLazyLoad($event)"
+          [rows]="guidancePageSize()"
+          [totalRecords]="guidanceTotalRecords()"
+          [loading]="guidanceLoading()"
+          [rowsPerPageOptions]="[5, 10, 20]"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Student Name</th>
+              <th>Program &amp; Section</th>
+              <th>Support Level &amp; Priority</th>
+              <th>Support Services</th>
+              <th class="text-center">Actions</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-student>
+            <tr>
+              <td>
+                <div class="student-profile-cell">
+                  <p-avatar [label]="getInitials(student.fullName)" shape="circle" size="normal" styleClass="student-avatar"></p-avatar>
+                  <div class="student-meta">
+                    <span class="student-name">{{ student.fullName }}</span>
+                    <span class="student-number">{{ student.studentNumber }}</span>
+                  </div>
                 </div>
-              </div>
-            </td>
-            <td><span class="font-bold text-xs text-slate-800">{{ student.programOrSection }}</span></td>
-            <td>
-              <div class="risk-score-wrapper">
-                <p-tag [value]="student.riskLevel" [severity]="getRiskSeverity(student.riskLevel)" [rounded]="true"></p-tag>
-                <span class="risk-percentage">{{ student.riskScore }}%</span>
-              </div>
-            </td>
-            <td>
-              @if (student.activeInterventions.length > 0) {
-                <div class="interventions-list">
-                  @for (action of student.activeInterventions; track action) {
-                    <p-tag [value]="action" severity="warn" size="small"></p-tag>
-                  }
+              </td>
+              <td><span class="font-bold text-xs text-slate-800">{{ student.programOrSection }}</span></td>
+              <td>
+                <div class="risk-score-wrapper">
+                  <p-tag [value]="student.riskLevel" [severity]="getRiskSeverity(student.riskLevel)" [rounded]="true"></p-tag>
+                  <span class="risk-percentage">{{ student.riskScore }}%</span>
                 </div>
-              } @else {
-                <span class="no-interventions">No Dispatches</span>
-              }
-            </td>
-            <td class="text-center">
-              <p-button
-                icon="pi pi-send"
-                severity="warn"
-                [text]="true"
-                [rounded]="true"
-                size="small"
-                pTooltip="Dispatch Intervention"
-                (onClick)="openDispatchModal(student)"
-              ></p-button>
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
+              </td>
+              <td>
+                @if (student.activeInterventions.length > 0) {
+                  <div class="interventions-list">
+                    @for (action of student.activeInterventions; track action) {
+                      <p-tag [value]="action" severity="warn" size="small"></p-tag>
+                    }
+                  </div>
+                } @else {
+                  <span class="no-interventions">No Active Referrals</span>
+                }
+              </td>
+              <td class="text-center">
+                <p-button
+                  icon="pi pi-send"
+                  severity="warn"
+                  [text]="true"
+                  [rounded]="true"
+                  size="small"
+                  pTooltip="Provide Student Support"
+                  (onClick)="openDispatchModal(student)"
+                ></p-button>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="5" class="text-center py-8">
+                <div class="empty-state-container flex flex-col items-center justify-center text-slate-500 py-6">
+                  <i class="pi pi-check-circle text-3xl text-emerald-600 mb-2"></i>
+                  <span class="font-bold text-slate-700 text-sm">No Monitored Students</span>
+                  <span class="text-xs text-slate-500 mt-1">There are currently no students identified requiring priority guidance or academic intervention.</span>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
     </div>
   }
 
-  <!-- 10. ACCOUNTANT WORKSPACE: Accounting Office & UniFAST FHE Billing Claims -->
+  <!-- 10. ACCOUNTANT WORKSPACE: Accounting Office & Free Higher Education (UniFAST) Billing -->
   @else if (isAccountant()) {
-    <div class="table-card">
-      <div class="table-toolbar">
-        <div class="toolbar-heading">
-          <h2 class="section-title">
-            <i class="pi pi-file-export header-icon-sm"></i>
-            Accounting Office & UniFAST FHE Billing Claim Ledger
-          </h2>
-          <p-tag value="RA 10931 Compliant" severity="success" [rounded]="true"></p-tag>
+    <div class="student-cockpit">
+      <!-- Fused Identity Strip -->
+      <div class="identity-card">
+        <div class="identity-profile">
+          <p-avatar icon="pi pi-file-export" shape="circle" size="large" styleClass="identity-avatar"></p-avatar>
+          <div class="identity-meta">
+            <h2 class="identity-name">Accounting Office &amp; Free Higher Education (UniFAST) Ledger</h2>
+            <p class="identity-sub">Carlos Hilado Memorial State University • RA 10931 Tertiary Education Subsidy Billing</p>
+          </div>
         </div>
-        <div class="toolbar-controls">
-          <a routerLink="/dashboard/finance/unifast" class="action-link text-xs font-bold text-emerald-700">Open UniFAST FHE Claims Portal &rarr;</a>
+
+        <div class="identity-stats">
+          <div class="stat-unit">
+            <span class="stat-label">Claim Batches</span>
+            <span class="stat-val">{{ accountantBatches() || '4 Batches Audited' }}</span>
+          </div>
+          <div class="hairline-divider"></div>
+          <div class="stat-unit">
+            <span class="stat-label">Total Subsidy Billed</span>
+            <span class="stat-val">{{ accountantTotalBilled() || '₱1,280,450.00' }}</span>
+          </div>
+          <div class="hairline-divider"></div>
+          <div class="stat-unit">
+            <span class="stat-label">COA Compliance</span>
+            <span class="clearance-pill pill-active">RA 10931 COMPLIANT</span>
+          </div>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
-          <div class="text-xs font-bold text-slate-500 uppercase">FHE Claim Batches</div>
-          <div class="text-sm font-bold text-blue-700 mt-1"><i class="pi pi-file-export text-xs mr-1"></i> 4 Batches Audited</div>
+      <!-- Health Gauge Card & Bento Grid -->
+      <div class="grid-section">
+        <div class="stat-card health-card">
+          <div class="knob-container">
+            <p-knob
+              [ngModel]="100"
+              [readonly]="true"
+              [size]="70"
+              valueTemplate="{value}%"
+              valueColor="var(--chmsu-green-main, #116834)"
+              rangeColor="var(--p-surface-200, #e2e8f0)"
+            ></p-knob>
+          </div>
+          <div class="health-meta">
+            <span class="stat-label">Audit Compliance Rate</span>
+            <span class="stat-val health-rate-val">100% Verified</span>
+            <div class="tag-row">
+              <p-tag value="COA RECONCILED" severity="success" size="small"></p-tag>
+            </div>
+          </div>
         </div>
-        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
-          <div class="text-xs font-bold text-slate-500 uppercase">Total Subsidy Billed</div>
-          <div class="text-sm font-bold text-emerald-700 mt-1"><i class="pi pi-dollar text-xs mr-1"></i> ₱1,280,450.00</div>
+
+        <div class="bento-grid-4col">
+          <div class="stat-card bento-tile accent-green">
+            <div class="tile-header">
+              <span class="stat-label">Free Tuition Batches</span>
+              <div class="tile-icon-box green"><i class="pi pi-file-export"></i></div>
+            </div>
+            <div class="stat-val">{{ accountantBatches() || '4 Batches' }}</div>
+            <p-progressBar [value]="100" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">CHED UniFAST billing batches</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-blue">
+            <div class="tile-header">
+              <span class="stat-label">Total Subsidy Billed</span>
+              <div class="tile-icon-box blue"><i class="pi pi-dollar"></i></div>
+            </div>
+            <div class="stat-val">{{ accountantTotalBilled() || '₱1.28M' }}</div>
+            <p-progressBar [value]="95" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">Tuition &amp; TOSF claims submitted</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-amber">
+            <div class="tile-header">
+              <span class="stat-label">Student Scholars</span>
+              <div class="tile-icon-box amber"><i class="pi pi-users"></i></div>
+            </div>
+            <div class="stat-val">{{ accountantEnrollees() || '1,420 Enrollees' }}</div>
+            <p-progressBar [value]="90" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">UniFAST beneficiary scholars</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-rose">
+            <div class="tile-header">
+              <span class="stat-label">Audit Status</span>
+              <div class="tile-icon-box rose"><i class="pi pi-shield"></i></div>
+            </div>
+            <div class="tag-wrapper">
+              <p-tag value="AUDITED" severity="success" [rounded]="true"></p-tag>
+            </div>
+            <div class="tile-caption">Double-entry ledger verified</div>
+          </div>
         </div>
-        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
-          <div class="text-xs font-bold text-slate-500 uppercase">Double-Entry Ledgers</div>
-          <div class="text-sm font-bold text-slate-700 mt-1"><i class="pi pi-history text-xs mr-1"></i> 1,420 Enrollees Synchronized</div>
+      </div>
+
+      <!-- Institutional UniFAST Claims Table -->
+      <div class="table-card">
+        <div class="table-toolbar">
+          <div class="toolbar-heading">
+            <h2 class="section-title">
+              <i class="pi pi-file-export text-emerald-700"></i>
+              UniFAST Free Higher Education (FHE) Billing Claims Ledger
+            </h2>
+            <p-tag value="RA 10931 Governed" severity="success" [rounded]="true"></p-tag>
+          </div>
+          <div class="toolbar-controls">
+            <a routerLink="/dashboard/finance/unifast" class="action-link text-xs font-bold text-emerald-700">Open UniFAST Claims Portal &rarr;</a>
+          </div>
         </div>
+
+        <p-table
+          [value]="accountantClaimsList()"
+          styleClass="institutional-table"
+          [scrollable]="true"
+          [paginator]="true"
+          [rows]="5"
+          [rowsPerPageOptions]="[5, 10, 20]"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Batch Number</th>
+              <th>Academic Term</th>
+              <th>Campus</th>
+              <th>Beneficiaries</th>
+              <th>Total Claim Amount</th>
+              <th class="text-center">Audit Status</th>
+              <th class="text-center">Action</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-claim>
+            <tr>
+              <td>
+                <div class="font-bold text-xs text-slate-800 font-mono">{{ claim.claimBatchNumber }}</div>
+                <div class="text-xs text-slate-400">Created by {{ claim.createdByUsername || 'Accountant' }}</div>
+              </td>
+              <td><span class="text-xs font-semibold text-slate-700">{{ claim.termName || 'AY 2026-2027 1st Sem' }}</span></td>
+              <td><span class="text-xs text-slate-600">{{ claim.campusName || 'Talisay (Main)' }}</span></td>
+              <td>
+                <span class="font-bold text-xs text-blue-700">{{ claim.totalBeneficiaries }} Scholars</span>
+              </td>
+              <td>
+                <span class="font-mono font-bold text-xs text-emerald-700">
+                  {{ claim.totalClaimAmount | currency:'PHP':'symbol':'1.2-2' }}
+                </span>
+              </td>
+              <td class="text-center">
+                <p-tag
+                  [value]="claim.status"
+                  [severity]="claim.status === 'APPROVED' || claim.status === 'DISBURSED' ? 'success' : (claim.status === 'SUBMITTED' ? 'info' : 'warn')"
+                  [rounded]="true"
+                ></p-tag>
+              </td>
+              <td class="text-center">
+                <a routerLink="/dashboard/finance/unifast" class="action-link text-xs font-bold text-emerald-700">
+                  Audit View
+                </a>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="7" class="text-center py-6 text-slate-500 text-xs">
+                No UniFAST billing claim batches found for the current billing cycle.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
       </div>
     </div>
   }
@@ -543,10 +1808,13 @@
   <div class="two-column-grid">
     <!-- Left: Role-Tailored Quick Actions -->
     <div class="content-card">
-      <h3 class="section-title mb-3">
-        <i class="pi pi-th-large header-icon-green"></i>
-        Role-Tailored University Shortcuts
-      </h3>
+      <div class="card-header-row">
+        <h3 class="section-title">
+          <i class="pi pi-th-large header-icon-green"></i>
+          Quick Actions & Shortcuts
+        </h3>
+        <span class="card-header-caption">Frequently Used</span>
+      </div>
 
       <div class="quick-actions-grid">
         @for (action of roleQuickActions(); track action.label) {
@@ -560,33 +1828,108 @@
 
     <!-- Right: Official Announcements & Advisories -->
     <div class="content-card">
-      <h3 class="section-title mb-3">
-        <i class="pi pi-bell header-icon-amber"></i>
-        Institutional Announcements & Advisories
-      </h3>
+      <div class="card-header-row">
+        <div class="card-header-title-group">
+          <h3 class="section-title">
+            <i class="pi pi-bell header-icon-amber"></i>
+            Campus Announcements & Advisories
+          </h3>
+          @if (unreadNoticeCount() > 0) {
+            <span class="unread-pill">{{ unreadNoticeCount() }} New</span>
+          }
+        </div>
+
+        <div class="card-header-actions">
+          @if (canPostNotice()) {
+            <p-button
+              label="Post Notice"
+              icon="pi pi-plus"
+              severity="secondary"
+              [outlined]="true"
+              size="small"
+              (onClick)="openCreateNoticeModal()"
+            ></p-button>
+          }
+        </div>
+      </div>
 
       <div class="notices-list">
-        @for (notice of notices; track notice.id) {
-          <div class="notice-item" [class.unread]="notice.unread" (click)="openNoticeDetail(notice)" tabindex="0" role="button">
-            <div class="notice-meta">
-              <span class="notice-category">{{ notice.category }}</span>
-              <span class="notice-date">{{ notice.date }}</span>
+        @for (notice of paginatedNotices(); track notice.id) {
+          <div
+            class="notice-item"
+            [class.unread]="notice.unread"
+            [class.urgent]="notice.priority === 'URGENT'"
+            [class.important]="notice.priority === 'IMPORTANT'"
+            (click)="openNoticeDetail(notice)"
+            (keydown.enter)="openNoticeDetail(notice)"
+            (keydown.space)="openNoticeDetail(notice); $event.preventDefault()"
+            tabindex="0"
+            role="button"
+            [attr.aria-label]="'View advisory: ' + notice.title"
+          >
+            <div class="notice-item-main">
+              <div class="notice-meta">
+                <div class="notice-meta-left">
+                  <span class="notice-category-badge">{{ notice.category }}</span>
+                  @if (notice.priority === 'URGENT') {
+                    <span class="notice-priority-pill urgent">
+                      <i class="pi pi-exclamation-triangle"></i> Urgent
+                    </span>
+                  } @else if (notice.priority === 'IMPORTANT') {
+                    <span class="notice-priority-pill important">Important</span>
+                  }
+                </div>
+                <span class="notice-date">
+                  <i class="pi pi-clock date-icon"></i>
+                  {{ notice.date }}
+                </span>
+              </div>
+              <h4 class="notice-title">{{ notice.title }}</h4>
+              @if (notice.content) {
+                <p class="notice-snippet">{{ notice.content }}</p>
+              }
             </div>
-            <h4 class="notice-title">{{ notice.title }}</h4>
+
+            <div class="notice-action-indicator">
+              @if (notice.unread) {
+                <span class="notice-unread-dot" title="Unread Notice"></span>
+              }
+              <i class="pi pi-chevron-right notice-arrow"></i>
+            </div>
+          </div>
+        } @empty {
+          <div class="notices-empty-state">
+            <div class="empty-icon-box">
+              <i class="pi pi-bell-slash"></i>
+            </div>
+            <div class="empty-text-group">
+              <span class="empty-title">No Active Campus Advisories</span>
+              <span class="empty-subtitle">University bulletins and circulars will be displayed here once released.</span>
+            </div>
           </div>
         }
       </div>
+
+      @if (noticesSignal().length > noticesPageSize()) {
+        <p-paginator
+          [rows]="noticesPageSize()"
+          [totalRecords]="noticesSignal().length"
+          [first]="noticesFirst()"
+          (onPageChange)="onNoticesPageChange($event)"
+          styleClass="notices-paginator mt-3"
+        ></p-paginator>
+      }
     </div>
   </div>
 </div>
 
-<!-- Dispatch AI Intervention Drawer for Guidance Counselor & Admin -->
+<!-- Support Referral Drawer for Guidance Counselor & Admin -->
 <p-drawer
   [(visible)]="isDispatchModalOpen"
   position="right"
   [style]="{ width: '480px' }"
   styleClass="institutional-drawer"
-  header="Dispatch AI Support Intervention"
+  header="Provide Student Support & Guidance"
 >
   @if (selectedStudentForDispatch(); as student) {
     <div [formGroup]="dispatchForm" class="drawer-content flex flex-col gap-4 p-2">
@@ -596,14 +1939,14 @@
           <div class="target-student-name font-bold text-slate-800 text-sm">{{ student.fullName }}</div>
           <div class="target-student-sub text-xs text-slate-500">{{ student.studentNumber }} — {{ student.programOrSection }}</div>
           <div class="target-student-risk mt-1">
-            <span class="risk-label text-xs mr-1 text-slate-500 font-bold">Risk Level:</span>
+            <span class="risk-label text-xs mr-1 text-slate-500 font-bold">Support Priority:</span>
             <p-tag [value]="student.riskLevel" [severity]="getRiskSeverity(student.riskLevel)" size="small"></p-tag>
           </div>
         </div>
       </div>
 
       <div class="form-field flex flex-col gap-1">
-        <label for="interventionType" class="field-label text-xs font-bold text-slate-700 uppercase">SUPPORT ACTION TYPE <span class="text-rose-600">*</span></label>
+        <label for="interventionType" class="field-label text-xs font-bold text-slate-700 uppercase">SUPPORT SERVICE TYPE <span class="text-rose-600">*</span></label>
         <p-select
           id="interventionType"
           [options]="interventionTypeOptions"
@@ -616,13 +1959,13 @@
       </div>
 
       <div class="form-field flex flex-col gap-1">
-        <label for="triggerReason" class="field-label text-xs font-bold text-slate-700 uppercase">TRIGGER REASON <span class="text-rose-600">*</span></label>
+        <label for="triggerReason" class="field-label text-xs font-bold text-slate-700 uppercase">REASON FOR REFERRAL <span class="text-rose-600">*</span></label>
         <input
           pInputText
           id="triggerReason"
           type="text"
           formControlName="triggerReason"
-          placeholder="Enter specific risk factor or rationale..."
+          placeholder="Enter reason or details for this referral..."
           class="p-inputtext-sm w-full"
         />
       </div>
@@ -634,7 +1977,7 @@
           pInputText
           formControlName="notes"
           rows="3"
-          placeholder="Optional clinical guidance notes..."
+          placeholder="Optional counseling or follow-up notes..."
           class="p-inputtext-sm w-full"
         ></textarea>
       </div>
@@ -648,8 +1991,8 @@
           (onClick)="isDispatchModalOpen.set(false)"
         ></p-button>
         <p-button
-          label="Dispatch Action"
-          icon="pi pi-send"
+          label="Save Referral"
+          icon="pi pi-check"
           severity="warn"
           size="small"
           [loading]="isDispatching()"
@@ -687,7 +2030,7 @@
             <span class="notice-date text-xs text-slate-500">{{ selectedNotice()!.date }}</span>
           </div>
           <p class="drawer-notice-text text-xs text-slate-700 leading-relaxed margin-0">
-            This official notice was issued by the {{ selectedNotice()!.category }} for student records and academic schedule adherence. Please verify any prerequisites or clearances required before the end of the term.
+            {{ selectedNotice()!.content || ('This official notice was issued by the ' + selectedNotice()!.category + ' for student records and academic schedule adherence. Please verify any prerequisites or clearances required before the end of the term.') }}
           </p>
         </div>
       </div>
@@ -697,7 +2040,93 @@
   <ng-template pTemplate="footer">
     <div class="drawer-footer-row flex items-center justify-between w-full">
       <p-button label="Dismiss" icon="pi pi-times" severity="secondary" [outlined]="true" size="small" (onClick)="isNoticeDrawerOpen.set(false)"></p-button>
-      <p-button label="Acknowledge Notice" icon="pi pi-check" severity="primary" size="small" (onClick)="isNoticeDrawerOpen.set(false)"></p-button>
+      <p-button label="Acknowledge Notice" icon="pi pi-check" severity="primary" size="small" (onClick)="acknowledgeCurrentNotice()"></p-button>
     </div>
   </ng-template>
+</p-drawer>
+
+<!-- Create Campus Advisory Drawer for Authorized Roles -->
+<p-drawer
+  [(visible)]="isCreateNoticeModalOpen"
+  position="right"
+  [style]="{ width: '480px' }"
+  styleClass="institutional-drawer"
+  header="Publish Campus Advisory"
+>
+  <div [formGroup]="noticeForm" class="drawer-content flex flex-col gap-4 p-2">
+    <div class="form-field flex flex-col gap-1">
+      <label for="noticeTitle" class="field-label text-xs font-bold text-slate-700 uppercase">
+        ANNOUNCEMENT TITLE <span class="text-rose-600">*</span>
+      </label>
+      <input
+        pInputText
+        id="noticeTitle"
+        type="text"
+        formControlName="title"
+        placeholder="Enter announcement headline..."
+        class="p-inputtext-sm w-full"
+      />
+    </div>
+
+    <div class="form-field flex flex-col gap-1">
+      <label for="noticeCategory" class="field-label text-xs font-bold text-slate-700 uppercase">
+        ISSUING OFFICE / CATEGORY <span class="text-rose-600">*</span>
+      </label>
+      <p-select
+        id="noticeCategory"
+        [options]="noticeCategoryOptions"
+        optionLabel="label"
+        optionValue="value"
+        formControlName="category"
+        placeholder="Select Issuing Office"
+        styleClass="w-full"
+      ></p-select>
+    </div>
+
+    <div class="form-field flex flex-col gap-1">
+      <label for="noticeAudience" class="field-label text-xs font-bold text-slate-700 uppercase">
+        TARGET AUDIENCE
+      </label>
+      <p-select
+        id="noticeAudience"
+        [options]="noticeAudienceOptions"
+        optionLabel="label"
+        optionValue="value"
+        formControlName="audience"
+        styleClass="w-full"
+      ></p-select>
+    </div>
+
+    <div class="form-field flex flex-col gap-1">
+      <label for="noticeContent" class="field-label text-xs font-bold text-slate-700 uppercase">
+        ANNOUNCEMENT DETAILS <span class="text-rose-600">*</span>
+      </label>
+      <textarea
+        id="noticeContent"
+        pInputText
+        formControlName="content"
+        rows="5"
+        placeholder="Provide complete instructions, deadlines, or advisory text..."
+        class="p-inputtext-sm w-full"
+      ></textarea>
+    </div>
+
+    <div class="drawer-actions flex items-center justify-end gap-2 mt-4">
+      <p-button
+        label="Cancel"
+        severity="secondary"
+        [outlined]="true"
+        size="small"
+        (onClick)="isCreateNoticeModalOpen.set(false)"
+      ></p-button>
+      <p-button
+        label="Publish Advisory"
+        icon="pi pi-send"
+        severity="primary"
+        size="small"
+        [loading]="isCreatingNotice()"
+        (onClick)="confirmCreateNotice()"
+      ></p-button>
+    </div>
+  </div>
 </p-drawer>

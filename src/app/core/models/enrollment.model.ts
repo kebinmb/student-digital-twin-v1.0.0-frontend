@@ -108,6 +108,10 @@ export interface CreateStudentRequest {
   username: string;
   email: string;
   password?: string;
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  suffix?: string;
   programId: number;
   curriculumId: number;
   classification: 'FRESHMAN' | 'INCOMING_FIRST_YEAR' | 'TRANSFEREE' | 'RETURNEE' | 'CONTINUING' | 'SECOND_DEGREE';
@@ -121,6 +125,11 @@ export interface StudentProfileResponse {
   userId: number;
   username: string;
   email: string;
+  firstName?: string | null;
+  middleName?: string | null;
+  lastName?: string | null;
+  suffix?: string | null;
+  fullName?: string | null;
   programId: number;
   programCode: string;
   programName: string;

@@ -474,7 +474,7 @@
   <!-- Ledger Transaction History Table -->
   <div class="table-card">
     <h2 class="table-card-title">Transaction History Ledger</h2>
-    <p-table [value]="ledgerEntries()" [rows]="10" [paginator]="true" responsiveLayout="scroll" styleClass="institutional-table">
+    <p-table [value]="ledgerEntries()" [rows]="10" [paginator]="true" [rowsPerPageOptions]="[5, 10, 20]" responsiveLayout="scroll" styleClass="institutional-table">
       <ng-template pTemplate="header">
         <tr>
           <th>Txn #</th>

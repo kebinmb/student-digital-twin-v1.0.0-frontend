@@ -17,7 +17,8 @@
         <p-button
           label="Provision Faculty Member"
           icon="pi pi-user-plus"
-          styleClass="p-button-primary provision-btn"
+          severity="success"
+          size="small"
           (onClick)="openCreateDialog()"
         />
       }
@@ -25,14 +26,14 @@
   </div>
 
   <!-- Content Table Card -->
-  <div class="card-table-wrapper">
+  <div class="table-card">
     <p-table
       [value]="facultyList()"
       [loading]="isLoading()"
       [paginator]="true"
       [rows]="10"
-      [rowsPerPageOptions]="[10, 25, 50]"
-      styleClass="p-datatable-striped faculty-table"
+      [rowsPerPageOptions]="[5, 10, 20]"
+      styleClass="institutional-table faculty-table"
       responsiveLayout="scroll"
     >
       <ng-template pTemplate="header">

@@ -48,7 +48,7 @@
         </div>
       </div>
 
-      <p-table [value]="feeCatalog()" [loading]="isLoadingFees" responsiveLayout="scroll" styleClass="p-datatable-sm p-datatable-gridlines">
+      <p-table [value]="feeCatalog()" [loading]="isLoadingFees" [paginator]="true" [rows]="5" [rowsPerPageOptions]="[5, 10, 20]" responsiveLayout="scroll" styleClass="p-datatable-sm institutional-table">
         <ng-template #header>
           <tr>
             <th style="width: 140px">Fee Code</th>
@@ -121,7 +121,7 @@
         </p-button>
       </div>
 
-      <p-table [value]="templates()" [loading]="isLoadingTemplates" responsiveLayout="scroll" styleClass="p-datatable-sm p-datatable-gridlines">
+      <p-table [value]="templates()" [loading]="isLoadingTemplates" [paginator]="true" [rows]="5" [rowsPerPageOptions]="[5, 10, 20]" responsiveLayout="scroll" styleClass="p-datatable-sm institutional-table">
         <ng-template #header>
           <tr>
             <th>Template Name</th>
@@ -183,7 +183,7 @@
         </p-button>
       </div>
 
-      <p-table [value]="scholarships()" [loading]="isLoadingScholarships" responsiveLayout="scroll" styleClass="p-datatable-sm p-datatable-gridlines">
+      <p-table [value]="scholarships()" [loading]="isLoadingScholarships" [paginator]="true" [rows]="5" [rowsPerPageOptions]="[5, 10, 20]" responsiveLayout="scroll" styleClass="p-datatable-sm institutional-table">
         <ng-template #header>
           <tr>
             <th style="width: 160px">Grant Code</th>

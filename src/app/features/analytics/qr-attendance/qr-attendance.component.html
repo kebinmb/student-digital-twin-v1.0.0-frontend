@@ -166,7 +166,7 @@
         </div>
 
         <!-- PrimeNG Student Attendance History Table -->
-        <p-table [value]="studentHistoryRecords()" [loading]="isLoadingHistory()" styleClass="p-datatable-striped p-datatable-sm shadow-table">
+        <p-table [value]="studentHistoryRecords()" [loading]="isLoadingHistory()" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 20]" styleClass="p-datatable-striped p-datatable-sm shadow-table institutional-table">
           <ng-template pTemplate="header">
             <tr>
               <th>Date & Time</th>
@@ -357,7 +357,7 @@
           </div>
         </div>
 
-        <p-table [value]="facultyDailyRecords()" [loading]="isLoadingFaculty()" styleClass="p-datatable-striped p-datatable-sm shadow-table">
+        <p-table [value]="facultyDailyRecords()" [loading]="isLoadingFaculty()" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 20]" styleClass="p-datatable-striped p-datatable-sm shadow-table institutional-table">
           <ng-template pTemplate="header">
             <tr>
               <th>Verified At</th>
@@ -461,7 +461,7 @@
       </div>
 
       <!-- PrimeNG Daily Attendance Table -->
-      <p-table [value]="dailyRecords()" [loading]="isLoadingDaily()" styleClass="p-datatable-striped p-datatable-sm shadow-table">
+      <p-table [value]="dailyRecords()" [loading]="isLoadingDaily()" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 20]" styleClass="p-datatable-striped p-datatable-sm shadow-table institutional-table">
         <ng-template pTemplate="header">
           <tr>
             <th>Scanned At</th>

@@ -394,16 +394,12 @@
   border-left: 4px solid #0284c7;
 }
 
-.kpi-card.border-purple {
-  border-left: 4px solid #7c3aed;
-}
-
-.kpi-card.border-orange {
-  border-left: 4px solid #ea580c;
+.kpi-card.border-rose {
+  border-left: 4px solid var(--status-rose-text, #e11d48);
 }
 
 .kpi-card.border-amber {
-  border-left: 4px solid #d97706;
+  border-left: 4px solid var(--chmsu-gold-main, #d97706);
 }
 
 .kpi-title {
@@ -422,9 +418,8 @@
 }
 
 .kpi-value.text-blue { color: #0284c7; }
-.kpi-value.text-purple { color: #7c3aed; }
-.kpi-value.text-orange { color: #ea580c; }
-.kpi-value.text-amber { color: #d97706; }
+.kpi-value.text-rose { color: var(--status-rose-text, #e11d48); }
+.kpi-value.text-amber { color: var(--chmsu-gold-main, #d97706); }
 
 .kpi-subtext {
   font-size: 0.75rem;

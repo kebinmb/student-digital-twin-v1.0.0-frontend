@@ -246,6 +246,9 @@
           <p-table
             [value]="req.signoffs"
             [stripedRows]="true"
+            [paginator]="true"
+            [rows]="10"
+            [rowsPerPageOptions]="[5, 10, 20]"
             responsiveLayout="scroll"
             styleClass="institutional-table">
             <ng-template pTemplate="header">

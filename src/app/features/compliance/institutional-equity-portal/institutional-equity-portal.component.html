@@ -52,14 +52,14 @@
       <span class="kpi-value text-blue">{{ s.count4psBeneficiaries }} / {{ s.countListahananNhts }} / {{ s.countUnifastTesAwardees }}</span>
       <span class="kpi-subtext">RA 10931 UniFAST & DSWD 4Ps</span>
     </div>
-    <div class="kpi-card border-purple">
+    <div class="kpi-card border-rose">
       <span class="kpi-title">Indigenous Peoples & PWD</span>
-      <span class="kpi-value text-purple">{{ s.countIndigenousPeoples }} IP | {{ s.countPersonsWithDisabilities }} PWD</span>
+      <span class="kpi-value text-rose">{{ s.countIndigenousPeoples }} IP | {{ s.countPersonsWithDisabilities }} PWD</span>
       <span class="kpi-subtext">RA 8371 NCIP / RA 7277 PDAO</span>
     </div>
-    <div class="kpi-card border-orange">
+    <div class="kpi-card border-amber">
       <span class="kpi-title">Solo Parents & Orphans</span>
-      <span class="kpi-value text-orange">{{ s.countSoloParents }} Solo | {{ s.countOrphans }} Orphans</span>
+      <span class="kpi-value text-amber">{{ s.countSoloParents }} Solo | {{ s.countOrphans }} Orphans</span>
       <span class="kpi-subtext">RA 11861 & {{ s.countRaisedBySoloParents }} Dependent Raised</span>
     </div>
     <div class="kpi-card border-amber">
@@ -83,14 +83,14 @@
       <span class="kpi-value text-blue">{{ appStats.count4psBeneficiaries }} 4Ps | {{ appStats.countBottom40IncomeBracket }} B40</span>
       <span class="kpi-subtext">RA 10931 Priority Target Groups</span>
     </div>
-    <div class="kpi-card border-purple">
+    <div class="kpi-card border-rose">
       <span class="kpi-title">Indigenous Peoples & PWD</span>
-      <span class="kpi-value text-purple">{{ appStats.countIndigenousPeoples }} IP | {{ appStats.countPersonsWithDisabilities }} PWD</span>
+      <span class="kpi-value text-rose">{{ appStats.countIndigenousPeoples }} IP | {{ appStats.countPersonsWithDisabilities }} PWD</span>
       <span class="kpi-subtext">RA 8371 NCIP / RA 7277 PDAO</span>
     </div>
-    <div class="kpi-card border-orange">
+    <div class="kpi-card border-amber">
       <span class="kpi-title">Solo Parents & Orphans</span>
-      <span class="kpi-value text-orange">{{ appStats.countSoloParents }} Solo | {{ appStats.countOrphans }} Orphans</span>
+      <span class="kpi-value text-amber">{{ appStats.countSoloParents }} Solo | {{ appStats.countOrphans }} Orphans</span>
       <span class="kpi-subtext">RA 11861 & DSWD Certified</span>
     </div>
     <div class="kpi-card border-amber">
@@ -172,6 +172,7 @@
       [value]="profiles()"
       [loading]="isLoading()"
       [rows]="size()"
+      [rowsPerPageOptions]="[5, 10, 20]"
       [totalRecords]="totalElements()"
       [paginator]="true"
       [stripedRows]="true"
@@ -268,6 +269,7 @@
       [value]="applicants()"
       [loading]="isLoading()"
       [rows]="size()"
+      [rowsPerPageOptions]="[5, 10, 20]"
       [totalRecords]="applicantTotalElements()"
       [paginator]="true"
       [stripedRows]="true"

@@ -194,6 +194,9 @@
       <!-- PrimeNG Subject Table -->
       <p-table
         [value]="filteredCourses()"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[5, 10, 20]"
         styleClass="institutional-table"
         responsiveLayout="scroll"
         [rowHover]="true"

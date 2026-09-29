@@ -36,8 +36,11 @@
   <p-table
     [value]="terms()"
     [loading]="isLoading()"
+    [paginator]="true"
+    [rows]="5"
+    [rowsPerPageOptions]="[5, 10, 20]"
     responsiveLayout="scroll"
-    styleClass="p-datatable-sm p-datatable-gridlines">
+    styleClass="p-datatable-sm institutional-table">
     <ng-template #header>
       <tr>
         <th style="width: 150px">Term / Semester</th>

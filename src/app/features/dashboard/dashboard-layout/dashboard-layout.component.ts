@@ -79,7 +79,7 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
       items: [
         { label: 'Dashboard Overview', icon: 'pi pi-home', routerLink: '/dashboard', exact: true },
         { label: 'Student Self-Service', icon: 'pi pi-user-edit', routerLink: '/dashboard/portal/student', roles: ['STUDENT'] },
-        { label: 'Digital Twin Telemetry', icon: 'pi pi-sparkles', routerLink: '/dashboard/analytics/digital-twin', badge: 'AI', roles: ['ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE', 'STUDENT'] },
+        { label: 'Student Academic Insights', icon: 'pi pi-sparkles', routerLink: '/dashboard/analytics/digital-twin', roles: ['ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE', 'STUDENT'] },
         { label: 'QR Attendance Check-In', icon: 'pi pi-qrcode', routerLink: '/dashboard/analytics/qr-attendance', roles: ['ADMIN', 'FACULTY', 'STUDENT'] }
       ]
     },
@@ -113,12 +113,12 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
       ]
     },
     {
-      title: 'Administration & Intelligence',
+      title: 'Administration & Support',
       items: [
-        { label: 'Early Warning Radar', icon: 'pi pi-radar', routerLink: '/dashboard/analytics/early-warning', badge: 'ALERT', badgeSeverity: 'warn', roles: ['ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE'] },
+        { label: 'Student Support Alerts', icon: 'pi pi-info-circle', routerLink: '/dashboard/analytics/early-warning', badge: 'ALERT', badgeSeverity: 'warn', roles: ['ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE'] },
         { label: 'User Management', icon: 'pi pi-users', routerLink: '/dashboard/users', roles: ['ADMIN', 'REGISTRAR'] },
         { label: 'Faculty Profiles', icon: 'pi pi-briefcase', routerLink: '/dashboard/faculty-accounts', roles: ['ADMIN', 'REGISTRAR'] },
-        { label: 'LMS LTI Integration', icon: 'pi pi-desktop', routerLink: '/dashboard/admin/lms-config', roles: ['ADMIN'] }
+        { label: 'LMS & Portal Settings', icon: 'pi pi-desktop', routerLink: '/dashboard/admin/lms-config', roles: ['ADMIN'] }
       ]
     }
   ];
@@ -138,11 +138,11 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
             if (item.routerLink === '/dashboard/grades') {
               let label = 'Section Gradebook';
               if (role.includes('REGISTRAR')) {
-                label = 'Registrar Grade Sealing';
+                label = 'Registrar Grade Records';
               } else if (role.includes('DEAN') || role.includes('CHAIRPERSON')) {
                 label = 'Dean Grade Verification';
               } else if (role.includes('ADMIN')) {
-                label = 'Gradebook & Sealing Engine';
+                label = 'Gradebook & Records';
               } else if (role.includes('FACULTY')) {
                 label = 'Faculty Gradebook';
               }

@@ -51,6 +51,9 @@
   <p-table
     [value]="filteredPrograms()"
     [loading]="isLoading()"
+    [paginator]="true"
+    [rows]="5"
+    [rowsPerPageOptions]="[5, 10, 20]"
     responsiveLayout="scroll"
     styleClass="p-datatable-sm institutional-table">
     <ng-template pTemplate="header">
@@ -391,7 +394,7 @@
       }
 
       <!-- PILO List Table -->
-      <p-table [value]="programOutcomes()" [loading]="isLoadingPilos" styleClass="p-datatable-sm institutional-table">
+      <p-table [value]="programOutcomes()" [loading]="isLoadingPilos" [paginator]="true" [rows]="5" [rowsPerPageOptions]="[5, 10, 20]" styleClass="p-datatable-sm institutional-table">
         <ng-template pTemplate="header">
           <tr>
             <th style="width: 120px">Code</th>

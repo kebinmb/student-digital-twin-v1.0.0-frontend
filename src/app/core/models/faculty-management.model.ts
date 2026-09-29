@@ -4,6 +4,11 @@ export interface FacultyProfile {
   username: string;
   email: string;
   facultyIdNumber: string;
+  firstName?: string | null;
+  middleName?: string | null;
+  lastName?: string | null;
+  suffix?: string | null;
+  fullName?: string | null;
   highestDegree: string;
   academicRank: string;
   prcLicenseNo: string | null;
@@ -22,6 +27,10 @@ export interface CreateFacultyAccountRequest {
   email: string;
   password?: string;
   facultyIdNumber: string;
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  suffix?: string;
   highestDegree: string;
   academicRank: string;
   prcLicenseNo?: string;
@@ -32,6 +41,10 @@ export interface CreateFacultyAccountRequest {
 }
 
 export interface UpdateFacultyProfileRequest {
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  suffix?: string;
   highestDegree: string;
   academicRank: string;
   prcLicenseNo?: string;

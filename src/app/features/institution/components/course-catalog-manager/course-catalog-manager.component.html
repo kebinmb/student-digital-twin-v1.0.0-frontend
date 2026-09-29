@@ -39,6 +39,7 @@
     [lazy]="true"
     [paginator]="true"
     [rows]="pageSize"
+    [rowsPerPageOptions]="[5, 10, 20]"
     [totalRecords]="totalElements()"
     (onLazyLoad)="onPageChange($event)"
     responsiveLayout="scroll"

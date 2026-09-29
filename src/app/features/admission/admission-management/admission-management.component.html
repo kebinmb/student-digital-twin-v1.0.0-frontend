@@ -202,6 +202,7 @@
         [loading]="loading()" 
         [paginator]="true" 
         [rows]="10" 
+        [rowsPerPageOptions]="[5, 10, 20]"
         styleClass="institutional-table">
         <ng-template pTemplate="header">
           <tr>
@@ -295,6 +296,7 @@
         [loading]="loading()" 
         [paginator]="true" 
         [rows]="10" 
+        [rowsPerPageOptions]="[5, 10, 20]"
         styleClass="institutional-table">
         <ng-template pTemplate="header">
           <tr>
@@ -387,14 +389,14 @@
             <span class="kpi-value text-blue">{{ s.count4ps }} 4Ps | {{ s.countBottom40 }} B40</span>
             <span class="kpi-subtext">RA 10931 Priority Target Groups</span>
           </div>
-          <div class="kpi-card border-purple">
+          <div class="kpi-card border-rose">
             <span class="kpi-title">Indigenous Peoples & PWD</span>
-            <span class="kpi-value text-purple">{{ s.countIp }} IP | {{ s.countPwd }} PWD</span>
+            <span class="kpi-value text-rose">{{ s.countIp }} IP | {{ s.countPwd }} PWD</span>
             <span class="kpi-subtext">RA 8371 NCIP / RA 7277 PDAO</span>
           </div>
-          <div class="kpi-card border-orange">
+          <div class="kpi-card border-amber">
             <span class="kpi-title">Solo Parents & Orphans</span>
-            <span class="kpi-value text-orange">{{ s.countSolo }} Solo | {{ s.countOrphan }} Orphans</span>
+            <span class="kpi-value text-amber">{{ s.countSolo }} Solo | {{ s.countOrphan }} Orphans</span>
             <span class="kpi-subtext">RA 11861 & DSWD Certified</span>
           </div>
           <div class="kpi-card border-amber">
@@ -467,6 +469,7 @@
         [loading]="loading()" 
         [paginator]="true" 
         [rows]="10" 
+        [rowsPerPageOptions]="[5, 10, 20]"
         [stripedRows]="true"
         responsiveLayout="scroll"
         styleClass="institutional-table p-datatable-sm p-datatable-gridlines">
@@ -615,6 +618,7 @@
         [loading]="loading()" 
         [paginator]="true" 
         [rows]="10" 
+        [rowsPerPageOptions]="[5, 10, 20]"
         [stripedRows]="true"
         responsiveLayout="scroll"
         styleClass="institutional-table p-datatable-sm p-datatable-gridlines">

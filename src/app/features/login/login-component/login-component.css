@@ -1,13 +1,108 @@
+/* ==========================================================================
+   CHMSU INSTITUTIONAL LOGIN COMPONENT
+   Carlos Hilado Memorial State University • Student Digital Twin Platform
+   Compliant with custom-theme.ts, styles.css & 00 AI Index standards
+   ========================================================================== */
+
 :host {
   display: block;
   min-height: 100vh;
-  color: var(--p-surface-800, #1e293b);
+  color: var(--chmsu-navy-900, #0f172a);
+  font-family: var(--font-family-body, Arial, sans-serif);
   box-sizing: border-box;
 }
 
-/* ========================================================================= */
-/* 1. MOBILE-FIRST BASE CANVAS (< 768px)                                     */
-/* ========================================================================= */
+/* ==========================================================================
+   KEYFRAME ANIMATIONS (Human-Crafted, Natural Institutional Motion)
+   Strictly no neon glows, futuristic pulses, or artificial AI aesthetics.
+   ========================================================================== */
+
+/* 1. Smooth card elevation entrance */
+@keyframes loginCardEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 2. Soft horizontal reveal for desktop brand panel */
+@keyframes brandPanelEntrance {
+  0% {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 3. Subtle vertical cascade for authentication panel */
+@keyframes formPanelEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 4. Alert slide-in entrance */
+@keyframes alertSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 5. Restrained horizontal attention nudge on error trigger (not jarring) */
+@keyframes subtleAlertAttention {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  20%, 60% {
+    transform: translateX(-3px);
+  }
+  40%, 80% {
+    transform: translateX(3px);
+  }
+}
+
+/* 6. Inline validation error slide-in */
+@keyframes fieldErrorSlide {
+  0% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 7. Unified institutional footer fade-in */
+@keyframes footerFadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* ==========================================================================
+   1. VIEWPORT & CONTAINER LAYOUT
+   ========================================================================== */
 
 .login-viewport {
   min-height: 100vh;
@@ -15,42 +110,53 @@
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
-  background-color: var(--p-surface-50, #f8fafc);
-  padding: 1.25rem 1rem 2rem;
+  background-color: var(--chmsu-slate-50, #f8fafc);
+  padding: 1.5rem 1rem 2rem;
   box-sizing: border-box;
 }
 
-/* Central Card Structure */
+/* Central Card Structure (Custom Theme Card Token: 16px radius) */
 .login-card {
   width: 100%;
   max-width: 440px;
-  background-color: var(--p-surface-0, #ffffff);
-  border: 1px solid var(--p-surface-300, #cbd5e1);
-  border-radius: 8px;
+  background-color: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-xl, 16px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 10px 24px -3px rgba(15, 23, 42, 0.07);
+  animation: loginCardEntrance 0.36s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
-/* Brand Panel hidden on mobile viewport */
+.login-card:hover {
+  border-color: var(--chmsu-slate-300, #cbd5e1);
+}
+
+/* Brand panel hidden by default on mobile */
 .brand-panel {
   display: none;
 }
 
-/* Mobile Institutional Header */
+/* Mobile Institutional Header (< 768px) */
 .mobile-header {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   padding-bottom: 1.25rem;
   margin-bottom: 1.25rem;
-  border-bottom: 1px solid var(--p-surface-200, #e2e8f0);
+  border-bottom: 1px solid var(--chmsu-slate-200, #e2e8f0);
 }
 
 .mobile-header img {
   display: block;
   object-fit: contain;
+  transition: transform 0.25s ease;
+}
+
+.mobile-header img:hover {
+  transform: scale(1.05);
 }
 
 .mobile-header-text {
@@ -63,57 +169,66 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #0c5027;
+  color: var(--chmsu-green-deep, #0c5027);
+  font-family: var(--font-family-heading, sans-serif);
 }
 
 .mobile-portal-title {
   font-size: 0.75rem;
-  color: var(--p-surface-500, #64748b);
+  color: var(--chmsu-slate-500, #64748b);
   font-weight: 500;
 }
 
-/* Form Panel */
+/* ==========================================================================
+   2. AUTHENTICATION FORM PANEL
+   ========================================================================== */
+
 .auth-panel {
-  padding: 1.75rem 1.25rem;
+  padding: 2rem 1.5rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  background-color: var(--chmsu-white, #ffffff);
 }
 
 .auth-panel-inner {
   width: 100%;
+  animation: formPanelEntrance 0.38s 0.08s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .form-title-group {
-  margin-bottom: 1.35rem;
+  margin-bottom: 1.5rem;
 }
 
 .form-title {
   margin: 0;
-  font-size: 1.375rem;
+  font-size: 1.5rem;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: var(--p-surface-900, #0f172a);
+  color: var(--chmsu-navy-900, #0f172a);
+  font-family: var(--font-family-heading, sans-serif);
 }
 
 .form-subtitle {
-  margin: 0.25rem 0 0;
+  margin: 0.3rem 0 0;
   font-size: 0.8125rem;
-  color: var(--p-surface-500, #64748b);
-  line-height: 1.4;
+  color: var(--chmsu-slate-500, #64748b);
+  line-height: 1.45;
 }
 
-/* Academic Error Banner */
+/* Institutional System Alert Banner */
 .system-alert {
   display: flex;
   align-items: flex-start;
   gap: 0.625rem;
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
+  background-color: var(--status-rose-bg, #fef2f2);
+  border: 1px solid var(--status-rose-border, #fecaca);
   border-left: 3px solid #dc2626;
-  border-radius: 6px;
-  padding: 0.75rem;
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  padding: 0.75rem 0.85rem;
   margin-bottom: 1.25rem;
+  animation: alertSlideIn 0.26s cubic-bezier(0.16, 1, 0.3, 1) both,
+             subtleAlertAttention 0.38s 0.22s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
 .alert-icon {
@@ -139,6 +254,7 @@
   font-size: 0.75rem;
   color: #b91c1c;
   line-height: 1.35;
+  margin-top: 0.1rem;
 }
 
 .alert-close-btn {
@@ -146,21 +262,33 @@
   border: none;
   color: #991b1b;
   cursor: pointer;
-  padding: 0.2rem;
+  padding: 0.25rem;
   font-size: 0.75rem;
   opacity: 0.7;
-  transition: opacity 0.15s ease;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.15s ease, background-color 0.15s ease, transform 0.12s ease;
 }
 
 .alert-close-btn:hover {
   opacity: 1;
+  background-color: rgba(220, 38, 38, 0.1);
 }
 
-/* Form Layout */
+.alert-close-btn:active {
+  transform: scale(0.92);
+}
+
+/* ==========================================================================
+   3. FORM FIELDS & INTERACTIVE CONTROLS
+   ========================================================================== */
+
 .credential-form {
   display: flex;
   flex-direction: column;
-  gap: 1.1rem;
+  gap: 1.15rem;
 }
 
 .form-field {
@@ -171,7 +299,7 @@
 .field-label {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--p-surface-700, #334155);
+  color: var(--chmsu-navy-800, #1e293b);
   margin-bottom: 0.35rem;
 }
 
@@ -189,39 +317,56 @@
 .inline-link {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #0c5027;
+  color: var(--chmsu-green-main, #116834);
   text-decoration: none;
-  transition: color 0.15s ease;
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
 }
 
 .inline-link:hover {
-  color: #083b1c;
+  color: var(--chmsu-green-deep, #0c5027);
   text-decoration: underline;
+}
+
+.inline-link:focus-visible {
+  outline: 2px solid var(--chmsu-green-main, #116834);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 .inline-link.font-medium {
   font-weight: 600;
 }
 
+/* Text Input Styling (Custom Theme FormField Token: 8px radius) */
 .text-input {
-  height: 42px;
+  height: 44px;
   font-size: 0.875rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  border: 1px solid var(--p-surface-300, #cbd5e1);
-  color: var(--p-surface-900, #0f172a);
-  background-color: var(--p-surface-0, #ffffff);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  padding: 0.55rem 0.85rem;
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  border: 1px solid var(--chmsu-slate-300, #cbd5e1);
+  color: var(--chmsu-navy-900, #0f172a);
+  background-color: var(--chmsu-white, #ffffff);
+  font-family: var(--font-family-body, Arial, sans-serif);
+  transition: border-color 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+              background-color 0.18s ease;
 }
 
 .text-input:hover {
-  border-color: var(--p-surface-400, #94a3b8);
+  border-color: var(--chmsu-slate-400, #94a3b8);
 }
 
 .text-input:focus {
-  border-color: #116834;
+  border-color: var(--chmsu-green-main, #116834);
   outline: none;
-  box-shadow: 0 0 0 1px #116834;
+  box-shadow: 0 0 0 3px rgba(17, 104, 52, 0.15);
+}
+
+/* Invalid form field states */
+.text-input.ng-invalid.ng-touched,
+:host ::ng-deep .p-password.ng-invalid.ng-touched input {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15) !important;
 }
 
 .field-error-msg {
@@ -232,12 +377,14 @@
   font-weight: 500;
   color: #dc2626;
   margin-top: 0.35rem;
+  animation: fieldErrorSlide 0.18s cubic-bezier(0, 0, 0.2, 1) both;
 }
 
 .field-error-msg i {
   font-size: 0.75rem;
 }
 
+/* Checkbox (Remember Me) */
 .form-options {
   display: flex;
   align-items: center;
@@ -245,7 +392,6 @@
 
 .checkbox-container {
   display: flex;
-  align-items: start;
   gap: 0.5rem;
 }
 
@@ -253,38 +399,68 @@
   cursor: pointer;
   user-select: none;
   font-size: 0.8125rem;
-  color: var(--p-surface-600, #475569);
+  color: var(--chmsu-slate-600, #475569);
   font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.checkbox-text:hover {
+  color: var(--chmsu-navy-900, #0f172a);
 }
 
 .form-action {
-  margin-top: 0.25rem;
+  margin-top: 0.35rem;
 }
 
-/* Primary Flat Button */
+/* Primary Institutional Submit Button */
 :host ::ng-deep .portal-submit-btn {
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
-  height: 42px !important;
+  height: 44px !important;
   font-size: 0.875rem !important;
   font-weight: 600 !important;
-  border-radius: 6px !important;
-  background-color: #0c5027 !important;
-  border: 1px solid #0c5027 !important;
+  border-radius: var(--chmsu-border-radius-md, 8px) !important;
+  background-color: var(--chmsu-green-main, #116834) !important;
+  border: 1px solid var(--chmsu-green-main, #116834) !important;
   color: #ffffff !important;
-  box-shadow: none !important;
-  transition: background-color 0.15s ease, border-color 0.15s ease !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06) !important;
+  transition: background-color 0.18s ease,
+              border-color 0.18s ease,
+              box-shadow 0.18s ease,
+              transform 0.12s ease !important;
 }
 
 :host ::ng-deep .portal-submit-btn:hover:not(:disabled) {
-  background-color: #083b1c !important;
-  border-color: #083b1c !important;
+  background-color: var(--chmsu-green-deep, #0c5027) !important;
+  border-color: var(--chmsu-green-deep, #0c5027) !important;
+  box-shadow: 0 3px 8px rgba(12, 80, 39, 0.22) !important;
+  transform: translateY(-1px);
+}
+
+:host ::ng-deep .portal-submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(12, 80, 39, 0.15) !important;
+}
+
+:host ::ng-deep .portal-submit-btn:focus-visible {
+  outline: 2px solid var(--chmsu-green-main, #116834) !important;
+  outline-offset: 2px !important;
 }
 
 :host ::ng-deep .portal-submit-btn:disabled {
   opacity: 0.65 !important;
   cursor: not-allowed !important;
+  transform: none !important;
+}
+
+/* Subtle micro-interaction on button arrow icon */
+:host ::ng-deep .portal-submit-btn .p-button-icon {
+  transition: transform 0.18s ease;
+}
+
+:host ::ng-deep .portal-submit-btn:hover:not(:disabled) .p-button-icon {
+  transform: translateX(3px);
 }
 
 .security-policy-notice {
@@ -292,14 +468,15 @@
   align-items: flex-start;
   gap: 0.45rem;
   font-size: 0.6875rem;
-  color: var(--p-surface-500, #64748b);
-  line-height: 1.35;
+  color: var(--chmsu-slate-500, #64748b);
+  line-height: 1.4;
+  margin-top: 0.15rem;
 }
 
 .security-policy-notice i {
   font-size: 0.75rem;
-  color: var(--p-surface-500, #64748b);
-  margin-top: 0.1rem;
+  color: var(--chmsu-green-main, #116834);
+  margin-top: 0.15rem;
   flex-shrink: 0;
 }
 
@@ -307,23 +484,23 @@
 .section-divider {
   display: flex;
   align-items: center;
-  margin: 1.35rem 0 1rem;
+  margin: 1.5rem 0 1rem;
 }
 
 .section-divider::before,
 .section-divider::after {
   content: '';
   flex: 1;
-  border-bottom: 1px solid var(--p-surface-200, #e2e8f0);
+  border-bottom: 1px solid var(--chmsu-slate-200, #e2e8f0);
 }
 
 .divider-text {
-  padding: 0 0.5rem;
+  padding: 0 0.625rem;
   font-size: 0.6875rem;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--p-surface-400, #94a3b8);
+  letter-spacing: 0.06em;
+  color: var(--chmsu-slate-400, #94a3b8);
 }
 
 .support-footer {
@@ -332,16 +509,230 @@
   align-items: center;
   gap: 0.35rem;
   font-size: 0.75rem;
-  color: var(--p-surface-500, #64748b);
+  color: var(--chmsu-slate-500, #64748b);
 }
 
-/* ========================================================================= */
-/* 2. UNIFIED INSTITUTIONAL MOTTO FOOTER                                     */
-/* ========================================================================= */
+/* ==========================================================================
+   4. PRIMENG CONTROL OVERRIDES
+   ========================================================================= */
+
+.w-full {
+  width: 100% !important;
+}
+
+:host ::ng-deep .p-password {
+  display: block;
+  width: 100%;
+}
+
+:host ::ng-deep .p-password input {
+  height: 44px;
+  width: 100%;
+  font-size: 0.875rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  border: 1px solid var(--chmsu-slate-300, #cbd5e1);
+  color: var(--chmsu-navy-900, #0f172a);
+  background-color: var(--chmsu-white, #ffffff);
+  font-family: var(--font-family-body, Arial, sans-serif);
+  transition: border-color 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+              background-color 0.18s ease;
+}
+
+:host ::ng-deep .p-password input:hover {
+  border-color: var(--chmsu-slate-400, #94a3b8);
+}
+
+:host ::ng-deep .p-password input:focus {
+  border-color: var(--chmsu-green-main, #116834);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(17, 104, 52, 0.15);
+}
+
+:host ::ng-deep .p-password .p-password-toggle-mask-icon {
+  color: var(--chmsu-slate-500, #64748b);
+  transition: color 0.15s ease;
+}
+
+:host ::ng-deep .p-password .p-password-toggle-mask-icon:hover {
+  color: var(--chmsu-navy-900, #0f172a);
+}
+
+:host ::ng-deep .p-checkbox .p-checkbox-box {
+  border-radius: var(--chmsu-border-radius-sm, 5px);
+  border-color: var(--chmsu-slate-300, #cbd5e1);
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+:host ::ng-deep .p-checkbox:hover .p-checkbox-box {
+  border-color: var(--chmsu-green-main, #116834);
+}
+
+:host ::ng-deep .p-checkbox.p-checkbox-checked .p-checkbox-box {
+  background-color: var(--chmsu-green-main, #116834);
+  border-color: var(--chmsu-green-main, #116834);
+}
+
+:host ::ng-deep .p-checkbox:focus-within .p-checkbox-box {
+  box-shadow: 0 0 0 3px rgba(17, 104, 52, 0.15);
+  border-color: var(--chmsu-green-main, #116834);
+}
+
+/* ==========================================================================
+   5. TABLET & DESKTOP ENHANCEMENTS (min-width: 768px)
+   ========================================================================== */
+
+@media (min-width: 768px) {
+  .login-viewport {
+    justify-content: center;
+    padding: 2.5rem 1.5rem;
+  }
+
+  .login-card {
+    max-width: 880px;
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    border-radius: var(--chmsu-border-radius-xl, 16px);
+  }
+
+  .mobile-header {
+    display: none;
+  }
+
+  /* Solid Institutional Green Brand Panel */
+  .brand-panel {
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(165deg, var(--chmsu-green-deep, #0c5027) 0%, #073518 100%);
+    border-right: 1px solid rgba(0, 0, 0, 0.08);
+    color: #ffffff;
+    padding: 2.5rem 2.25rem;
+  }
+
+  .brand-panel-inner {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    animation: brandPanelEntrance 0.38s 0.05s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .institution-header {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .portal-tag {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #a7f3d0;
+    margin-bottom: 0.35rem;
+  }
+
+  .university-name {
+    margin: 0;
+    font-size: 1.1875rem;
+    font-weight: 700;
+    line-height: 1.35;
+    color: #ffffff;
+    font-family: var(--font-family-heading, sans-serif);
+  }
+
+  .portal-edition {
+    margin: 0.35rem 0 0;
+    font-size: 0.75rem;
+    color: #d1fae5;
+  }
+
+  .crest-area {
+    margin: 2rem 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .crest-frame {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    background-color: #ffffff;
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.25rem;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  .crest-frame:hover {
+    transform: scale(1.03);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+  }
+
+  .crest-image {
+    display: block;
+    object-fit: contain;
+  }
+
+  .mission-statement {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: #d1fae5;
+    max-width: 260px;
+  }
+
+  /* Administrative Editorial Bylines */
+  .institutional-bylines {
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    padding-top: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .byline-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .byline-label {
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #a7f3d0;
+  }
+
+  .byline-value {
+    font-size: 0.75rem;
+    color: #ecfdf5;
+    line-height: 1.35;
+  }
+
+  /* Right Panel Adjustments */
+  .auth-panel {
+    padding: 3rem 2.75rem;
+  }
+
+  .form-title {
+    font-size: 1.625rem;
+  }
+}
+
+/* ==========================================================================
+   6. UNIFIED INSTITUTIONAL MOTTO FOOTER
+   ========================================================================== */
 
 .site-footer {
   width: 100%;
-  max-width: 860px;
+  max-width: 880px;
   margin-top: 1.75rem;
   display: flex;
   flex-direction: column;
@@ -349,6 +740,7 @@
   gap: 0.65rem;
   text-align: center;
   background: transparent;
+  animation: footerFadeIn 0.4s 0.15s ease both;
 }
 
 .motto-banner {
@@ -397,7 +789,7 @@
   font-size: 0.6875rem;
   font-weight: 600;
   font-style: italic;
-  color: var(--p-surface-600, #475569);
+  color: var(--chmsu-slate-600, #475569);
   max-width: 720px;
 }
 
@@ -407,7 +799,7 @@
 }
 
 .values-list .separator {
-  color: var(--p-surface-400, #94a3b8);
+  color: var(--chmsu-slate-400, #94a3b8);
   font-style: normal;
   user-select: none;
   font-size: 0.55rem;
@@ -416,196 +808,10 @@
 .copyright-text {
   margin: 0.25rem 0 0;
   font-size: 0.6875rem;
-  color: var(--p-surface-400, #94a3b8);
+  color: var(--chmsu-slate-400, #94a3b8);
 }
-
-/* ========================================================================= */
-/* 3. PRIMENG FORM CONTROL OVERRIDES                                         */
-/* ========================================================================= */
-
-.w-full {
-  width: 100% !important;
-}
-
-:host ::ng-deep .p-password {
-  display: block;
-  width: 100%;
-}
-
-:host ::ng-deep .p-password input {
-  height: 42px;
-  width: 100%;
-  font-size: 0.875rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  border: 1px solid var(--p-surface-300, #cbd5e1);
-  color: var(--p-surface-900, #0f172a);
-  background-color: var(--p-surface-0, #ffffff);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-:host ::ng-deep .p-password input:hover {
-  border-color: var(--p-surface-400, #94a3b8);
-}
-
-:host ::ng-deep .p-password input:focus {
-  border-color: #116834;
-  outline: none;
-  box-shadow: 0 0 0 1px #116834;
-}
-
-:host ::ng-deep .p-password .p-password-toggle-mask-icon {
-  color: var(--p-surface-500, #64748b);
-}
-
-:host ::ng-deep .p-checkbox .p-checkbox-box {
-  border-radius: 4px;
-  border-color: var(--p-surface-300, #cbd5e1);
-}
-
-:host ::ng-deep .p-checkbox.p-checkbox-checked .p-checkbox-box {
-  background-color: #0c5027;
-  border-color: #0c5027;
-}
-
-/* ========================================================================= */
-/* 4. TABLET & DESKTOP ENHANCEMENT (min-width: 768px)                       */
-/* ========================================================================= */
 
 @media (min-width: 768px) {
-  .login-viewport {
-    justify-content: center;
-    padding: 2.5rem 1.5rem;
-  }
-
-  .login-card {
-    max-width: 860px;
-    display: grid;
-    grid-template-columns: 360px 1fr;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
-  }
-
-  .mobile-header {
-    display: none;
-  }
-
-  /* Solid Green Brand Panel */
-  .brand-panel {
-    display: flex;
-    flex-direction: column;
-    background-color: #0c5027;
-    border-right: 1px solid #083b1c;
-    color: #ffffff;
-    padding: 2.25rem 2rem;
-  }
-
-  .brand-panel-inner {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-
-  .institution-header {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .portal-tag {
-    font-size: 0.6875rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #a7f3d0;
-    margin-bottom: 0.35rem;
-  }
-
-  .university-name {
-    margin: 0;
-    font-size: 1.125rem;
-    font-weight: 700;
-    line-height: 1.35;
-    color: #ffffff;
-  }
-
-  .portal-edition {
-    margin: 0.35rem 0 0;
-    font-size: 0.75rem;
-    color: #d1fae5;
-  }
-
-  .crest-area {
-    margin: 2rem 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-
-  .crest-frame {
-    width: 96px;
-    height: 96px;
-    border-radius: 50%;
-    background-color: #ffffff;
-    border: 2px solid #15803d;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1.25rem;
-  }
-
-  .crest-image {
-    display: block;
-    object-fit: contain;
-  }
-
-  .mission-statement {
-    margin: 0;
-    font-size: 0.8125rem;
-    line-height: 1.5;
-    color: #d1fae5;
-    max-width: 250px;
-  }
-
-  /* Option 1: Editorial Administrative Bylines */
-  .institutional-bylines {
-    border-top: 1px solid rgba(255, 255, 255, 0.14);
-    padding-top: 1.25rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .byline-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-  }
-
-  .byline-label {
-    font-size: 0.625rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #a7f3d0;
-  }
-
-  .byline-value {
-    font-size: 0.75rem;
-    color: #ecfdf5;
-    line-height: 1.35;
-  }
-
-  /* Right Panel Adjustments */
-  .auth-panel {
-    padding: 2.75rem 2.5rem;
-  }
-
-  .form-title {
-    font-size: 1.5rem;
-  }
-
   .site-footer {
     margin-top: 2rem;
   }
@@ -617,5 +823,28 @@
   .values-list {
     font-size: 0.75rem;
     column-gap: 0.45rem;
+  }
+}
+
+/* ==========================================================================
+   7. ACCESSIBILITY: REDUCED MOTION PREFERENCE (WCAG 2.2 Compliance)
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .login-card,
+  .brand-panel-inner,
+  .auth-panel-inner,
+  .system-alert,
+  .field-error-msg,
+  .site-footer,
+  :host ::ng-deep .portal-submit-btn,
+  :host ::ng-deep .portal-submit-btn .p-button-icon,
+  .text-input,
+  :host ::ng-deep .p-password input,
+  .crest-frame,
+  .mobile-header img {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
   }
 }

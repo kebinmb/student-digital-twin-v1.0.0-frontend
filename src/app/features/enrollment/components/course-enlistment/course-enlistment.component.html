@@ -94,6 +94,9 @@
       [value]="store.enrollment()?.items || []" 
       [loading]="store.isLoading()"
       [rowHover]="true"
+      [paginator]="true"
+      [rows]="5"
+      [rowsPerPageOptions]="[5, 10, 20]"
       styleClass="p-datatable-sm institutional-table"
       responsiveLayout="scroll">
       

@@ -49,6 +49,9 @@
   <p-table
     [value]="filteredDepartments()"
     [loading]="isLoading()"
+    [paginator]="true"
+    [rows]="5"
+    [rowsPerPageOptions]="[5, 10, 20]"
     responsiveLayout="scroll"
     styleClass="p-datatable-sm institutional-table">
     <ng-template pTemplate="header">

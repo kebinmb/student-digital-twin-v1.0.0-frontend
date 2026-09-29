@@ -27,8 +27,11 @@
     <p-table 
       [value]="store.termEnrollments()" 
       [loading]="store.isLoading()" 
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[5, 10, 20]"
       responsiveLayout="scroll"
-      styleClass="p-datatable-striped p-datatable-sm">
+      styleClass="institutional-table p-datatable-striped p-datatable-sm">
       
       <ng-template pTemplate="header">
         <tr>

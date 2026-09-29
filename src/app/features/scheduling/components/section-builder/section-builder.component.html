@@ -152,6 +152,9 @@
     <p-table 
       [value]="store.sections()" 
       [loading]="store.isLoading()" 
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[5, 10, 20]"
       responsiveLayout="scroll"
       styleClass="section-datatable institutional-table p-datatable-striped p-datatable-sm">
       

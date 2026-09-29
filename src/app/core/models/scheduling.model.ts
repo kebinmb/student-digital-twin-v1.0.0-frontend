@@ -30,6 +30,10 @@ export interface SchedulingTermDto {
   isCurrent: boolean;
   isActive: boolean;
   isEnrollmentOpen: boolean;
+  isGradingOpen?: boolean;
+  isAddDropOpen?: boolean;
+  startDate?: string | null;
+  endDate?: string | null;
   maxHoursPerClass?: number;
 }
 
@@ -94,6 +98,7 @@ export interface SectionDetailResponse {
   maxCapacity: number;
   enrolledCount: number;
   status: string; // "PLANNED" | "OPEN" | "CLOSED" | "CANCELLED"
+  gradeStatus?: string; // "DRAFT" | "SUBMITTED" | "VERIFIED" | "SEALED"
   schedules: ScheduleSlotResponse[];
 }
 

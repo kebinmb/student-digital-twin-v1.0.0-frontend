@@ -922,3 +922,87 @@ input::placeholder {
   gap: 0.75rem;
   flex-wrap: wrap;
 }
+
+/* ==========================================================================
+   INSTITUTIONAL TABLE CARDS & KPI METRIC ACCENTS (STUDENT ACADEMIC INSIGHTS)
+   ========================================================================== */
+
+.table-card {
+  background: var(--chmsu-white, #ffffff);
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 1.25rem;
+  box-shadow: var(--chmsu-shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.toolbar-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.section-title {
+  font-family: var(--font-family-heading);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--chmsu-navy-900, #0f172a);
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.toolbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Standard Institutional KPI Ribbon & Bento Accents */
+.kpi-card.border-green {
+  border-left: 4px solid var(--chmsu-green-main, #116834);
+}
+.kpi-card.border-blue {
+  border-left: 4px solid #0284c7;
+}
+.kpi-card.border-amber {
+  border-left: 4px solid var(--chmsu-gold-main, #d97706);
+}
+.kpi-card.border-rose {
+  border-left: 4px solid #e11d48;
+}
+
+.kpi-value.text-green { color: var(--chmsu-green-main, #116834); }
+.kpi-value.text-blue { color: #0284c7; }
+.kpi-value.text-amber { color: var(--chmsu-gold-main, #d97706); }
+.kpi-value.text-rose { color: #e11d48; }
+
+.kpi-icon-box.green { background: var(--status-emerald-bg, #ecfdf5); color: var(--status-emerald-text, #047857); }
+.kpi-icon-box.blue { background: var(--status-blue-bg, #f0f9ff); color: var(--status-blue-text, #0369a1); }
+.kpi-icon-box.amber { background: var(--status-amber-bg, #fffbeb); color: var(--status-amber-text, #b45309); }
+.kpi-icon-box.rose { background: var(--status-rose-bg, #fef2f2); color: var(--status-rose-text, #b91c1c); }
+
+.action-link {
+  color: var(--chmsu-green-main, #116834);
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.action-link:hover {
+  color: var(--chmsu-green-deep, #0c5027);
+  text-decoration: underline;
+}
+
