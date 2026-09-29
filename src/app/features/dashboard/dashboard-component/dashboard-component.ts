@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, NonNullableFormBuilder, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 
 // PrimeNG Standalone Components & Modules
 import { ButtonModule } from 'primeng/button';
@@ -28,7 +28,7 @@ import { MessageService } from 'primeng/api';
 
 import { AuthService } from '../../../core/service/authentication/auth-service';
 import { UserApiService } from '../../../core/service/user/user-api.service';
-import { CampusService } from '../../../core/services/institution.service';
+import { CampusService, TermService } from '../../../core/services/institution.service';
 import { AnalyticsApiService } from '../../../core/service/analytics/analytics-api.service';
 import { ComplianceApiService } from '../../../core/service/compliance/compliance-api.service';
 import { FinancialApiService } from '../../../core/service/financial/financial-api.service';
@@ -156,6 +156,7 @@ export class DashboardComponent implements OnInit {
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly userApiService = inject(UserApiService);
   private readonly campusService = inject(CampusService);
+  private readonly termService = inject(TermService);
   private readonly analyticsApiService = inject(AnalyticsApiService);
   private readonly complianceApiService = inject(ComplianceApiService);
   private readonly financialApiService = inject(FinancialApiService);
@@ -287,76 +288,76 @@ export class DashboardComponent implements OnInit {
 
   // Base student metrics (maintained for backwards-compatibility in specs)
   readonly metrics: MetricCard[] = [
-    { title: 'Current GWA', value: '1.38', subtext: "Dean's Honor List", icon: 'pi pi-chart-line', trend: '+0.04 vs last term', trendUp: true },
-    { title: 'Curriculum Progress', value: '84 / 142', subtext: '59% Units Completed', icon: 'pi pi-graduation-cap', trend: 'On Track', trendUp: true },
-    { title: 'Attendance Rate', value: '98.4%', subtext: '0 unexcused absences', icon: 'pi pi-check-circle', trend: 'Exemplary', trendUp: true },
-    { title: 'Twin Model Sync', value: '99.8%', subtext: 'Telemetry Up-to-date', icon: 'pi pi-sparkles', trend: 'Active', trendUp: true }
+    { title: 'Current GWA', value: '0.00', subtext: "Academic Record", icon: 'pi pi-chart-line', trend: 'No grades yet', trendUp: false },
+    { title: 'Curriculum Progress', value: '0 / 0', subtext: '0% Units Completed', icon: 'pi pi-graduation-cap', trend: 'Pending Enrolment', trendUp: false },
+    { title: 'Attendance Rate', value: '0.0%', subtext: '0 unexcused absences', icon: 'pi pi-check-circle', trend: 'No Data', trendUp: false },
+    { title: 'Twin Model Sync', value: '0.0%', subtext: 'Telemetry Pending', icon: 'pi pi-sparkles', trend: 'Inactive', trendUp: false }
   ];
 
   private getBaselineMetricsForRole(role: string): MetricCard[] {
     switch (role) {
       case 'SUPER_ADMIN':
         return [
-          { title: 'System Health', value: '100.0%', subtext: 'All services online', icon: 'pi pi-server', trend: 'Optimal', trendUp: true },
-          { title: 'Campus Network', value: '4 Campuses', subtext: 'Connected & synchronized', icon: 'pi pi-building', trend: 'Online', trendUp: true },
-          { title: 'Active Sessions', value: '1,480 Users', subtext: 'Currently signed in', icon: 'pi pi-shield', trend: 'Secure', trendUp: true },
-          { title: 'System Activity', value: '284 Events', subtext: 'No issues detected', icon: 'pi pi-heart-fill', trend: 'Healthy', trendUp: true }
+          { title: 'System Health', value: '0.0%', subtext: 'No services online', icon: 'pi pi-server', trend: 'Offline', trendUp: false },
+          { title: 'Campus Network', value: '0 Campuses', subtext: 'No network connected', icon: 'pi pi-building', trend: 'Offline', trendUp: false },
+          { title: 'Active Sessions', value: '0 Users', subtext: 'No active sessions', icon: 'pi pi-shield', trend: 'Inactive', trendUp: false },
+          { title: 'System Activity', value: '0 Events', subtext: 'No log events', icon: 'pi pi-heart-fill', trend: 'Inactive', trendUp: false }
         ];
       case 'ADMIN':
         return [
-          { title: 'Registered Users', value: '1,480 Active', subtext: 'Students, faculty & staff', icon: 'pi pi-users', trend: 'Active', trendUp: true },
-          { title: 'Active Campuses', value: '4 Campuses', subtext: 'University campus sites', icon: 'pi pi-building', trend: 'Operational', trendUp: true },
-          { title: 'Security Logs', value: '284 Recorded', subtext: 'All checks passed', icon: 'pi pi-shield', trend: 'Normal', trendUp: true },
-          { title: 'Academic Programs', value: '8 Programs', subtext: 'Active degree programs', icon: 'pi pi-sitemap', trend: 'Current', trendUp: true }
+          { title: 'Registered Users', value: '0 Active', subtext: 'Students, faculty & staff', icon: 'pi pi-users', trend: 'Empty', trendUp: false },
+          { title: 'Active Campuses', value: '0 Campuses', subtext: 'University campus sites', icon: 'pi pi-building', trend: 'Empty', trendUp: false },
+          { title: 'Security Logs', value: '0 Recorded', subtext: 'No security logs', icon: 'pi pi-shield', trend: 'Empty', trendUp: false },
+          { title: 'Academic Programs', value: '0 Programs', subtext: 'Active degree programs', icon: 'pi pi-sitemap', trend: 'Empty', trendUp: false }
         ];
       case 'REGISTRAR':
         return [
-          { title: 'Total Enrolled', value: '3,842 Students', subtext: 'Current semester enrolment', icon: 'pi pi-users', trend: 'Active Term', trendUp: true },
-          { title: 'Grade Verification', value: '148 / 180', subtext: 'Class grade sheets verified', icon: 'pi pi-lock', trend: '82% Complete', trendUp: true },
-          { title: 'Student Clearances', value: '92.4%', subtext: 'Department clearances completed', icon: 'pi pi-verified', trend: '+5.1% this week', trendUp: true },
-          { title: 'Graduation Candidates', value: '412 Applicants', subtext: 'Applications under review', icon: 'pi pi-graduation-cap', trend: 'In Review', trendUp: true }
+          { title: 'Total Enrolled', value: '0 Students', subtext: 'Current semester enrolment', icon: 'pi pi-users', trend: 'Inactive', trendUp: false },
+          { title: 'Grade Verification', value: '0 / 0', subtext: 'Class grade sheets verified', icon: 'pi pi-lock', trend: '0% Complete', trendUp: false },
+          { title: 'Student Clearances', value: '0.0%', subtext: 'Department clearances completed', icon: 'pi pi-verified', trend: 'No Data', trendUp: false },
+          { title: 'Graduation Candidates', value: '0 Applicants', subtext: 'Applications under review', icon: 'pi pi-graduation-cap', trend: 'Empty', trendUp: false }
         ];
       case 'CASHIER':
         return [
-          { title: 'Receipt Booklet', value: 'BKL-2026-001', subtext: 'Official Receipts (42/50 left)', icon: 'pi pi-id-card', trend: 'In Use', trendUp: true },
-          { title: "Today's Collections", value: '₱84,500.00', subtext: '42 receipts issued today', icon: 'pi pi-wallet', trend: '+12% vs yesterday', trendUp: true },
-          { title: 'Student Trust Fund', value: '₱2.45M', subtext: 'Trust fund collections balance', icon: 'pi pi-building-columns', trend: 'Reconciled', trendUp: true },
-          { title: 'Payment Window', value: 'OPEN', subtext: 'Window 1 — Ready for payments', icon: 'pi pi-shield', trend: 'Open', trendUp: true }
+          { title: 'Receipt Booklet', value: 'No Active Booklet', subtext: 'Official Receipts (0 left)', icon: 'pi pi-id-card', trend: 'Unassigned', trendUp: false },
+          { title: "Today's Collections", value: '₱0.00', subtext: '0 receipts issued today', icon: 'pi pi-wallet', trend: '₱0.00 today', trendUp: false },
+          { title: 'Student Trust Fund', value: '₱0.00', subtext: 'Trust fund collections balance', icon: 'pi pi-building-columns', trend: 'Uncollected', trendUp: false },
+          { title: 'Payment Window', value: 'CLOSED', subtext: 'Window 1 — Closed', icon: 'pi pi-shield', trend: 'Closed', trendUp: false }
         ];
       case 'FACULTY':
         return [
-          { title: 'Teaching Load', value: '18.0 / 21.0', subtext: 'Assigned teaching units', icon: 'pi pi-book', trend: 'Standard Load', trendUp: true },
-          { title: 'Assigned Classes', value: '5 Sections', subtext: '182 enrolled students', icon: 'pi pi-users', trend: 'Active Term', trendUp: true },
-          { title: 'Grade Submissions', value: '3 / 5 Ready', subtext: 'Midterm grades submitted', icon: 'pi pi-chart-line', trend: 'In Progress', trendUp: true },
-          { title: 'Average Attendance', value: '96.2%', subtext: 'Class attendance rate', icon: 'pi pi-check-circle', trend: 'Good', trendUp: true }
+          { title: 'Teaching Load', value: '0.0 / 0.0', subtext: 'Assigned teaching units', icon: 'pi pi-book', trend: 'No Load', trendUp: false },
+          { title: 'Assigned Classes', value: '0 Sections', subtext: '0 enrolled students', icon: 'pi pi-users', trend: 'No Classes', trendUp: false },
+          { title: 'Grade Submissions', value: '0 / 0 Ready', subtext: 'Midterm grades submitted', icon: 'pi pi-chart-line', trend: 'Pending', trendUp: false },
+          { title: 'Average Attendance', value: '0.0%', subtext: 'Class attendance rate', icon: 'pi pi-check-circle', trend: 'No Data', trendUp: false }
         ];
       case 'DEAN':
         return [
-          { title: 'Degree Programs', value: '8 Programs', subtext: 'College undergraduate programs', icon: 'pi pi-sitemap', trend: 'Active', trendUp: true },
-          { title: 'Department Faculty', value: '24 Instructors', subtext: 'Teaching faculty members', icon: 'pi pi-user', trend: 'Full Roster', trendUp: true },
-          { title: 'Students Needing Support', value: '12 Students', subtext: 'Referred for counseling', icon: 'pi pi-info-circle', trend: 'Needs Follow-up', trendUp: false },
-          { title: 'College Clearance', value: '94.1%', subtext: 'Clearances completed', icon: 'pi pi-check-square', trend: 'On Schedule', trendUp: true }
+          { title: 'Degree Programs', value: '0 Programs', subtext: 'College undergraduate programs', icon: 'pi pi-sitemap', trend: 'Empty', trendUp: false },
+          { title: 'Department Faculty', value: '0 Instructors', subtext: 'Teaching faculty members', icon: 'pi pi-user', trend: 'Empty', trendUp: false },
+          { title: 'Students Needing Support', value: '0 Students', subtext: 'Referred for counseling', icon: 'pi pi-info-circle', trend: 'Nominal', trendUp: true },
+          { title: 'College Clearance', value: '0.0%', subtext: 'Clearances completed', icon: 'pi pi-check-square', trend: 'Pending', trendUp: false }
         ];
       case 'CHAIRPERSON':
         return [
-          { title: 'Department Curricula', value: '3 Active', subtext: 'Approved degree tracks', icon: 'pi pi-sitemap', trend: 'Approved', trendUp: true },
-          { title: 'Learning Outcomes', value: '96.4%', subtext: 'Course syllabus alignment', icon: 'pi pi-th-large', trend: 'Aligned', trendUp: true },
-          { title: 'Class Sections', value: '28 Sections', subtext: 'Rooms & schedules assigned', icon: 'pi pi-calendar', trend: 'Scheduled', trendUp: true },
-          { title: 'Pending Grade Reviews', value: '4 Pending', subtext: 'Awaiting department review', icon: 'pi pi-clock', trend: 'Review Needed', trendUp: false }
+          { title: 'Department Curricula', value: '0 Active', subtext: 'Approved degree tracks', icon: 'pi pi-sitemap', trend: 'Empty', trendUp: false },
+          { title: 'Learning Outcomes', value: '0.0%', subtext: 'Course syllabus alignment', icon: 'pi pi-th-large', trend: 'Unmapped', trendUp: false },
+          { title: 'Class Sections', value: '0 Sections', subtext: 'Rooms & schedules assigned', icon: 'pi pi-calendar', trend: 'Unscheduled', trendUp: false },
+          { title: 'Pending Grade Reviews', value: '0 Pending', subtext: 'Awaiting department review', icon: 'pi pi-clock', trend: 'Nominal', trendUp: true }
         ];
       case 'GUIDANCE':
         return [
-          { title: 'Enrolled Students', value: '3,842 Students', subtext: 'Students under care', icon: 'pi pi-users', trend: 'Active Term', trendUp: true },
-          { title: 'Priority Support', value: '14 Students', subtext: 'Follow-up counseling needed', icon: 'pi pi-exclamation-triangle', trend: 'Priority', trendUp: false },
-          { title: 'Support Actions', value: '28 Sessions', subtext: 'Guidance & tutoring sessions', icon: 'pi pi-send', trend: 'In Progress', trendUp: true },
-          { title: 'Student Wellness', value: '88.6%', subtext: 'Overall student wellbeing', icon: 'pi pi-heart-fill', trend: '+2.1% this term', trendUp: true }
+          { title: 'Enrolled Students', value: '0 Students', subtext: 'Students under care', icon: 'pi pi-users', trend: 'Empty', trendUp: false },
+          { title: 'Priority Support', value: '0 Students', subtext: 'Follow-up counseling needed', icon: 'pi pi-exclamation-triangle', trend: 'Nominal', trendUp: true },
+          { title: 'Support Actions', value: '0 Sessions', subtext: 'Guidance & tutoring sessions', icon: 'pi pi-send', trend: 'Empty', trendUp: false },
+          { title: 'Student Wellness', value: '0.0%', subtext: 'Overall student wellbeing', icon: 'pi pi-heart-fill', trend: 'No Data', trendUp: false }
         ];
       case 'ACCOUNTANT':
         return [
-          { title: 'UniFAST Billing Claims', value: '4 Batches', subtext: 'Free Higher Education subsidy', icon: 'pi pi-file-export', trend: 'Verified', trendUp: true },
-          { title: 'Total Free Tuition', value: '₱1,280,450.00', subtext: '318 student beneficiaries', icon: 'pi pi-dollar', trend: 'Audited', trendUp: true },
-          { title: 'Billing Reviews', value: '2 Items', subtext: 'Adjustments requiring review', icon: 'pi pi-exclamation-circle', trend: 'Action Needed', trendUp: false },
-          { title: 'Student Accounts', value: '1,420 Enrollees', subtext: 'Tuition accounts up-to-date', icon: 'pi pi-history', trend: 'Balanced', trendUp: true }
+          { title: 'UniFAST Billing Claims', value: '0 Batches', subtext: 'Free Higher Education subsidy', icon: 'pi pi-file-export', trend: 'Empty', trendUp: false },
+          { title: 'Total Free Tuition', value: '₱0.00', subtext: '0 student beneficiaries', icon: 'pi pi-dollar', trend: '₱0.00 Billed', trendUp: false },
+          { title: 'Billing Reviews', value: '0 Items', subtext: 'Adjustments requiring review', icon: 'pi pi-exclamation-circle', trend: 'Nominal', trendUp: true },
+          { title: 'Student Accounts', value: '0 Enrollees', subtext: 'Tuition accounts up-to-date', icon: 'pi pi-history', trend: 'Empty', trendUp: false }
         ];
       case 'STUDENT':
       default:
@@ -497,7 +498,7 @@ export class DashboardComponent implements OnInit {
 
   readonly adminUserActiveRate = computed(() => {
     const list = this.usersList();
-    if (list.length === 0) return 98;
+    if (list.length === 0) return 0;
     const enabled = list.filter(u => u.enabled).length;
     return Math.round((enabled / list.length) * 100);
   });
@@ -525,10 +526,10 @@ export class DashboardComponent implements OnInit {
     return p ? `${p.studentNumber} — ${p.programCode} (Year ${p.yearLevel}) • CHMSU Scholar` : 'Student Academic Profile';
   });
 
-  readonly studentGpa = computed(() => this.studentPortalSummary()?.cumulativeGpa || '—');
+  readonly studentGpa = computed(() => this.studentPortalSummary()?.cumulativeGpa || '0.00');
   readonly studentUnits = computed(() => {
     const p = this.studentPortalSummary();
-    return p?.totalUnitsEarned ? `${p.totalUnitsEarned} / 142` : '— / 142';
+    return p?.totalUnitsEarned ? `${p.totalUnitsEarned} / 142` : '0 / 142';
   });
   readonly studentClearanceStatus = computed(() => {
     const p = this.studentPortalSummary();
@@ -537,17 +538,17 @@ export class DashboardComponent implements OnInit {
   });
   readonly studentWellnessScore = computed(() => {
     const t = this.studentSelfTelemetry();
-    return t?.wellnessScore ? Math.round(t.wellnessScore) : 98;
+    return t?.wellnessScore ? Math.round(t.wellnessScore) : 0;
   });
   readonly studentStandingText = computed(() => `Academic Standing (${this.studentWellnessScore()}%)`);
   readonly studentStandingTag = computed(() => (this.studentSelfTelemetry()?.riskLevel === 'LOW' || !this.studentSelfTelemetry()) ? 'ON TRACK' : 'NEEDS ATTENTION');
   readonly studentAcademicPerf = computed(() => {
     const t = this.studentSelfTelemetry();
-    return t?.dimensionScores?.['Academic Progress'] != null ? Math.round(t.dimensionScores['Academic Progress']) : 94;
+    return t?.dimensionScores?.['Academic Progress'] != null ? Math.round(t.dimensionScores['Academic Progress']) : 0;
   });
   readonly studentAttendanceRate = computed(() => {
     const t = this.studentSelfTelemetry();
-    return t?.dimensionScores?.['Attendance Consistency'] != null ? Math.round(t.dimensionScores['Attendance Consistency']) : 98;
+    return t?.dimensionScores?.['Attendance Consistency'] != null ? Math.round(t.dimensionScores['Attendance Consistency']) : 0;
   });
   readonly studentAcademicStanding = computed(() => {
     const t = this.studentSelfTelemetry();
@@ -606,7 +607,7 @@ export class DashboardComponent implements OnInit {
   readonly chairpersonOutcomes = signal('');
   readonly chairpersonSections = signal('');
   readonly chairpersonPendingGrades = signal('');
-  readonly chairpersonOutcomeScore = signal<number>(96);
+  readonly chairpersonOutcomeScore = signal<number>(0);
   readonly chairpersonSectionsList = signal<SectionDetailResponse[]>([]);
 
   readonly chairpersonGradeProgress = computed(() => {
@@ -734,25 +735,50 @@ export class DashboardComponent implements OnInit {
       });
   }
 
+  private updateActiveTermState(current: any): void {
+    if (!current) return;
+    const termName = current.termName || (current.termType ? current.termType.replace(/_/g, ' ') : 'AY 2026-2027 1st Semester');
+    this.activeTermName.set(termName);
+
+    const enrollmentOpen = current.enrollmentOpen ?? current.isEnrollmentOpen ?? false;
+    const gradingOpen = current.gradingOpen ?? current.isGradingOpen ?? false;
+    const addDropOpen = current.addDropOpen ?? current.isAddDropOpen ?? false;
+
+    this.isEnrollmentOpen.set(!!enrollmentOpen);
+    this.isGradingOpen.set(!!gradingOpen);
+    this.isAddDropOpen.set(!!addDropOpen);
+
+    if (current.startDate && current.endDate) {
+      this.activeTermDates.set(`${current.startDate} to ${current.endDate}`);
+    } else {
+      this.activeTermDates.set('Regular Term Schedule Active');
+    }
+
+    this.registrarEnrollmentPeriod.set(enrollmentOpen ? 'OPEN (Self-Service)' : 'CLOSED (Term Finalized)');
+    this.registrarGradeWindow.set(gradingOpen ? 'MIDTERM & FINAL SUBMISSIONS OPEN' : 'SUBMISSION WINDOW LOCKED');
+  }
+
   loadGeneralAcademicContext(): void {
-    this.schedulingApiService.getSchedulingTerms()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(terms => {
-        if (terms && terms.length > 0) {
-          const current = terms.find(t => t.isCurrent) || terms[0];
-          if (current) {
-            this.activeTermName.set(current.termName || 'AY 2026-2027 1st Semester');
-            this.isEnrollmentOpen.set(!!current.isEnrollmentOpen);
-            this.isGradingOpen.set(!!current.isGradingOpen);
-            this.isAddDropOpen.set(!!current.isAddDropOpen);
-            if (current.startDate && current.endDate) {
-              this.activeTermDates.set(`${current.startDate} to ${current.endDate}`);
-            } else {
-              this.activeTermDates.set('Regular Term Schedule Active');
-            }
-            this.registrarEnrollmentPeriod.set(current.isEnrollmentOpen ? 'OPEN (Self-Service)' : 'CLOSED (Term Finalized)');
-            this.registrarGradeWindow.set(current.isGradingOpen ? 'MIDTERM & FINAL SUBMISSIONS OPEN' : 'SUBMISSION WINDOW LOCKED');
-          }
+    this.termService.getActive()
+      .pipe(
+        catchError(() => this.termService.getAll().pipe(
+          map(terms => terms.find(t => t.isActive || t.isCurrent) || terms[0]),
+          catchError(() => of(null))
+        )),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(term => {
+        if (term) {
+          this.updateActiveTermState(term);
+        } else {
+          this.schedulingApiService.getSchedulingTerms()
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(terms => {
+              if (terms && terms.length > 0) {
+                const current = terms.find(t => t.isCurrent || t.isActive) || terms[0];
+                this.updateActiveTermState(current);
+              }
+            });
         }
       });
 
@@ -1022,12 +1048,13 @@ export class DashboardComponent implements OnInit {
           telemetry: this.analyticsApiService.getAdminStudentTelemetry({ page: 0, size: 1 }).pipe(catchError(() => of(null))),
           pendingGrades: this.enrollmentApiService.getPendingGradeChangeRequests().pipe(catchError(() => of([]))),
           gradApps: this.complianceApiService.getGraduationApplicationsByTerm(1).pipe(catchError(() => of([]))),
+          termRegistryActive: this.termService.getActive().pipe(catchError(() => of(null))),
           schedulingTerms: this.schedulingApiService.getSchedulingTerms().pipe(catchError(() => of([]))),
           sections: this.schedulingApiService.getSectionsByTerm(1).pipe(catchError(() => of([])))
         })
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe({
-            next: ({ telemetry, pendingGrades, gradApps, schedulingTerms, sections }) => {
+            next: ({ telemetry, pendingGrades, gradApps, termRegistryActive, schedulingTerms, sections }) => {
               const totalHeadcount = telemetry?.totalElements ? `${telemetry.totalElements.toLocaleString()} Students` : '3,842 Students';
               const pendingCount = pendingGrades ? `${pendingGrades.length} Pending` : '0 Pending';
               const gradCount = gradApps.length > 0 ? `${gradApps.length} Applicants` : '412 Applicants';
@@ -1042,21 +1069,9 @@ export class DashboardComponent implements OnInit {
                 ]
               }));
 
-              const currentTerm = schedulingTerms.find(t => t.isCurrent) || schedulingTerms[0];
+              const currentTerm = termRegistryActive || schedulingTerms.find(t => t.isCurrent || t.isActive) || schedulingTerms[0];
               if (currentTerm) {
-                this.activeTermName.set(currentTerm.termName || 'AY 2026-2027 1st Semester');
-                this.isEnrollmentOpen.set(!!currentTerm.isEnrollmentOpen);
-                this.isGradingOpen.set(!!currentTerm.isGradingOpen);
-                this.isAddDropOpen.set(!!currentTerm.isAddDropOpen);
-
-                if (currentTerm.startDate && currentTerm.endDate) {
-                  this.activeTermDates.set(`${currentTerm.startDate} to ${currentTerm.endDate}`);
-                } else {
-                  this.activeTermDates.set('Regular Term Schedule Active');
-                }
-
-                this.registrarEnrollmentPeriod.set(currentTerm.isEnrollmentOpen ? 'OPEN (Self-Service)' : 'CLOSED (Term Finalized)');
-                this.registrarGradeWindow.set(currentTerm.isGradingOpen ? 'MIDTERM & FINAL SUBMISSIONS OPEN' : 'SUBMISSION WINDOW LOCKED');
+                this.updateActiveTermState(currentTerm);
               }
 
               if (sections && sections.length > 0) {

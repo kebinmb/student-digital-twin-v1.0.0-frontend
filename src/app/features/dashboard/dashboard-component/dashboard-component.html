@@ -99,7 +99,7 @@
           <div class="hairline-divider"></div>
           <div class="stat-unit">
             <span class="stat-label">Infrastructure</span>
-            <span class="clearance-pill">100% OPERATIONAL</span>
+            <span class="clearance-pill">{{ usersList().length > 0 || auditLogsList().length > 0 ? '100% OPERATIONAL' : '0% OPERATIONAL' }}</span>
           </div>
         </div>
       </div>
@@ -109,7 +109,7 @@
         <div class="stat-card health-card">
           <div class="knob-container">
             <p-knob
-              [ngModel]="100"
+              [ngModel]="usersList().length > 0 || auditLogsList().length > 0 ? 100 : 0"
               [readonly]="true"
               [size]="70"
               valueTemplate="{value}%"
@@ -119,9 +119,9 @@
           </div>
           <div class="health-meta">
             <span class="stat-label">System Health Index</span>
-            <span class="stat-val health-rate-val">All Services Online</span>
+            <span class="stat-val health-rate-val">{{ usersList().length > 0 || auditLogsList().length > 0 ? 'All Services Online' : 'No Active Services' }}</span>
             <div class="tag-row">
-              <p-tag value="OPTIMAL" severity="success" size="small"></p-tag>
+              <p-tag [value]="usersList().length > 0 || auditLogsList().length > 0 ? 'OPTIMAL' : 'OFFLINE'" [severity]="usersList().length > 0 || auditLogsList().length > 0 ? 'success' : 'warn'" size="small"></p-tag>
             </div>
           </div>
         </div>
@@ -132,8 +132,8 @@
               <span class="stat-label">Service Nodes</span>
               <div class="tile-icon-box green"><i class="pi pi-server"></i></div>
             </div>
-            <div class="stat-val">4 Online</div>
-            <p-progressBar [value]="100" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="stat-val">{{ actuatorEndpoints.length > 0 ? actuatorEndpoints.length + ' Online' : '0 Online' }}</div>
+            <p-progressBar [value]="actuatorEndpoints.length > 0 ? 100 : 0" [showValue]="false" styleClass="tile-progress"></p-progressBar>
             <div class="tile-caption">REST APIs & actuator services running</div>
           </div>
 
@@ -142,8 +142,8 @@
               <span class="stat-label">Campus Network</span>
               <div class="tile-icon-box blue"><i class="pi pi-building"></i></div>
             </div>
-            <div class="stat-val">{{ campusesList().length || 4 }} Campuses</div>
-            <p-progressBar [value]="100" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="stat-val">{{ campusesList().length }} Campuses</div>
+            <p-progressBar [value]="campusesList().length > 0 ? 100 : 0" [showValue]="false" styleClass="tile-progress"></p-progressBar>
             <div class="tile-caption">Synchronized university campus network</div>
           </div>
 
@@ -153,7 +153,7 @@
               <div class="tile-icon-box amber"><i class="pi pi-shield"></i></div>
             </div>
             <div class="stat-val">{{ auditLogsList().length }} Events</div>
-            <p-progressBar [value]="95" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <p-progressBar [value]="auditLogsList().length > 0 ? 100 : 0" [showValue]="false" styleClass="tile-progress"></p-progressBar>
             <div class="tile-caption">Tamper-evident audit trail logged</div>
           </div>
 
@@ -163,7 +163,7 @@
               <div class="tile-icon-box rose"><i class="pi pi-bolt"></i></div>
             </div>
             <div class="tag-wrapper">
-              <p-tag value="4ms Response" severity="success" [rounded]="true"></p-tag>
+              <p-tag [value]="actuatorEndpoints.length > 0 ? '4ms Response' : '0ms Response'" severity="success" [rounded]="true"></p-tag>
             </div>
             <div class="tile-caption">Optimal gateway response latency</div>
           </div>
@@ -218,10 +218,10 @@
                 <span class="text-xs font-medium text-slate-700">{{ log.entityName }}</span>
               </td>
               <td>
-                <span class="font-mono text-xs text-slate-600">{{ log.ipAddress || '127.0.0.1' }}</span>
+                <span class="font-mono text-xs text-slate-600">{{ log.ipAddress || '—' }}</span>
               </td>
               <td>
-                <span class="text-xs text-slate-600 truncate max-w-xs">{{ log.details || 'System operation executed' }}</span>
+                <span class="text-xs text-slate-600 truncate max-w-xs">{{ log.details || '—' }}</span>
               </td>
             </tr>
           </ng-template>
@@ -258,7 +258,7 @@
           <div class="hairline-divider"></div>
           <div class="stat-unit">
             <span class="stat-label">Campuses</span>
-            <span class="stat-val">{{ campusesList().length || 4 }} Campuses</span>
+            <span class="stat-val">{{ campusesList().length }} Campuses</span>
           </div>
           <div class="hairline-divider"></div>
           <div class="stat-unit">
@@ -297,7 +297,7 @@
               <div class="tile-icon-box green"><i class="pi pi-users"></i></div>
             </div>
             <div class="stat-val">{{ usersList().length }} Active</div>
-            <p-progressBar [value]="100" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <p-progressBar [value]="usersList().length > 0 ? 100 : 0" [showValue]="false" styleClass="tile-progress"></p-progressBar>
             <div class="tile-caption">Students, faculty, and administrative staff</div>
           </div>
 
@@ -306,8 +306,8 @@
               <span class="stat-label">Academic Campuses</span>
               <div class="tile-icon-box blue"><i class="pi pi-map-marker"></i></div>
             </div>
-            <div class="stat-val">{{ campusesList().length || 4 }} Campuses</div>
-            <p-progressBar [value]="100" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="stat-val">{{ campusesList().length }} Campuses</div>
+            <p-progressBar [value]="campusesList().length > 0 ? 100 : 0" [showValue]="false" styleClass="tile-progress"></p-progressBar>
             <div class="tile-caption">Talisay, Fortune Towne, Alijis, Binalbagan</div>
           </div>
 
@@ -317,7 +317,7 @@
               <div class="tile-icon-box amber"><i class="pi pi-shield"></i></div>
             </div>
             <div class="stat-val">{{ auditLogsList().length }} Audited</div>
-            <p-progressBar [value]="90" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <p-progressBar [value]="auditLogsList().length > 0 ? 100 : 0" [showValue]="false" styleClass="tile-progress"></p-progressBar>
             <div class="tile-caption">Account authentications and modifications</div>
           </div>
 
@@ -327,7 +327,7 @@
               <div class="tile-icon-box rose"><i class="pi pi-sitemap"></i></div>
             </div>
             <div class="tag-wrapper">
-              <p-tag [value]="(curriculaList().length || 8) + ' Curricula'" severity="success" [rounded]="true"></p-tag>
+              <p-tag [value]="curriculaList().length + ' Curricula'" severity="success" [rounded]="true"></p-tag>
             </div>
             <div class="tile-caption">Active college degree program curricula</div>
           </div>
@@ -420,7 +420,7 @@
           <p-avatar icon="pi pi-lock" shape="circle" size="large" styleClass="identity-avatar"></p-avatar>
           <div class="identity-meta">
             <h2 class="identity-name">Office of the University Registrar</h2>
-            <p class="identity-sub">{{ activeTermName() || 'Academic Year 2026-2027 1st Semester' }} • Academic Window Controls & SHA-256 Grade Sealing</p>
+            <p class="identity-sub">{{ activeTermName() || 'No Active Academic Term' }} • Academic Window Controls & SHA-256 Grade Sealing</p>
           </div>
         </div>
 
@@ -441,7 +441,7 @@
           <div class="hairline-divider"></div>
           <div class="stat-unit">
             <span class="stat-label">Sealed Records</span>
-            <span class="stat-val gpa-val">{{ sealedGradeCount() }} / {{ totalRegistrarSections() || 1 }}</span>
+            <span class="stat-val gpa-val">{{ sealedGradeCount() }} / {{ totalRegistrarSections() }}</span>
           </div>
         </div>
       </div>
@@ -461,7 +461,7 @@
           </div>
           <div class="health-meta">
             <span class="stat-label">Grade Sealing Progress</span>
-            <span class="stat-val health-rate-val">{{ sealedGradeCount() }} of {{ totalRegistrarSections() || 1 }} Sealed</span>
+            <span class="stat-val health-rate-val">{{ sealedGradeCount() }} of {{ totalRegistrarSections() }} Sealed</span>
             <div class="tag-row">
               <p-tag
                 [value]="pendingGradeReviewCount() === 0 ? 'ALL VERIFIED' : pendingGradeReviewCount() + ' PENDING REVIEW'"
@@ -480,7 +480,7 @@
             </div>
             <div class="stat-val">{{ isEnrollmentOpen() ? 'Active' : 'Closed' }}</div>
             <p-progressBar [value]="isEnrollmentOpen() ? 100 : 0" [showValue]="false" styleClass="tile-progress"></p-progressBar>
-            <div class="tile-caption">{{ activeTermDates() || 'Regular Academic Calendar' }}</div>
+            <div class="tile-caption">{{ activeTermDates() || 'No Active Calendar' }}</div>
           </div>
 
           <div class="stat-card bento-tile accent-amber">
@@ -528,7 +528,7 @@
               <i class="pi pi-list text-emerald-700"></i>
               Active Class Section Grade Sheets Roster
             </h2>
-            <p-tag [value]="activeTermName() || 'Current Term'" severity="success" [rounded]="true"></p-tag>
+            <p-tag [value]="activeTermName() || 'No Active Term'" severity="success" [rounded]="true"></p-tag>
           </div>
           <div class="toolbar-controls">
             <a routerLink="/dashboard/grades" class="action-link text-xs font-bold text-emerald-700">Open Grade Management &rarr;</a>
@@ -566,7 +566,7 @@
                 </div>
               </td>
               <td>
-                <span class="text-xs text-slate-600">{{ sec.curriculumCode || 'BSIT' }}</span>
+                <span class="text-xs text-slate-600">{{ sec.curriculumCode || '—' }}</span>
               </td>
               <td>
                 <span class="font-mono text-xs font-bold text-slate-700">
@@ -622,12 +622,12 @@
         <div class="identity-stats">
           <div class="stat-unit">
             <span class="stat-label">Active Booklet</span>
-            <span class="stat-val">{{ cashierBooklets.length > 0 ? cashierBooklets[0].bookletNumber : 'BKL-2026-001' }}</span>
+            <span class="stat-val">{{ cashierBooklets.length > 0 ? cashierBooklets[0].bookletNumber : 'No Active Booklet' }}</span>
           </div>
           <div class="hairline-divider"></div>
           <div class="stat-unit">
             <span class="stat-label">Available Receipts</span>
-            <span class="stat-val">{{ cashierBooklets.length > 0 ? cashierBooklets[0].remainingCount : 8 }} Remaining</span>
+            <span class="stat-val">{{ cashierBooklets.length > 0 ? cashierBooklets[0].remainingCount : 0 }} Remaining</span>
           </div>
           <div class="hairline-divider"></div>
           <div class="stat-unit">
@@ -642,7 +642,7 @@
         <div class="stat-card health-card">
           <div class="knob-container">
             <p-knob
-              [ngModel]="84"
+              [ngModel]="cashierBooklets.length > 0 ? 100 : 0"
               [readonly]="true"
               [size]="70"
               valueTemplate="{value}%"
@@ -652,9 +652,9 @@
           </div>
           <div class="health-meta">
             <span class="stat-label">Collection Terminal Status</span>
-            <span class="stat-val health-rate-val">COA Form 51 Receipts Active</span>
+            <span class="stat-val health-rate-val">{{ cashierBooklets.length > 0 ? 'COA Form 51 Receipts Active' : 'No Receipt Booklets Assigned' }}</span>
             <div class="tag-row">
-              <p-tag value="BALANCED" severity="success" size="small"></p-tag>
+              <p-tag [value]="cashierBooklets.length > 0 ? 'BALANCED' : 'UNASSIGNED'" [severity]="cashierBooklets.length > 0 ? 'success' : 'secondary'" size="small"></p-tag>
             </div>
           </div>
         </div>
@@ -665,8 +665,8 @@
               <span class="stat-label">Receipt Booklet</span>
               <div class="tile-icon-box green"><i class="pi pi-id-card"></i></div>
             </div>
-            <div class="stat-val">{{ cashierBooklets.length > 0 ? cashierBooklets[0].bookletNumber : 'BKL-2026-001' }}</div>
-            <p-progressBar [value]="84" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="stat-val">{{ cashierBooklets.length > 0 ? cashierBooklets[0].bookletNumber : 'No Active Booklet' }}</div>
+            <p-progressBar [value]="cashierBooklets.length > 0 ? 100 : 0" [showValue]="false" styleClass="tile-progress"></p-progressBar>
             <div class="tile-caption">Accountable form in POS terminal</div>
           </div>
 
@@ -675,8 +675,8 @@
               <span class="stat-label">Today's Collections</span>
               <div class="tile-icon-box blue"><i class="pi pi-wallet"></i></div>
             </div>
-            <div class="stat-val">₱84,500.00</div>
-            <p-progressBar [value]="92" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="stat-val">₱0.00</div>
+            <p-progressBar [value]="0" [showValue]="false" styleClass="tile-progress"></p-progressBar>
             <div class="tile-caption">Official collections received today</div>
           </div>
 
@@ -685,8 +685,8 @@
               <span class="stat-label">Booklet Serial Range</span>
               <div class="tile-icon-box amber"><i class="pi pi-history"></i></div>
             </div>
-            <div class="stat-val">{{ cashierBooklets.length > 0 ? (cashierBooklets[0].startOr + ' - ' + cashierBooklets[0].endOr) : 'OR-890001 - 890050' }}</div>
-            <p-progressBar [value]="76" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="stat-val">{{ cashierBooklets.length > 0 ? (cashierBooklets[0].startOr + ' - ' + cashierBooklets[0].endOr) : 'No Serial Range' }}</div>
+            <p-progressBar [value]="0" [showValue]="false" styleClass="tile-progress"></p-progressBar>
             <div class="tile-caption">Current assigned serial range</div>
           </div>
 
@@ -771,14 +771,14 @@
           <p-avatar icon="pi pi-book" shape="circle" size="large" styleClass="identity-avatar"></p-avatar>
           <div class="identity-meta">
             <h2 class="identity-name">{{ userName() }}</h2>
-            <p class="identity-sub">{{ activeTermName() || 'Academic Year 2026-2027 1st Semester' }} • CHMSU Academic Instruction & Class Record</p>
+            <p class="identity-sub">{{ activeTermName() || 'No Active Academic Term' }} • CHMSU Academic Instruction & Class Record</p>
           </div>
         </div>
 
         <div class="identity-stats">
           <div class="stat-unit">
             <span class="stat-label">Teaching Load</span>
-            <span class="stat-val">{{ facultyTeachingUnitsTag() || '18.0 / 21.0 Units' }}</span>
+            <span class="stat-val">{{ facultyTeachingUnitsTag() || '0.0 / 0.0 Units' }}</span>
           </div>
           <div class="hairline-divider"></div>
           <div class="stat-unit">
@@ -798,7 +798,7 @@
         <div class="stat-card health-card">
           <div class="knob-container">
             <p-knob
-              [ngModel]="96"
+              [ngModel]="todayClasses.length > 0 ? 100 : 0"
               [readonly]="true"
               [size]="70"
               valueTemplate="{value}%"
@@ -808,7 +808,7 @@
           </div>
           <div class="health-meta">
             <span class="stat-label">Instructional Consistency</span>
-            <span class="stat-val health-rate-val">96.2% Class Attendance</span>
+            <span class="stat-val health-rate-val">{{ todayClasses.length > 0 ? 'Class Attendance Active' : '0% Class Attendance' }}</span>
             <div class="tag-row">
               <p-tag value="ON SCHEDULE" severity="success" size="small"></p-tag>
             </div>
@@ -821,8 +821,8 @@
               <span class="stat-label">Teaching Load</span>
               <div class="tile-icon-box green"><i class="pi pi-book"></i></div>
             </div>
-            <div class="stat-val">{{ facultyTeachingUnitsTag() || '18.0 Units' }}</div>
-            <p-progressBar [value]="86" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="stat-val">{{ facultyTeachingUnitsTag() || '0.0 Units' }}</div>
+            <p-progressBar [value]="todayClasses.length > 0 ? 100 : 0" [showValue]="false" styleClass="tile-progress"></p-progressBar>
             <div class="tile-caption">CHED CMO standard teaching load</div>
           </div>
 
@@ -832,7 +832,7 @@
               <div class="tile-icon-box blue"><i class="pi pi-calendar"></i></div>
             </div>
             <div class="stat-val">{{ todayClasses.length }} Classes</div>
-            <p-progressBar [value]="100" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <p-progressBar [value]="todayClasses.length > 0 ? 100 : 0" [showValue]="false" styleClass="tile-progress"></p-progressBar>
             <div class="tile-caption">Class schedule slots assigned</div>
           </div>
 
@@ -841,8 +841,8 @@
               <span class="stat-label">Grade Submissions</span>
               <div class="tile-icon-box amber"><i class="pi pi-chart-line"></i></div>
             </div>
-            <div class="stat-val">3 / 5 Ready</div>
-            <p-progressBar [value]="60" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="stat-val">0 Ready</div>
+            <p-progressBar [value]="0" [showValue]="false" styleClass="tile-progress"></p-progressBar>
             <div class="tile-caption">Midterm grades encoded in gradebook</div>
           </div>
 
@@ -852,7 +852,7 @@
               <div class="tile-icon-box rose"><i class="pi pi-qrcode"></i></div>
             </div>
             <div class="tag-wrapper">
-              <p-tag value="96.2% Confirmed" severity="success" [rounded]="true"></p-tag>
+              <p-tag [value]="todayClasses.length > 0 ? 'Confirmed' : '0% Confirmed'" severity="success" [rounded]="true"></p-tag>
             </div>
             <div class="tile-caption">Geofenced student check-in active</div>
           </div>
@@ -902,7 +902,7 @@
                 <div class="text-xs text-slate-500"><i class="pi pi-map-marker"></i> {{ cls.room }}</div>
               </td>
               <td><span class="text-xs text-slate-700">{{ cls.instructor }}</span></td>
-              <td><span class="font-mono text-xs font-bold text-emerald-700">96.2% Present</span></td>
+              <td><span class="font-mono text-xs font-bold text-emerald-700">0% Present</span></td>
               <td class="text-center">
                 <p-tag [value]="cls.status" [severity]="cls.status === 'In Progress' ? 'success' : (cls.status === 'Completed' ? 'secondary' : 'info')" [rounded]="true"></p-tag>
               </td>
@@ -936,12 +936,12 @@
         <div class="identity-stats">
           <div class="stat-unit">
             <span class="stat-label">Degree Programs</span>
-            <span class="stat-val">{{ curriculaList().length || 8 }} Programs</span>
+            <span class="stat-val">{{ curriculaList().length }} Programs</span>
           </div>
           <div class="hairline-divider"></div>
           <div class="stat-unit">
             <span class="stat-label">Faculty Roster</span>
-            <span class="stat-val">{{ facultyWorkloadList.length || 24 }} Instructors</span>
+            <span class="stat-val">{{ facultyWorkloadList.length }} Instructors</span>
           </div>
           <div class="hairline-divider"></div>
           <div class="stat-unit">
@@ -956,7 +956,7 @@
         <div class="stat-card health-card">
           <div class="knob-container">
             <p-knob
-              [ngModel]="94"
+              [ngModel]="facultyWorkloadList.length > 0 ? 100 : 0"
               [readonly]="true"
               [size]="70"
               valueTemplate="{value}%"
@@ -979,8 +979,8 @@
               <span class="stat-label">Degree Programs</span>
               <div class="tile-icon-box green"><i class="pi pi-sitemap"></i></div>
             </div>
-            <div class="stat-val">{{ curriculaList().length || 8 }} Programs</div>
-            <p-progressBar [value]="100" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="stat-val">{{ curriculaList().length }} Programs</div>
+            <p-progressBar [value]="curriculaList().length > 0 ? 100 : 0" [showValue]="false" styleClass="tile-progress"></p-progressBar>
             <div class="tile-caption">Approved undergraduate curricula</div>
           </div>
 
@@ -989,8 +989,8 @@
               <span class="stat-label">Teaching Faculty</span>
               <div class="tile-icon-box blue"><i class="pi pi-user"></i></div>
             </div>
-            <div class="stat-val">{{ facultyWorkloadList.length || 24 }} Faculty</div>
-            <p-progressBar [value]="96" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="stat-val">{{ facultyWorkloadList.length }} Faculty</div>
+            <p-progressBar [value]="facultyWorkloadList.length > 0 ? 100 : 0" [showValue]="false" styleClass="tile-progress"></p-progressBar>
             <div class="tile-caption">Instructional faculty active</div>
           </div>
 
@@ -999,8 +999,8 @@
               <span class="stat-label">Overload Reviews</span>
               <div class="tile-icon-box amber"><i class="pi pi-briefcase"></i></div>
             </div>
-            <div class="stat-val">{{ facultyWorkloadList.length > 0 ? (facultyWorkloadList.length - 2) : 2 }} Cases</div>
-            <p-progressBar [value]="80" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="stat-val">{{ facultyWorkloadList.length }} Cases</div>
+            <p-progressBar [value]="0" [showValue]="false" styleClass="tile-progress"></p-progressBar>
             <div class="tile-caption">Overload applications pending review</div>
           </div>
 
@@ -1010,7 +1010,7 @@
               <div class="tile-icon-box rose"><i class="pi pi-check-square"></i></div>
             </div>
             <div class="tag-wrapper">
-              <p-tag value="94.1% Cleared" severity="success" [rounded]="true"></p-tag>
+              <p-tag [value]="facultyWorkloadList.length > 0 ? '100% Cleared' : '0% Cleared'" severity="success" [rounded]="true"></p-tag>
             </div>
             <div class="tile-caption">College department clearance on track</div>
           </div>
@@ -1093,20 +1093,20 @@
         <div class="identity-profile">
           <p-avatar icon="pi pi-sitemap" shape="circle" size="large" styleClass="identity-avatar"></p-avatar>
           <div class="identity-meta">
-            <h2 class="identity-name">{{ chairpersonProgramTag() || 'Department of Information Technology' }}</h2>
-            <p class="identity-sub">{{ activeTermName() || 'Academic Year 2026-2027 1st Semester' }} • Outcome-Based Education (OBE) Framework</p>
+            <h2 class="identity-name">{{ chairpersonProgramTag() || 'Department Management' }}</h2>
+            <p class="identity-sub">{{ activeTermName() || 'No Active Academic Term' }} • Outcome-Based Education (OBE) Framework</p>
           </div>
         </div>
 
         <div class="identity-stats">
           <div class="stat-unit">
             <span class="stat-label">Curricula Tracks</span>
-            <span class="stat-val">{{ chairpersonOutcomes() || '3 Active Programs' }}</span>
+            <span class="stat-val">{{ chairpersonOutcomes() || '0 Active Programs' }}</span>
           </div>
           <div class="hairline-divider"></div>
           <div class="stat-unit">
             <span class="stat-label">Class Sections</span>
-            <span class="stat-val">{{ chairpersonSections() || '28 Sections' }}</span>
+            <span class="stat-val">{{ chairpersonSections() || '0 Sections' }}</span>
           </div>
           <div class="hairline-divider"></div>
           <div class="stat-unit">
@@ -1121,7 +1121,7 @@
         <div class="stat-card health-card">
           <div class="knob-container">
             <p-knob
-              [ngModel]="chairpersonOutcomeScore()"
+              [ngModel]="chairpersonSectionsList().length > 0 ? chairpersonOutcomeScore() : 0"
               [readonly]="true"
               [size]="70"
               valueTemplate="{value}%"
@@ -1131,7 +1131,7 @@
           </div>
           <div class="health-meta">
             <span class="stat-label">Curriculum Compliance</span>
-            <span class="stat-val health-rate-val">{{ chairpersonOutcomeScore() }}% Syllabus Alignment</span>
+            <span class="stat-val health-rate-val">{{ chairpersonSectionsList().length > 0 ? chairpersonOutcomeScore() + '% Syllabus Alignment' : '0% Syllabus Alignment' }}</span>
             <div class="tag-row">
               <p-tag value="CHED COMPLIANT" severity="success" size="small"></p-tag>
             </div>
@@ -1144,8 +1144,8 @@
               <span class="stat-label">Learning Outcomes</span>
               <div class="tile-icon-box green"><i class="pi pi-check-circle"></i></div>
             </div>
-            <div class="stat-val">96.4%</div>
-            <p-progressBar [value]="96.4" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="stat-val">{{ chairpersonSectionsList().length > 0 ? chairpersonOutcomeScore() + '%' : '0%' }}</div>
+            <p-progressBar [value]="chairpersonSectionsList().length > 0 ? chairpersonOutcomeScore() : 0" [showValue]="false" styleClass="tile-progress"></p-progressBar>
             <div class="tile-caption">CILO to PILO mappings verified</div>
           </div>
 
@@ -1154,8 +1154,8 @@
               <span class="stat-label">Timetable Schedules</span>
               <div class="tile-icon-box blue"><i class="pi pi-calendar"></i></div>
             </div>
-            <div class="stat-val">{{ chairpersonSections() }}</div>
-            <p-progressBar [value]="92" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="stat-val">{{ chairpersonSections() || '0 Sections' }}</div>
+            <p-progressBar [value]="chairpersonSectionsList().length > 0 ? 100 : 0" [showValue]="false" styleClass="tile-progress"></p-progressBar>
             <div class="tile-caption">Faculty assignments & rooms loaded</div>
           </div>
 
@@ -1190,7 +1190,7 @@
               <i class="pi pi-list text-emerald-700"></i>
               Department Class Sections & Curriculum Offering Timetable
             </h2>
-            <p-tag [value]="activeTermName() || 'Current Term'" severity="success" [rounded]="true"></p-tag>
+            <p-tag [value]="activeTermName() || 'No Active Term'" severity="success" [rounded]="true"></p-tag>
           </div>
           <div class="toolbar-controls">
             <a routerLink="/dashboard/curriculum/designer/1" class="action-link text-xs font-bold text-emerald-700">Open Curriculum Designer &rarr;</a>
@@ -1228,7 +1228,7 @@
                 </div>
               </td>
               <td>
-                <span class="text-xs text-slate-600">{{ sec.curriculumCode || 'BSIT' }}</span>
+                <span class="text-xs text-slate-600">{{ sec.curriculumCode || '—' }}</span>
               </td>
               <td>
                 <span class="font-mono text-xs font-bold text-slate-700">
@@ -1347,8 +1347,8 @@
               <span class="stat-label">Tuition Subsidy</span>
               <div class="tile-icon-box amber"><i class="pi pi-shield"></i></div>
             </div>
-            <div class="stat-val">100%</div>
-            <p-progressBar [value]="100" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="stat-val">{{ studentPortalSummary() ? '100%' : '0%' }}</div>
+            <p-progressBar [value]="studentPortalSummary() ? 100 : 0" [showValue]="false" styleClass="tile-progress"></p-progressBar>
             <div class="tile-caption">UniFAST Free Tuition active</div>
           </div>
 
@@ -1449,17 +1449,17 @@
         <div class="identity-stats">
           <div class="stat-unit">
             <span class="stat-label">Monitored Students</span>
-            <span class="stat-val">{{ guidanceTotalRecords() > 0 ? (guidanceTotalRecords() + ' Students') : '3,842 Students' }}</span>
+            <span class="stat-val">{{ guidanceTotalRecords() > 0 ? (guidanceTotalRecords() + ' Students') : '0 Students' }}</span>
           </div>
           <div class="hairline-divider"></div>
           <div class="stat-unit">
             <span class="stat-label">Priority Support</span>
-            <span class="stat-val">{{ guidancePriorityCountTag() || '14 Priority Cases' }}</span>
+            <span class="stat-val">{{ guidancePriorityCountTag() || '0 Priority Cases' }}</span>
           </div>
           <div class="hairline-divider"></div>
           <div class="stat-unit">
             <span class="stat-label">Wellness Index</span>
-            <span class="clearance-pill pill-active">88.6% WELLNESS</span>
+            <span class="clearance-pill" [class.pill-active]="guidanceTotalRecords() > 0">{{ guidanceTotalRecords() > 0 ? '88.6% WELLNESS' : '0% WELLNESS' }}</span>
           </div>
         </div>
       </div>
@@ -1469,7 +1469,7 @@
         <div class="stat-card health-card">
           <div class="knob-container">
             <p-knob
-              [ngModel]="89"
+              [ngModel]="guidanceTotalRecords() > 0 ? 89 : 0"
               [readonly]="true"
               [size]="70"
               valueTemplate="{value}%"
@@ -1479,7 +1479,7 @@
           </div>
           <div class="health-meta">
             <span class="stat-label">Student Wellness Index</span>
-            <span class="stat-val health-rate-val">89% Health Baseline</span>
+            <span class="stat-val health-rate-val">{{ guidanceTotalRecords() > 0 ? '89% Health Baseline' : '0% Health Baseline' }}</span>
             <div class="tag-row">
               <p-tag value="RETENTION HEALTHY" severity="success" size="small"></p-tag>
             </div>
@@ -1492,8 +1492,8 @@
               <span class="stat-label">Enrolled Under Care</span>
               <div class="tile-icon-box green"><i class="pi pi-users"></i></div>
             </div>
-            <div class="stat-val">{{ guidanceTotalRecords() > 0 ? guidanceTotalRecords().toLocaleString() : '3,842' }}</div>
-            <p-progressBar [value]="98" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="stat-val">{{ guidanceTotalRecords() > 0 ? guidanceTotalRecords().toLocaleString() : '0' }}</div>
+            <p-progressBar [value]="guidanceTotalRecords() > 0 ? 100 : 0" [showValue]="false" styleClass="tile-progress"></p-progressBar>
             <div class="tile-caption">Active scholars under care</div>
           </div>
 
@@ -1502,8 +1502,8 @@
               <span class="stat-label">Support Referrals</span>
               <div class="tile-icon-box blue"><i class="pi pi-send"></i></div>
             </div>
-            <div class="stat-val">28 Sessions</div>
-            <p-progressBar [value]="82" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="stat-val">0 Sessions</div>
+            <p-progressBar [value]="0" [showValue]="false" styleClass="tile-progress"></p-progressBar>
             <div class="tile-caption">Guidance &amp; peer mentoring actions</div>
           </div>
 
@@ -1512,8 +1512,8 @@
               <span class="stat-label">Priority Attention</span>
               <div class="tile-icon-box amber"><i class="pi pi-exclamation-triangle"></i></div>
             </div>
-            <div class="stat-val">{{ guidancePriorityCountTag() ? guidancePriorityCountTag().replace(' Needing Priority Support', '') : '14 Cases' }}</div>
-            <p-progressBar [value]="65" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="stat-val">{{ guidancePriorityCountTag() ? guidancePriorityCountTag().replace(' Needing Priority Support', '') : '0 Cases' }}</div>
+            <p-progressBar [value]="0" [showValue]="false" styleClass="tile-progress"></p-progressBar>
             <div class="tile-caption">Requiring counseling follow-up</div>
           </div>
 
@@ -1647,12 +1647,12 @@
         <div class="identity-stats">
           <div class="stat-unit">
             <span class="stat-label">Claim Batches</span>
-            <span class="stat-val">{{ accountantBatches() || '4 Batches Audited' }}</span>
+            <span class="stat-val">{{ accountantBatches() || '0 Batches Audited' }}</span>
           </div>
           <div class="hairline-divider"></div>
           <div class="stat-unit">
             <span class="stat-label">Total Subsidy Billed</span>
-            <span class="stat-val">{{ accountantTotalBilled() || '₱1,280,450.00' }}</span>
+            <span class="stat-val">{{ accountantTotalBilled() || '₱0.00' }}</span>
           </div>
           <div class="hairline-divider"></div>
           <div class="stat-unit">
@@ -1667,7 +1667,7 @@
         <div class="stat-card health-card">
           <div class="knob-container">
             <p-knob
-              [ngModel]="100"
+              [ngModel]="accountantClaimsList().length > 0 ? 100 : 0"
               [readonly]="true"
               [size]="70"
               valueTemplate="{value}%"
@@ -1677,7 +1677,7 @@
           </div>
           <div class="health-meta">
             <span class="stat-label">Audit Compliance Rate</span>
-            <span class="stat-val health-rate-val">100% Verified</span>
+            <span class="stat-val health-rate-val">{{ accountantClaimsList().length > 0 ? '100% Verified' : '0% Verified' }}</span>
             <div class="tag-row">
               <p-tag value="COA RECONCILED" severity="success" size="small"></p-tag>
             </div>
@@ -1690,8 +1690,8 @@
               <span class="stat-label">Free Tuition Batches</span>
               <div class="tile-icon-box green"><i class="pi pi-file-export"></i></div>
             </div>
-            <div class="stat-val">{{ accountantBatches() || '4 Batches' }}</div>
-            <p-progressBar [value]="100" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="stat-val">{{ accountantBatches() || '0 Batches' }}</div>
+            <p-progressBar [value]="accountantClaimsList().length > 0 ? 100 : 0" [showValue]="false" styleClass="tile-progress"></p-progressBar>
             <div class="tile-caption">CHED UniFAST billing batches</div>
           </div>
 
@@ -1700,8 +1700,8 @@
               <span class="stat-label">Total Subsidy Billed</span>
               <div class="tile-icon-box blue"><i class="pi pi-dollar"></i></div>
             </div>
-            <div class="stat-val">{{ accountantTotalBilled() || '₱1.28M' }}</div>
-            <p-progressBar [value]="95" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="stat-val">{{ accountantTotalBilled() || '₱0.00' }}</div>
+            <p-progressBar [value]="accountantClaimsList().length > 0 ? 100 : 0" [showValue]="false" styleClass="tile-progress"></p-progressBar>
             <div class="tile-caption">Tuition &amp; TOSF claims submitted</div>
           </div>
 
@@ -1710,8 +1710,8 @@
               <span class="stat-label">Student Scholars</span>
               <div class="tile-icon-box amber"><i class="pi pi-users"></i></div>
             </div>
-            <div class="stat-val">{{ accountantEnrollees() || '1,420 Enrollees' }}</div>
-            <p-progressBar [value]="90" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="stat-val">{{ accountantEnrollees() || '0 Enrollees' }}</div>
+            <p-progressBar [value]="accountantClaimsList().length > 0 ? 100 : 0" [showValue]="false" styleClass="tile-progress"></p-progressBar>
             <div class="tile-caption">UniFAST beneficiary scholars</div>
           </div>
 
@@ -1766,10 +1766,10 @@
             <tr>
               <td>
                 <div class="font-bold text-xs text-slate-800 font-mono">{{ claim.claimBatchNumber }}</div>
-                <div class="text-xs text-slate-400">Created by {{ claim.createdByUsername || 'Accountant' }}</div>
+                <div class="text-xs text-slate-400">Created by {{ claim.createdByUsername || '—' }}</div>
               </td>
-              <td><span class="text-xs font-semibold text-slate-700">{{ claim.termName || 'AY 2026-2027 1st Sem' }}</span></td>
-              <td><span class="text-xs text-slate-600">{{ claim.campusName || 'Talisay (Main)' }}</span></td>
+              <td><span class="text-xs font-semibold text-slate-700">{{ claim.termName || '—' }}</span></td>
+              <td><span class="text-xs text-slate-600">{{ claim.campusName || '—' }}</span></td>
               <td>
                 <span class="font-bold text-xs text-blue-700">{{ claim.totalBeneficiaries }} Scholars</span>
               </td>

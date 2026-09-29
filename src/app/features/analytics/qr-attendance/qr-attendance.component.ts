@@ -12,6 +12,9 @@ import { TableModule } from 'primeng/table';
 import { SelectModule } from 'primeng/select';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
+import { KnobModule } from 'primeng/knob';
+import { ProgressBarModule } from 'primeng/progressbar';
+import { AvatarModule } from 'primeng/avatar';
 
 import { AnalyticsApiService } from '../../../core/service/analytics/analytics-api.service';
 import { SchedulingApiService } from '../../../core/service/scheduling/scheduling-api.service';
@@ -41,6 +44,9 @@ export interface ScheduleOption {
     SelectModule,
     SkeletonModule,
     TooltipModule,
+    KnobModule,
+    ProgressBarModule,
+    AvatarModule,
     EmptyStateComponent
   ],
   templateUrl: './qr-attendance.component.html',
@@ -48,10 +54,10 @@ export interface ScheduleOption {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
+  protected readonly authService = inject(AuthService);
   private readonly analyticsApi = inject(AnalyticsApiService);
   private readonly schedulingApi = inject(SchedulingApiService);
   private readonly enrollmentApi = inject(EnrollmentApiService);
-  private readonly authService = inject(AuthService);
   private readonly messageService = inject(MessageService);
 
   @ViewChild('scannerVideo') scannerVideoRef?: ElementRef<HTMLVideoElement>;
@@ -117,6 +123,15 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
     const valid = this.dailyRecords().filter(r => r.isGeofenceValid).length;
     return Math.round((valid / total) * 100);
   });
+
+  getInitials(name?: string): string {
+    if (!name) return 'ST';
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  }
 
   private sseSub?: Subscription;
 
@@ -373,8 +388,9 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
           this.isScanning.set(false);
           this.qrSeedInput.set('');
 
-          // Prepend verified record to student's personal attendance history
+          // Prepend verified record to student's personal attendance history & daily student log
           this.studentHistoryRecords.update(prev => [res, ...prev.filter(r => r.recordId !== res.recordId)]);
+          this.dailyRecords.update(prev => [res, ...prev.filter(r => r.recordId !== res.recordId)]);
 
           this.messageService.add({
             severity: 'success',
@@ -470,12 +486,33 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
     const sectionId = this.selectedFilterSectionId();
     this.analyticsApi.getDailyAttendance(dateStr, sectionId || undefined).subscribe({
       next: (records) => {
-        this.dailyRecords.set(records || []);
-        this.isLoadingDaily.set(false);
+        if (records && records.length > 0) {
+          this.dailyRecords.set(records);
+          this.isLoadingDaily.set(false);
+        } else {
+          this.analyticsApi.getDailyAttendance(undefined, sectionId || undefined).subscribe({
+            next: (allRecords) => {
+              this.dailyRecords.set(allRecords || []);
+              this.isLoadingDaily.set(false);
+            },
+            error: () => {
+              this.dailyRecords.set([]);
+              this.isLoadingDaily.set(false);
+            }
+          });
+        }
       },
       error: () => {
-        this.dailyRecords.set([]);
-        this.isLoadingDaily.set(false);
+        this.analyticsApi.getDailyAttendance(undefined, sectionId || undefined).subscribe({
+          next: (allRecords) => {
+            this.dailyRecords.set(allRecords || []);
+            this.isLoadingDaily.set(false);
+          },
+          error: () => {
+            this.dailyRecords.set([]);
+            this.isLoadingDaily.set(false);
+          }
+        });
       }
     });
 
@@ -488,12 +525,33 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
     const sectionId = this.selectedFilterSectionId();
     this.analyticsApi.getDailyFacultyAttendance(dateStr, sectionId || undefined).subscribe({
       next: (records) => {
-        this.facultyDailyRecords.set(records || []);
-        this.isLoadingFaculty.set(false);
+        if (records && records.length > 0) {
+          this.facultyDailyRecords.set(records);
+          this.isLoadingFaculty.set(false);
+        } else {
+          this.analyticsApi.getDailyFacultyAttendance(undefined, sectionId || undefined).subscribe({
+            next: (allRecords) => {
+              this.facultyDailyRecords.set(allRecords || []);
+              this.isLoadingFaculty.set(false);
+            },
+            error: () => {
+              this.facultyDailyRecords.set([]);
+              this.isLoadingFaculty.set(false);
+            }
+          });
+        }
       },
       error: () => {
-        this.facultyDailyRecords.set([]);
-        this.isLoadingFaculty.set(false);
+        this.analyticsApi.getDailyFacultyAttendance(undefined, sectionId || undefined).subscribe({
+          next: (allRecords) => {
+            this.facultyDailyRecords.set(allRecords || []);
+            this.isLoadingFaculty.set(false);
+          },
+          error: () => {
+            this.facultyDailyRecords.set([]);
+            this.isLoadingFaculty.set(false);
+          }
+        });
       }
     });
   }

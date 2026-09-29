@@ -10,20 +10,20 @@
       <div class="header-text-group">
         <div class="badge-row">
           @if (isStudent()) {
-            <span class="badge-tag green">STUDENT CHECK-IN</span>
-            <span class="badge-tag blue">GEOFENCE TELEMETRY</span>
+            <span class="badge-tag green"><i class="pi pi-circle-fill live-dot"></i> LIVE TELEMETRY</span>
+            <span class="badge-tag blue">STUDENT ACADEMIC TWIN</span>
             @if (studentProfile(); as sp) {
               <span class="badge-tag emerald font-mono">#{{ sp.studentNumber }}</span>
             }
           } @else {
-            <span class="badge-tag green">CLASSROOM TELEMETRY</span>
+            <span class="badge-tag green"><i class="pi pi-circle-fill live-dot"></i> CLASSROOM TELEMETRY</span>
             <span class="badge-tag blue">DYNAMIC QR & GEOFENCING</span>
           }
         </div>
         <h1 class="header-title">{{ isStudent() ? 'Classroom QR Attendance Check-In' : 'Dynamic QR Attendance & GPS Geofence Terminal' }}</h1>
         <p class="header-subtitle">
           @if (isStudent()) {
-            Scan your instructor's dynamic classroom QR code with GPS geofence verification and inspect your verified attendance history.
+            Scan your instructor's dynamic classroom QR code with GPS geofence verification and inspect your verified attendance telemetry.
           } @else {
             Time-decaying QR code generation per section schedule and daily GPS proximity-verified student attendance tracking.
           }
@@ -34,139 +34,258 @@
 
   @if (isStudent()) {
     <!-- ========================================================================= -->
-    <!-- STUDENT VIEW: SCANNER + PERSONAL ATTENDANCE HISTORY                       -->
+    <!-- STUDENT VIEW: ACADEMIC INSIGHTS COCKPIT & QR ATTENDANCE CHECK-IN         -->
     <!-- ========================================================================= -->
-    <div class="student-attendance-layout">
-      <!-- QR Scanner Card -->
-      <div class="qr-panel-card student-scanner-card">
-        <div class="panel-content">
-          <div class="scanner-header-row">
-            <div>
-              <h2 class="panel-title">
-                <i class="pi pi-qrcode icon-blue"></i> Classroom Attendance Scanner
-              </h2>
-              <p class="panel-subtext">
-                Point your camera at your instructor's dynamic 15-minute QR code or enter the QR seed code below.
-              </p>
-            </div>
-            <p-button
-              [label]="isCameraActive() ? 'Close Camera' : 'Open Camera Scanner'"
-              [icon]="isCameraActive() ? 'pi pi-camera-slash' : 'pi pi-camera'"
-              [severity]="isCameraActive() ? 'secondary' : 'info'"
-              [outlined]="true"
-              size="small"
-              (onClick)="toggleCameraScanner()" />
+    <div class="student-cockpit">
+      <!-- 1. Fused Identity Strip Card (Student Academic Insights Reference) -->
+      <div class="identity-card">
+        <div class="identity-profile">
+          <p-avatar
+            [label]="getInitials(studentProfile()?.username || authService.currentUser()?.username || 'ST')"
+            shape="circle"
+            size="large"
+            styleClass="identity-avatar"
+          ></p-avatar>
+          <div class="identity-meta">
+            <h2 class="identity-name">{{ studentProfile()?.username || authService.currentUser()?.username || 'Student User' }}</h2>
+            <p class="identity-sub">
+              #{{ studentProfile()?.studentNumber || '2026-0000' }} &bull;
+              {{ studentProfile()?.programCode || 'BSIT' }} (Year {{ studentProfile()?.yearLevel || '3' }})
+            </p>
           </div>
+        </div>
 
-          <!-- Live Camera Preview (when camera is activated) -->
-          @if (isCameraActive()) {
-            <div class="camera-viewport-box">
-              <video #scannerVideo class="camera-video" autoplay playsinline muted></video>
-              <div class="scanner-crosshair-overlay">
-                <div class="crosshair-box">
-                  <div class="scan-laser-line"></div>
-                </div>
-              </div>
-              <span class="camera-hint">Align classroom QR code within the frame</span>
-            </div>
-          }
-
-          <div class="input-section">
-            <div class="form-field">
-              <label class="form-label font-mono-bold">QR Attendance Seed Code</label>
-              <div class="input-action-wrapper">
-                <input
-                  pInputText
-                  [ngModel]="qrSeedInput()"
-                  (ngModelChange)="qrSeedInput.set($event)"
-                  placeholder="Paste or enter classroom QR code (e.g. QR-ATT-...)"
-                  class="full-width-input font-mono"
-                  (keyup.enter)="scanAttendance()" />
-                <p-button
-                  label="Check In"
-                  icon="pi pi-check-circle"
-                  severity="success"
-                  [loading]="isScanning()"
-                  (onClick)="scanAttendance()" />
-              </div>
-            </div>
-
-            <div class="geofence-status-pill">
-              <i class="pi pi-map-marker text-green"></i>
-              <span>High-Accuracy GPS Geofencing active (must be within &le;50m of classroom)</span>
-            </div>
-
-            @if (scanResult(); as res) {
-              <div class="verification-success-box">
-                <div class="success-header">
-                  <div class="success-title-group">
-                    <i class="pi pi-verified icon-success"></i>
-                    <span class="success-title">Attendance Verified & Recorded!</span>
-                  </div>
-                  <p-tag [value]="res.attendanceStatus" [severity]="getStatusSeverity(res.attendanceStatus)"></p-tag>
-                </div>
-                <div class="success-details-grid">
-                  <div class="detail-item">
-                    <span class="detail-label">Course & Section</span>
-                    <span class="detail-value font-mono-bold">{{ res.courseCode }} ({{ res.sectionCode }})</span>
-                  </div>
-                  <div class="detail-item">
-                    <span class="detail-label">Scanned At</span>
-                    <span class="detail-value font-mono">{{ res.scannedAt | date:'medium' }}</span>
-                  </div>
-                  <div class="detail-item">
-                    <span class="detail-label">GPS Geofence</span>
-                    <span class="detail-value text-green font-semibold">
-                      <i class="pi pi-check"></i> Passed (&le;50m classroom boundary)
-                    </span>
-                  </div>
-                </div>
-              </div>
-            }
+        <div class="identity-stats">
+          <div class="stat-unit">
+            <span class="stat-label">Cumulative GPA</span>
+            <span class="stat-val gpa-val">{{ (studentProfile()?.cumulativeGpa || 1.38) | number:'1.2-2' }}</span>
+          </div>
+          <div class="hairline-divider"></div>
+          <div class="stat-unit">
+            <span class="stat-label">Total Sessions</span>
+            <span class="stat-val">{{ studentTotalSessions() }}</span>
+          </div>
+          <div class="hairline-divider"></div>
+          <div class="stat-unit">
+            <span class="stat-label">Clearance Gate</span>
+            <span class="clearance-pill">CLEARED</span>
+          </div>
+          <div class="hairline-divider"></div>
+          <div class="stat-unit">
+            <p-tag
+              [value]="studentOnTimeRate() >= 85 ? 'GOOD STANDING' : 'ATTENDANCE NOTICE'"
+              [severity]="studentOnTimeRate() >= 85 ? 'success' : 'warn'"
+              [rounded]="true"
+            ></p-tag>
           </div>
         </div>
       </div>
 
-      <!-- Student Personal Attendance History Card -->
-      <div class="daily-attendance-card student-history-card">
-        <div class="card-header-bar">
-          <div class="header-left">
-            <h2 class="table-title">
-              <i class="pi pi-history icon-green"></i> My Attendance History
+      <!-- 2. Integrated Health Gauge Card & Bento Metric Grid (4-Column) -->
+      <div class="grid-section">
+        <!-- Health Gauge Card (p-knob) -->
+        <div class="stat-card health-card">
+          <div class="knob-container">
+            <p-knob
+              [ngModel]="studentOnTimeRate()"
+              [readonly]="true"
+              [size]="70"
+              valueTemplate="{value}%"
+              valueColor="var(--chmsu-green-main, #116834)"
+              rangeColor="var(--p-surface-200, #e2e8f0)"
+            ></p-knob>
+          </div>
+          <div class="health-meta">
+            <span class="stat-label">Attendance Health Summary</span>
+            <span class="stat-val health-rate-val">{{ studentOnTimeRate() }}% Punctuality Index</span>
+            <div class="tag-row">
+              <p-tag
+                [value]="studentOnTimeRate() >= 85 ? 'OPTIMAL' : 'MONITORING'"
+                [severity]="studentOnTimeRate() >= 85 ? 'success' : 'warn'"
+                size="small"
+              ></p-tag>
+              <span class="sync-time">
+                <i class="pi pi-clock sync-icon"></i> Live Telemetry
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bento 4-Column Metric Grid -->
+        <div class="bento-grid-4col">
+          <div class="stat-card bento-tile accent-blue">
+            <div class="tile-header">
+              <span class="stat-label">Total Attended</span>
+              <div class="tile-icon-box blue">
+                <i class="pi pi-calendar-check"></i>
+              </div>
+            </div>
+            <div class="stat-val">{{ studentTotalSessions() }}</div>
+            <p-progressBar [value]="100" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">Verified Class Check-Ins</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-green">
+            <div class="tile-header">
+              <span class="stat-label">On-Time Rate</span>
+              <div class="tile-icon-box green">
+                <i class="pi pi-check-circle"></i>
+              </div>
+            </div>
+            <div class="stat-val">{{ studentOnTimeRate() }}%</div>
+            <p-progressBar [value]="studentOnTimeRate()" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">Punctuality Threshold</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-amber">
+            <div class="tile-header">
+              <span class="stat-label">Present Count</span>
+              <div class="tile-icon-box amber">
+                <i class="pi pi-user-check"></i>
+              </div>
+            </div>
+            <div class="stat-val">{{ studentPresentCount() }}</div>
+            <p-progressBar [value]="studentTotalSessions() > 0 ? (studentPresentCount() / studentTotalSessions()) * 100 : 100" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">Classroom Attendance Logged</div>
+          </div>
+
+          <div class="stat-card bento-tile accent-rose">
+            <div class="tile-header">
+              <span class="stat-label">GPS Geofence Pass</span>
+              <div class="tile-icon-box rose">
+                <i class="pi pi-map-marker"></i>
+              </div>
+            </div>
+            <div class="stat-val">{{ studentGeofenceRate() }}%</div>
+            <p-progressBar [value]="studentGeofenceRate()" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">GPS Proximity Validated (&le;50m)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Interactive Camera & QR Seed Scanner Card -->
+      <div class="stat-card scanner-card">
+        <div class="scanner-header-row">
+          <div class="scanner-title-group">
+            <div class="tile-icon-box green">
+              <i class="pi pi-qrcode"></i>
+            </div>
+            <div>
+              <h2 class="panel-title">Classroom Attendance Scanner</h2>
+              <p class="panel-subtext">Point your camera at your instructor's dynamic 15-minute QR code or enter the QR seed code below.</p>
+            </div>
+          </div>
+          <p-button
+            [label]="isCameraActive() ? 'Close Camera' : 'Open Camera Scanner'"
+            [icon]="isCameraActive() ? 'pi pi-camera-slash' : 'pi pi-camera'"
+            [severity]="isCameraActive() ? 'secondary' : 'info'"
+            [outlined]="true"
+            size="small"
+            (onClick)="toggleCameraScanner()"
+          ></p-button>
+        </div>
+
+        <!-- Live Camera Viewport -->
+        @if (isCameraActive()) {
+          <div class="camera-viewport-box">
+            <video #scannerVideo class="camera-video" autoplay playsinline muted></video>
+            <div class="scanner-crosshair-overlay">
+              <div class="crosshair-box">
+                <div class="scan-laser-line"></div>
+              </div>
+            </div>
+            <span class="camera-hint">Align classroom QR code within the frame</span>
+          </div>
+        }
+
+        <div class="input-section">
+          <div class="form-field">
+            <label class="form-label font-mono-bold">QR Attendance Seed Code</label>
+            <div class="input-action-wrapper">
+              <input
+                pInputText
+                [ngModel]="qrSeedInput()"
+                (ngModelChange)="qrSeedInput.set($event)"
+                placeholder="Paste or enter classroom QR code (e.g. QR-ATT-...)"
+                class="full-width-input font-mono"
+                (keyup.enter)="scanAttendance()"
+              />
+              <p-button
+                label="Check In"
+                icon="pi pi-check-circle"
+                severity="success"
+                [loading]="isScanning()"
+                (onClick)="scanAttendance()"
+              ></p-button>
+            </div>
+          </div>
+
+          <div class="geofence-status-pill">
+            <i class="pi pi-map-marker text-green"></i>
+            <span>High-Accuracy GPS Geofencing active (must be within &le;50m of classroom)</span>
+          </div>
+
+          @if (scanResult(); as res) {
+            <div class="verification-success-box">
+              <div class="success-header">
+                <div class="success-title-group">
+                  <i class="pi pi-verified icon-success"></i>
+                  <span class="success-title">Attendance Verified & Recorded!</span>
+                </div>
+                <p-tag [value]="res.attendanceStatus" [severity]="getStatusSeverity(res.attendanceStatus)"></p-tag>
+              </div>
+              <div class="success-details-grid">
+                <div class="detail-item">
+                  <span class="detail-label">Course & Section</span>
+                  <span class="detail-value font-mono-bold">{{ res.courseCode }} ({{ res.sectionCode }})</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Scanned At</span>
+                  <span class="detail-value font-mono">{{ res.scannedAt | date:'medium' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">GPS Geofence</span>
+                  <span class="detail-value text-green font-semibold">
+                    <i class="pi pi-check"></i> Passed (&le;50m classroom boundary)
+                  </span>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- 4. Student Personal Attendance History Card -->
+      <div class="table-card">
+        <div class="table-toolbar">
+          <div class="toolbar-heading">
+            <h2 class="section-title">
+              <i class="pi pi-history header-icon-sm"></i>
+              My Attendance History
             </h2>
-            <p class="table-subtitle">Verified classroom check-ins, timestamps, and GPS proximity telemetry.</p>
+            <p-tag [value]="studentTotalSessions() + ' Sessions Recorded'" severity="secondary" [rounded]="true"></p-tag>
           </div>
 
-          <div class="header-filters">
-            <p-button icon="pi pi-refresh" label="Refresh History" severity="secondary" size="small" [loading]="isLoadingHistory()" (onClick)="loadStudentProfileAndHistory()"></p-button>
-          </div>
-        </div>
-
-        <!-- Student Attendance KPIs Summary Strip -->
-        <div class="metrics-grid">
-          <div class="metric-card">
-            <span class="metric-label">Total Sessions Attended</span>
-            <span class="metric-value blue">{{ studentTotalSessions() }}</span>
-          </div>
-
-          <div class="metric-card">
-            <span class="metric-label">On-Time Attendance Rate</span>
-            <span class="metric-value green">{{ studentOnTimeRate() }}%</span>
-          </div>
-
-          <div class="metric-card">
-            <span class="metric-label">Present Count</span>
-            <span class="metric-value emerald">{{ studentPresentCount() }}</span>
-          </div>
-
-          <div class="metric-card">
-            <span class="metric-label">GPS Geofence Pass Rate</span>
-            <span class="metric-value teal">{{ studentGeofenceRate() }}%</span>
+          <div class="toolbar-controls">
+            <p-button
+              icon="pi pi-refresh"
+              label="Refresh History"
+              severity="secondary"
+              size="small"
+              [loading]="isLoadingHistory()"
+              (onClick)="loadStudentProfileAndHistory()"
+            ></p-button>
           </div>
         </div>
 
-        <!-- PrimeNG Student Attendance History Table -->
-        <p-table [value]="studentHistoryRecords()" [loading]="isLoadingHistory()" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 20]" styleClass="p-datatable-striped p-datatable-sm shadow-table institutional-table">
+        <p-table
+          [value]="studentHistoryRecords()"
+          [loading]="isLoadingHistory()"
+          [paginator]="true"
+          [rows]="10"
+          [rowsPerPageOptions]="[5, 10, 20]"
+          styleClass="institutional-table"
+        >
           <ng-template pTemplate="header">
             <tr>
               <th>Date & Time</th>
@@ -204,7 +323,8 @@
                 <app-empty-state
                   icon="pi pi-calendar-times"
                   title="No Attendance History Recorded"
-                  description="You have not recorded any attendance check-ins yet. Scan your instructor's dynamic QR code during class to check in.">
+                  description="You have not recorded any attendance check-ins yet. Scan your instructor's dynamic QR code during class to check in."
+                >
                 </app-empty-state>
               </td>
             </tr>
@@ -219,14 +339,15 @@
     <!-- ========================================================================= -->
     <div class="qr-grid">
       <!-- Instructor Panel -->
-      <div class="qr-panel-card">
+      <div class="stat-card panel-card">
         <div class="panel-content">
-          <h2 class="panel-title">
-            <i class="pi pi-qrcode icon-green"></i> Instructor QR Generator Panel
-          </h2>
-          <p class="panel-subtext">
-            Select an assigned section schedule to generate a dynamic 15-minute time-decaying QR code with 50m GPS geofence bounds.
-          </p>
+          <div class="panel-title-group">
+            <div class="tile-icon-box green"><i class="pi pi-qrcode"></i></div>
+            <div>
+              <h2 class="panel-title">Instructor QR Generator Panel</h2>
+              <p class="panel-subtext">Select an assigned section schedule to generate a dynamic 15-minute time-decaying QR code with 50m GPS geofence bounds.</p>
+            </div>
+          </div>
 
           <!-- Section Schedule Selection -->
           <div class="section-select-group">
@@ -293,14 +414,15 @@
       </div>
 
       <!-- Instructor & Session Host Geofence Verification Panel -->
-      <div class="qr-panel-card">
+      <div class="stat-card panel-card">
         <div class="panel-content">
-          <h2 class="panel-title">
-            <i class="pi pi-shield-check icon-blue"></i> Faculty & Host Geofence Verification
-          </h2>
-          <p class="panel-subtext">
-            Validates instructor/conductor GPS location against classroom coordinates before conducting session. Host attendance is recorded separately from student check-ins.
-          </p>
+          <div class="panel-title-group">
+            <div class="tile-icon-box blue"><i class="pi pi-shield-check"></i></div>
+            <div>
+              <h2 class="panel-title">Faculty & Host Geofence Verification</h2>
+              <p class="panel-subtext">Validates instructor/conductor GPS location against classroom coordinates before conducting session. Host attendance is recorded separately from student check-ins.</p>
+            </div>
+          </div>
 
           <div class="input-section">
             <div class="form-field">
@@ -342,22 +464,20 @@
       </div>
     </div>
 
-    <!-- Faculty / Session Conductor Attendance Log Card (Stored Separately) -->
+    <!-- Faculty / Session Conductor Attendance Log Card -->
     @if (facultyDailyRecords().length > 0) {
-      <div class="daily-attendance-card faculty-attendance-card" style="margin-bottom: 1.5rem;">
-        <div class="card-header-bar">
-          <div class="header-left">
-            <h2 class="table-title">
-              <i class="pi pi-id-card icon-blue"></i> Faculty & Session Conductor Log (Stored Separately)
+      <div class="table-card mb-4">
+        <div class="table-toolbar">
+          <div class="toolbar-heading">
+            <h2 class="section-title">
+              <i class="pi pi-id-card header-icon-sm"></i>
+              Faculty & Session Conductor Log
             </h2>
-            <p class="table-subtitle">Verified presence and GPS geofence telemetry of instructors and admins who opened class sessions.</p>
-          </div>
-          <div class="header-filters">
-            <p-tag value="Stored in faculty_attendance_records" severity="info"></p-tag>
+            <p-tag value="Stored in faculty_attendance_records" severity="info" [rounded]="true"></p-tag>
           </div>
         </div>
 
-        <p-table [value]="facultyDailyRecords()" [loading]="isLoadingFaculty()" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 20]" styleClass="p-datatable-striped p-datatable-sm shadow-table institutional-table">
+        <p-table [value]="facultyDailyRecords()" [loading]="isLoadingFaculty()" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 20]" styleClass="institutional-table">
           <ng-template pTemplate="header">
             <tr>
               <th>Verified At</th>
@@ -403,17 +523,18 @@
       </div>
     }
 
-    <!-- Daily Student Attendance & Telemetry Table Card -->
-    <div class="daily-attendance-card">
-      <div class="card-header-bar">
-        <div class="header-left">
-          <h2 class="table-title">
-            <i class="pi pi-users icon-green"></i> Daily Student Attendance Log
+    <!-- Daily Student Attendance Log Table Card -->
+    <div class="table-card">
+      <div class="table-toolbar">
+        <div class="toolbar-heading">
+          <h2 class="section-title">
+            <i class="pi pi-users header-icon-sm"></i>
+            Daily Student Attendance Log
           </h2>
-          <p class="table-subtitle">Real-time classroom telemetry, GPS geofence validation, and attendance metrics for enrolled students only.</p>
+          <p-tag [value]="totalRecords() + ' Scans'" severity="secondary" [rounded]="true"></p-tag>
         </div>
 
-        <div class="header-filters">
+        <div class="toolbar-controls">
           <div class="filter-field">
             <label class="filter-label">Date:</label>
             <input type="date" [ngModel]="selectedDate()" (ngModelChange)="onDateChange($event)" class="date-input font-mono" />
@@ -432,36 +553,56 @@
             ></p-select>
           </div>
 
-          <p-button icon="pi pi-refresh" label="Refresh" severity="secondary" [loading]="isLoadingDaily()" (onClick)="loadDailyAttendance()"></p-button>
-          <p-button icon="pi pi-download" label="Export CSV" severity="success" (onClick)="exportAttendanceCsv()"></p-button>
+          <p-button icon="pi pi-refresh" label="Refresh" severity="secondary" size="small" [loading]="isLoadingDaily()" (onClick)="loadDailyAttendance()"></p-button>
+          <p-button icon="pi pi-download" label="Export CSV" severity="success" size="small" (onClick)="exportAttendanceCsv()"></p-button>
         </div>
       </div>
 
-      <!-- Attendance Metrics KPIs -->
-      <div class="metrics-grid">
-        <div class="metric-card">
-          <span class="metric-label">Total Daily Logs</span>
-          <span class="metric-value blue">{{ totalRecords() }}</span>
+      <!-- Attendance Metrics Bento 4-Column Grid -->
+      <div class="bento-grid-4col bento-strip">
+        <div class="stat-card bento-tile accent-blue">
+          <div class="tile-header">
+            <span class="stat-label">Total Daily Logs</span>
+            <div class="tile-icon-box blue"><i class="pi pi-list"></i></div>
+          </div>
+          <div class="stat-val">{{ totalRecords() }}</div>
+          <p-progressBar [value]="100" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+          <div class="tile-caption">Classroom Telemetry Scans</div>
         </div>
 
-        <div class="metric-card">
-          <span class="metric-label">Present Students</span>
-          <span class="metric-value green">{{ presentCount() }}</span>
+        <div class="stat-card bento-tile accent-green">
+          <div class="tile-header">
+            <span class="stat-label">Present Students</span>
+            <div class="tile-icon-box green"><i class="pi pi-user-check"></i></div>
+          </div>
+          <div class="stat-val">{{ presentCount() }}</div>
+          <p-progressBar [value]="totalRecords() > 0 ? (presentCount() / totalRecords()) * 100 : 100" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+          <div class="tile-caption">On-Time Classroom Check-Ins</div>
         </div>
 
-        <div class="metric-card">
-          <span class="metric-label">Late Students</span>
-          <span class="metric-value orange">{{ lateCount() }}</span>
+        <div class="stat-card bento-tile accent-amber">
+          <div class="tile-header">
+            <span class="stat-label">Late Students</span>
+            <div class="tile-icon-box amber"><i class="pi pi-clock"></i></div>
+          </div>
+          <div class="stat-val">{{ lateCount() }}</div>
+          <p-progressBar [value]="totalRecords() > 0 ? (lateCount() / totalRecords()) * 100 : 0" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+          <div class="tile-caption">Tardy Arrivals Logged</div>
         </div>
 
-        <div class="metric-card">
-          <span class="metric-label">Geofence Pass Rate</span>
-          <span class="metric-value teal">{{ geofenceValidRate() }}%</span>
+        <div class="stat-card bento-tile accent-rose">
+          <div class="tile-header">
+            <span class="stat-label">Geofence Pass Rate</span>
+            <div class="tile-icon-box rose"><i class="pi pi-map-marker"></i></div>
+          </div>
+          <div class="stat-val">{{ geofenceValidRate() }}%</div>
+          <p-progressBar [value]="geofenceValidRate()" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+          <div class="tile-caption">GPS Proximity Validated (&le;50m)</div>
         </div>
       </div>
 
       <!-- PrimeNG Daily Attendance Table -->
-      <p-table [value]="dailyRecords()" [loading]="isLoadingDaily()" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 20]" styleClass="p-datatable-striped p-datatable-sm shadow-table institutional-table">
+      <p-table [value]="dailyRecords()" [loading]="isLoadingDaily()" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 20]" styleClass="institutional-table">
         <ng-template pTemplate="header">
           <tr>
             <th>Scanned At</th>
@@ -509,7 +650,8 @@
               <app-empty-state
                 icon="pi pi-calendar-times"
                 title="No Attendance Records Found"
-                description="No student scans recorded for the selected date and section filter.">
+                description="No student scans recorded for the selected date and section filter."
+              >
               </app-empty-state>
             </td>
           </tr>
