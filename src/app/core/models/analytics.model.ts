@@ -163,6 +163,16 @@ export interface FacultyTelemetryQueryParams extends AdminTelemetryQueryParams {
   sectionId?: number;
 }
 
+export interface TelemetryKpiSummary {
+  totalMonitored: number;
+  criticalRiskCount: number;
+  highRiskCount: number;
+  moderateRiskCount: number;
+  lowRiskCount: number;
+  totalActiveInterventions: number;
+  averageWellnessIndex: number;
+}
+
 export interface MilestoneDto {
   id: number;
   title: string;

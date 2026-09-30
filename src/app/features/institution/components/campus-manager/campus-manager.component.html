@@ -8,24 +8,13 @@
       </p>
     </div>
     @if (canManage()) {
-      <p-button
-        label="New Campus"
-        icon="pi pi-plus"
-        size="small"
-        severity="primary"
-        (onClick)="openCreateDialog()">
-      </p-button>
+    <p-button label="New Campus" icon="pi pi-plus" size="small" severity="primary" (onClick)="openCreateDialog()">
+    </p-button>
     }
   </div>
 
-  <p-table
-    [value]="campuses()"
-    [loading]="isLoading()"
-    [paginator]="true"
-    [rows]="5"
-    [rowsPerPageOptions]="[5, 10, 20]"
-    responsiveLayout="scroll"
-    styleClass="p-datatable-sm institutional-table">
+  <p-table [value]="campuses()" [loading]="isLoading()" [paginator]="true" [rows]="5" [rowsPerPageOptions]="[5, 10, 20]"
+    responsiveLayout="scroll" styleClass="p-datatable-sm institutional-table">
     <ng-template pTemplate="header">
       <tr>
         <th style="width: 110px;">Code</th>
@@ -36,19 +25,14 @@
         <th style="width: 130px;">Main Flag</th>
         <th style="width: 110px;">Status</th>
         @if (canManage()) {
-          <th style="width: 160px; text-align: right;">Actions</th>
+        <th style="width: 160px; text-align: right;">Actions</th>
         }
       </tr>
     </ng-template>
 
     <ng-template pTemplate="body" let-c>
-      <tr 
-        tabindex="0"
-        role="button"
-        [attr.aria-label]="'View details for ' + c.name"
-        (click)="openDetailDrawer(c)"
-        (keydown.enter)="openDetailDrawer(c)"
-        (keydown.space)="$event.preventDefault(); openDetailDrawer(c)"
+      <tr tabindex="0" role="button" [attr.aria-label]="'View details for ' + c.name" (click)="openDetailDrawer(c)"
+        (keydown.enter)="openDetailDrawer(c)" (keydown.space)="$event.preventDefault(); openDetailDrawer(c)"
         class="hover:bg-slate-100 cursor-pointer focus:outline-none focus:bg-slate-100">
         <td>
           <span class="code-badge">{{ c.code }}</span>
@@ -56,7 +40,7 @@
         <td>
           <div class="primary-text">{{ c.name }}</div>
           @if (c.address) {
-            <div class="secondary-text">{{ c.address }}</div>
+          <div class="secondary-text">{{ c.address }}</div>
           }
         </td>
         <td>
@@ -69,65 +53,52 @@
         </td>
         <td>
           @if (c.isMain) {
-            <p-tag severity="info" value="MAIN CAMPUS" icon="pi pi-star-fill"></p-tag>
+          <p-tag severity="info" value="MAIN CAMPUS" icon="pi pi-star-fill"></p-tag>
           } @else {
-            <span class="text-muted">Satellite</span>
+          <span class="text-muted">Satellite</span>
           }
         </td>
         <td>
           @if (c.isActive) {
-            <p-tag severity="success" value="ACTIVE"></p-tag>
+          <p-tag severity="success" value="ACTIVE"></p-tag>
           } @else {
-            <p-tag severity="danger" value="INACTIVE"></p-tag>
+          <p-tag severity="danger" value="INACTIVE"></p-tag>
           }
         </td>
         @if (canManage()) {
-          <td style="text-align: right;" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
-            <div class="action-buttons-cell">
-              <p-button
-                [icon]="c.isActive ? 'pi pi-ban' : 'pi pi-check-circle'"
-                size="small"
-                [text]="true"
-                [severity]="c.isActive ? 'warn' : 'success'"
-                [attr.aria-label]="c.isActive ? 'Deactivate Campus' : 'Activate Campus'"
-                (onClick)="confirmToggleStatus(c)">
-              </p-button>
-              <p-button
-                icon="pi pi-pencil"
-                size="small"
-                [text]="true"
-                severity="secondary"
-                aria-label="Edit Campus"
-                (onClick)="openEditDialog(c)">
-              </p-button>
-              <p-button
-                icon="pi pi-trash"
-                size="small"
-                [text]="true"
-                severity="danger"
-                aria-label="Delete Campus"
-                (onClick)="confirmDelete(c)">
-              </p-button>
-            </div>
-          </td>
+        <td style="text-align: right;" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+          <div class="action-buttons-cell">
+            <p-button [icon]="c.isActive ? 'pi pi-ban' : 'pi pi-check-circle'" size="small" [text]="true"
+              [severity]="c.isActive ? 'warn' : 'success'"
+              [attr.aria-label]="c.isActive ? 'Deactivate Campus' : 'Activate Campus'"
+              (onClick)="confirmToggleStatus(c)">
+            </p-button>
+            <p-button icon="pi pi-pencil" size="small" [text]="true" severity="secondary" aria-label="Edit Campus"
+              (onClick)="openEditDialog(c)">
+            </p-button>
+            <p-button icon="pi pi-trash" size="small" [text]="true" severity="danger" aria-label="Delete Campus"
+              (onClick)="confirmDelete(c)">
+            </p-button>
+          </div>
+        </td>
         }
       </tr>
     </ng-template>
 
     <ng-template pTemplate="loadingbody">
       @for (i of [1, 2, 3]; track i) {
-        <tr>
-          <td><p-skeleton width="70px"></p-skeleton></td>
-          <td><p-skeleton width="180px"></p-skeleton></td>
-          <td><p-skeleton width="60px"></p-skeleton></td>
-          <td><p-skeleton width="90px"></p-skeleton></td>
-          <td><p-skeleton width="120px"></p-skeleton></td>
-          <td><p-skeleton width="80px"></p-skeleton></td>
-          <td><p-skeleton width="60px"></p-skeleton></td>
-          @if (canManage()) {
-            <td><p-skeleton width="100px"></p-skeleton></td>
-          }
-        </tr>
+      <tr>
+        <td><p-skeleton width="70px"></p-skeleton></td>
+        <td><p-skeleton width="180px"></p-skeleton></td>
+        <td><p-skeleton width="60px"></p-skeleton></td>
+        <td><p-skeleton width="90px"></p-skeleton></td>
+        <td><p-skeleton width="120px"></p-skeleton></td>
+        <td><p-skeleton width="80px"></p-skeleton></td>
+        <td><p-skeleton width="60px"></p-skeleton></td>
+        @if (canManage()) {
+        <td><p-skeleton width="100px"></p-skeleton></td>
+        }
+      </tr>
       }
     </ng-template>
 
@@ -140,7 +111,8 @@
             </div>
             <h4 class="empty-state-title">No Campuses Registered</h4>
             <p class="empty-state-subtext">
-              No campus units found in the system registry. Click "New Campus" above to establish institutional campuses and departments.
+              No campus units found in the system registry. Click "New Campus" above to establish institutional campuses
+              and departments.
             </p>
           </div>
         </td>
@@ -149,13 +121,8 @@
   </p-table>
 
   <!-- Master-Detail Drawer for Campus Profile -->
-  <p-drawer
-    [visible]="isDetailDrawerOpen()"
-    (visibleChange)="isDetailDrawerOpen.set($event)"
-    position="right"
-    [modal]="true"
-    [blockScroll]="true"
-    ariaLabelledBy="campus-drawer-title"
+  <p-drawer [visible]="isDetailDrawerOpen()" (visibleChange)="isDetailDrawerOpen.set($event)" position="right"
+    [modal]="true" [blockScroll]="true" ariaLabelledBy="campus-drawer-title"
     styleClass="institutional-drawer campus-detail-drawer w-full sm:w-[28rem]">
     <ng-template pTemplate="header">
       <div class="drawer-header-content">
@@ -171,208 +138,154 @@
 
     <ng-template pTemplate="content">
       @if (selectedCampusForDetail(); as campus) {
-        <div class="drawer-scroll-container">
-          <!-- Overview Card -->
-          <div class="drawer-summary-card">
-            <div class="summary-badge-row">
-              <span class="code-badge">{{ campus.code }}</span>
-              <div class="flex items-center gap-2">
-                @if (campus.isMain) {
-                  <p-tag severity="info" value="MAIN CAMPUS" icon="pi pi-star-fill"></p-tag>
-                }
-                <p-tag [severity]="campus.isActive ? 'success' : 'danger'" [value]="campus.isActive ? 'ACTIVE' : 'INACTIVE'"></p-tag>
-              </div>
-            </div>
-            <div class="summary-location-box">
-              <i class="pi pi-map-marker location-icon"></i>
-              <p class="location-text">
-                {{ campus.address || 'No registered physical campus address specified.' }}
-              </p>
+      <div class="drawer-scroll-container">
+        <!-- Overview Card -->
+        <div class="drawer-summary-card">
+          <div class="summary-badge-row">
+            <span class="code-badge">{{ campus.code }}</span>
+            <div class="flex items-center gap-2">
+              @if (campus.isMain) {
+              <p-tag [style]="{'margin-right': '12px'}" severity="info" value="MAIN CAMPUS" icon="pi pi-star-fill">
+              </p-tag>
+              }
+              <p-tag [severity]="campus.isActive ? 'success' : 'danger'"
+                [value]="campus.isActive ? 'ACTIVE' : 'INACTIVE'"></p-tag>
             </div>
           </div>
-
-          <!-- Section: Institutional Profile -->
-          <div class="drawer-group-section">
-            <h4 class="drawer-group-title">
-              <i class="pi pi-id-card"></i> Institutional Classifications
-            </h4>
-            <div class="drawer-info-grid">
-              <div class="drawer-info-card">
-                <span class="info-card-label">CHED Institutional Code</span>
-                <span class="info-card-value font-mono">{{ campus.chedInstitutionalCode || 'N/A' }}</span>
-              </div>
-              <div class="drawer-info-card">
-                <span class="info-card-label">Designated Region</span>
-                <span class="info-card-value">{{ campus.region || 'REGION VI' }}</span>
-              </div>
-            </div>
+          <div class="summary-location-box">
+            <i class="pi pi-map-marker location-icon"></i>
+            <p class="location-text">
+              {{ campus.address || 'No registered physical campus address specified.' }}
+            </p>
           </div>
+        </div>
 
-          <!-- Section: Contact Channels -->
-          <div class="drawer-group-section">
-            <h4 class="drawer-group-title">
-              <i class="pi pi-phone"></i> Direct Channels & Inquiries
-            </h4>
-            <div class="drawer-info-grid">
-              <div class="drawer-info-card">
-                <span class="info-card-label">Official Contact</span>
-                <span class="info-card-value">{{ campus.contactNumber || '—' }}</span>
-              </div>
-              <div class="drawer-info-card">
-                <span class="info-card-label">Institutional Email</span>
-                <span class="info-card-value font-mono text-break" [title]="campus.email || ''">
-                  {{ campus.email || '—' }}
-                </span>
-              </div>
+        <!-- Section: Institutional Profile -->
+        <div class="drawer-group-section">
+          <h4 class="drawer-group-title">
+            <i class="pi pi-id-card"></i> Institutional Classifications
+          </h4>
+          <div class="drawer-info-grid">
+            <div class="drawer-info-card">
+              <span class="info-card-label">CHED Institutional Code</span>
+              <span class="info-card-value font-mono">{{ campus.chedInstitutionalCode || 'N/A' }}</span>
+            </div>
+            <div class="drawer-info-card">
+              <span class="info-card-label">Designated Region</span>
+              <span class="info-card-value">{{ campus.region || 'REGION VI' }}</span>
             </div>
           </div>
         </div>
+
+        <!-- Section: Contact Channels -->
+        <div class="drawer-group-section">
+          <h4 class="drawer-group-title">
+            <i class="pi pi-phone"></i> Direct Channels & Inquiries
+          </h4>
+          <div class="drawer-info-grid">
+            <div class="drawer-info-card">
+              <span class="info-card-label">Official Contact</span>
+              <span class="info-card-value">{{ campus.contactNumber || '—' }}</span>
+            </div>
+            <div class="drawer-info-card">
+              <span class="info-card-label">Institutional Email</span>
+              <span class="info-card-value font-mono text-break" [title]="campus.email || ''">
+                {{ campus.email || '—' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
       }
     </ng-template>
 
     <ng-template pTemplate="footer">
       <div class="drawer-action-footer">
-        <p-button 
-          label="Close" 
-          icon="pi pi-times" 
-          severity="secondary" 
-          [outlined]="true" 
-          size="small"
+        <p-button label="Close" icon="pi pi-times" severity="secondary" [outlined]="true" size="small"
           (onClick)="isDetailDrawerOpen.set(false)">
         </p-button>
         @if (canManage() && selectedCampusForDetail()) {
-          <p-button 
-            label="Edit Master Data" 
-            icon="pi pi-pencil" 
-            severity="primary" 
-            size="small"
-            (onClick)="openEditDialog(selectedCampusForDetail()!); isDetailDrawerOpen.set(false)">
-          </p-button>
+        <p-button label="Edit Master Data" icon="pi pi-pencil" severity="primary" size="small"
+          (onClick)="openEditDialog(selectedCampusForDetail()!); isDetailDrawerOpen.set(false)">
+        </p-button>
         }
       </div>
     </ng-template>
   </p-drawer>
 
   <!-- Create / Edit Campus Dialog -->
-  <p-dialog
-    [header]="editingId() ? 'Edit Campus Record' : 'Register New Campus'"
-    [visible]="isDialogVisible()"
-    (visibleChange)="isDialogVisible.set($event)"
-    [modal]="true"
-    [breakpoints]="{ '960px': '75vw', '640px': '92vw' }"
-    [style]="{ width: '520px', maxWidth: '95vw' }"
-    [contentStyle]="{ 'overflow-x': 'hidden' }">
+  <p-dialog [header]="editingId() ? 'Edit Campus Record' : 'Register New Campus'" [visible]="isDialogVisible()"
+    (visibleChange)="isDialogVisible.set($event)" [modal]="true" [breakpoints]="{ '960px': '75vw', '640px': '92vw' }"
+    [style]="{ width: '520px', maxWidth: '95vw' }" [contentStyle]="{ 'overflow-x': 'hidden' }">
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="dialog-form">
       <div class="form-row-2col">
         <div class="form-group">
           <label for="cCode" class="form-label">Campus Code <span class="required-star">*</span></label>
-          <input
-            id="cCode"
-            pInputText
-            type="text"
-            formControlName="code"
-            placeholder="e.g. TALISAY"
-            class="form-control-input uppercase"
-            [readOnly]="!!editingId()" />
+          <input id="cCode" pInputText type="text" formControlName="code" placeholder="e.g. TALISAY"
+            class="form-control-input uppercase" [readOnly]="!!editingId()" />
           @if (form.get('code')?.touched && form.get('code')?.invalid) {
-            <span class="p-error">Code is required (max 20 chars).</span>
+          <span class="p-error">Code is required (max 20 chars).</span>
           }
         </div>
 
         <div class="form-group">
           <label for="cChed" class="form-label">CHED Code</label>
-          <input
-            id="cChed"
-            pInputText
-            type="text"
-            formControlName="chedInstitutionalCode"
-            placeholder="e.g. 06014"
+          <input id="cChed" pInputText type="text" formControlName="chedInstitutionalCode" placeholder="e.g. 06014"
             class="form-control-input font-mono" />
         </div>
       </div>
 
       <div class="form-group">
         <label for="cName" class="form-label">Campus Name <span class="required-star">*</span></label>
-        <input
-          id="cName"
-          pInputText
-          type="text"
-          formControlName="name"
-          placeholder="e.g. Carlos Hilado Memorial State University - Talisay Main"
-          class="form-control-input" />
+        <input id="cName" pInputText type="text" formControlName="name"
+          placeholder="e.g. Carlos Hilado Memorial State University - Talisay Main" class="form-control-input" />
         @if (form.get('name')?.touched && form.get('name')?.invalid) {
-          <span class="p-error">Campus name is required (max 100 chars).</span>
+        <span class="p-error">Campus name is required (max 100 chars).</span>
         }
       </div>
 
       <div class="form-group">
         <label for="cAddress" class="form-label">Physical Address</label>
-        <input
-          id="cAddress"
-          pInputText
-          type="text"
-          formControlName="address"
-          placeholder="e.g. Mabini St., Talisay City, Negros Occidental"
-          class="form-control-input" />
+        <input id="cAddress" pInputText type="text" formControlName="address"
+          placeholder="e.g. Mabini St., Talisay City, Negros Occidental" class="form-control-input" />
       </div>
 
       <div class="form-row-2col">
         <div class="form-group">
           <label for="cContact" class="form-label">Contact Number</label>
-          <input
-            id="cContact"
-            pInputText
-            type="text"
-            formControlName="contactNumber"
-            placeholder="e.g. (034) 712-0003"
+          <input id="cContact" pInputText type="text" formControlName="contactNumber" placeholder="e.g. (034) 712-0003"
             class="form-control-input" />
         </div>
 
         <div class="form-group">
           <label for="cEmail" class="form-label">Email</label>
-          <input
-            id="cEmail"
-            pInputText
-            type="email"
-            formControlName="email"
-            placeholder="e.g. info@chmsu.edu.ph"
+          <input id="cEmail" pInputText type="email" formControlName="email" placeholder="e.g. info@chmsu.edu.ph"
             class="form-control-input" />
           @if (form.get('email')?.touched && form.get('email')?.invalid) {
-            <span class="p-error">Must be a valid email address.</span>
+          <span class="p-error">Must be a valid email address.</span>
           }
         </div>
       </div>
 
       @if (!editingId()) {
-        <div class="toggle-group-row">
-          <div class="toggle-info">
-            <span class="toggle-label">Designate as Main Campus</span>
-            <span class="toggle-desc">Sets this campus as the primary administrative institutional campus.</span>
-          </div>
-          <p-toggleswitch formControlName="isMain"></p-toggleswitch>
+      <div class="toggle-group-row">
+        <div class="toggle-info">
+          <span class="toggle-label">Designate as Main Campus</span>
+          <span class="toggle-desc">Sets this campus as the primary administrative institutional campus.</span>
         </div>
+        <p-toggleswitch formControlName="isMain"></p-toggleswitch>
+      </div>
       }
 
       <div class="dialog-actions-footer">
-        <p-button
-          label="Cancel"
-          size="small"
-          severity="secondary"
-          [outlined]="true"
-          type="button"
+        <p-button label="Cancel" size="small" severity="secondary" [outlined]="true" type="button"
           (onClick)="isDialogVisible.set(false)">
         </p-button>
-        <p-button
-          [label]="editingId() ? 'Update Campus' : 'Register Campus'"
-          icon="pi pi-check"
-          size="small"
-          severity="primary"
-          type="submit"
-          [disabled]="form.invalid || isSaving()">
+        <p-button [label]="editingId() ? 'Update Campus' : 'Register Campus'" icon="pi pi-check" size="small"
+          severity="primary" type="submit" [disabled]="form.invalid || isSaving()">
         </p-button>
       </div>
     </form>
   </p-dialog>
-
-  <p-confirmdialog></p-confirmdialog>
+  
 </div>

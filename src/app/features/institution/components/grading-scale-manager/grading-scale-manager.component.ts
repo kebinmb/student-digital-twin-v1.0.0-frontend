@@ -207,7 +207,10 @@ export class GradingScaleManagerComponent implements OnInit {
       message: `Delete grading bracket "${g.code}" (${g.remarks || g.description})?`,
       header: 'Confirm Deletion',
       icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Yes',
+      rejectLabel: 'No',
       acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-outlined p-button-secondary',
       accept: () => {
         this.gradingService.delete(g.id).subscribe({
           next: () => {

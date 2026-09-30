@@ -8,7 +8,6 @@
   text-align: center;
   margin: 0.75rem 0;
   box-shadow: var(--chmsu-shadow-card);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
   display: flex;
   flex-direction: column;
   align-items: center;

@@ -22,7 +22,8 @@ import {
   FacultySectionOption,
   FacultyTelemetryQueryParams,
   StudentSelfTelemetry,
-  StudentTelemetrySummary
+  StudentTelemetrySummary,
+  TelemetryKpiSummary
 } from '../../models/analytics.model';
 
 @Injectable({
@@ -195,5 +196,38 @@ export class AnalyticsApiService {
 
   acknowledgeStudentIntervention(id: number): Observable<void> {
     return this.http.post<void>(`${environment.apiUrl}/v1/student/telemetry/interventions/${id}/acknowledge`, {});
+  }
+
+  getAdminTelemetryKpi(params?: AdminTelemetryQueryParams): Observable<TelemetryKpiSummary> {
+    let httpParams = new HttpParams();
+    if (params?.searchQuery) {
+      httpParams = httpParams.set('searchQuery', params.searchQuery);
+    }
+    if (params?.riskLevel && params.riskLevel !== 'ALL') {
+      httpParams = httpParams.set('riskLevel', params.riskLevel);
+    }
+    if (params?.interventionStatus && params.interventionStatus !== 'ALL') {
+      httpParams = httpParams.set('interventionStatus', params.interventionStatus);
+    }
+
+    return this.http.get<TelemetryKpiSummary>(`${environment.apiUrl}/v1/admin/telemetry/kpi`, { params: httpParams });
+  }
+
+  getFacultyTelemetryKpi(params?: FacultyTelemetryQueryParams): Observable<TelemetryKpiSummary> {
+    let httpParams = new HttpParams();
+    if (params?.searchQuery) {
+      httpParams = httpParams.set('searchQuery', params.searchQuery);
+    }
+    if (params?.riskLevel && params.riskLevel !== 'ALL') {
+      httpParams = httpParams.set('riskLevel', params.riskLevel);
+    }
+    if (params?.interventionStatus && params.interventionStatus !== 'ALL') {
+      httpParams = httpParams.set('interventionStatus', params.interventionStatus);
+    }
+    if (params?.sectionId) {
+      httpParams = httpParams.set('sectionId', params.sectionId.toString());
+    }
+
+    return this.http.get<TelemetryKpiSummary>(`${environment.apiUrl}/v1/faculty/telemetry/kpi`, { params: httpParams });
   }
 }

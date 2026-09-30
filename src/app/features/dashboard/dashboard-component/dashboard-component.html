@@ -178,7 +178,6 @@
               <i class="pi pi-shield text-emerald-700"></i>
               System Security Audit Trail & Activity Log
             </h2>
-            <p-tag value="Database Audited" severity="success" [rounded]="true"></p-tag>
           </div>
           <div class="toolbar-controls">
             <a routerLink="/dashboard/institution" class="action-link text-xs font-bold text-emerald-700">Open Campus Management &rarr;</a>
@@ -192,14 +191,16 @@
           [paginator]="true"
           [rows]="5"
           [rowsPerPageOptions]="[5, 10, 20]"
+          sortField="createdAt"
+          [sortOrder]="1"
         >
           <ng-template pTemplate="header">
             <tr>
-              <th>Timestamp</th>
-              <th>Performed By</th>
-              <th>Action</th>
-              <th>Target Entity</th>
-              <th>IP / Host</th>
+              <th pSortableColumn="createdAt">Timestamp <p-sortIcon field="createdAt"></p-sortIcon></th>
+              <th pSortableColumn="performedBy">Performed By <p-sortIcon field="performedBy"></p-sortIcon></th>
+              <th pSortableColumn="action">Action <p-sortIcon field="action"></p-sortIcon></th>
+              <th pSortableColumn="entityName">Target Entity <p-sortIcon field="entityName"></p-sortIcon></th>
+              <th pSortableColumn="ipAddress">IP / Host <p-sortIcon field="ipAddress"></p-sortIcon></th>
               <th>Details</th>
             </tr>
           </ng-template>
@@ -342,7 +343,6 @@
               <i class="pi pi-users text-emerald-700"></i>
               Institutional User Directory & Account Provisioning
             </h2>
-            <p-tag value="RBAC Enabled" severity="success" [rounded]="true"></p-tag>
           </div>
           <div class="toolbar-controls">
             <a routerLink="/dashboard/users" class="action-link text-xs font-bold text-emerald-700">Manage User Accounts &rarr;</a>
@@ -528,7 +528,6 @@
               <i class="pi pi-list text-emerald-700"></i>
               Active Class Section Grade Sheets Roster
             </h2>
-            <p-tag [value]="activeTermName() || 'No Active Term'" severity="success" [rounded]="true"></p-tag>
           </div>
           <div class="toolbar-controls">
             <a routerLink="/dashboard/grades" class="action-link text-xs font-bold text-emerald-700">Open Grade Management &rarr;</a>
@@ -711,7 +710,6 @@
               <i class="pi pi-calculator text-emerald-700"></i>
               Cashier Payment Counter & Official Receipt Booklet Inventory
             </h2>
-            <p-tag value="Form 51 Inventory" severity="warn" [rounded]="true"></p-tag>
           </div>
           <div class="toolbar-controls">
             <a routerLink="/dashboard/finance/cashier" class="action-link text-xs font-bold text-emerald-700">Open Payment Counter &rarr;</a>
@@ -867,7 +865,6 @@
               <i class="pi pi-id-card text-emerald-700"></i>
               Faculty Assigned Sections & Instructional Timetable
             </h2>
-            <p-tag value="Active Semester" severity="success" [rounded]="true"></p-tag>
           </div>
           <div class="toolbar-controls">
             <a routerLink="/dashboard/grades" class="action-link text-xs font-bold text-emerald-700">Open Section Gradebook &rarr;</a>
@@ -1025,7 +1022,6 @@
               <i class="pi pi-briefcase text-emerald-700"></i>
               College Faculty Workload & Overload Review Roster
             </h2>
-            <p-tag value="CMO 25 Governed" severity="info" [rounded]="true"></p-tag>
           </div>
           <div class="toolbar-controls">
             <a routerLink="/dashboard/scheduling" class="action-link text-xs font-bold text-emerald-700">View All Faculty Loads &rarr;</a>
@@ -1190,10 +1186,9 @@
               <i class="pi pi-list text-emerald-700"></i>
               Department Class Sections & Curriculum Offering Timetable
             </h2>
-            <p-tag [value]="activeTermName() || 'No Active Term'" severity="success" [rounded]="true"></p-tag>
           </div>
           <div class="toolbar-controls">
-            <a routerLink="/dashboard/curriculum/designer/1" class="action-link text-xs font-bold text-emerald-700">Open Curriculum Designer &rarr;</a>
+            <a routerLink="/dashboard/curriculum/designer" class="action-link text-xs font-bold text-emerald-700">Open Curriculum Designer &rarr;</a>
           </div>
         </div>
 
@@ -1250,7 +1245,7 @@
                 ></p-tag>
               </td>
               <td class="text-center">
-                <a routerLink="/dashboard/curriculum/designer/1" class="action-link text-xs font-bold text-emerald-700">
+                <a routerLink="/dashboard/curriculum/designer" class="action-link text-xs font-bold text-emerald-700">
                   Manage
                 </a>
               </td>
@@ -1373,7 +1368,6 @@
               <i class="pi pi-calendar text-emerald-700"></i>
               Enrolled Courses &amp; Class Schedule
             </h2>
-            <p-tag value="Active Term Enrollment" severity="success" [rounded]="true"></p-tag>
           </div>
           <div class="toolbar-controls">
             <a routerLink="/dashboard/scheduling" class="action-link text-xs font-bold text-emerald-700">View Full Schedule &rarr;</a>
@@ -1538,7 +1532,6 @@
               <i class="pi pi-heart-fill text-emerald-700"></i>
               Student Support Services &amp; Advising
             </h2>
-            <p-tag [value]="guidancePriorityCountTag()" severity="danger" [rounded]="true"></p-tag>
           </div>
           <div class="toolbar-controls">
             <p-button
@@ -1736,7 +1729,6 @@
               <i class="pi pi-file-export text-emerald-700"></i>
               UniFAST Free Higher Education (FHE) Billing Claims Ledger
             </h2>
-            <p-tag value="RA 10931 Governed" severity="success" [rounded]="true"></p-tag>
           </div>
           <div class="toolbar-controls">
             <a routerLink="/dashboard/finance/unifast" class="action-link text-xs font-bold text-emerald-700">Open UniFAST Claims Portal &rarr;</a>
@@ -1854,59 +1846,85 @@
       </div>
 
       <div class="notices-list">
-        @for (notice of paginatedNotices(); track notice.id) {
-          <div
-            class="notice-item"
-            [class.unread]="notice.unread"
-            [class.urgent]="notice.priority === 'URGENT'"
-            [class.important]="notice.priority === 'IMPORTANT'"
-            (click)="openNoticeDetail(notice)"
-            (keydown.enter)="openNoticeDetail(notice)"
-            (keydown.space)="openNoticeDetail(notice); $event.preventDefault()"
-            tabindex="0"
-            role="button"
-            [attr.aria-label]="'View advisory: ' + notice.title"
-          >
-            <div class="notice-item-main">
-              <div class="notice-meta">
-                <div class="notice-meta-left">
-                  <span class="notice-category-badge">{{ notice.category }}</span>
-                  @if (notice.priority === 'URGENT') {
-                    <span class="notice-priority-pill urgent">
-                      <i class="pi pi-exclamation-triangle"></i> Urgent
-                    </span>
-                  } @else if (notice.priority === 'IMPORTANT') {
-                    <span class="notice-priority-pill important">Important</span>
-                  }
+        @if (isNoticesLoading()) {
+          <div class="notices-skeleton-list">
+            @for (i of [1, 2, 3]; track i) {
+              <div class="notice-skeleton-card">
+                <div class="notice-skeleton-header">
+                  <p-skeleton width="80px" height="1.25rem" borderRadius="12px"></p-skeleton>
+                  <p-skeleton width="90px" height="0.875rem"></p-skeleton>
                 </div>
-                <span class="notice-date">
-                  <i class="pi pi-clock date-icon"></i>
-                  {{ notice.date }}
-                </span>
+                <p-skeleton width="70%" height="1.125rem" styleClass="my-2"></p-skeleton>
+                <p-skeleton width="95%" height="0.875rem"></p-skeleton>
               </div>
-              <h4 class="notice-title">{{ notice.title }}</h4>
-              @if (notice.content) {
-                <p class="notice-snippet">{{ notice.content }}</p>
-              }
-            </div>
+            }
+          </div>
+        } @else {
+          @for (notice of paginatedNotices(); track notice.id) {
+            <div
+              class="notice-item"
+              [class.unread]="notice.unread"
+              [class.urgent]="notice.priority === 'URGENT'"
+              [class.important]="notice.priority === 'IMPORTANT'"
+              (click)="openNoticeDetail(notice)"
+              (keydown.enter)="openNoticeDetail(notice)"
+              (keydown.space)="openNoticeDetail(notice); $event.preventDefault()"
+              tabindex="0"
+              role="button"
+              [attr.aria-label]="'View advisory: ' + notice.title"
+            >
+              <div class="notice-item-main">
+                <div class="notice-meta">
+                  <div class="notice-meta-left">
+                    <span class="notice-category-badge">{{ notice.category }}</span>
+                    @if (notice.priority === 'URGENT') {
+                      <span class="notice-priority-pill urgent">
+                        <i class="pi pi-exclamation-triangle"></i> Urgent
+                      </span>
+                    } @else if (notice.priority === 'IMPORTANT') {
+                      <span class="notice-priority-pill important">Important</span>
+                    }
+                  </div>
+                  <span class="notice-date">
+                    <i class="pi pi-clock date-icon"></i>
+                    {{ notice.date }}
+                  </span>
+                </div>
+                <h4 class="notice-title">{{ notice.title }}</h4>
+                @if (notice.content) {
+                  <p class="notice-snippet">{{ notice.content }}</p>
+                }
+              </div>
 
-            <div class="notice-action-indicator">
-              @if (notice.unread) {
-                <span class="notice-unread-dot" title="Unread Notice"></span>
+              <div class="notice-action-indicator">
+                @if (notice.unread) {
+                  <span class="notice-unread-dot" title="Unread Notice"></span>
+                }
+                <i class="pi pi-chevron-right notice-arrow"></i>
+              </div>
+            </div>
+          } @empty {
+            <div class="notices-empty-state">
+              <div class="empty-icon-box">
+                <i class="pi pi-bell-slash"></i>
+              </div>
+              <div class="empty-text-group">
+                <span class="empty-title">No Active Campus Advisories</span>
+                <span class="empty-subtitle">University bulletins, circulars, and departmental announcements will appear here once published.</span>
+              </div>
+              @if (canPostNotice()) {
+                <p-button
+                  label="Publish First Advisory"
+                  icon="pi pi-plus"
+                  severity="success"
+                  [outlined]="true"
+                  size="small"
+                  (onClick)="openCreateNoticeModal()"
+                  styleClass="mt-2"
+                ></p-button>
               }
-              <i class="pi pi-chevron-right notice-arrow"></i>
             </div>
-          </div>
-        } @empty {
-          <div class="notices-empty-state">
-            <div class="empty-icon-box">
-              <i class="pi pi-bell-slash"></i>
-            </div>
-            <div class="empty-text-group">
-              <span class="empty-title">No Active Campus Advisories</span>
-              <span class="empty-subtitle">University bulletins and circulars will be displayed here once released.</span>
-            </div>
-          </div>
+          }
         }
       </div>
 
@@ -1927,62 +1945,118 @@
 <p-drawer
   [(visible)]="isDispatchModalOpen"
   position="right"
-  [style]="{ width: '480px' }"
-  styleClass="institutional-drawer"
-  header="Provide Student Support & Guidance"
+  [modal]="true"
+  [blockScroll]="true"
+  [style]="{ width: '500px', maxWidth: '100vw' }"
+  styleClass="institutional-drawer telemetry-drawer"
+  ariaLabelledBy="support-referral-heading"
+  (onHide)="isDispatchModalOpen.set(false)"
 >
-  @if (selectedStudentForDispatch(); as student) {
-    <div [formGroup]="dispatchForm" class="drawer-content flex flex-col gap-4 p-2">
-      <div class="target-student-banner p-3 bg-slate-50 border border-slate-200 rounded-lg flex items-center gap-3">
-        <p-avatar [label]="getInitials(student.fullName)" shape="circle" styleClass="target-avatar"></p-avatar>
-        <div class="target-student-info">
-          <div class="target-student-name font-bold text-slate-800 text-sm">{{ student.fullName }}</div>
-          <div class="target-student-sub text-xs text-slate-500">{{ student.studentNumber }} — {{ student.programOrSection }}</div>
-          <div class="target-student-risk mt-1">
-            <span class="risk-label text-xs mr-1 text-slate-500 font-bold">Support Priority:</span>
-            <p-tag [value]="student.riskLevel" [severity]="getRiskSeverity(student.riskLevel)" size="small"></p-tag>
+  <ng-template pTemplate="header">
+    <div class="telemetry-drawer-header">
+      <div class="telemetry-header-icon-box amber">
+        <i class="pi pi-heart-fill"></i>
+      </div>
+      <div class="telemetry-header-meta">
+        <div class="badge-row">
+          <span class="badge-tag green">
+            <i class="pi pi-circle-fill live-dot"></i>
+            LIVE INTERVENTION
+          </span>
+          <span class="badge-tag amber">STUDENT SUPPORT &amp; GUIDANCE</span>
+        </div>
+        <h3 id="support-referral-heading" class="telemetry-header-title">
+          Provide Student Support &amp; Guidance
+        </h3>
+        <p class="telemetry-header-sub">
+          Carlos Hilado Memorial State University &bull; Early Warning Radar Intervention
+        </p>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="content">
+    @if (selectedStudentForDispatch(); as student) {
+      <div [formGroup]="dispatchForm" class="telemetry-drawer-body">
+        <!-- Target Student Dossier Banner -->
+        <div class="telemetry-student-card">
+          <p-avatar [label]="getInitials(student.fullName)" shape="circle" size="large" styleClass="target-avatar"></p-avatar>
+          <div class="target-student-meta">
+            <div class="target-name font-bold text-slate-900 text-sm">{{ student.fullName }}</div>
+            <div class="target-sub font-mono text-xs text-slate-500">{{ student.studentNumber }} &bull; {{ student.programOrSection }}</div>
+            <div class="target-risk mt-1.5 flex items-center gap-1.5">
+              <span class="risk-label text-xs font-bold text-slate-500">Support Priority:</span>
+              <p-tag [value]="student.riskLevel" [severity]="getRiskSeverity(student.riskLevel)" size="small"></p-tag>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-field flex flex-col gap-1">
+          <label for="interventionType" class="field-label text-xs font-bold text-slate-700 uppercase">
+            SUPPORT SERVICE TYPE <span class="text-rose-600">*</span>
+          </label>
+          <p-select
+            id="interventionType"
+            [options]="interventionTypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            formControlName="interventionType"
+            placeholder="Select Support Action"
+            styleClass="w-full"
+          ></p-select>
+        </div>
+
+        <div class="form-field flex flex-col gap-1">
+          <label for="triggerReason" class="field-label text-xs font-bold text-slate-700 uppercase">
+            REASON FOR REFERRAL <span class="text-rose-600">*</span>
+          </label>
+          <input
+            pInputText
+            id="triggerReason"
+            type="text"
+            formControlName="triggerReason"
+            placeholder="Enter reason or details for this referral..."
+            class="p-inputtext-sm w-full"
+          />
+        </div>
+
+        <div class="form-field flex flex-col gap-1">
+          <label for="notes" class="field-label text-xs font-bold text-slate-700 uppercase">
+            COUNSELOR DIRECTIVES &amp; CLINICAL NOTES
+          </label>
+          <textarea
+            id="notes"
+            pInputText
+            formControlName="notes"
+            rows="4"
+            placeholder="Optional counseling observations, guidance interventions, or follow-up notes..."
+            class="p-inputtext-sm w-full"
+          ></textarea>
+        </div>
+
+        <!-- Telemetry radar hint -->
+        <div class="telemetry-sync-card">
+          <div class="sync-icon-box">
+            <i class="pi pi-shield text-emerald-700"></i>
+          </div>
+          <div class="sync-meta">
+            <span class="sync-title">Closed-Loop Case Registry</span>
+            <p class="sync-desc">
+              Referrals are encrypted and dispatched directly to the student guidance dossier. Updates reflect across the Early Warning Radar telemetry.
+            </p>
           </div>
         </div>
       </div>
+    }
+  </ng-template>
 
-      <div class="form-field flex flex-col gap-1">
-        <label for="interventionType" class="field-label text-xs font-bold text-slate-700 uppercase">SUPPORT SERVICE TYPE <span class="text-rose-600">*</span></label>
-        <p-select
-          id="interventionType"
-          [options]="interventionTypeOptions"
-          optionLabel="label"
-          optionValue="value"
-          formControlName="interventionType"
-          placeholder="Select Support Action"
-          styleClass="w-full"
-        ></p-select>
+  <ng-template pTemplate="footer">
+    <div class="telemetry-drawer-footer">
+      <div class="footer-telemetry-badge">
+        <i class="pi pi-lock text-slate-500"></i>
+        <span class="footer-ref-text">Confidential Guidance Record</span>
       </div>
-
-      <div class="form-field flex flex-col gap-1">
-        <label for="triggerReason" class="field-label text-xs font-bold text-slate-700 uppercase">REASON FOR REFERRAL <span class="text-rose-600">*</span></label>
-        <input
-          pInputText
-          id="triggerReason"
-          type="text"
-          formControlName="triggerReason"
-          placeholder="Enter reason or details for this referral..."
-          class="p-inputtext-sm w-full"
-        />
-      </div>
-
-      <div class="form-field flex flex-col gap-1">
-        <label for="notes" class="field-label text-xs font-bold text-slate-700 uppercase">COUNSELOR NOTES</label>
-        <textarea
-          id="notes"
-          pInputText
-          formControlName="notes"
-          rows="3"
-          placeholder="Optional counseling or follow-up notes..."
-          class="p-inputtext-sm w-full"
-        ></textarea>
-      </div>
-
-      <div class="drawer-actions flex items-center justify-end gap-2 mt-4">
+      <div class="footer-btn-group">
         <p-button
           label="Cancel"
           severity="secondary"
@@ -2000,47 +2074,157 @@
         ></p-button>
       </div>
     </div>
-  }
+  </ng-template>
 </p-drawer>
 
-<!-- Notice Detail Drawer -->
+<!-- Notice Detail Drawer (Digital Twin Telemetry Master-Detail) -->
 <p-drawer
   [(visible)]="isNoticeDrawerOpen"
   position="right"
   [modal]="true"
-  styleClass="notice-drawer"
+  [blockScroll]="true"
+  [style]="{ width: '500px', maxWidth: '100vw' }"
+  styleClass="institutional-drawer telemetry-drawer"
+  ariaLabelledBy="notice-drawer-heading"
   (onHide)="isNoticeDrawerOpen.set(false)"
 >
   <ng-template pTemplate="header">
-    <div class="notice-drawer-header flex items-center gap-2">
-      <i class="pi pi-bell text-emerald-700"></i>
-      <div>
-        <span class="notice-drawer-title-sub text-xs font-bold text-emerald-800 uppercase block">CHMSU Official Advisory</span>
-        <h3 class="notice-drawer-title-text font-bold text-slate-900 text-sm m-0">{{ selectedNotice()?.title }}</h3>
+    <div class="telemetry-drawer-header">
+      <div class="telemetry-header-icon-box" [class.urgent]="selectedNotice()?.priority === 'URGENT'" [class.important]="selectedNotice()?.priority === 'IMPORTANT'">
+        <i class="pi" [ngClass]="selectedNotice()?.priority === 'URGENT' ? 'pi-exclamation-triangle' : (selectedNotice()?.priority === 'IMPORTANT' ? 'pi-info-circle' : 'pi-megaphone')"></i>
+      </div>
+      <div class="telemetry-header-meta">
+        <div class="badge-row">
+          <span class="badge-tag green">
+            <i class="pi pi-circle-fill live-dot"></i>
+            CAMPUS TELEMETRY
+          </span>
+          <span class="badge-tag blue">{{ selectedNotice()?.category || 'OFFICIAL' }}</span>
+          @if (selectedNotice()?.priority === 'URGENT') {
+            <span class="badge-tag rose"><i class="pi pi-bolt"></i> URGENT ACTION</span>
+          } @else if (selectedNotice()?.priority === 'IMPORTANT') {
+            <span class="badge-tag amber">IMPORTANT</span>
+          }
+        </div>
+        <h3 id="notice-drawer-heading" class="telemetry-header-title">
+          {{ selectedNotice()?.title }}
+        </h3>
+        <p class="telemetry-header-sub">
+          Carlos Hilado Memorial State University &bull; Official Institutional Advisory
+        </p>
       </div>
     </div>
   </ng-template>
 
   <ng-template pTemplate="content">
-    @if (selectedNotice()) {
-      <div class="drawer-content-body flex flex-col gap-3">
-        <div class="drawer-profile-card p-3 bg-slate-50 border border-slate-200 rounded-lg">
-          <div class="drawer-meta-row flex items-center gap-2 mb-2">
-            <p-tag severity="info" [value]="selectedNotice()!.category"></p-tag>
-            <span class="notice-date text-xs text-slate-500">{{ selectedNotice()!.date }}</span>
+    @if (selectedNotice(); as notice) {
+      <div class="telemetry-drawer-body">
+        <!-- Telemetry Metadata Dossier Card -->
+        <div class="telemetry-dossier-card">
+          <div class="dossier-grid">
+            <div class="dossier-item">
+              <span class="dossier-label">Issuing Office</span>
+              <div class="dossier-val flex items-center gap-1">
+                <i class="pi pi-building text-emerald-700 text-xs"></i>
+                <span>{{ notice.category }}</span>
+              </div>
+            </div>
+            <div class="dossier-item">
+              <span class="dossier-label">Broadcast Time</span>
+              <div class="dossier-val flex items-center gap-1">
+                <i class="pi pi-clock text-blue-600 text-xs"></i>
+                <span>{{ notice.date }}</span>
+              </div>
+            </div>
+            <div class="dossier-item">
+              <span class="dossier-label">Target Audience</span>
+              <div class="dossier-val flex items-center gap-1">
+                <i class="pi pi-users text-purple-600 text-xs"></i>
+                <span>{{ notice.audience || 'ALL CONSTITUENTS' }}</span>
+              </div>
+            </div>
+            <div class="dossier-item">
+              <span class="dossier-label">Audit Verification</span>
+              <div class="dossier-val">
+                @if (notice.unread) {
+                  <span class="badge-tag amber"><i class="pi pi-circle-fill live-dot"></i> PENDING ACK</span>
+                } @else {
+                  <span class="badge-tag green"><i class="pi pi-check"></i> ACKNOWLEDGED</span>
+                }
+              </div>
+            </div>
           </div>
-          <p class="drawer-notice-text text-xs text-slate-700 leading-relaxed margin-0">
-            {{ selectedNotice()!.content || ('This official notice was issued by the ' + selectedNotice()!.category + ' for student records and academic schedule adherence. Please verify any prerequisites or clearances required before the end of the term.') }}
-          </p>
+        </div>
+
+        <!-- Official Circular Directives & Content -->
+        <div class="telemetry-directives-card">
+          <div class="directives-header">
+            <div class="directives-title-wrap">
+              <i class="pi pi-file-edit text-emerald-800"></i>
+              <span class="directives-heading">OFFICIAL CIRCULAR DIRECTIVE</span>
+            </div>
+            <span class="directive-ref-code font-mono">#ADV-{{ notice.id }}</span>
+          </div>
+          <div class="directives-content">
+            <p class="directives-text">
+              {{ notice.content || ('This official circular directive was issued by the ' + notice.category + ' to uphold academic continuity, student records compliance, and university calendar adherence. All concerned parties are advised to review these directives and coordinate with the respective department.') }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Urgent Notice Warning Callout if Urgent -->
+        @if (notice.priority === 'URGENT') {
+          <div class="telemetry-alert-banner alert-urgent">
+            <i class="pi pi-exclamation-triangle alert-icon"></i>
+            <div class="alert-content">
+              <span class="alert-title">Time-Sensitive Academic Checkpoint</span>
+              <span class="alert-description">
+                This notice contains critical deadlines or compliance mandates that directly impact your academic status or enrollment standing.
+              </span>
+            </div>
+          </div>
+        }
+
+        <!-- Academic Digital Twin Telemetry Sync Note -->
+        <div class="telemetry-sync-card">
+          <div class="sync-icon-box">
+            <i class="pi pi-radar text-emerald-700"></i>
+          </div>
+          <div class="sync-meta">
+            <span class="sync-title">Academic Digital Twin Telemetry Sync</span>
+            <p class="sync-desc">
+              Campus bulletins are recorded in your institutional profile audit trail. Acknowledging this bulletin verifies receipt in your digital twin telemetry.
+            </p>
+          </div>
         </div>
       </div>
     }
   </ng-template>
 
   <ng-template pTemplate="footer">
-    <div class="drawer-footer-row flex items-center justify-between w-full">
-      <p-button label="Dismiss" icon="pi pi-times" severity="secondary" [outlined]="true" size="small" (onClick)="isNoticeDrawerOpen.set(false)"></p-button>
-      <p-button label="Acknowledge Notice" icon="pi pi-check" severity="primary" size="small" (onClick)="acknowledgeCurrentNotice()"></p-button>
+    <div class="telemetry-drawer-footer">
+      <div class="footer-telemetry-badge">
+        <i class="pi pi-shield text-emerald-700"></i>
+        <span class="footer-ref-text">CHMSU Telemetry Record</span>
+      </div>
+      <div class="footer-btn-group">
+        <p-button
+          label="Dismiss"
+          icon="pi pi-times"
+          severity="secondary"
+          [outlined]="true"
+          size="small"
+          (onClick)="isNoticeDrawerOpen.set(false)"
+        ></p-button>
+        <p-button
+          [label]="selectedNotice()?.unread ? 'Acknowledge Advisory' : 'Acknowledged'"
+          [icon]="selectedNotice()?.unread ? 'pi pi-check' : 'pi pi-check-circle'"
+          severity="success"
+          size="small"
+          [disabled]="!selectedNotice()?.unread"
+          (onClick)="acknowledgeCurrentNotice()"
+        ></p-button>
+      </div>
     </div>
   </ng-template>
 </p-drawer>
@@ -2049,84 +2233,338 @@
 <p-drawer
   [(visible)]="isCreateNoticeModalOpen"
   position="right"
-  [style]="{ width: '480px' }"
-  styleClass="institutional-drawer"
-  header="Publish Campus Advisory"
+  [modal]="true"
+  [blockScroll]="true"
+  [style]="{ width: '520px', maxWidth: '100vw' }"
+  styleClass="institutional-drawer telemetry-drawer"
+  ariaLabelledBy="create-notice-heading"
+  (onHide)="isCreateNoticeModalOpen.set(false)"
 >
-  <div [formGroup]="noticeForm" class="drawer-content flex flex-col gap-4 p-2">
-    <div class="form-field flex flex-col gap-1">
-      <label for="noticeTitle" class="field-label text-xs font-bold text-slate-700 uppercase">
-        ANNOUNCEMENT TITLE <span class="text-rose-600">*</span>
-      </label>
-      <input
-        pInputText
-        id="noticeTitle"
-        type="text"
-        formControlName="title"
-        placeholder="Enter announcement headline..."
-        class="p-inputtext-sm w-full"
-      />
+  <ng-template pTemplate="header">
+    <div class="telemetry-drawer-header">
+      <div
+        class="telemetry-header-icon-box"
+        [class.rose]="noticeForm.get('priority')?.value === 'URGENT'"
+        [class.amber]="noticeForm.get('priority')?.value === 'IMPORTANT'"
+        [class.green]="noticeForm.get('priority')?.value === 'NORMAL' || !noticeForm.get('priority')?.value"
+      >
+        <i
+          class="pi"
+          [ngClass]="noticeForm.get('priority')?.value === 'URGENT' ? 'pi-bolt' : (noticeForm.get('priority')?.value === 'IMPORTANT' ? 'pi-info-circle' : 'pi-megaphone')"
+        ></i>
+      </div>
+      <div class="telemetry-header-meta">
+        <div class="badge-row">
+          <span class="badge-tag green">
+            <i class="pi pi-circle-fill live-dot"></i>
+            BROADCAST TELEMETRY
+          </span>
+          <span class="badge-tag blue">{{ noticeForm.get('category')?.value || 'CAMPUS' }}</span>
+          @if (noticeForm.get('priority')?.value === 'URGENT') {
+            <span class="badge-tag rose"><i class="pi pi-bolt"></i> URGENT ALERT</span>
+          } @else if (noticeForm.get('priority')?.value === 'IMPORTANT') {
+            <span class="badge-tag amber">HIGH PRIORITY</span>
+          } @else {
+            <span class="badge-tag green">STANDARD</span>
+          }
+        </div>
+        <h3 id="create-notice-heading" class="telemetry-header-title">
+          Publish Campus Advisory &amp; Telemetry Notice
+        </h3>
+        <p class="telemetry-header-sub">
+          Carlos Hilado Memorial State University &bull; Institutional Telemetry Broadcast Channel
+        </p>
+      </div>
     </div>
+  </ng-template>
 
-    <div class="form-field flex flex-col gap-1">
-      <label for="noticeCategory" class="field-label text-xs font-bold text-slate-700 uppercase">
-        ISSUING OFFICE / CATEGORY <span class="text-rose-600">*</span>
-      </label>
-      <p-select
-        id="noticeCategory"
-        [options]="noticeCategoryOptions"
-        optionLabel="label"
-        optionValue="value"
-        formControlName="category"
-        placeholder="Select Issuing Office"
-        styleClass="w-full"
-      ></p-select>
-    </div>
+  <ng-template pTemplate="content">
+    <div [formGroup]="noticeForm" class="telemetry-drawer-body">
+      <!-- Broadcaster Authority & Clearance Dossier -->
+      <div class="telemetry-broadcaster-banner">
+        <p-avatar [label]="getInitials(userName())" shape="circle" size="large" styleClass="broadcaster-avatar"></p-avatar>
+        <div class="broadcaster-meta">
+          <div class="broadcaster-name font-bold text-slate-900 text-sm">{{ userName() }}</div>
+          <div class="broadcaster-sub text-xs text-slate-500 font-mono">{{ roleBadge() }} &bull; Authorized Broadcaster</div>
+        </div>
+        <div class="broadcaster-status ml-auto">
+          <span class="badge-tag green"><i class="pi pi-shield"></i> VERIFIED</span>
+        </div>
+      </div>
 
-    <div class="form-field flex flex-col gap-1">
-      <label for="noticeAudience" class="field-label text-xs font-bold text-slate-700 uppercase">
-        TARGET AUDIENCE
-      </label>
-      <p-select
-        id="noticeAudience"
-        [options]="noticeAudienceOptions"
-        optionLabel="label"
-        optionValue="value"
-        formControlName="audience"
-        styleClass="w-full"
-      ></p-select>
-    </div>
+      <!-- Scope & Cohort Routing Card (Student Digital Twin Telemetry) -->
+      <div class="telemetry-section-card">
+        <div class="card-header-bar">
+          <div class="card-header-left">
+            <div class="card-header-icon-box">
+              <i class="pi pi-sitemap"></i>
+            </div>
+            <div>
+              <span class="card-section-tag">TELEMETRY ROUTING</span>
+              <h4 class="card-section-title">Cohort Routing &amp; Classification</h4>
+            </div>
+          </div>
+          <span class="badge-tag green">
+            <i class="pi pi-circle-fill live-dot"></i>
+            ACTIVE ROUTING
+          </span>
+        </div>
 
-    <div class="form-field flex flex-col gap-1">
-      <label for="noticeContent" class="field-label text-xs font-bold text-slate-700 uppercase">
-        ANNOUNCEMENT DETAILS <span class="text-rose-600">*</span>
-      </label>
-      <textarea
-        id="noticeContent"
-        pInputText
-        formControlName="content"
-        rows="5"
-        placeholder="Provide complete instructions, deadlines, or advisory text..."
-        class="p-inputtext-sm w-full"
-      ></textarea>
-    </div>
+        <div class="card-form-body">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div class="telemetry-field-group">
+              <label for="noticeCategory" class="telemetry-field-label">
+                <span>ISSUING OFFICE</span>
+                <span class="required-star">*</span>
+              </label>
+              <p-select
+                id="noticeCategory"
+                [options]="noticeCategoryOptions"
+                optionLabel="label"
+                optionValue="value"
+                formControlName="category"
+                placeholder="Select Issuing Office"
+                styleClass="w-full telemetry-select"
+              >
+                <ng-template pTemplate="selectedItem" let-selected>
+                  @if (selected) {
+                    <div class="flex items-center gap-2">
+                      <span class="font-medium text-xs text-slate-800">{{ selected.label }}</span>
+                    </div>
+                  }
+                </ng-template>
+                <ng-template pTemplate="item" let-item>
+                  <div class="flex items-center gap-2 py-0.5">
+                    <i class="pi pi-building text-slate-400 text-xs"></i>
+                    <span class="text-xs">{{ item.label }}</span>
+                  </div>
+                </ng-template>
+              </p-select>
+            </div>
 
-    <div class="drawer-actions flex items-center justify-end gap-2 mt-4">
-      <p-button
-        label="Cancel"
-        severity="secondary"
-        [outlined]="true"
-        size="small"
-        (onClick)="isCreateNoticeModalOpen.set(false)"
-      ></p-button>
-      <p-button
-        label="Publish Advisory"
-        icon="pi pi-send"
-        severity="primary"
-        size="small"
-        [loading]="isCreatingNotice()"
-        (onClick)="confirmCreateNotice()"
-      ></p-button>
+            <div class="telemetry-field-group">
+              <label for="noticeAudience" class="telemetry-field-label">
+                <span>RECIPIENT COHORT</span>
+                <span class="required-star">*</span>
+              </label>
+              <p-select
+                id="noticeAudience"
+                [options]="noticeAudienceOptions"
+                optionLabel="label"
+                optionValue="value"
+                formControlName="audience"
+                styleClass="w-full telemetry-select"
+              >
+                <ng-template pTemplate="selectedItem" let-selected>
+                  @if (selected) {
+                    <div class="flex items-center gap-2">
+                      <span class="font-medium text-xs text-slate-800">{{ selected.label }}</span>
+                    </div>
+                  }
+                </ng-template>
+                <ng-template pTemplate="item" let-item>
+                  <div class="flex items-center justify-between w-full py-0.5">
+                    <div class="flex items-center gap-2">
+                      <i class="pi pi-users text-slate-400 text-xs"></i>
+                      <span class="text-xs">{{ item.label }}</span>
+                    </div>
+                    <span class="badge-tag green text-[0.6rem] py-0 px-1 font-mono">{{ item.value }}</span>
+                  </div>
+                </ng-template>
+              </p-select>
+            </div>
+          </div>
+
+          <div class="telemetry-field-group">
+            <label for="noticePriority" class="telemetry-field-label">
+              <span>BROADCAST PRIORITY LEVEL</span>
+            </label>
+            <p-select
+              id="noticePriority"
+              [options]="noticePriorityOptions"
+              optionLabel="label"
+              optionValue="value"
+              formControlName="priority"
+              placeholder="Select Priority"
+              styleClass="w-full telemetry-select"
+            >
+              <ng-template pTemplate="selectedItem" let-selected>
+                @if (selected) {
+                  <div class="flex items-center gap-2">
+                    <span
+                      class="priority-indicator-dot"
+                      [class.urgent]="selected.value === 'URGENT'"
+                      [class.important]="selected.value === 'IMPORTANT'"
+                      [class.normal]="selected.value === 'NORMAL'"
+                    ></span>
+                    <span class="font-medium text-xs text-slate-800">{{ selected.label }}</span>
+                  </div>
+                }
+              </ng-template>
+              <ng-template pTemplate="item" let-item>
+                <div class="flex items-center justify-between w-full py-0.5">
+                  <div class="flex items-center gap-2">
+                    <span
+                      class="priority-indicator-dot"
+                      [class.urgent]="item.value === 'URGENT'"
+                      [class.important]="item.value === 'IMPORTANT'"
+                      [class.normal]="item.value === 'NORMAL'"
+                    ></span>
+                    <span class="text-xs">{{ item.label }}</span>
+                  </div>
+                  @if (item.value === 'URGENT') {
+                    <span class="badge-tag rose text-[0.6rem] py-0 px-1 font-mono">IMMEDIATE</span>
+                  } @else if (item.value === 'IMPORTANT') {
+                    <span class="badge-tag amber text-[0.6rem] py-0 px-1 font-mono">HIGH VISIBILITY</span>
+                  } @else {
+                    <span class="badge-tag green text-[0.6rem] py-0 px-1 font-mono">STANDARD</span>
+                  }
+                </div>
+              </ng-template>
+            </p-select>
+          </div>
+
+          <!-- Dynamic Telemetry Routing Feedback -->
+          <div class="telemetry-routing-feedback">
+            <div class="routing-icon-box">
+              <i class="pi pi-send text-emerald-700"></i>
+            </div>
+            <div class="routing-meta">
+              <div class="routing-title-row">
+                <span class="routing-label">Target Distribution Scope</span>
+                <span class="routing-badge">
+                  {{ noticeForm.get('audience')?.value === 'ALL' ? 'CAMPUS-WIDE REACH' : (noticeForm.get('audience')?.value + ' COHORT ONLY') }}
+                </span>
+              </div>
+              <p class="routing-description">
+                @if (noticeForm.get('audience')?.value === 'STUDENT') {
+                  Transmits directly to enrolled scholars' Student Academic Insights telemetry and personal alert feed.
+                } @else if (noticeForm.get('audience')?.value === 'FACULTY') {
+                  Transmits directly to instructional faculty gradebooks, department boards, and classroom portals.
+                } @else if (noticeForm.get('audience')?.value === 'STAFF') {
+                  Dispatches to administrative offices, registrar personnel, and campus support units.
+                } @else {
+                  Broadcasts across all institutional roles, faculty portals, and student digital twin dashboards.
+                }
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Advisory Directive Formulation Card (Student Digital Twin Telemetry) -->
+      <div class="telemetry-section-card">
+        <div class="card-header-bar">
+          <div class="card-header-left">
+            <div class="card-header-icon-box">
+              <i class="pi pi-file-edit"></i>
+            </div>
+            <div>
+              <span class="card-section-tag">CIRCULAR DIRECTIVE FORMULATION</span>
+              <h4 class="card-section-title">Bulletin Headline &amp; Directive Text</h4>
+            </div>
+          </div>
+          <span class="badge-tag blue font-mono">DRAFT DIRECTIVE</span>
+        </div>
+
+        <div class="card-form-body">
+          <div class="telemetry-field-group">
+            <div class="flex items-center justify-between">
+              <label for="noticeTitle" class="telemetry-field-label">
+                <i class="pi pi-bookmark text-emerald-700"></i>
+                <span>ANNOUNCEMENT HEADLINE</span>
+                <span class="required-star">*</span>
+              </label>
+              <span class="field-char-count">
+                {{ noticeForm.get('title')?.value?.length || 0 }} chars (min 5)
+              </span>
+            </div>
+
+            <div class="telemetry-input-wrap">
+              <i class="pi pi-pencil input-leading-icon"></i>
+              <input
+                pInputText
+                id="noticeTitle"
+                type="text"
+                formControlName="title"
+                placeholder="e.g. Midterm Examination Timetable AY 2026-2027 Released"
+                class="telemetry-input w-full"
+                [class.ng-invalid]="noticeForm.get('title')?.invalid && noticeForm.get('title')?.touched"
+                [class.ng-dirty]="noticeForm.get('title')?.dirty"
+              />
+            </div>
+
+            @if (noticeForm.get('title')?.invalid && noticeForm.get('title')?.touched) {
+              <small class="field-error-text flex items-center gap-1 text-rose-600 font-semibold text-xs mt-0.5">
+                <i class="pi pi-exclamation-circle"></i>
+                Title is mandatory and must contain at least 5 characters.
+              </small>
+            }
+          </div>
+
+          <div class="telemetry-field-group">
+            <div class="flex items-center justify-between">
+              <label for="noticeContent" class="telemetry-field-label">
+                <i class="pi pi-align-left text-emerald-700"></i>
+                <span>OFFICIAL INSTRUCTIONS &amp; DIRECTIVE BODY</span>
+                <span class="required-star">*</span>
+              </label>
+              <span class="field-char-count">
+                {{ noticeForm.get('content')?.value?.length || 0 }} chars (min 10)
+              </span>
+            </div>
+
+            <textarea
+              id="noticeContent"
+              pInputText
+              formControlName="content"
+              rows="5"
+              placeholder="Provide complete administrative directives, affected college programs, room assignments, deadline dates, and office clearance guidelines..."
+              class="telemetry-textarea w-full font-sans"
+              [class.ng-invalid]="noticeForm.get('content')?.invalid && noticeForm.get('content')?.touched"
+              [class.ng-dirty]="noticeForm.get('content')?.dirty"
+            ></textarea>
+
+            @if (noticeForm.get('content')?.invalid && noticeForm.get('content')?.touched) {
+              <small class="field-error-text flex items-center gap-1 text-rose-600 font-semibold text-xs mt-0.5">
+                <i class="pi pi-exclamation-circle"></i>
+                Directive instructions are required with minimum 10 characters.
+              </small>
+            } @else {
+              <span class="field-guideline-text text-[0.6875rem] text-slate-400">
+                <i class="pi pi-info-circle mr-1"></i> Supports structured directives, timetable schedules, and multi-paragraph advisories.
+              </span>
+            }
+          </div>
+        </div>
+      </div>
+
     </div>
-  </div>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <div class="telemetry-drawer-footer">
+      <div class="footer-telemetry-badge">
+        <i class="pi pi-globe text-emerald-700"></i>
+        <span class="footer-ref-text">Broadcast Scope: {{ noticeForm.get('audience')?.value === 'ALL' ? 'Campus Wide' : (noticeForm.get('audience')?.value || 'Targeted') }}</span>
+      </div>
+      <div class="footer-btn-group">
+        <p-button
+          label="Cancel"
+          severity="secondary"
+          [outlined]="true"
+          size="small"
+          (onClick)="isCreateNoticeModalOpen.set(false)"
+        ></p-button>
+        <p-button
+          label="Broadcast Advisory"
+          icon="pi pi-send"
+          severity="primary"
+          size="small"
+          [loading]="isCreatingNotice()"
+          (onClick)="confirmCreateNotice()"
+        ></p-button>
+      </div>
+    </div>
+  </ng-template>
 </p-drawer>

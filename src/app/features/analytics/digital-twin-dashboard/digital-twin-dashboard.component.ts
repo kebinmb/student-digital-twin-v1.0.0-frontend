@@ -26,7 +26,8 @@ import {
   DigitalTwinRiskProfileDto, 
   StudentTelemetryAdminSummary, 
   FacultySectionOption,
-  StudentSelfTelemetry
+  StudentSelfTelemetry,
+  TelemetryKpiSummary
 } from '../../../core/models/analytics.model';
 import { StudentProfileResponse } from '../../../core/models/enrollment.model';
 import { AuthService } from '../../../core/service/authentication/auth-service';
@@ -141,6 +142,10 @@ export class DigitalTwinAnalyticsDashboardComponent implements OnInit {
   // Student Portal Telemetry Signal
   readonly studentSelfTelemetry = signal<StudentSelfTelemetry | null>(null);
 
+  // Executive KPI Summary Signal
+  readonly kpiSummary = signal<TelemetryKpiSummary | null>(null);
+  readonly isKpiLoading = signal<boolean>(false);
+
   // Action Modal Signals
   readonly isDispatchModalOpen = signal<boolean>(false);
   readonly selectedStudentForDispatch = signal<StudentTelemetryAdminSummary | null>(null);
@@ -151,16 +156,46 @@ export class DigitalTwinAnalyticsDashboardComponent implements OnInit {
   readonly isFaculty = computed(() => !this.isAdmin() && (this.authService.hasRole('FACULTY') || this.authService.hasRole('CHAIRPERSON') || this.authService.hasRole('DEAN')));
   readonly isStudent = computed(() => !this.isAdmin() && !this.isFaculty() && this.authService.hasRole('STUDENT'));
 
-  // Admin & Faculty KPI Computations
-  readonly totalMonitoredStudents = computed(() => this.adminTotalElements() || this.adminTelemetryList().length);
-  readonly criticalRiskCount = computed(() => this.adminTelemetryList().filter(s => s.riskLevel === 'CRITICAL').length);
-  readonly highRiskCount = computed(() => this.adminTelemetryList().filter(s => s.riskLevel === 'HIGH').length);
-  readonly moderateRiskCount = computed(() => this.adminTelemetryList().filter(s => s.riskLevel === 'MODERATE').length);
-  readonly lowRiskCount = computed(() => this.adminTelemetryList().filter(s => s.riskLevel === 'LOW').length);
+  // Admin & Faculty KPI Computations (Total Aggregate Metrics)
+  readonly totalMonitoredStudents = computed(() => {
+    const kpi = this.kpiSummary();
+    if (kpi != null) return kpi.totalMonitored;
+    return this.adminTotalElements() || this.adminTelemetryList().length;
+  });
+
+  readonly criticalRiskCount = computed(() => {
+    const kpi = this.kpiSummary();
+    if (kpi != null) return kpi.criticalRiskCount;
+    return this.adminTelemetryList().filter(s => s.riskLevel === 'CRITICAL').length;
+  });
+
+  readonly highRiskCount = computed(() => {
+    const kpi = this.kpiSummary();
+    if (kpi != null) return kpi.highRiskCount;
+    return this.adminTelemetryList().filter(s => s.riskLevel === 'HIGH').length;
+  });
+
+  readonly moderateRiskCount = computed(() => {
+    const kpi = this.kpiSummary();
+    if (kpi != null) return kpi.moderateRiskCount;
+    return this.adminTelemetryList().filter(s => s.riskLevel === 'MODERATE').length;
+  });
+
+  readonly lowRiskCount = computed(() => {
+    const kpi = this.kpiSummary();
+    if (kpi != null) return kpi.lowRiskCount;
+    return this.adminTelemetryList().filter(s => s.riskLevel === 'LOW').length;
+  });
+
   readonly totalActiveInterventionsCount = computed(() => {
+    const kpi = this.kpiSummary();
+    if (kpi != null) return kpi.totalActiveInterventions;
     return this.adminTelemetryList().reduce((acc, s) => acc + (s.activeInterventions ? s.activeInterventions.length : 0), 0);
   });
+
   readonly averageWellnessIndex = computed(() => {
+    const kpi = this.kpiSummary();
+    if (kpi != null) return kpi.averageWellnessIndex;
     const list = this.adminTelemetryList();
     if (!list || list.length === 0) return 100.0;
     const totalScore = list.reduce((acc, s) => acc + (100 - (s.riskScore || 0)), 0);
@@ -212,9 +247,11 @@ export class DigitalTwinAnalyticsDashboardComponent implements OnInit {
 
     if (this.isAdmin()) {
       this.fetchAdminTelemetry();
+      this.fetchAdminTelemetryKpi();
     } else if (this.isFaculty()) {
       this.fetchFacultyAssignedSections();
       this.fetchFacultyTelemetry();
+      this.fetchFacultyTelemetryKpi();
     } else if (this.isStudent()) {
       this.loadStudentViewData();
     }
@@ -253,6 +290,20 @@ export class DigitalTwinAnalyticsDashboardComponent implements OnInit {
     });
   }
 
+  fetchAdminTelemetryKpi(): void {
+    this.isKpiLoading.set(true);
+    this.analyticsApi.getAdminTelemetryKpi().subscribe({
+      next: (kpi) => {
+        this.kpiSummary.set(kpi);
+        this.isKpiLoading.set(false);
+      },
+      error: (err) => {
+        console.warn('Could not load admin telemetry KPI summary:', err);
+        this.isKpiLoading.set(false);
+      }
+    });
+  }
+
   fetchFacultyAssignedSections(): void {
     this.analyticsApi.getFacultyAssignedSections().subscribe({
       next: (sections) => this.facultySections.set(sections || []),
@@ -287,11 +338,27 @@ export class DigitalTwinAnalyticsDashboardComponent implements OnInit {
     });
   }
 
+  fetchFacultyTelemetryKpi(): void {
+    this.isKpiLoading.set(true);
+    const secId = this.selectedFacultySectionId();
+    this.analyticsApi.getFacultyTelemetryKpi(secId ? { sectionId: secId } : undefined).subscribe({
+      next: (kpi) => {
+        this.kpiSummary.set(kpi);
+        this.isKpiLoading.set(false);
+      },
+      error: (err) => {
+        console.warn('Could not load faculty telemetry KPI summary:', err);
+        this.isKpiLoading.set(false);
+      }
+    });
+  }
+
   onFacultySectionChange(sectionIdVal: string): void {
     const parsed = sectionIdVal && sectionIdVal !== 'ALL' ? Number(sectionIdVal) : null;
     this.selectedFacultySectionId.set(parsed);
     this.adminPageIndex.set(0);
     this.fetchFacultyTelemetry();
+    this.fetchFacultyTelemetryKpi();
   }
 
   onAdminTableLazyLoad(event: TableLazyLoadEvent): void {
@@ -379,8 +446,10 @@ export class DigitalTwinAnalyticsDashboardComponent implements OnInit {
         });
         if (this.isFaculty()) {
           this.fetchFacultyTelemetry();
+          this.fetchFacultyTelemetryKpi();
         } else {
           this.fetchAdminTelemetry();
+          this.fetchAdminTelemetryKpi();
         }
       },
       error: () => {
@@ -510,6 +579,13 @@ export class DigitalTwinAnalyticsDashboardComponent implements OnInit {
         }
       });
     } else {
+      if (this.isAdmin()) {
+        this.fetchAdminTelemetry();
+        this.fetchAdminTelemetryKpi();
+      } else if (this.isFaculty()) {
+        this.fetchFacultyTelemetry();
+        this.fetchFacultyTelemetryKpi();
+      }
       const studentId = this.currentStudentId() || 1;
       this.loadRiskProfile(studentId, true);
     }

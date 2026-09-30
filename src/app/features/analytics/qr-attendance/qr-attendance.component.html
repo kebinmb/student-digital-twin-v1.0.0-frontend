@@ -4,22 +4,7 @@
   <!-- Institutional Sticky Header Toolbar -->
   <div class="qr-toolbar-card" [class.student-toolbar]="isStudent()">
     <div class="header-branding">
-      <div class="header-icon-box" [class.student-icon-box]="isStudent()">
-        <i class="pi" [ngClass]="isStudent() ? 'pi-mobile' : 'pi-qrcode'" class="header-icon"></i>
-      </div>
       <div class="header-text-group">
-        <div class="badge-row">
-          @if (isStudent()) {
-            <span class="badge-tag green"><i class="pi pi-circle-fill live-dot"></i> LIVE TELEMETRY</span>
-            <span class="badge-tag blue">STUDENT ACADEMIC TWIN</span>
-            @if (studentProfile(); as sp) {
-              <span class="badge-tag emerald font-mono">#{{ sp.studentNumber }}</span>
-            }
-          } @else {
-            <span class="badge-tag green"><i class="pi pi-circle-fill live-dot"></i> CLASSROOM TELEMETRY</span>
-            <span class="badge-tag blue">DYNAMIC QR & GEOFENCING</span>
-          }
-        </div>
         <h1 class="header-title">{{ isStudent() ? 'Classroom QR Attendance Check-In' : 'Dynamic QR Attendance & GPS Geofence Terminal' }}</h1>
         <p class="header-subtitle">
           @if (isStudent()) {
@@ -351,7 +336,6 @@
 
           <!-- Section Schedule Selection -->
           <div class="section-select-group">
-            <label class="form-label font-mono-bold">Assigned Class Section Schedule</label>
             <p-select
               [options]="scheduleOptions()"
               [ngModel]="selectedScheduleId()"
@@ -417,7 +401,7 @@
       <div class="stat-card panel-card">
         <div class="panel-content">
           <div class="panel-title-group">
-            <div class="tile-icon-box blue"><i class="pi pi-shield-check"></i></div>
+  <div class="tile-icon-box blue"><i class="pi pi-shield"></i></div>
             <div>
               <h2 class="panel-title">Faculty & Host Geofence Verification</h2>
               <p class="panel-subtext">Validates instructor/conductor GPS location against classroom coordinates before conducting session. Host attendance is recorded separately from student check-ins.</p>
@@ -426,10 +410,8 @@
 
           <div class="input-section">
             <div class="form-field">
-              <label class="form-label font-mono-bold">Class QR Attendance Seed</label>
               <input pInputText [ngModel]="qrSeedInput()" (ngModelChange)="qrSeedInput.set($event)" placeholder="Paste or scan QR seed code..." class="full-width-input font-mono" />
             </div>
-
             @if (creatorScanResult(); as res) {
               <div class="verification-success-box">
                 <div class="success-header">
@@ -531,7 +513,6 @@
             <i class="pi pi-users header-icon-sm"></i>
             Daily Student Attendance Log
           </h2>
-          <p-tag [value]="totalRecords() + ' Scans'" severity="secondary" [rounded]="true"></p-tag>
         </div>
 
         <div class="toolbar-controls">
@@ -573,8 +554,7 @@
         <div class="stat-card bento-tile accent-green">
           <div class="tile-header">
             <span class="stat-label">Present Students</span>
-            <div class="tile-icon-box green"><i class="pi pi-user-check"></i></div>
-          </div>
+<div class="tile-icon-box green"><i class="pi pi-verified"></i></div>          </div>
           <div class="stat-val">{{ presentCount() }}</div>
           <p-progressBar [value]="totalRecords() > 0 ? (presentCount() / totalRecords()) * 100 : 100" [showValue]="false" styleClass="tile-progress"></p-progressBar>
           <div class="tile-caption">On-Time Classroom Check-Ins</div>

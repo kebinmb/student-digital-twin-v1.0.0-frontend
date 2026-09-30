@@ -145,7 +145,13 @@ export class UserManagementComponent implements OnInit {
     this.isAuditLoading.set(true);
     this.userApiService.getAuditLogs().subscribe({
       next: (logs) => {
-        this.auditLogs.set(logs);
+        const sorted = [...(logs || [])].sort((a, b) => {
+          const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          const diff = timeA - timeB;
+          return diff !== 0 ? diff : (a.id || 0) - (b.id || 0);
+        });
+        this.auditLogs.set(sorted);
         this.isAuditLoading.set(false);
       },
       error: () => {

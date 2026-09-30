@@ -235,7 +235,10 @@ export class FinancialFoundationsComponent implements OnInit {
       message: `Delete fee catalog item "${f.code} - ${f.name}"?`,
       header: 'Confirm Deletion',
       icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Yes',
+      rejectLabel: 'No',
       acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-outlined p-button-secondary',
       accept: () => {
         this.financialService.deleteFeeCatalog(f.id).subscribe({
           next: () => {
@@ -283,7 +286,10 @@ export class FinancialFoundationsComponent implements OnInit {
       message: `Delete template "${t.name}"?`,
       header: 'Confirm Deletion',
       icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Yes',
+      rejectLabel: 'No',
       acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-outlined p-button-secondary',
       accept: () => {
         this.financialService.deletePaymentTermTemplate(t.id).subscribe({
           next: () => {
@@ -336,7 +342,10 @@ export class FinancialFoundationsComponent implements OnInit {
       message: `Delete scholarship "${s.code} - ${s.name}"?`,
       header: 'Confirm Deletion',
       icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Yes',
+      rejectLabel: 'No',
       acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-outlined p-button-secondary',
       accept: () => {
         this.financialService.deleteScholarship(s.id).subscribe({
           next: () => {

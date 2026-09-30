@@ -48,7 +48,6 @@ describe('DashboardComponent', () => {
 
   beforeEach(async () => {
     mockNoticeApiService = {
-      fallbackNotices: mockNotices,
       getActiveNotices: vi.fn().mockReturnValue(of([...mockNotices])),
       createNotice: vi.fn().mockImplementation((req: any) => of({
         id: 'mock-100',

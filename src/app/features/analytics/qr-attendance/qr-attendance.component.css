@@ -312,11 +312,6 @@
   padding: 1rem 1.125rem;
 }
 
-.bento-tile.accent-green { border-top-color: var(--status-emerald-text, #047857); }
-.bento-tile.accent-blue { border-top-color: var(--status-blue-text, #0369a1); }
-.bento-tile.accent-amber { border-top-color: var(--status-amber-text, #b45309); }
-.bento-tile.accent-rose { border-top-color: var(--status-rose-text, #b91c1c); }
-
 .tile-header {
   display: flex;
   align-items: center;
@@ -372,6 +367,7 @@
   display: flex;
   align-items: center;
   gap: 0.875rem;
+  margin-bottom: 10px;
 }
 
 .panel-title {

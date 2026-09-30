@@ -76,7 +76,9 @@ describe('DigitalTwinAnalyticsDashboardComponent', () => {
         lastSync: '2026-09-25T06:00:00Z'
       })),
       acknowledgeStudentIntervention: vi.fn().mockReturnValue(of(undefined)),
-      dispatchIntervention: vi.fn().mockReturnValue(of({ id: 1, interventionType: 'GUIDANCE_COUNSELING', status: 'DISPATCHED' }))
+      dispatchIntervention: vi.fn().mockReturnValue(of({ id: 1, interventionType: 'GUIDANCE_COUNSELING', status: 'DISPATCHED' })),
+      getAdminTelemetryKpi: vi.fn().mockReturnValue(of(null)),
+      getFacultyTelemetryKpi: vi.fn().mockReturnValue(of(null))
     };
 
     mockEnrollmentApi = {
@@ -218,5 +220,62 @@ describe('DigitalTwinAnalyticsDashboardComponent', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('Faculty Class Section Digital Twin Radar');
     expect(compiled.textContent).toContain('Bob Faculty Student');
+  });
+
+  it('should populate executive analytics cards using total aggregate KPI data rather than only loaded page data', () => {
+    mockAuthService.hasRole.mockImplementation((role: string) => role === 'ADMIN');
+    mockAnalyticsApi.getAdminStudentTelemetry.mockReturnValue(of({
+      content: [
+        {
+          studentId: 10,
+          studentNumber: '2026-CS-0001',
+          fullName: 'Alice Student',
+          programOrCohort: 'BSIT (Year 3)',
+          riskLevel: 'LOW',
+          riskScore: 10.0,
+          activeInterventions: [],
+          lastTelemetrySync: '2026-09-25T06:00:00Z'
+        }
+      ],
+      totalElements: 50,
+      totalPages: 5,
+      size: 10,
+      number: 0
+    }));
+
+    mockAnalyticsApi.getAdminTelemetryKpi.mockReturnValue(of({
+      totalMonitored: 50,
+      criticalRiskCount: 8,
+      highRiskCount: 12,
+      moderateRiskCount: 15,
+      lowRiskCount: 15,
+      totalActiveInterventions: 18,
+      averageWellnessIndex: 78.5
+    }));
+
+    fixture = TestBed.createComponent(DigitalTwinAnalyticsDashboardComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    expect(component.isAdmin()).toBe(true);
+    expect(mockAnalyticsApi.getAdminTelemetryKpi).toHaveBeenCalled();
+    // Only 1 student is in the current page table slice
+    expect(component.adminTelemetryList().length).toBe(1);
+
+    // But executive KPI cards show total institutional aggregates
+    expect(component.totalMonitoredStudents()).toBe(50);
+    expect(component.criticalRiskCount()).toBe(8);
+    expect(component.highRiskCount()).toBe(12);
+    expect(component.moderateRiskCount()).toBe(15);
+    expect(component.lowRiskCount()).toBe(15);
+    expect(component.totalActiveInterventionsCount()).toBe(18);
+    expect(component.averageWellnessIndex()).toBe(78.5);
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.textContent).toContain('50');
+    expect(compiled.textContent).toContain('20');
+    expect(compiled.textContent).toContain('(8 Critical, 12 High)');
+    expect(compiled.textContent).toContain('18');
+    expect(compiled.textContent).toContain('78.5%');
   });
 });

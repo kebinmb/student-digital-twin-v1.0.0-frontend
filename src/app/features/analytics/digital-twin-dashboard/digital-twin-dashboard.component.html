@@ -4,23 +4,7 @@
   <!-- Top Cockpit Header Toolbar -->
   <div class="dashboard-toolbar-card">
     <div class="header-branding">
-      <div class="header-icon-box">
-        <i class="pi pi-radar header-icon"></i>
-      </div>
       <div class="header-text-group">
-        <div class="badge-row">
-          <span class="badge-tag green">
-            <i class="pi pi-circle-fill live-dot"></i>
-            LIVE TELEMETRY
-          </span>
-          @if (isAdmin()) {
-            <span class="badge-tag blue">INSTITUTIONAL ADMINISTRATION</span>
-          } @else if (isFaculty()) {
-            <span class="badge-tag amber">SECTION RADAR SCOPE</span>
-          } @else {
-            <span class="badge-tag green">PERSONAL ACADEMIC TWIN</span>
-          }
-        </div>
         <h1 class="header-title">
           @if (isAdmin()) {
             Administrator Student Telemetry & AI Interventions
@@ -91,7 +75,6 @@
           <div class="kpi-body">
             <div class="kpi-header">
               <span class="kpi-title">Total Monitored</span>
-              <span class="badge-tag green">+4.2%</span>
             </div>
             <div class="kpi-value text-blue">{{ totalMonitoredStudents() }}</div>
             <div class="kpi-subtext">Enrolled Scholars</div>
@@ -108,7 +91,6 @@
           <div class="kpi-body">
             <div class="kpi-header">
               <span class="kpi-title">Critical & High Risk</span>
-              <span class="badge-tag rose">HIGH ALERT</span>
             </div>
             <div class="kpi-value text-rose">
               {{ criticalRiskCount() + highRiskCount() }}
@@ -128,7 +110,6 @@
           <div class="kpi-body">
             <div class="kpi-header">
               <span class="kpi-title">Dispatched Interventions</span>
-              <span class="badge-tag amber">ACTIVE</span>
             </div>
             <div class="kpi-value text-amber">{{ totalActiveInterventionsCount() }}</div>
             <div class="kpi-subtext">Active Support Actions</div>
@@ -145,7 +126,6 @@
           <div class="kpi-body">
             <div class="kpi-header">
               <span class="kpi-title">Average Wellness Index</span>
-              <span class="badge-tag green">+1.8%</span>
             </div>
             <div class="kpi-value text-green">{{ averageWellnessIndex() }}%</div>
             <div class="kpi-subtext">Aggregate Cohort Health</div>
@@ -164,7 +144,6 @@
             <i class="pi pi-table header-icon-sm"></i>
             Student Telemetry Directory
           </h2>
-          <p-tag [value]="adminTotalElements() + ' Accounts'" severity="secondary" [rounded]="true"></p-tag>
         </div>
 
         <div class="toolbar-controls">

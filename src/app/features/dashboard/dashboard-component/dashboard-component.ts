@@ -382,14 +382,14 @@ export class DashboardComponent implements OnInit {
         { label: 'System Health', icon: 'pi pi-heart', routerLink: '/dashboard/admin/lms-config', severity: 'danger' },
         { label: 'User Accounts', icon: 'pi pi-users', routerLink: '/dashboard/users', severity: 'primary' },
         { label: 'Activity Logs', icon: 'pi pi-shield', routerLink: '/dashboard/institution', severity: 'info' },
-        { label: 'Database Setup', icon: 'pi pi-database', routerLink: '/dashboard/curriculum/designer/1', severity: 'success' }
+        { label: 'Database Setup', icon: 'pi pi-database', routerLink: '/dashboard/curriculum/designer', severity: 'success' }
       ];
     }
     if (this.isAdmin()) {
       return [
         { label: 'User Accounts', icon: 'pi pi-users', routerLink: '/dashboard/users', severity: 'primary' },
         { label: 'Campus & Colleges', icon: 'pi pi-building', routerLink: '/dashboard/institution', severity: 'info' },
-        { label: 'Curriculum Manager', icon: 'pi pi-sitemap', routerLink: '/dashboard/curriculum/designer/1', severity: 'success' },
+        { label: 'Curriculum Manager', icon: 'pi pi-sitemap', routerLink: '/dashboard/curriculum/designer', severity: 'success' },
         { label: 'LMS Settings', icon: 'pi pi-desktop', routerLink: '/dashboard/admin/lms-config', severity: 'secondary' }
       ];
     }
@@ -419,7 +419,7 @@ export class DashboardComponent implements OnInit {
     }
     if (this.isDean()) {
       return [
-        { label: 'Curriculum Plans', icon: 'pi pi-sitemap', routerLink: '/dashboard/curriculum/designer/1', severity: 'primary' },
+        { label: 'Curriculum Plans', icon: 'pi pi-sitemap', routerLink: '/dashboard/curriculum/designer', severity: 'primary' },
         { label: 'Class Schedule Planner', icon: 'pi pi-calendar-plus', routerLink: '/dashboard/scheduling', severity: 'info' },
         { label: 'Approve Clearances', icon: 'pi pi-verified', routerLink: '/dashboard/compliance/clearance', severity: 'success' },
         { label: 'Student Support Alerts', icon: 'pi pi-info-circle', routerLink: '/dashboard/analytics/early-warning', severity: 'warn' }
@@ -427,8 +427,8 @@ export class DashboardComponent implements OnInit {
     }
     if (this.isChairperson()) {
       return [
-        { label: 'Curriculum Plans', icon: 'pi pi-sitemap', routerLink: '/dashboard/curriculum/designer/1', severity: 'primary' },
-        { label: 'Course Outcomes', icon: 'pi pi-th-large', routerLink: '/dashboard/curriculum/designer/1', severity: 'info' },
+        { label: 'Curriculum Plans', icon: 'pi pi-sitemap', routerLink: '/dashboard/curriculum/designer', severity: 'primary' },
+        { label: 'Course Outcomes', icon: 'pi pi-th-large', routerLink: '/dashboard/curriculum/designer', severity: 'info' },
         { label: 'Class Schedule Planner', icon: 'pi pi-calendar', routerLink: '/dashboard/scheduling', severity: 'success' },
         { label: 'Grade Review Queue', icon: 'pi pi-check-square', routerLink: '/dashboard/grades', severity: 'warn' }
       ];
@@ -492,6 +492,15 @@ export class DashboardComponent implements OnInit {
   // Dynamic Database Entities for Super Admin, Admin, and Accountant Workspaces
   readonly usersList = signal<UserDetail[]>([]);
   readonly auditLogsList = signal<AuditLogEntry[]>([]);
+
+  private sortAuditLogsAscending(logs: AuditLogEntry[]): AuditLogEntry[] {
+    return [...(logs || [])].sort((a, b) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      const diff = timeA - timeB;
+      return diff !== 0 ? diff : (a.id || 0) - (b.id || 0);
+    });
+  }
   readonly campusesList = signal<any[]>([]);
   readonly curriculaList = signal<any[]>([]);
   readonly accountantClaimsList = signal<UnifastFheClaimDto[]>([]);
@@ -627,6 +636,7 @@ export class DashboardComponent implements OnInit {
 
   // Dynamic Campus Notices (Loaded from backend)
   readonly noticesSignal = signal<NoticeItem[]>([]);
+  readonly isNoticesLoading = signal(false);
   readonly noticesFirst = signal(0);
   readonly noticesPageSize = signal(3);
 
@@ -681,6 +691,12 @@ export class DashboardComponent implements OnInit {
     { label: 'Students Only', value: 'STUDENT' },
     { label: 'Faculty & Instructors', value: 'FACULTY' },
     { label: 'Administrative Staff', value: 'STAFF' }
+  ];
+
+  readonly noticePriorityOptions = [
+    { label: 'Normal (Standard Broadcast)', value: 'NORMAL' },
+    { label: 'Important (High Visibility Banner)', value: 'IMPORTANT' },
+    { label: 'Urgent Action Required (Immediate Alert)', value: 'URGENT' }
   ];
 
   // Action Drawer Signals
@@ -876,7 +892,7 @@ export class DashboardComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(logs => {
         if (logs && logs.length > 0) {
-          this.auditLogsList.set(logs);
+          this.auditLogsList.set(this.sortAuditLogsAscending(logs));
         }
       });
 
@@ -930,11 +946,17 @@ export class DashboardComponent implements OnInit {
   }
 
   loadNotices(): void {
+    this.isNoticesLoading.set(true);
     this.noticeApiService.getActiveNotices()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(list => {
-        if (list && list.length > 0) {
-          this.noticesSignal.set(list);
+      .subscribe({
+        next: (list) => {
+          this.noticesSignal.set(list || []);
+          this.isNoticesLoading.set(false);
+        },
+        error: () => {
+          this.noticesSignal.set([]);
+          this.isNoticesLoading.set(false);
         }
       });
   }
@@ -993,7 +1015,7 @@ export class DashboardComponent implements OnInit {
               }));
 
               this.usersList.set(users);
-              this.auditLogsList.set(auditLogs);
+              this.auditLogsList.set(this.sortAuditLogsAscending(auditLogs));
               this.campusesList.set(campuses);
 
               this.actuatorEndpointsSignal.set([
@@ -1035,7 +1057,7 @@ export class DashboardComponent implements OnInit {
               }));
               this.usersList.set(users);
               this.campusesList.set(campuses);
-              this.auditLogsList.set(auditLogs);
+              this.auditLogsList.set(this.sortAuditLogsAscending(auditLogs));
               this.curriculaList.set(curricula);
               this.isLoading.set(false);
             },

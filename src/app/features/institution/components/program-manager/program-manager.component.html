@@ -8,54 +8,36 @@
       </p>
     </div>
     @if (canCreate()) {
-      <div class="header-actions">
-        <p-button
-          label="Register Program"
-          icon="pi pi-plus"
-          size="small"
-          severity="primary"
-          [disabled]="departmentOptions().length === 0"
-          (onClick)="openCreateDialog()">
-        </p-button>
-      </div>
+    <div class="header-actions">
+      <p-button label="Register Program" icon="pi pi-plus" size="small" severity="primary"
+        [disabled]="departmentOptions().length === 0" (onClick)="openCreateDialog()">
+      </p-button>
+    </div>
     }
   </div>
 
   <!-- Prerequisite Notice -->
   @if (!isLoading() && departments().length === 0) {
-    <div class="prerequisite-banner">
-      <p-message
-        severity="warn"
-        text="Prerequisite Notice: No academic departments found. Please create a Department under an active Campus first."
-        styleClass="w-full">
-      </p-message>
-    </div>
+  <div class="prerequisite-banner">
+    <p-message severity="warn"
+      text="Prerequisite Notice: No academic departments found. Please create a Department under an active Campus first."
+      styleClass="w-full">
+    </p-message>
+  </div>
   }
 
   <!-- Department Filter Selector -->
   <div class="filter-row">
     <label for="deptFilterSelect" class="filter-label">Filter by Department:</label>
-    <p-select
-      id="deptFilterSelect"
-      [options]="departmentFilterOptions()"
-      [(ngModel)]="selectedDepartmentId"
-      (onChange)="onDepartmentFilterChange()"
-      placeholder="All Departments"
-      optionLabel="label"
-      optionValue="value"
-      styleClass="p-inputtext-sm dept-filter-dropdown text-xs">
+    <p-select id="deptFilterSelect" [options]="departmentFilterOptions()" [(ngModel)]="selectedDepartmentId"
+      (onChange)="onDepartmentFilterChange()" placeholder="All Departments" optionLabel="label" optionValue="value"
+      class="w-full text-xs" size="small">
     </p-select>
   </div>
 
   <!-- Programs Data Table -->
-  <p-table
-    [value]="filteredPrograms()"
-    [loading]="isLoading()"
-    [paginator]="true"
-    [rows]="5"
-    [rowsPerPageOptions]="[5, 10, 20]"
-    responsiveLayout="scroll"
-    styleClass="p-datatable-sm institutional-table">
+  <p-table [value]="filteredPrograms()" [loading]="isLoading()" [paginator]="true" [rows]="5"
+    [rowsPerPageOptions]="[5, 10, 20]" responsiveLayout="scroll" styleClass="p-datatable-sm institutional-table">
     <ng-template pTemplate="header">
       <tr>
         <th style="width: 140px">Program Code</th>
@@ -68,13 +50,8 @@
     </ng-template>
 
     <ng-template pTemplate="body" let-p>
-      <tr 
-        tabindex="0"
-        role="button"
-        [attr.aria-label]="'View details for ' + p.name"
-        (click)="openDetailDrawer(p)"
-        (keydown.enter)="openDetailDrawer(p)"
-        (keydown.space)="$event.preventDefault(); openDetailDrawer(p)"
+      <tr tabindex="0" role="button" [attr.aria-label]="'View details for ' + p.name" (click)="openDetailDrawer(p)"
+        (keydown.enter)="openDetailDrawer(p)" (keydown.space)="$event.preventDefault(); openDetailDrawer(p)"
         class="hover:bg-slate-100 cursor-pointer focus:outline-none focus:bg-slate-100">
         <td>
           <span class="code-badge">{{ p.code }}</span>
@@ -82,7 +59,7 @@
         <td>
           <div class="prog-title">{{ p.name }}</div>
           @if (p.major) {
-            <div class="prog-major">Major in {{ p.major }}</div>
+          <div class="prog-major">Major in {{ p.major }}</div>
           }
         </td>
         <td>
@@ -96,9 +73,9 @@
         </td>
         <td style="text-align: center">
           @if (p.isActive) {
-            <p-tag value="Active" severity="success"></p-tag>
+          <p-tag value="Active" severity="success"></p-tag>
           } @else {
-            <p-tag value="Inactive" severity="secondary"></p-tag>
+          <p-tag value="Inactive" severity="secondary"></p-tag>
           }
         </td>
       </tr>
@@ -106,14 +83,14 @@
 
     <ng-template pTemplate="loadingbody">
       @for (i of [1, 2, 3, 4]; track i) {
-        <tr>
-          <td><p-skeleton width="80px"></p-skeleton></td>
-          <td><p-skeleton width="240px"></p-skeleton></td>
-          <td><p-skeleton width="100px"></p-skeleton></td>
-          <td><p-skeleton width="90px"></p-skeleton></td>
-          <td><p-skeleton width="50px"></p-skeleton></td>
-          <td><p-skeleton width="60px"></p-skeleton></td>
-        </tr>
+      <tr>
+        <td><p-skeleton width="80px"></p-skeleton></td>
+        <td><p-skeleton width="240px"></p-skeleton></td>
+        <td><p-skeleton width="100px"></p-skeleton></td>
+        <td><p-skeleton width="90px"></p-skeleton></td>
+        <td><p-skeleton width="50px"></p-skeleton></td>
+        <td><p-skeleton width="60px"></p-skeleton></td>
+      </tr>
       }
     </ng-template>
 
@@ -135,13 +112,8 @@
   </p-table>
 
   <!-- Master-Detail Drawer for Program Profile -->
-  <p-drawer
-    [visible]="isDetailDrawerOpen()"
-    (visibleChange)="isDetailDrawerOpen.set($event)"
-    position="right"
-    [modal]="true"
-    [blockScroll]="true"
-    ariaLabelledBy="prog-drawer-title"
+  <p-drawer [visible]="isDetailDrawerOpen()" (visibleChange)="isDetailDrawerOpen.set($event)" position="right"
+    [modal]="true" [blockScroll]="true" ariaLabelledBy="prog-drawer-title"
     styleClass="institutional-drawer prog-detail-drawer w-full sm:w-[28rem]">
     <ng-template pTemplate="header">
       <div class="drawer-header-content">
@@ -157,166 +129,133 @@
 
     <ng-template pTemplate="content">
       @if (selectedProgForDetail(); as prog) {
-        <div class="drawer-scroll-container">
-          <!-- Summary Profile Card -->
-          <div class="drawer-summary-card">
-            <div class="summary-badge-row">
-              <span class="code-badge">{{ prog.code }}</span>
-              <div class="flex items-center gap-1.5">
-                <span class="degree-level-badge">{{ prog.degreeLevel }}</span>
-                <p-tag [severity]="prog.isActive ? 'success' : 'danger'" [value]="prog.isActive ? 'ACTIVE' : 'INACTIVE'"></p-tag>
-              </div>
-            </div>
-
-            @if (prog.major) {
-              <div class="summary-major-box">
-                <span class="meta-label">Major / Field of Specialization</span>
-                <span class="meta-val font-semibold-navy">{{ prog.major }}</span>
-              </div>
-            }
-
-            <div class="summary-dept-box">
-              <i class="pi pi-sitemap dept-icon"></i>
-              <div class="dept-meta">
-                <span class="meta-label">Department Placement</span>
-                <span class="meta-val font-semibold-navy">
-                  {{ prog.departmentCode || getDeptCode(prog.departmentId) }}
-                </span>
-              </div>
+      <div class="drawer-scroll-container">
+        <!-- Summary Profile Card -->
+        <div class="drawer-summary-card">
+          <div class="summary-badge-row">
+            <span class="code-badge">{{ prog.code }}</span>
+            <div class="flex items-center gap-1.5">
+              <span class="degree-level-badge" style="margin-right: 8px;">{{ prog.degreeLevel }}</span>
+              <p-tag [severity]="prog.isActive ? 'success' : 'danger'"
+                [value]="prog.isActive ? 'ACTIVE' : 'INACTIVE'"></p-tag>
             </div>
           </div>
 
-          <!-- Section: Curricular Requirements -->
-          <div class="drawer-group-section">
-            <h4 class="drawer-group-title">
-              <i class="pi pi-book"></i> Curricular Specifications
-            </h4>
-            <div class="drawer-info-grid">
-              <div class="drawer-info-card">
-                <span class="info-card-label">Total Required Units</span>
-                <span class="info-card-value font-mono text-chmsu-green">
-                  {{ prog.totalUnitsRequired || 146 }} Units
-                </span>
-              </div>
-              <div class="drawer-info-card">
-                <span class="info-card-label">Degree Classification</span>
-                <span class="info-card-value">{{ prog.degreeLevel }}</span>
-              </div>
-            </div>
+          @if (prog.major) {
+          <div class="summary-major-box">
+            <span class="meta-label">Major / Field of Specialization</span>
+            <span class="meta-val font-semibold-navy">{{ prog.major }}</span>
           </div>
+          }
 
-          <!-- Section: Program Educational Objectives & Outcomes -->
-          <div class="drawer-group-section">
-            <h4 class="drawer-group-title chmsu-gold-heading">
-              <i class="pi pi-flag"></i> Assessment & Accreditation
-            </h4>
-            <div class="drawer-info-card callout-card-gold">
-              <span class="info-card-label text-gold-deep">Program Intended Learning Outcomes (PILOs)</span>
-              <p class="drawer-card-help">
-                Define and audit specific student competencies and career readiness criteria tailored for CHMSU academic quality assurance.
-              </p>
-              <div class="pt-2">
-                <p-button
-                  label="Manage Outcomes (PILOs)"
-                  icon="pi pi-external-link"
-                  size="small"
-                  styleClass="btn-chmsu-gold"
-                  (onClick)="openPiloDialog(prog); isDetailDrawerOpen.set(false)">
-                </p-button>
-              </div>
+          <div class="summary-dept-box">
+            <i class="pi pi-sitemap dept-icon"></i>
+            <div class="dept-meta">
+              <span class="meta-label">Department Placement</span>
+              <span class="meta-val font-semibold-navy">
+                {{ prog.departmentCode || getDeptCode(prog.departmentId) }}
+              </span>
             </div>
           </div>
         </div>
+
+        <!-- Section: Curricular Requirements -->
+        <div class="drawer-group-section">
+          <h4 class="drawer-group-title">
+            <i class="pi pi-book"></i> Curricular Specifications
+          </h4>
+          <div class="drawer-info-grid">
+            <div class="drawer-info-card">
+              <span class="info-card-label">Total Required Units</span>
+              <span class="info-card-value font-mono text-chmsu-green">
+                {{ prog.totalUnitsRequired || 146 }} Units
+              </span>
+            </div>
+            <div class="drawer-info-card">
+              <span class="info-card-label">Degree Classification</span>
+              <span class="info-card-value">{{ prog.degreeLevel }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Program Educational Objectives & Outcomes -->
+        <div class="drawer-group-section">
+          <h4 class="drawer-group-title chmsu-gold-heading">
+            <i class="pi pi-flag"></i> Assessment & Accreditation
+          </h4>
+          <div class="drawer-info-card callout-card-gold">
+            <span class="info-card-label text-gold-deep">Program Intended Learning Outcomes (PILOs)</span>
+            <p class="drawer-card-help">
+              Define and audit specific student competencies and career readiness criteria tailored for CHMSU academic
+              quality assurance.
+            </p>
+            <div class="pt-2">
+              <p-button [style]="{'margin-top': '8px'}" label="Manage Outcomes (PILOs)" icon="pi pi-external-link"
+                size="small" styleClass="btn-chmsu-gold"
+                (onClick)="openPiloDialog(prog); isDetailDrawerOpen.set(false)">
+              </p-button>
+            </div>
+          </div>
+        </div>
+      </div>
       }
     </ng-template>
 
     <ng-template pTemplate="footer">
       <div class="drawer-action-footer">
-        <p-button 
-          label="Close" 
-          icon="pi pi-times" 
-          severity="secondary" 
-          [outlined]="true" 
-          size="small"
-          class="w-full sm:w-auto"
-          (onClick)="isDetailDrawerOpen.set(false)">
+        <p-button label="Close" icon="pi pi-times" severity="secondary" [outlined]="true" size="small"
+          class="w-full sm:w-auto" (onClick)="isDetailDrawerOpen.set(false)">
         </p-button>
       </div>
     </ng-template>
   </p-drawer>
 
   <!-- Program Create/Edit Modal -->
-  <p-dialog
-    [header]="isEditing ? 'Edit Degree Program' : 'Register Degree Program'"
-    [visible]="displayDialog"
-    (visibleChange)="displayDialog = $event"
-    [modal]="true"
-    [breakpoints]="{ '960px': '75vw', '640px': '92vw' }"
-    [style]="{ width: '500px', maxWidth: '95vw' }"
-    [contentStyle]="{ 'overflow-x': 'hidden' }"
-    (onHide)="resetForm()">
-    
+  <p-dialog [header]="isEditing ? 'Edit Degree Program' : 'Register Degree Program'" [visible]="displayDialog"
+    (visibleChange)="displayDialog = $event" [modal]="true" [breakpoints]="{ '960px': '75vw', '640px': '92vw' }"
+    [style]="{ width: '500px', maxWidth: '95vw' }" [contentStyle]="{ 'overflow-x': 'hidden' }" (onHide)="resetForm()">
+
     <form [formGroup]="programForm" (ngSubmit)="saveProgram()" class="dialog-form">
       @if (!isEditing) {
-        <div class="form-group">
-          <label class="form-label">Parent Department <span class="required-star">*</span></label>
-          <p-select
-            appendTo="body"
-            [options]="departmentOptions()"
-            formControlName="departmentId"
-            placeholder="Select Department"
-            optionLabel="label"
-            optionValue="value"
-            styleClass="w-full text-xs">
-          </p-select>
-          @if (programForm.get('departmentId')?.touched && programForm.get('departmentId')?.invalid) {
-            <span class="p-error">Parent department is required.</span>
-          }
-        </div>
+      <div class="form-group">
+        <label class="form-label">Parent Department <span class="required-star">*</span></label>
+        <p-select appendTo="body" [options]="departmentOptions()" formControlName="departmentId" class="w-full text-xs" size="small"
+          placeholder="Select Department" optionLabel="label" optionValue="value" styleClass="w-full text-xs">
+        </p-select>
+        @if (programForm.get('departmentId')?.touched && programForm.get('departmentId')?.invalid) {
+        <span class="p-error">Parent department is required.</span>
+        }
+      </div>
       }
 
       <div class="form-group">
         <label class="form-label">Program Code <span class="required-star">*</span></label>
-        <input
-          pInputText
-          formControlName="code"
-          placeholder="e.g. BSIT"
-          class="form-input uppercase font-mono"
+        <input pInputText formControlName="code" placeholder="e.g. BSIT" class="form-input uppercase font-mono"
           [readonly]="isEditing" />
         @if (programForm.get('code')?.touched && programForm.get('code')?.invalid) {
-          <span class="p-error">Program code is required.</span>
+        <span class="p-error">Program code is required.</span>
         }
       </div>
 
       <div class="form-group">
         <label class="form-label">Program Name / Title <span class="required-star">*</span></label>
-        <input
-          pInputText
-          formControlName="name"
-          placeholder="e.g. Bachelor of Science in Information Technology"
+        <input pInputText formControlName="name" placeholder="e.g. Bachelor of Science in Information Technology"
           class="form-input" />
         @if (programForm.get('name')?.touched && programForm.get('name')?.invalid) {
-          <span class="p-error">Program name is required.</span>
+        <span class="p-error">Program name is required.</span>
         }
       </div>
 
       <div class="form-row-2">
         <div class="form-group">
           <label class="form-label">Degree Level <span class="required-star">*</span></label>
-          <p-select
-            appendTo="body"
-            [options]="degreeLevelOptions"
-            formControlName="degreeLevel"
-            placeholder="Select Level"
-            styleClass="w-full text-xs">
+          <p-select appendTo="body" [options]="degreeLevelOptions" formControlName="degreeLevel" class="w-full text-xs" size="small"
+            placeholder="Select Level" styleClass="w-full text-xs">
           </p-select>
         </div>
         <div class="form-group">
           <label class="form-label">Total Units Required <span class="required-star">*</span></label>
-          <p-inputnumber
-            formControlName="totalUnitsRequired"
-            placeholder="e.g. 146"
-            [min]="1"
+          <p-inputnumber formControlName="totalUnitsRequired" placeholder="e.g. 146" [min]="1"
             styleClass="w-full text-xs">
           </p-inputnumber>
         </div>
@@ -324,83 +263,56 @@
 
       <div class="form-group">
         <label class="form-label">Major / Specialization (Optional)</label>
-        <input
-          pInputText
-          formControlName="major"
-          placeholder="e.g. Enterprise Application Development"
+        <input pInputText formControlName="major" placeholder="e.g. Enterprise Application Development"
           class="form-input" />
       </div>
 
       <div class="dialog-actions">
-        <p-button
-          label="Cancel"
-          size="small"
-          [outlined]="true"
-          severity="secondary"
-          type="button"
+        <p-button label="Cancel" size="small" [outlined]="true" severity="secondary" type="button"
           (onClick)="displayDialog = false">
         </p-button>
-        <p-button
-          [label]="isEditing ? 'Save Changes' : 'Register Program'"
-          icon="pi pi-check"
-          size="small"
-          severity="primary"
-          type="submit"
-          [disabled]="programForm.invalid || isSubmitting">
+        <p-button [label]="isEditing ? 'Save Changes' : 'Register Program'" icon="pi pi-check" size="small"
+          severity="primary" type="submit" [disabled]="programForm.invalid || isSubmitting">
         </p-button>
       </div>
     </form>
   </p-dialog>
 
   <!-- PILO Management Modal -->
-  <p-dialog
-    [header]="'Program Educational Outcomes: ' + (activePiloProgram?.code || '')"
-    [visible]="displayPiloDialog"
-    (visibleChange)="displayPiloDialog = $event"
-    [modal]="true"
-    [breakpoints]="{ '960px': '75vw', '640px': '92vw' }"
-    [style]="{ width: '650px', maxWidth: '95vw' }"
-    [contentStyle]="{ 'overflow-x': 'hidden' }">
+  <p-dialog [header]="'Program Educational Outcomes: ' + (activePiloProgram?.code || '')" [visible]="displayPiloDialog"
+    (visibleChange)="displayPiloDialog = $event" [modal]="true" [breakpoints]="{ '960px': '75vw', '640px': '92vw' }"
+    [style]="{ width: '650px', maxWidth: '95vw' }" [contentStyle]="{ 'overflow-x': 'hidden' }">
     <div class="pilo-dialog-container">
       <div class="pilo-header-notice">
         <i class="pi pi-info-circle text-gold-deep"></i>
         <p class="dialog-subtext">
-          Outcomes defining the graduate attributes and CHED competencies for <strong>{{ activePiloProgram?.name }}</strong>.
+          Outcomes defining the graduate attributes and CHED competencies for <strong>{{ activePiloProgram?.name
+            }}</strong>.
         </p>
       </div>
 
       <!-- Add PILO inline -->
       @if (canManage()) {
-        <div class="pilo-inline-add">
-          <input
-            pInputText
-            [(ngModel)]="newPiloCode"
-            placeholder="PILO Code (e.g. PILO-1)"
-            class="pilo-code-input uppercase font-mono" />
-          <input
-            pInputText
-            [(ngModel)]="newPiloDescription"
-            placeholder="Outcome statement & capability description"
-            class="flex-1 form-input text-xs" />
-          <p-button
-            label="Add Outcome"
-            icon="pi pi-plus"
-            size="small"
-            styleClass="btn-chmsu-gold"
-            [disabled]="!newPiloCode.trim() || !newPiloDescription.trim()"
-            (onClick)="addPilo()">
-          </p-button>
-        </div>
+      <div class="pilo-inline-add">
+        <input pInputText [(ngModel)]="newPiloCode" placeholder="PILO Code (e.g. PILO-1)"
+          class="pilo-code-input uppercase font-mono" />
+        <input pInputText [(ngModel)]="newPiloDescription" placeholder="Outcome statement & capability description"
+          class="flex-1 form-input text-xs" />
+        <p-button label="Add Outcome" icon="pi pi-plus" size="small" styleClass="btn-chmsu-gold"
+          [disabled]="!newPiloCode.trim() || !newPiloDescription.trim()" (onClick)="addPilo()">
+        </p-button>
+      </div>
       }
 
       <!-- PILO List Table -->
-      <p-table [value]="programOutcomes()" [loading]="isLoadingPilos" [paginator]="true" [rows]="5" [rowsPerPageOptions]="[5, 10, 20]" styleClass="p-datatable-sm institutional-table">
+      <p-table [value]="programOutcomes()" [loading]="isLoadingPilos" [paginator]="true" [rows]="5"
+        [rowsPerPageOptions]="[5, 10, 20]" styleClass="p-datatable-sm institutional-table">
         <ng-template pTemplate="header">
           <tr>
             <th style="width: 120px">Code</th>
             <th>Outcome Statement</th>
             @if (canManage()) {
-              <th style="width: 70px; text-align: right">Action</th>
+            <th style="width: 70px; text-align: right">Action</th>
             }
           </tr>
         </ng-template>
@@ -411,16 +323,11 @@
             </td>
             <td class="text-xs font-normal text-slate-700 leading-relaxed">{{ po.description }}</td>
             @if (canManage()) {
-              <td style="text-align: right">
-                <p-button
-                  icon="pi pi-trash"
-                  size="small"
-                  [text]="true"
-                  severity="danger"
-                  aria-label="Delete outcome"
-                  (onClick)="deletePilo(po.id)">
-                </p-button>
-              </td>
+            <td style="text-align: right">
+              <p-button icon="pi pi-trash" size="small" [text]="true" severity="danger" aria-label="Delete outcome"
+                (onClick)="deletePilo(po.id)">
+              </p-button>
+            </td>
             }
           </tr>
         </ng-template>
@@ -429,7 +336,8 @@
             <td [attr.colspan]="canManage() ? 3 : 2" class="empty-state-cell">
               <div class="empty-state-card py-3">
                 <i class="pi pi-flag text-slate-400 text-lg mb-1"></i>
-                <p class="empty-state-subtext">No program outcomes (PILOs) registered yet for this degree curriculum.</p>
+                <p class="empty-state-subtext">No program outcomes (PILOs) registered yet for this degree curriculum.
+                </p>
               </div>
             </td>
           </tr>

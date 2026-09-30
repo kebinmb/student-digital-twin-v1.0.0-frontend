@@ -4,7 +4,7 @@ import { roleGuard } from '../../core/guards/authorization/role.guard';
 export const CURRICULUM_ROUTES: Routes = [
   {
     path: '',
-    redirectTo: 'designer/1',
+    redirectTo: 'designer', // <-- Clean redirect without hardcoded ID
     pathMatch: 'full'
   },
   {

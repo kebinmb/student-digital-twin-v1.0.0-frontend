@@ -322,14 +322,16 @@
         [rowsPerPageOptions]="[5, 10, 20]"
         styleClass="institutional-table"
         responsiveLayout="scroll"
+        sortField="createdAt"
+        [sortOrder]="1"
       >
         <ng-template pTemplate="header">
           <tr>
-            <th style="width: 15%;">Timestamp</th>
-            <th style="width: 18%;">Action</th>
-            <th style="width: 15%;">Target Entity</th>
-            <th style="width: 15%;">Performed By</th>
-            <th style="width: 12%;">IP Address</th>
+            <th style="width: 15%;" pSortableColumn="createdAt">Timestamp <p-sortIcon field="createdAt"></p-sortIcon></th>
+            <th style="width: 18%;" pSortableColumn="action">Action <p-sortIcon field="action"></p-sortIcon></th>
+            <th style="width: 15%;" pSortableColumn="entityName">Target Entity <p-sortIcon field="entityName"></p-sortIcon></th>
+            <th style="width: 15%;" pSortableColumn="username">Performed By <p-sortIcon field="username"></p-sortIcon></th>
+            <th style="width: 12%;" pSortableColumn="ipAddress">IP Address <p-sortIcon field="ipAddress"></p-sortIcon></th>
             <th style="width: 25%;">Details</th>
           </tr>
         </ng-template>

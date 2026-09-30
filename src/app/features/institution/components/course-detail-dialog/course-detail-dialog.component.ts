@@ -250,7 +250,10 @@ export class CourseDetailDialogComponent {
       message: `Delete outcome "${co.code}"? Blocked if linked in the CILO-PILO curriculum alignment matrix.`,
       header: 'Delete Course Outcome',
       icon: 'pi pi-trash',
+      acceptLabel: 'Yes',
+      rejectLabel: 'No',
       acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-outlined p-button-secondary',
       accept: () => {
         this.outcomeService.delete(currentCourse.id, co.id).subscribe({
           next: () => {
@@ -323,7 +326,10 @@ export class CourseDetailDialogComponent {
       message: `Remove prerequisite requirement "${prereq.prerequisiteCourseCode}"?`,
       header: 'Remove Prerequisite Rule',
       icon: 'pi pi-trash',
+      acceptLabel: 'Yes',
+      rejectLabel: 'No',
       acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-outlined p-button-secondary',
       accept: () => {
         this.prereqService.delete(currentCourse.id, prereq.id).subscribe({
           next: () => {

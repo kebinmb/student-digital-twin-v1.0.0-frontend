@@ -134,23 +134,10 @@ export class CurriculumDesignerComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.store.loadCurriculumOptions();
-    this.route.paramMap
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(params => {
-        const idParam = params.get('id');
-        const curriculumId = idParam ? parseInt(idParam, 10) : NaN;
-        if (!isNaN(curriculumId) && curriculumId > 0) {
-          if (this.selectedCurriculumId() !== curriculumId || this.store.curriculum()?.curriculumId !== curriculumId) {
-            this.selectedCurriculumId.set(curriculumId);
-            this.store.loadCurriculum(curriculumId);
-          }
-        } else if (!idParam && !this.id()) {
-          this.selectedCurriculumId.set(null);
-          this.store.curriculum.set(null);
-        }
-      });
-  }
+  this.store.loadCurriculumOptions();
+  this.selectedCurriculumId.set(null);
+  this.store.curriculum.set(null);
+}
 
   onCurriculumChange(newId: number | null): void {
     if (!newId) return;
@@ -265,8 +252,8 @@ export class CurriculumDesignerComponent implements OnInit {
     const curriculumId = idParam ? parseInt(idParam, 10) : (selectedId ?? NaN);
     if (!isNaN(curriculumId) && curriculumId > 0) {
       this.store.loadCurriculum(curriculumId);
-    } else {
-      this.store.loadCurriculum(1);
     }
+    // No fallback: if no valid curriculum is selected, do nothing.
+    // Prevents a spurious GET /curricula/1/designer on initial load.
   }
 }

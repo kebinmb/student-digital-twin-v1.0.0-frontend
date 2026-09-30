@@ -170,7 +170,8 @@
               placeholder="Switch Curriculum..."
               [loading]="store.isOptionsLoading()"
               appendTo="body"
-              styleClass="curriculum-switcher-select">
+              class="w-full text-xs"
+            size="small">
               <ng-template pTemplate="selectedItem" let-selected>
                 @if (selected) {
                   <div class="switcher-selected-item">

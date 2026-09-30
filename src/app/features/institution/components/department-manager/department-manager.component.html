@@ -23,14 +23,15 @@
       <!-- Campus filter -->
       <div class="filter-box">
         <p-select
-          [options]="campusFilterOptions()"
-          [(ngModel)]="selectedCampusFilter"
-          (onChange)="onFilterChange()"
-          placeholder="Filter by Campus"
-          optionLabel="label"
-          optionValue="value"
-          styleClass="p-inputtext-sm w-full text-xs">
-        </p-select>
+  [options]="campusFilterOptions()"
+  [(ngModel)]="selectedCampusFilter"
+  (onChange)="onFilterChange()"
+  placeholder="Filter by Campus"
+  optionLabel="label"
+  optionValue="value"
+  class="w-full text-xs"
+  size="small">
+</p-select>
       </div>
 
       @if (canManage()) {
@@ -207,6 +208,7 @@
               <span class="code-badge">{{ dept.code }}</span>
               <div class="flex items-center gap-1.5">
                 <p-tag 
+                  [style]="{'margin-right': '12px'}"
                   [severity]="dept.type === 'COLLEGE' ? 'info' : (dept.type === 'DEPARTMENT' ? 'secondary' : 'warn')" 
                   [value]="dept.type">
                 </p-tag>
@@ -309,7 +311,8 @@
           optionLabel="label"
           optionValue="value"
           [disabled]="!!editingId()"
-          styleClass="w-full text-xs">
+          class="w-full text-xs"
+          size="small">
         </p-select>
         @if (form.get('campusId')?.touched && form.get('campusId')?.invalid) {
           <span class="p-error">Target campus is mandatory.</span>
@@ -342,7 +345,8 @@
             placeholder="Select Type"
             optionLabel="label"
             optionValue="value"
-            styleClass="w-full text-xs">
+            class="w-full text-xs"
+            size="small">
           </p-select>
         </div>
       </div>
@@ -372,7 +376,8 @@
           optionLabel="label"
           optionValue="value"
           [showClear]="true"
-          styleClass="w-full text-xs">
+          class="w-full text-xs"
+            size="small">
         </p-select>
         <span class="field-hint">Filtered strictly to units within the selected campus; cyclic self-assignment is excluded.</span>
       </div>
@@ -397,6 +402,4 @@
       </div>
     </form>
   </p-dialog>
-
-  <p-confirmdialog></p-confirmdialog>
 </div>

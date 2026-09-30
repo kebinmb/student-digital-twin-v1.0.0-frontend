@@ -93,6 +93,6 @@ export class InstitutionManagementComponent implements OnInit {
   }
 
   navigateToCurriculumDesigner(): void {
-    this.router.navigate(['/dashboard/curriculum/designer/1']);
+    this.router.navigate(['/dashboard/curriculum/designer']);
   }
 }

@@ -12,11 +12,6 @@
   gap: 1.25rem;
 }
 
-/* Header Card Accent */
-.header-card {
-  border-left: 4px solid var(--chmsu-green-main, #116834);
-}
-
 /* Tab Navigation Toolbar */
 .tab-toolbar {
   display: flex;
@@ -381,26 +376,10 @@
   border: 1px solid var(--chmsu-slate-200, #e2e8f0);
   border-radius: var(--chmsu-border-radius-md, 8px);
   padding: 1rem 1.15rem;
-  box-shadow: var(--chmsu-shadow-card, 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1));
   display: flex;
   flex-direction: column;
 }
 
-.kpi-card.border-green {
-  border-left: 4px solid var(--chmsu-green-main, #116834);
-}
-
-.kpi-card.border-blue {
-  border-left: 4px solid #0284c7;
-}
-
-.kpi-card.border-rose {
-  border-left: 4px solid var(--status-rose-text, #e11d48);
-}
-
-.kpi-card.border-amber {
-  border-left: 4px solid var(--chmsu-gold-main, #d97706);
-}
 
 .kpi-title {
   font-size: 0.6875rem;

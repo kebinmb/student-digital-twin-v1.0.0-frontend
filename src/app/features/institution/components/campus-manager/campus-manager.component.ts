@@ -190,11 +190,15 @@ export class CampusManagerComponent implements OnInit {
   confirmToggleStatus(campus: Campus): void {
     const nextStatus = !campus.isActive;
     const actionWord = nextStatus ? 'activate' : 'deactivate';
+    const actionTitle = actionWord.charAt(0).toUpperCase() + actionWord.slice(1);
     this.confirmationService.confirm({
       message: `Are you sure you want to ${actionWord} "${campus.name}"?`,
       header: `${actionWord.toUpperCase()} Campus`,
       icon: 'pi pi-exclamation-triangle',
-      acceptLabel: `Confirm ${actionWord}`,
+      acceptLabel: `Confirm ${actionTitle}`,
+      rejectLabel: 'No',
+      acceptButtonStyleClass: nextStatus ? 'p-button-success' : 'p-button-warn',
+      rejectButtonStyleClass: 'p-button-outlined p-button-secondary',
       accept: () => {
         this.campusService.toggleStatus(campus.id, nextStatus).subscribe({
           next: () => {
@@ -214,7 +218,10 @@ export class CampusManagerComponent implements OnInit {
       message: `Permanently delete campus "${campus.name}"? This operation will be rejected if existing departments belong to it.`,
       header: 'Delete Campus',
       icon: 'pi pi-trash',
+      acceptLabel: 'Yes',
+      rejectLabel: 'No',
       acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-outlined p-button-secondary',
       accept: () => {
         this.campusService.delete(campus.id).subscribe({
           next: () => {

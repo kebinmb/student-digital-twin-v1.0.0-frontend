@@ -43,10 +43,9 @@ describe('NoticeApiService', () => {
     req.flush(mockNotices);
   });
 
-  it('should gracefully fallback to seed notices when backend is offline or errors', () => {
+  it('should gracefully return an empty array when backend is offline or errors', () => {
     service.getActiveNotices().subscribe(notices => {
-      expect(notices.length).toBeGreaterThan(0);
-      expect(notices[0].title).toContain('Examination Schedule');
+      expect(notices).toEqual([]);
     });
 
     const req = httpTesting.expectOne(`${baseUrl}/active`);

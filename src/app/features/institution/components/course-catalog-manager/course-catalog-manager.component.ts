@@ -304,7 +304,10 @@ export class CourseCatalogManagerComponent implements OnInit {
       message: `Permanently delete "${c.code} - ${c.title}"? Deletion is blocked if the course is assigned to any curriculum or referenced as a prerequisite.`,
       header: 'Delete Master Course',
       icon: 'pi pi-trash',
+      acceptLabel: 'Yes',
+      rejectLabel: 'No',
       acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-outlined p-button-secondary',
       accept: () => {
         this.courseService.delete(c.id).subscribe({
           next: () => {

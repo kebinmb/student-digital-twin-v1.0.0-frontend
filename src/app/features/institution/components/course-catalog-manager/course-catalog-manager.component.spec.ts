@@ -1,8 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { MessageService, ConfirmationService } from 'primeng/api';
+import { MessageService, ConfirmationService, Confirmation } from 'primeng/api';
+import { vi } from 'vitest';
 import { CourseCatalogManagerComponent } from './course-catalog-manager.component';
+import { Course } from '../../../../core/models/institution.model';
 
 describe('CourseCatalogManagerComponent', () => {
   let component: CourseCatalogManagerComponent;
@@ -89,5 +91,39 @@ describe('CourseCatalogManagerComponent', () => {
     component.form.controls.lectureUnits.setValue(2);
     component.form.controls.labUnits.setValue(0);
     expect(component.computedTotalUnits).toBe(2);
+  });
+
+  describe('confirmDelete', () => {
+    it('should configure confirmDelete with dedicated key "courseDeleteConfirm", explicit "Yes" acceptLabel and "No" rejectLabel', () => {
+      const confirmationService = TestBed.inject(ConfirmationService);
+      let capturedConfirmation: Confirmation | undefined;
+      vi.spyOn(confirmationService, 'confirm').mockImplementation((conf: Confirmation) => {
+        capturedConfirmation = conf;
+        return confirmationService;
+      });
+
+      const mockCourse: Course = {
+        id: 1,
+        code: 'IT-101',
+        title: 'Introduction to Computing',
+        lectureUnits: 3,
+        labUnits: 0,
+        creditUnits: 3,
+        contactHoursLec: 3,
+        contactHoursLab: 0,
+        category: 'PROFESSIONAL_MAJOR',
+        isActive: true
+      };
+
+      component.confirmDelete(mockCourse);
+
+      expect(capturedConfirmation).toBeDefined();
+      expect(capturedConfirmation?.key).toBe('courseDeleteConfirm');
+      expect(capturedConfirmation?.acceptLabel).toBe('Yes');
+      expect(capturedConfirmation?.rejectLabel).toBe('No');
+      expect(capturedConfirmation?.acceptButtonStyleClass).toBe('p-button-danger');
+      expect(capturedConfirmation?.rejectButtonStyleClass).toBe('p-button-outlined p-button-secondary');
+      expect(capturedConfirmation?.header).toBe('Delete Master Course');
+    });
   });
 });
