@@ -176,10 +176,15 @@ export class DashboardComponent implements OnInit {
   // Role override switcher signal (defaults to null, falls back to auth user role)
   readonly selectedRoleOverride = signal<string | null>(null);
 
+  // Check if current user is authorized to switch role perspectives (SUPER_ADMIN only)
+  readonly canChangeRoleView = computed(() => this.authService.hasRole('SUPER_ADMIN'));
+
   // Active Role string normalized
   readonly activeRole = computed<string>(() => {
-    const override = this.selectedRoleOverride();
-    if (override) return override.toUpperCase();
+    if (this.canChangeRoleView()) {
+      const override = this.selectedRoleOverride();
+      if (override) return override.toUpperCase();
+    }
     const userRole = this.authService.currentUser()?.role;
     if (!userRole || userRole === 'GUEST') return 'STUDENT';
     return userRole.replace(/^ROLE_/, '').toUpperCase();
@@ -788,7 +793,10 @@ export class DashboardComponent implements OnInit {
           this.updateActiveTermState(term);
         } else {
           this.schedulingApiService.getSchedulingTerms()
-            .pipe(takeUntilDestroyed(this.destroyRef))
+            .pipe(
+              catchError(() => of([])),
+              takeUntilDestroyed(this.destroyRef)
+            )
             .subscribe(terms => {
               if (terms && terms.length > 0) {
                 const current = terms.find(t => t.isCurrent || t.isActive) || terms[0];
@@ -799,7 +807,10 @@ export class DashboardComponent implements OnInit {
       });
 
     this.curriculumApiService.getCurriculumLookupOptions()
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        catchError(() => of([])),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe(curricula => {
         if (curricula && curricula.length > 0) {
           this.curriculaList.set(curricula);
@@ -808,17 +819,11 @@ export class DashboardComponent implements OnInit {
         }
       });
 
-    this.enrollmentApiService.getPendingGradeChangeRequests()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(grades => {
-        if (grades) {
-          this.pendingDisputesCount.set(grades.length);
-          this.chairpersonPendingGrades.set(grades.length > 0 ? `${grades.length} Sheets Pending Review` : 'All Grade Sheets Approved');
-        }
-      });
-
     this.schedulingApiService.getSectionsByTerm(1)
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        catchError(() => of([])),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe(sections => {
         if (sections && sections.length > 0) {
           this.chairpersonSections.set(`${sections.length} Sections Scheduled`);
@@ -854,95 +859,140 @@ export class DashboardComponent implements OnInit {
         }
       });
 
-    this.analyticsApiService.getEarlyWarningRadar()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(radar => {
-        if (radar && radar.length > 0) {
-          const highRisk = radar.filter(r => r.riskLevel === 'CRITICAL' || r.riskLevel === 'HIGH').length;
-          this.guidancePriorityCountTag.set(highRisk > 0 ? `${highRisk} Students Needing Priority Support` : 'All Students In Good Standing');
-        }
-      });
-
-    this.financialApiService.getClaimsByTerm(1)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(claims => {
-        if (claims && claims.length > 0) {
-          this.accountantClaimsList.set(claims);
-          this.accountantBatches.set(`${claims.length} Batches Audited`);
-          const totalAmount = claims.reduce((acc, c) => acc + (c.totalClaimAmount || 0), 0);
-          if (totalAmount > 0) {
-            this.accountantTotalBilled.set(`₱${totalAmount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
-          }
-          const totalBen = claims.reduce((acc, c) => acc + (c.totalBeneficiaries || 0), 0);
-          if (totalBen > 0) {
-            this.accountantEnrollees.set(`${totalBen.toLocaleString()} Enrollees Covered`);
-          }
-        }
-      });
-
-    this.userApiService.getUsers()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(users => {
-        if (users && users.length > 0) {
-          this.usersList.set(users);
-        }
-      });
-
-    this.userApiService.getAuditLogs()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(logs => {
-        if (logs && logs.length > 0) {
-          this.auditLogsList.set(this.sortAuditLogsAscending(logs));
-        }
-      });
-
     this.campusService.getAll()
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        catchError(() => of([])),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe(campuses => {
         if (campuses && campuses.length > 0) {
           this.campusesList.set(campuses);
         }
       });
 
-    this.financialApiService.getCashierBooklets()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(booklets => {
-        if (booklets && booklets.length > 0) {
-          const mapped: CashierOrBooklet[] = booklets.map(b => {
-            const startNum = parseInt(b.startOrNumber?.replace(/\D/g, '') || '0', 10);
-            const endNum = parseInt(b.endOrNumber?.replace(/\D/g, '') || '0', 10);
-            const currentNum = parseInt(b.currentOrNumber?.replace(/\D/g, '') || '0', 10);
-            return {
-              bookletNumber: b.bookletCode,
-              formType: 'COA Form 51',
-              assignedCashier: b.assignedCashierUsername || 'Assigned Cashier',
-              startOr: b.startOrNumber,
-              endOr: b.endOrNumber,
-              currentOr: b.currentOrNumber,
-              remainingCount: Math.max(0, endNum - currentNum),
-              status: (b.status as any) || 'ACTIVE'
-            };
-          });
-          this.cashierBookletsSignal.set(mapped);
-        }
-      });
+    if (this.authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON'])) {
+      this.enrollmentApiService.getPendingGradeChangeRequests()
+        .pipe(
+          catchError(() => of([])),
+          takeUntilDestroyed(this.destroyRef)
+        )
+        .subscribe(grades => {
+          if (grades) {
+            this.pendingDisputesCount.set(grades.length);
+            this.chairpersonPendingGrades.set(grades.length > 0 ? `${grades.length} Sheets Pending Review` : 'All Grade Sheets Approved');
+          }
+        });
+    }
 
-    this.facultyApiService.getAllFaculty()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(faculty => {
-        if (faculty && faculty.length > 0 && this.facultyWorkloadListSignal().length === 0) {
-          const mapped: FacultyWorkloadItem[] = faculty.map(f => ({
-            instructorId: f.userId,
-            fullName: f.fullName || f.username,
-            department: f.academicRank || 'Academic Department',
-            assignedUnits: 18.0,
-            maxUnits: 21.0,
-            status: 'NORMAL',
-            assignedSections: 5
-          }));
-          this.facultyWorkloadListSignal.set(mapped);
-        }
-      });
+    if (this.authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'GUIDANCE', 'DEAN', 'CHAIRPERSON'])) {
+      this.analyticsApiService.getEarlyWarningRadar()
+        .pipe(
+          catchError(() => of([])),
+          takeUntilDestroyed(this.destroyRef)
+        )
+        .subscribe(radar => {
+          if (radar && radar.length > 0) {
+            const highRisk = radar.filter(r => r.riskLevel === 'CRITICAL' || r.riskLevel === 'HIGH').length;
+            this.guidancePriorityCountTag.set(highRisk > 0 ? `${highRisk} Students Needing Priority Support` : 'All Students In Good Standing');
+          }
+        });
+    }
+
+    if (this.authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT', 'CASHIER'])) {
+      this.financialApiService.getClaimsByTerm(1)
+        .pipe(
+          catchError(() => of([])),
+          takeUntilDestroyed(this.destroyRef)
+        )
+        .subscribe(claims => {
+          if (claims && claims.length > 0) {
+            this.accountantClaimsList.set(claims);
+            this.accountantBatches.set(`${claims.length} Batches Audited`);
+            const totalAmount = claims.reduce((acc, c) => acc + (c.totalClaimAmount || 0), 0);
+            if (totalAmount > 0) {
+              this.accountantTotalBilled.set(`₱${totalAmount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+            }
+            const totalBen = claims.reduce((acc, c) => acc + (c.totalBeneficiaries || 0), 0);
+            if (totalBen > 0) {
+              this.accountantEnrollees.set(`${totalBen.toLocaleString()} Enrollees Covered`);
+            }
+          }
+        });
+    }
+
+    if (this.authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) {
+      this.userApiService.getUsers()
+        .pipe(
+          catchError(() => of([])),
+          takeUntilDestroyed(this.destroyRef)
+        )
+        .subscribe(users => {
+          if (users && users.length > 0) {
+            this.usersList.set(users);
+          }
+        });
+
+      this.userApiService.getAuditLogs()
+        .pipe(
+          catchError(() => of([])),
+          takeUntilDestroyed(this.destroyRef)
+        )
+        .subscribe(logs => {
+          if (logs && logs.length > 0) {
+            this.auditLogsList.set(this.sortAuditLogsAscending(logs));
+          }
+        });
+    }
+
+    if (this.authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'CASHIER', 'ACCOUNTANT'])) {
+      this.financialApiService.getCashierBooklets()
+        .pipe(
+          catchError(() => of([])),
+          takeUntilDestroyed(this.destroyRef)
+        )
+        .subscribe(booklets => {
+          if (booklets && booklets.length > 0) {
+            const mapped: CashierOrBooklet[] = booklets.map(b => {
+              const startNum = parseInt(b.startOrNumber?.replace(/\D/g, '') || '0', 10);
+              const endNum = parseInt(b.endOrNumber?.replace(/\D/g, '') || '0', 10);
+              const currentNum = parseInt(b.currentOrNumber?.replace(/\D/g, '') || '0', 10);
+              return {
+                bookletNumber: b.bookletCode,
+                formType: 'COA Form 51',
+                assignedCashier: b.assignedCashierUsername || 'Assigned Cashier',
+                startOr: b.startOrNumber,
+                endOr: b.endOrNumber,
+                currentOr: b.currentOrNumber,
+                remainingCount: Math.max(0, endNum - currentNum),
+                status: (b.status as any) || 'ACTIVE'
+              };
+            });
+            this.cashierBookletsSignal.set(mapped);
+          }
+        });
+    }
+
+    if (this.authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'DEAN', 'CHAIRPERSON'])) {
+      this.facultyApiService.getAllFaculty()
+        .pipe(
+          catchError(() => of([])),
+          takeUntilDestroyed(this.destroyRef)
+        )
+        .subscribe(faculty => {
+          if (faculty && faculty.length > 0 && this.facultyWorkloadListSignal().length === 0) {
+            const mapped: FacultyWorkloadItem[] = faculty.map(f => ({
+              instructorId: f.userId,
+              fullName: f.fullName || f.username,
+              department: f.academicRank || 'Academic Department',
+              assignedUnits: 18.0,
+              maxUnits: 21.0,
+              status: 'NORMAL',
+              assignedSections: 5
+            }));
+            this.facultyWorkloadListSignal.set(mapped);
+          }
+        });
+    }
   }
 
   loadNotices(): void {

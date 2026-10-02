@@ -16,25 +16,27 @@
     </div>
 
     <div class="header-actions-group">
-      <!-- Role View Switcher Dropdown (Allows testing & previewing all 10 role perspectives) -->
-      <div class="role-selector-wrapper">
-        <label for="roleViewSelect" class="role-view-badge" title="Active Role Perspective">
-          <i class="pi pi-id-card role-view-icon" aria-hidden="true"></i>
-          <span class="role-view-text">Role View</span>
-        </label>
-        <p-select
-          id="roleViewSelect"
-          [options]="roleOptions"
-          optionLabel="label"
-          optionValue="value"
-          [ngModel]="activeRole()"
-          (ngModelChange)="onRoleOverrideChange($event)"
-          placeholder="Switch Role Perspective"
-          size="small"
-          styleClass="role-select-control"
-          aria-label="Switch Role Perspective"
-        ></p-select>
-      </div>
+      <!-- Role View Switcher Dropdown (Restricted to SUPER_ADMIN role only) -->
+      @if (canChangeRoleView()) {
+        <div class="role-selector-wrapper">
+          <label for="roleViewSelect" class="role-view-badge" title="Active Role Perspective">
+            <i class="pi pi-id-card role-view-icon" aria-hidden="true"></i>
+            <span class="role-view-text">Role View</span>
+          </label>
+          <p-select
+            id="roleViewSelect"
+            [options]="roleOptions"
+            optionLabel="label"
+            optionValue="value"
+            [ngModel]="activeRole()"
+            (ngModelChange)="onRoleOverrideChange($event)"
+            placeholder="Switch Role Perspective"
+            size="small"
+            styleClass="role-select-control"
+            aria-label="Switch Role Perspective"
+          ></p-select>
+        </div>
+      }
 
       <p-button
         label="Refresh Dashboard"

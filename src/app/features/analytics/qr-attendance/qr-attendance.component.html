@@ -185,13 +185,13 @@
 
         <div class="input-section">
           <div class="form-field">
-            <label class="form-label font-mono-bold">QR Attendance Seed Code</label>
+            <label class="form-label font-mono-bold">Classroom Attendance Code / Simple Manual Code</label>
             <div class="input-action-wrapper">
               <input
                 pInputText
                 [ngModel]="qrSeedInput()"
                 (ngModelChange)="qrSeedInput.set($event)"
-                placeholder="Paste or enter classroom QR code (e.g. QR-ATT-...)"
+                placeholder="Enter simple code (e.g. 849201) or scan/paste QR seed..."
                 class="full-width-input font-mono"
                 (keyup.enter)="scanAttendance()"
               />
@@ -377,7 +377,12 @@
                   <span class="qr-seed-text font-mono mt-1 text-xs">{{ sess.qrSeed }}</span>
                 </div>
               </div>
-              <p class="qr-meta-text">
+              <div class="simple-code-card mt-3 p-2 bg-emerald-50 rounded text-center border border-emerald-200">
+                <span class="text-xs text-emerald-800 font-bold uppercase tracking-wider block">Simple Code for Manual Input</span>
+                <span class="text-2xl font-black font-mono text-emerald-950 tracking-widest block my-1">{{ sess.qrSeed.replace('ATT-', '').replace('QR-ATT-', '') }}</span>
+                <span class="text-xs text-slate-600 block">Students can enter <strong>{{ sess.qrSeed.replace('ATT-', '').replace('QR-ATT-', '') }}</strong> or <strong>{{ sess.qrSeed }}</strong></span>
+              </div>
+              <p class="qr-meta-text mt-2">
                 Expires: <span class="font-mono-bold text-green">{{ sess.expiresAt | date:'shortTime' }}</span> &middot;
                 Geofence Radius: <span class="font-mono-bold">{{ sess.allowedRadiusMeters }}m</span>
               </p>

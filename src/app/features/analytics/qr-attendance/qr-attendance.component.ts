@@ -22,6 +22,7 @@ import { EnrollmentApiService } from '../../../core/service/enrollment/enrollmen
 import { AttendanceRecordResponse, AttendanceSessionResponse, FacultyAttendanceRecordResponse } from '../../../core/models/analytics.model';
 import { StudentProfileResponse } from '../../../core/models/enrollment.model';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+import jsQR from 'jsqr';
 import { AuthService } from '../../../core/service/authentication/auth-service';
 
 export interface ScheduleOption {
@@ -134,6 +135,7 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
   }
 
   private sseSub?: Subscription;
+  private livePollTimer: any = null;
 
   ngOnInit(): void {
     if (this.isStudent()) {
@@ -149,6 +151,10 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.sseSub) {
       this.sseSub.unsubscribe();
+    }
+    if (this.livePollTimer) {
+      clearInterval(this.livePollTimer);
+      this.livePollTimer = null;
     }
     this.stopCameraScanner();
   }
@@ -211,8 +217,33 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
   }
 
   startCameraScanner(): void {
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Camera Unsupported',
+        detail: 'Camera access is not supported by your browser. Please enter the QR code manually.'
+      });
+      return;
+    }
+
+    const constraintsList: MediaStreamConstraints[] = [
+      { video: { facingMode: { ideal: 'environment' } } },
+      { video: { facingMode: 'environment' } },
+      { video: true }
+    ];
+
+    const tryStream = (index: number) => {
+      if (index >= constraintsList.length) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Camera Unavailable',
+          detail: 'Could not access camera stream. Please enter or paste the QR attendance code manually.'
+        });
+        this.isCameraActive.set(false);
+        return;
+      }
+
+      navigator.mediaDevices.getUserMedia(constraintsList[index])
         .then((stream) => {
           this.cameraStream = stream;
           this.isCameraActive.set(true);
@@ -220,28 +251,21 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
           setTimeout(() => {
             if (this.scannerVideoRef && this.scannerVideoRef.nativeElement) {
               const video = this.scannerVideoRef.nativeElement;
+              video.setAttribute('playsinline', 'true');
+              video.setAttribute('muted', 'true');
               video.srcObject = stream;
-              video.play();
+              video.play().catch(err => console.warn('Video play error:', err));
               this.startQrDetection(video);
             }
-          }, 100);
+          }, 150);
         })
         .catch((err) => {
-          console.warn('Camera access denied or unavailable:', err);
-          this.messageService.add({
-            severity: 'warn',
-            summary: 'Camera Unavailable',
-            detail: 'Please enter or paste the QR seed code manually in the input field.'
-          });
-          this.isCameraActive.set(false);
+          console.warn(`Camera constraint index ${index} failed:`, err);
+          tryStream(index + 1);
         });
-    } else {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Camera Unsupported',
-        detail: 'Camera access is not supported by your browser. Please enter the QR code manually.'
-      });
-    }
+    };
+
+    tryStream(0);
   }
 
   stopCameraScanner(): void {
@@ -257,28 +281,57 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
   }
 
   private startQrDetection(video: HTMLVideoElement): void {
-    if ('BarcodeDetector' in window) {
-      try {
-        const detector = new (window as any).BarcodeDetector({ formats: ['qr_code'] });
-        this.cameraScanTimer = setInterval(async () => {
-          try {
-            const barcodes = await detector.detect(video);
-            if (barcodes && barcodes.length > 0) {
-              const rawValue = barcodes[0].rawValue;
-              if (rawValue) {
-                this.qrSeedInput.set(rawValue);
-                this.stopCameraScanner();
-                this.scanAttendance();
-              }
-            }
-          } catch {
-            // Ignore frame detection errors
-          }
-        }, 500);
-      } catch {
-        // BarcodeDetector initialization fallback
-      }
+    if (this.cameraScanTimer) {
+      clearInterval(this.cameraScanTimer);
     }
+
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+
+    this.cameraScanTimer = setInterval(async () => {
+      if (!this.isCameraActive() || !video || video.readyState !== video.HAVE_ENOUGH_DATA) {
+        return;
+      }
+
+      let scannedText: string | null = null;
+
+      // 1. Try BarcodeDetector if natively supported by browser engine
+      if ('BarcodeDetector' in window) {
+        try {
+          const detector = new (window as any).BarcodeDetector({ formats: ['qr_code'] });
+          const barcodes = await detector.detect(video);
+          if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
+            scannedText = barcodes[0].rawValue;
+          }
+        } catch {
+          // Fallback to jsQR below
+        }
+      }
+
+      // 2. Fallback to jsQR canvas processing (Works on ALL mobile devices / iOS Safari / Android)
+      if (!scannedText && context) {
+        try {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          context.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+          const code = jsQR(imageData.data, imageData.width, imageData.height, {
+            inversionAttempts: 'attemptBoth'
+          });
+          if (code && code.data) {
+            scannedText = code.data;
+          }
+        } catch {
+          // Ignore frame extraction error
+        }
+      }
+
+      if (scannedText) {
+        this.qrSeedInput.set(scannedText);
+        this.stopCameraScanner();
+        this.scanAttendance();
+      }
+    }, 350);
   }
 
   scanAttendance(): void {
@@ -577,7 +630,7 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
       next: (record) => {
         this.dailyRecords.update(prev => {
           const exists = prev.some(r => r.recordId === record.recordId);
-          return exists ? prev : [record, ...prev];
+          return exists ? prev.map(r => r.recordId === record.recordId ? record : r) : [record, ...prev];
         });
         this.messageService.add({ severity: 'info', summary: 'Live Student Check-In', detail: `${record.studentName} checked in via QR scan!` });
       },
@@ -585,6 +638,21 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
         console.warn('SSE stream inactive or unseeded:', err);
       }
     });
+
+    if (this.livePollTimer) {
+      clearInterval(this.livePollTimer);
+    }
+    this.livePollTimer = setInterval(() => {
+      const dateStr = this.selectedDate();
+      const sectionId = this.selectedFilterSectionId();
+      this.analyticsApi.getDailyAttendance(dateStr, sectionId || undefined).subscribe({
+        next: (records) => {
+          if (records) {
+            this.dailyRecords.set(records);
+          }
+        }
+      });
+    }, 3000);
   }
 
   startClassSession(scheduleId?: number): void {

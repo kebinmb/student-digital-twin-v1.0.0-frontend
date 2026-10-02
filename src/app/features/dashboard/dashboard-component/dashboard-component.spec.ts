@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
@@ -75,6 +76,7 @@ describe('DashboardComponent', () => {
 
     fixture = TestBed.createComponent(DashboardComponent);
     component = fixture.componentInstance;
+    vi.spyOn((component as any).authService, 'hasRole').mockReturnValue(true);
     await fixture.whenStable();
   });
 
@@ -97,6 +99,7 @@ describe('DashboardComponent', () => {
   });
 
   it('should correctly resolve role signals for all 10 institutional roles', () => {
+    vi.spyOn((component as any).authService, 'hasRole').mockReturnValue(true);
     const roles = [
       'SUPER_ADMIN',
       'ADMIN',
@@ -182,6 +185,7 @@ describe('DashboardComponent', () => {
   });
 
   it('should evaluate canPostNotice based on role permissions', () => {
+    vi.spyOn((component as any).authService, 'hasRole').mockReturnValue(true);
     component.onRoleOverrideChange('STUDENT');
     expect(component.canPostNotice()).toBe(false);
 
@@ -208,6 +212,7 @@ describe('DashboardComponent', () => {
   });
 
   it('should open create notice modal and publish new notice', () => {
+    vi.spyOn((component as any).authService, 'hasRole').mockReturnValue(true);
     component.onRoleOverrideChange('REGISTRAR');
     expect(component.isCreateNoticeModalOpen()).toBe(false);
 
