@@ -74,6 +74,18 @@ export class EnrollmentStore {
     return this.advising()?.courses.filter(c => c.eligibilityStatus === 'ALREADY_PASSED') || [];
   });
 
+  readonly selectedTerm = computed(() => {
+    const id = this.selectedTermId();
+    if (!id) return null;
+    return this.terms().find(t => t.id === id) || null;
+  });
+
+  readonly isEnrollmentClosed = computed(() => {
+    const term = this.selectedTerm();
+    if (!term) return false;
+    return term.enrollmentOpen === false;
+  });
+
   formatTermType(type: string): string {
     if (!type) return '';
     if (type === '1ST_SEM' || type === 'FIRST_SEM') return '1st Semester';
@@ -317,6 +329,13 @@ export class EnrollmentStore {
     const sid = this.studentId();
     if (!termId || termId <= 0 || !sid || sid <= 0) return;
 
+    if (this.isEnrollmentClosed() && this.authService.hasRole('STUDENT')) {
+      const msg = 'Enrollment is closed for the selected term.';
+      this.errorMessage.set(msg);
+      if (onError) onError(msg);
+      return;
+    }
+
     this.isEnlisting.set(true);
     this.errorMessage.set(null);
 
@@ -342,6 +361,12 @@ export class EnrollmentStore {
     const sid = this.studentId();
     if (!termId || termId <= 0 || !sid || sid <= 0) return;
 
+    if (this.isEnrollmentClosed() && this.authService.hasRole('STUDENT')) {
+      const msg = 'Enrollment is closed for the selected term.';
+      if (onError) onError(msg);
+      return;
+    }
+
     this.isEnlisting.set(true);
     this.enrollmentApi.removeEnlistedSection(sid, termId, sectionId).pipe(
       takeUntilDestroyed(this.destroyRef),
@@ -363,6 +388,12 @@ export class EnrollmentStore {
     const termId = this.selectedTermId();
     const sid = this.studentId();
     if (!termId || termId <= 0 || !sid || sid <= 0) return;
+
+    if (this.isEnrollmentClosed() && this.authService.hasRole('STUDENT')) {
+      const msg = 'Enrollment is closed for the selected term.';
+      if (onError) onError(msg);
+      return;
+    }
 
     this.isEnlisting.set(true);
     this.enrollmentApi.confirmEnrollment(sid, termId).pipe(

@@ -2,6 +2,18 @@
 <div class="enlistment-container">
   <p-confirmdialog key="enrollmentConfirmDialog"></p-confirmdialog>
 
+  @if (store.isEnrollmentClosed() && isStudent()) {
+    <div class="enlistment-closed-banner" role="alert">
+      <i class="pi pi-lock lock-icon"></i>
+      <div>
+        <strong>Enrollment Period Closed:</strong>
+        <span>
+          Enrollment is currently closed for {{ store.selectedTerm()?.termName || 'the current academic term' }}. Finalization and course schedule modifications are disabled.
+        </span>
+      </div>
+    </div>
+  }
+
   <!-- Summary Card -->
   <div class="summary-card">
     <div class="summary-header">
@@ -20,7 +32,7 @@
         @if (store.enrollment(); as enr) {
           <p-tag [value]="enr.status" [severity]="getStatusSeverity(enr.status)"></p-tag>
           
-          @if (enr.status !== 'ENROLLED' && enr.items && enr.items.length > 0) {
+          @if (enr.status !== 'ENROLLED' && enr.items && enr.items.length > 0 && !(store.isEnrollmentClosed() && isStudent())) {
             <p-button 
               label="Finalize Enrollment" 
               icon="pi pi-check-circle" 
@@ -146,16 +158,18 @@
             <p-tag [value]="item.completionStatus" [severity]="getStatusSeverity(item.completionStatus)"></p-tag>
           </td>
           <td style="text-align: right;" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
-            <p-button 
-              icon="pi pi-trash" 
-              size="small"
-              [text]="true"
-              severity="danger"
-              aria-label="Drop Section"
-              title="Drop Section"
-              [disabled]="store.enrollment()?.status === 'ENROLLED' || store.isEnlisting()"
-              (onClick)="confirmDropSection(item)">
-            </p-button>
+            @if (!(store.isEnrollmentClosed() && isStudent())) {
+              <p-button 
+                icon="pi pi-trash" 
+                size="small"
+                [text]="true"
+                severity="danger"
+                aria-label="Drop Section"
+                title="Drop Section"
+                [disabled]="store.enrollment()?.status === 'ENROLLED' || store.isEnlisting()"
+                (onClick)="confirmDropSection(item)">
+              </p-button>
+            }
           </td>
         </tr>
       </ng-template>
@@ -285,7 +299,7 @@
           size="small"
           (onClick)="isItemDrawerOpen.set(false)">
         </p-button>
-        @if (store.enrollment()?.status !== 'ENROLLED' && selectedEnlistedItem()) {
+        @if (store.enrollment()?.status !== 'ENROLLED' && selectedEnlistedItem() && !(store.isEnrollmentClosed() && isStudent())) {
           <p-button 
             label="Drop Section" 
             icon="pi pi-trash" 

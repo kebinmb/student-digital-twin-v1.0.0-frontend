@@ -9,6 +9,25 @@
   gap: 1.25rem;
 }
 
+.enlistment-closed-banner {
+  padding: 0.75rem 1rem;
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-left: 4px solid #ef4444;
+  color: #991b1b;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.enlistment-closed-banner .lock-icon {
+  font-size: 1.25rem;
+  color: #dc2626;
+  flex-shrink: 0;
+}
+
 /* ==========================================================================
    SUMMARY & METRICS BENTO CARDS
    ========================================================================== */

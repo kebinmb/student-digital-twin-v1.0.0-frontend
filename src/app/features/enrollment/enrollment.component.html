@@ -28,37 +28,97 @@
         </p-select>
       </div>
 
-      <p-selectbutton 
-        [options]="viewOptions()" 
-        [ngModel]="activeTab()" 
-        (ngModelChange)="setTab($event)" 
-        optionLabel="label" 
-        optionValue="value"
-        styleClass="selectbutton-chmsu"
-        aria-label="Enrollment Module Navigation">
-        <ng-template pTemplate="item" let-item>
-          <div class="switcher-item">
-            <i [class]="item.icon"></i>
-            <span class="switcher-label">{{ item.label }}</span>
-            @if (item.value === 'enlistment' && store.enrollment()?.items?.length) {
-              <span class="enlistment-badge font-mono">
-                {{ store.enrollment()?.items?.length }}
-              </span>
-            }
-          </div>
-        </ng-template>
-      </p-selectbutton>
+      @if (viewOptions().length > 1) {
+        <p-selectbutton 
+          [options]="viewOptions()" 
+          [ngModel]="activeTab()" 
+          (ngModelChange)="setTab($event)" 
+          optionLabel="label" 
+          optionValue="value"
+          styleClass="selectbutton-chmsu"
+          aria-label="Enrollment Module Navigation">
+          <ng-template pTemplate="item" let-item>
+            <div class="switcher-item">
+              <i [class]="item.icon"></i>
+              <span class="switcher-label">{{ item.label }}</span>
+              @if (item.value === 'enlistment' && store.enrollment()?.items?.length) {
+                <span class="enlistment-badge font-mono">
+                  {{ store.enrollment()?.items?.length }}
+                </span>
+              }
+            </div>
+          </ng-template>
+        </p-selectbutton>
+      }
     </div>
   </header>
 
+
   <!-- View Content Areas -->
   <main class="enrollment-content">
-    @if (activeTab() === 'advising') {
-      <app-student-advising></app-student-advising>
-    } @else if (activeTab() === 'enlistment') {
-      <app-course-enlistment></app-course-enlistment>
-    } @else if (activeTab() === 'audit' && isStaff()) {
-      <app-enrollment-audit></app-enrollment-audit>
+    @if (store.isEnrollmentClosed() && isStudent()) {
+      <div class="closed-enrollment-card" role="region" aria-label="Closed Enrollment Information">
+        <div class="closed-card-hero">
+          <div class="closed-icon-bubble">
+            <i class="pi pi-lock"></i>
+          </div>
+          <h2 class="closed-card-title">Enrollment &amp; Advising Period Closed</h2>
+          <p class="closed-card-lead">
+            The online enrollment, subject enlistment, and student advising portals for 
+            <strong>{{ store.selectedTerm()?.termName || 'the selected term' }}</strong> 
+            are currently closed for students.
+          </p>
+        </div>
+
+        <div class="closed-card-body">
+          <div class="closed-info-grid">
+            <div class="closed-info-item">
+              <span class="info-label"><i class="pi pi-calendar mr-1"></i> Academic Term</span>
+              <span class="info-value font-mono">{{ store.selectedTerm()?.termName || 'Selected Academic Term' }}</span>
+            </div>
+            <div class="closed-info-item">
+              <span class="info-label"><i class="pi pi-shield mr-1"></i> Registration Gate</span>
+              <span class="info-value font-bold text-red-600">CLOSED</span>
+            </div>
+            <div class="closed-info-item">
+              <span class="info-label"><i class="pi pi-calendar-plus mr-1"></i> Add / Drop Window</span>
+              <span class="info-value font-mono">{{ store.selectedTerm()?.addDropOpen ? 'OPEN' : 'CLOSED' }}</span>
+            </div>
+            <div class="closed-info-item">
+              <span class="info-label"><i class="pi pi-id-card mr-1"></i> Access Permission</span>
+              <span class="info-value">Advisory Read-Only / Restricted</span>
+            </div>
+          </div>
+
+          <div class="closed-guidelines-box">
+            <h4 class="guidelines-title"><i class="pi pi-info-circle mr-1"></i> What should you do next?</h4>
+            <ul class="guidelines-list">
+              <li>Check the university academic calendar for upcoming registration and pre-enrollment schedules.</li>
+              <li>Coordinate with your Department Chairperson or Academic Advisor for manual advising or prerequisite evaluations.</li>
+              <li>Ensure all institutional clearances (Library, Financial, Departmental) are cleared prior to the next enrollment period.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="closed-card-actions">
+          <p-button 
+            label="Refresh Term Status" 
+            icon="pi pi-refresh" 
+            severity="secondary" 
+            size="small" 
+            [loading]="store.isLoading()"
+            (onClick)="store.refreshAdvising()">
+          </p-button>
+        </div>
+      </div>
+    } @else {
+      @if (activeTab() === 'advising') {
+        <app-student-advising></app-student-advising>
+      } @else if (activeTab() === 'enlistment') {
+        <app-course-enlistment></app-course-enlistment>
+      } @else if (activeTab() === 'audit' && isStaff()) {
+        <app-enrollment-audit></app-enrollment-audit>
+      }
     }
   </main>
 </div>

@@ -499,4 +499,66 @@ describe('StudentAdvisingComponent', () => {
       expect(component.availableApplications()).toHaveLength(0);
     });
   });
+
+  describe('Closed Enrollment Guarding', () => {
+    it('should block section chooser and display warning message when enrollment is closed for student', () => {
+      store.terms.set([
+        {
+          id: 1,
+          academicYearId: 1,
+          termType: 'FIRST_SEM',
+          startDate: '2026-08-01',
+          endDate: '2026-12-15',
+          enrollmentOpen: false,
+          termName: 'AY 2026-2027 - 1st Semester'
+        }
+      ]);
+      store.setSelectedTermId(1);
+
+      const messageService = TestBed.inject(MessageService);
+      let msgSummary = '';
+      messageService.add = (msg: any) => {
+        msgSummary = msg.summary;
+      };
+
+      vi.spyOn(component.authService, 'hasRole').mockImplementation((r: any) => r === 'STUDENT');
+
+      component.openSectionChooser(mockCourse);
+      expect(msgSummary).toBe('Enrollment Closed');
+      expect(component.isSectionModalVisible()).toBe(false);
+    });
+
+    it('should block enlistInSection and display warning message when enrollment is closed for student', () => {
+      store.terms.set([
+        {
+          id: 1,
+          academicYearId: 1,
+          termType: 'FIRST_SEM',
+          startDate: '2026-08-01',
+          endDate: '2026-12-15',
+          enrollmentOpen: false,
+          termName: 'AY 2026-2027 - 1st Semester'
+        }
+      ]);
+      store.setSelectedTermId(1);
+
+      const messageService = TestBed.inject(MessageService);
+      let msgSummary = '';
+      messageService.add = (msg: any) => {
+        msgSummary = msg.summary;
+      };
+
+      vi.spyOn(component.authService, 'hasRole').mockImplementation((r: any) => r === 'STUDENT');
+
+      component.enlistInSection({
+        sectionId: 10,
+        sectionCode: 'BSIT-1A',
+        maxCapacity: 40,
+        enrolledCount: 15,
+        status: 'OPEN',
+        scheduleSummary: 'Mon 08:00 - 10:00 (Room 101)'
+      });
+      expect(msgSummary).toBe('Enrollment Closed');
+    });
+  });
 });

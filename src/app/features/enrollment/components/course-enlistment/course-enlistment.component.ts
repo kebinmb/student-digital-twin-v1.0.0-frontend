@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, ChangeDetectionStrategy, signal } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, signal, computed } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
@@ -9,6 +9,7 @@ import { MessageModule } from 'primeng/message';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { EnrollmentStore } from '../../state/enrollment.store';
 import { EnrollmentItemResponse } from '../../../../core/models/enrollment.model';
+import { AuthService } from '../../../../core/service/authentication/auth-service';
 
 import { Drawer } from 'primeng/drawer';
 import { Skeleton } from 'primeng/skeleton';
@@ -35,6 +36,9 @@ export class CourseEnlistmentComponent {
   readonly store = inject(EnrollmentStore);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly messageService = inject(MessageService);
+  private readonly authService = inject(AuthService);
+
+  readonly isStudent = computed(() => this.authService.hasRole('STUDENT'));
 
   readonly selectedEnlistedItem = signal<EnrollmentItemResponse | null>(null);
   readonly isItemDrawerOpen = signal<boolean>(false);
@@ -45,6 +49,15 @@ export class CourseEnlistmentComponent {
   }
 
   confirmDropSection(item: EnrollmentItemResponse): void {
+    if (this.store.isEnrollmentClosed() && this.isStudent()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Enrollment Closed',
+        detail: 'Cannot drop class sections while the enrollment period is closed. Please contact the Registrar.'
+      });
+      return;
+    }
+
     this.confirmationService.confirm({
       key: 'enrollmentConfirmDialog',
       header: 'Drop Class Section',
@@ -77,6 +90,15 @@ export class CourseEnlistmentComponent {
   }
 
   confirmFinalizeEnrollment(): void {
+    if (this.store.isEnrollmentClosed() && this.isStudent()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Enrollment Closed',
+        detail: 'The enrollment period for this term is closed. Cannot finalize enrollment.'
+      });
+      return;
+    }
+
     const enrollment = this.store.enrollment();
     if (!enrollment || !enrollment.items || enrollment.items.length === 0) {
       return;

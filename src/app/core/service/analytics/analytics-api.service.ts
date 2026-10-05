@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { SliceResponse } from '../../models/institution.model';
@@ -33,22 +33,42 @@ export class AnalyticsApiService {
   private readonly http = inject(HttpClient);
 
   startAttendanceSession(request: StartAttendanceSessionRequest): Observable<AttendanceSessionResponse> {
-    return this.http.post<AttendanceSessionResponse>(`${environment.apiUrl}/v1/attendance/session/start`, request);
+    return this.http.post<AttendanceSessionResponse>(`${environment.apiUrl}/v1/attendance/session/start`, request).pipe(
+      catchError(err => {
+        console.error('Failed to start attendance session:', err);
+        return throwError(() => err);
+      })
+    );
   }
 
   scanAttendance(request: ScanAttendanceRequest): Observable<AttendanceRecordResponse> {
-    return this.http.post<AttendanceRecordResponse>(`${environment.apiUrl}/v1/attendance/scan`, request);
+    return this.http.post<AttendanceRecordResponse>(`${environment.apiUrl}/v1/attendance/scan`, request).pipe(
+      catchError(err => {
+        console.error('Failed to scan attendance:', err);
+        return throwError(() => err);
+      })
+    );
   }
 
   verifyCreatorAttendance(request: VerifyCreatorAttendanceRequest): Observable<FacultyAttendanceRecordResponse> {
-    return this.http.post<FacultyAttendanceRecordResponse>(`${environment.apiUrl}/v1/attendance/creator/verify`, request);
+    return this.http.post<FacultyAttendanceRecordResponse>(`${environment.apiUrl}/v1/attendance/creator/verify`, request).pipe(
+      catchError(err => {
+        console.error('Failed to verify creator attendance:', err);
+        return throwError(() => err);
+      })
+    );
   }
 
   getDailyFacultyAttendance(date?: string, sectionId?: number): Observable<FacultyAttendanceRecordResponse[]> {
     let params = new HttpParams();
     if (date) params = params.set('date', date);
     if (sectionId) params = params.set('sectionId', sectionId.toString());
-    return this.http.get<FacultyAttendanceRecordResponse[]>(`${environment.apiUrl}/v1/attendance/creator/daily`, { params });
+    return this.http.get<FacultyAttendanceRecordResponse[]>(`${environment.apiUrl}/v1/attendance/creator/daily`, { params }).pipe(
+      catchError(err => {
+        console.error('Failed to get daily faculty attendance:', err);
+        return of([]);
+      })
+    );
   }
 
   getStudentAttendanceSlice(
@@ -63,6 +83,11 @@ export class AnalyticsApiService {
     return this.http.get<SliceResponse<AttendanceRecordResponse>>(
       `${environment.apiUrl}/v1/attendance/student/${studentId}/slice`,
       { params }
+    ).pipe(
+      catchError(err => {
+        console.error(`Failed to get student attendance slice for ${studentId}:`, err);
+        return of({ content: [], hasNext: false, hasPrevious: false, isFirst: true, isLast: true, page: page, size: size });
+      })
     );
   }
 
@@ -77,6 +102,11 @@ export class AnalyticsApiService {
     return this.http.get<SliceResponse<AttendanceRecordResponse>>(
       `${environment.apiUrl}/v1/attendance/student/me/slice`,
       { params }
+    ).pipe(
+      catchError(err => {
+        console.error('Failed to get current student attendance slice:', err);
+        return of({ content: [], hasNext: false, hasPrevious: false, isFirst: true, isLast: true, page: page, size: size });
+      })
     );
   }
 
@@ -84,7 +114,12 @@ export class AnalyticsApiService {
     let params = new HttpParams();
     if (date) params = params.set('date', date);
     if (sectionId) params = params.set('sectionId', sectionId.toString());
-    return this.http.get<AttendanceRecordResponse[]>(`${environment.apiUrl}/v1/attendance/daily`, { params });
+    return this.http.get<AttendanceRecordResponse[]>(`${environment.apiUrl}/v1/attendance/daily`, { params }).pipe(
+      catchError(err => {
+        console.error('Failed to get daily attendance:', err);
+        return of([]);
+      })
+    );
   }
 
   subscribeToSessionStream(sessionId: number): Observable<AttendanceRecordResponse> {
@@ -104,15 +139,30 @@ export class AnalyticsApiService {
   }
 
   getStudentRiskProfile(studentId: number): Observable<DigitalTwinRiskProfileDto> {
-    return this.http.get<DigitalTwinRiskProfileDto>(`${environment.apiUrl}/v1/analytics/digital-twin/risk/${studentId}`);
+    return this.http.get<DigitalTwinRiskProfileDto>(`${environment.apiUrl}/v1/analytics/digital-twin/risk/${studentId}`).pipe(
+      catchError(err => {
+        console.error(`Failed to get student risk profile for ${studentId}:`, err);
+        return throwError(() => err);
+      })
+    );
   }
 
   getCurrentStudentRiskProfile(): Observable<DigitalTwinRiskProfileDto> {
-    return this.http.get<DigitalTwinRiskProfileDto>(`${environment.apiUrl}/v1/analytics/digital-twin/risk/me`);
+    return this.http.get<DigitalTwinRiskProfileDto>(`${environment.apiUrl}/v1/analytics/digital-twin/risk/me`).pipe(
+      catchError(err => {
+        console.error('Failed to get current student risk profile:', err);
+        return throwError(() => err);
+      })
+    );
   }
 
   getEarlyWarningRadar(): Observable<EarlyWarningRadarItemDto[]> {
-    return this.http.get<EarlyWarningRadarItemDto[]>(`${environment.apiUrl}/v1/analytics/digital-twin/early-warning/radar`);
+    return this.http.get<EarlyWarningRadarItemDto[]>(`${environment.apiUrl}/v1/analytics/digital-twin/early-warning/radar`).pipe(
+      catchError(err => {
+        console.error('Failed to get early warning radar items:', err);
+        return of([]);
+      })
+    );
   }
 
   getEarlyWarningRadarSlice(
@@ -126,19 +176,39 @@ export class AnalyticsApiService {
     return this.http.get<SliceResponse<DigitalTwinRiskProfileDto>>(
       `${environment.apiUrl}/v1/analytics/digital-twin/early-warning/slice`,
       { params }
+    ).pipe(
+      catchError(err => {
+        console.error('Failed to get early warning radar slice:', err);
+        return of({ content: [], hasNext: false, hasPrevious: false, isFirst: true, isLast: true, page: page, size: size });
+      })
     );
   }
 
   dispatchIntervention(request: DispatchInterventionRequest): Observable<StudentInterventionDto> {
-    return this.http.post<StudentInterventionDto>(`${environment.apiUrl}/v1/analytics/interventions/dispatch`, request);
+    return this.http.post<StudentInterventionDto>(`${environment.apiUrl}/v1/analytics/interventions/dispatch`, request).pipe(
+      catchError(err => {
+        console.error('Failed to dispatch intervention:', err);
+        return throwError(() => err);
+      })
+    );
   }
 
   updateInterventionStatus(id: number, request: UpdateInterventionStatusRequest): Observable<StudentInterventionDto> {
-    return this.http.patch<StudentInterventionDto>(`${environment.apiUrl}/v1/analytics/interventions/${id}/status`, request);
+    return this.http.patch<StudentInterventionDto>(`${environment.apiUrl}/v1/analytics/interventions/${id}/status`, request).pipe(
+      catchError(err => {
+        console.error(`Failed to update intervention status for ${id}:`, err);
+        return throwError(() => err);
+      })
+    );
   }
 
   getStudentInterventions(studentId: number): Observable<StudentInterventionDto[]> {
-    return this.http.get<StudentInterventionDto[]>(`${environment.apiUrl}/v1/analytics/interventions/student/${studentId}`);
+    return this.http.get<StudentInterventionDto[]>(`${environment.apiUrl}/v1/analytics/interventions/student/${studentId}`).pipe(
+      catchError(err => {
+        console.error(`Failed to get student interventions for ${studentId}:`, err);
+        return of([]);
+      })
+    );
   }
 
   getInterventionTypes(): Observable<string[]> {
@@ -162,7 +232,12 @@ export class AnalyticsApiService {
       httpParams = httpParams.set('interventionStatus', params.interventionStatus);
     }
 
-    return this.http.get<PageResponse<StudentTelemetryAdminSummary>>(`${environment.apiUrl}/v1/admin/telemetry/students`, { params: httpParams });
+    return this.http.get<PageResponse<StudentTelemetryAdminSummary>>(`${environment.apiUrl}/v1/admin/telemetry/students`, { params: httpParams }).pipe(
+      catchError(err => {
+        console.error('Failed to get admin student telemetry:', err);
+        return of({ content: [], totalElements: 0, totalPages: 0, size: params.size ?? 10, number: params.page ?? 0, first: true, last: true, empty: true });
+      })
+    );
   }
 
   getFacultyStudentTelemetry(params: FacultyTelemetryQueryParams): Observable<PageResponse<StudentTelemetryAdminSummary>> {
@@ -183,19 +258,39 @@ export class AnalyticsApiService {
       httpParams = httpParams.set('sectionId', params.sectionId.toString());
     }
 
-    return this.http.get<PageResponse<StudentTelemetryAdminSummary>>(`${environment.apiUrl}/v1/faculty/telemetry/students`, { params: httpParams });
+    return this.http.get<PageResponse<StudentTelemetryAdminSummary>>(`${environment.apiUrl}/v1/faculty/telemetry/students`, { params: httpParams }).pipe(
+      catchError(err => {
+        console.error('Failed to get faculty student telemetry:', err);
+        return of({ content: [], totalElements: 0, totalPages: 0, size: params.size ?? 10, number: params.page ?? 0, first: true, last: true, empty: true });
+      })
+    );
   }
 
   getFacultyAssignedSections(): Observable<FacultySectionOption[]> {
-    return this.http.get<FacultySectionOption[]>(`${environment.apiUrl}/v1/faculty/telemetry/sections`);
+    return this.http.get<FacultySectionOption[]>(`${environment.apiUrl}/v1/faculty/telemetry/sections`).pipe(
+      catchError(err => {
+        console.error('Failed to get faculty assigned sections:', err);
+        return of([]);
+      })
+    );
   }
 
   getStudentSelfTelemetry(): Observable<StudentSelfTelemetry> {
-    return this.http.get<StudentSelfTelemetry>(`${environment.apiUrl}/v1/student/telemetry/me`);
+    return this.http.get<StudentSelfTelemetry>(`${environment.apiUrl}/v1/student/telemetry/me`).pipe(
+      catchError(err => {
+        console.error('Failed to get student self telemetry:', err);
+        return throwError(() => err);
+      })
+    );
   }
 
   acknowledgeStudentIntervention(id: number): Observable<void> {
-    return this.http.post<void>(`${environment.apiUrl}/v1/student/telemetry/interventions/${id}/acknowledge`, {});
+    return this.http.post<void>(`${environment.apiUrl}/v1/student/telemetry/interventions/${id}/acknowledge`, {}).pipe(
+      catchError(err => {
+        console.error(`Failed to acknowledge intervention ${id}:`, err);
+        return throwError(() => err);
+      })
+    );
   }
 
   getAdminTelemetryKpi(params?: AdminTelemetryQueryParams): Observable<TelemetryKpiSummary> {
@@ -210,7 +305,20 @@ export class AnalyticsApiService {
       httpParams = httpParams.set('interventionStatus', params.interventionStatus);
     }
 
-    return this.http.get<TelemetryKpiSummary>(`${environment.apiUrl}/v1/admin/telemetry/kpi`, { params: httpParams });
+    return this.http.get<TelemetryKpiSummary>(`${environment.apiUrl}/v1/admin/telemetry/kpi`, { params: httpParams }).pipe(
+      catchError(err => {
+        console.error('Failed to get admin telemetry KPI:', err);
+        return of({
+          totalMonitored: 0,
+          criticalRiskCount: 0,
+          highRiskCount: 0,
+          moderateRiskCount: 0,
+          lowRiskCount: 0,
+          totalActiveInterventions: 0,
+          averageWellnessIndex: 100.0
+        });
+      })
+    );
   }
 
   getFacultyTelemetryKpi(params?: FacultyTelemetryQueryParams): Observable<TelemetryKpiSummary> {
@@ -228,6 +336,19 @@ export class AnalyticsApiService {
       httpParams = httpParams.set('sectionId', params.sectionId.toString());
     }
 
-    return this.http.get<TelemetryKpiSummary>(`${environment.apiUrl}/v1/faculty/telemetry/kpi`, { params: httpParams });
+    return this.http.get<TelemetryKpiSummary>(`${environment.apiUrl}/v1/faculty/telemetry/kpi`, { params: httpParams }).pipe(
+      catchError(err => {
+        console.error('Failed to get faculty telemetry KPI:', err);
+        return of({
+          totalMonitored: 0,
+          criticalRiskCount: 0,
+          highRiskCount: 0,
+          moderateRiskCount: 0,
+          lowRiskCount: 0,
+          totalActiveInterventions: 0,
+          averageWellnessIndex: 100.0
+        });
+      })
+    );
   }
 }

@@ -11,7 +11,7 @@
       <div class="header-text-group">
         <div class="badge-row">
           <span class="badge-tag green">
-            Student Academic Portal
+            Student Academic Portal & Digital Twin
           </span>
           @if (portalData(); as data) {
             <p-tag
@@ -21,8 +21,16 @@
               styleClass="standing-tag"
             ></p-tag>
           }
+          @if (telemetryData(); as telemetry) {
+            <p-tag
+              [value]="'Risk: ' + telemetry.riskLevel"
+              [severity]="getRiskSeverity(telemetry.riskLevel)"
+              icon="pi pi-shield"
+              styleClass="standing-tag"
+            ></p-tag>
+          }
         </div>
-        <h1 class="header-title">Welcome Back, {{ portalData()?.studentName || 'Student' }}</h1>
+        <h1 class="header-title">Welcome Back, {{ portalData()?.studentName || telemetryData()?.fullName || 'Student' }}</h1>
         <p class="header-subtitle">
           Student ID: <span class="font-mono-bold">{{ portalData()?.studentNumber || '—' }}</span> &middot;
           Program: <span class="font-semibold-navy">{{ portalData()?.programCode || '—' }}</span> &middot;
@@ -37,13 +45,117 @@
         severity="secondary"
         [outlined]="true"
         size="small"
-        [loading]="isLoading()"
-        (onClick)="loadPortalSummary()"
-        pTooltip="Synchronize latest academic and ledger records"
+        [loading]="isLoading() || isLoadingTelemetry()"
+        (onClick)="loadPortalSummary(); loadSelfTelemetry()"
+        pTooltip="Synchronize latest academic and telemetry records"
         tooltipPosition="bottom"
       ></p-button>
     </div>
   </div>
+
+  <!-- DIGITAL TWIN WELLNESS & TELEMETRY SECTION -->
+  @if (telemetryData(); as telemetry) {
+    <div class="twin-telemetry-banner">
+      <div class="twin-left-col">
+        <div class="wellness-ring-card">
+          <div class="wellness-header">
+            <span class="twin-badge">Digital Twin Wellness Index</span>
+            <span class="sync-text">Updated {{ telemetry.lastSync | date:'shortTime' }}</span>
+          </div>
+          <div class="knob-container">
+            <p-knob
+              [ngModel]="telemetry.wellnessScore"
+              [readonly]="true"
+              [size]="130"
+              [strokeWidth]="10"
+              valueTemplate="{value}%"
+              [valueColor]="getWellnessColor(telemetry.wellnessScore)"
+              rangeColor="#e2e8f0"
+            ></p-knob>
+          </div>
+          <div class="wellness-caption">
+            <span class="status-pill" [style.background]="getWellnessColor(telemetry.wellnessScore) + '22'" [style.color]="getWellnessColor(telemetry.wellnessScore)">
+              {{ telemetry.wellnessScore >= 75 ? 'Optimal Progress' : (telemetry.wellnessScore >= 50 ? 'Steady Engagement' : 'Needs Support') }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="twin-right-col">
+        <div class="dimension-grid">
+          @for (dim of dimensionEntries(); track dim.name) {
+            <div class="dim-card">
+              <div class="dim-header">
+                <span class="dim-name">{{ dim.name }}</span>
+                <span class="dim-val font-mono">{{ dim.score }}%</span>
+              </div>
+              <p-progressbar [value]="dim.score" [showValue]="false" styleClass="dim-bar" [style]="{'height': '8px'}"></p-progressbar>
+            </div>
+          }
+        </div>
+
+        @if (telemetry.milestones && telemetry.milestones.length > 0) {
+          <div class="milestones-row">
+            <span class="milestone-title"><i class="pi pi-sparkles"></i> Milestones:</span>
+            <div class="milestone-chips">
+              @for (m of telemetry.milestones; track m.id) {
+                <span class="milestone-chip" [pTooltip]="m.description" tooltipPosition="top">
+                  <i class="pi pi-check-circle"></i> {{ m.title }}
+                </span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Active Support Recommendations & Acknowledgment Banner -->
+    @if (telemetry.recommendations && telemetry.recommendations.length > 0) {
+      <div class="recommendations-container">
+        <div class="rec-header">
+          <div class="rec-title-group">
+            <i class="pi pi-bell rec-bell-icon"></i>
+            <div>
+              <h3 class="rec-heading">Advisory Support & Interventions</h3>
+              <p class="rec-subheading">Personalized academic and counseling recommendations from your digital twin</p>
+            </div>
+          </div>
+        </div>
+        <div class="rec-list">
+          @for (rec of telemetry.recommendations; track rec.id) {
+            <div class="rec-card" [class.acknowledged]="rec.status === 'ACKNOWLEDGED' || rec.status === 'RESOLVED'">
+              <div class="rec-content">
+                <div class="rec-badge-row">
+                  <p-tag [value]="rec.interventionType" severity="info" size="small"></p-tag>
+                  <p-tag [value]="rec.status" [severity]="rec.status === 'ACKNOWLEDGED' || rec.status === 'RESOLVED' ? 'success' : 'warn'" size="small"></p-tag>
+                </div>
+                <p class="rec-text">{{ rec.triggerReason }}</p>
+                <span class="rec-timestamp">Dispatched: {{ rec.dispatchedAt | date:'mediumDate' }}</span>
+              </div>
+              <div class="rec-action">
+                @if (rec.status !== 'ACKNOWLEDGED' && rec.status !== 'RESOLVED') {
+                  <p-button
+                    label="Acknowledge"
+                    icon="pi pi-check"
+                    size="small"
+                    severity="success"
+                    [loading]="acknowledgingId() === rec.id"
+                    (onClick)="acknowledgeIntervention(rec)"
+                    pTooltip="Confirm you have received and read this recommendation"
+                    tooltipPosition="left"
+                  ></p-button>
+                } @else {
+                  <span class="acknowledged-tag">
+                    <i class="pi pi-check-circle"></i> Acknowledged
+                  </span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  }
 
   @if (isLoading()) {
     <!-- Loading Skeletons -->

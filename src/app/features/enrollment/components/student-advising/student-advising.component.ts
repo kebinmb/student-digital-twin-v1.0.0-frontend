@@ -26,6 +26,7 @@ import { InputIcon } from 'primeng/inputicon';
 import { MessageService } from 'primeng/api';
 import { Skeleton } from 'primeng/skeleton';
 import { InputNumberModule } from 'primeng/inputnumber';
+import { TooltipModule } from 'primeng/tooltip';
 
 import { EnrollmentStore } from '../../state/enrollment.store';
 import { CourseEligibilityItemDto, AvailableSectionOptionDto } from '../../../../core/models/enrollment.model';
@@ -63,7 +64,8 @@ export function noWhitespaceValidator(): ValidatorFn {
     InputText,
     InputNumberModule,
     IconField,
-    InputIcon
+    InputIcon,
+    TooltipModule
   ],
   templateUrl: './student-advising.component.html',
   styleUrls: ['./student-advising.component.css'],
@@ -378,6 +380,14 @@ export class StudentAdvisingComponent implements OnInit {
   }
 
   openSectionChooser(course: CourseEligibilityItemDto): void {
+    if (this.store.isEnrollmentClosed() && this.isStudentUser()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Enrollment Closed',
+        detail: 'The enrollment period for this term is closed. Course selection is unavailable.'
+      });
+      return;
+    }
     const latest = this.store.advising()?.courses.find(c => c.courseId === course.courseId) || course;
     this.selectedCourse.set(latest);
     this.isSectionModalVisible.set(true);
@@ -389,6 +399,14 @@ export class StudentAdvisingComponent implements OnInit {
   }
 
   enlistInSection(section: AvailableSectionOptionDto): void {
+    if (this.store.isEnrollmentClosed() && this.isStudentUser()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Enrollment Closed',
+        detail: 'Cannot enlist in class sections while the enrollment period is closed.'
+      });
+      return;
+    }
     this.store.enlistSection(
       section.sectionId,
       () => {

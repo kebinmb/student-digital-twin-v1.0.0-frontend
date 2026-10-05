@@ -25,10 +25,27 @@
   gap: 0.75rem;
 }
 
+.enrollment-closed-alert {
+  padding: 0.75rem 1rem;
+  margin-top: 0.75rem;
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-left: 4px solid #ef4444;
+  color: #991b1b;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .lock-icon {
   font-size: 1.25rem;
   color: var(--chmsu-gold-main, #d97706);
   flex-shrink: 0;
+}
+
+.enrollment-closed-alert .lock-icon {
+  color: #dc2626;
 }
 
 .lock-text {

@@ -16,12 +16,26 @@ import { globalErrorInterceptor } from './core/interceptors/error/global-error.i
 import { CustomTheme } from './theme/custom-theme';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { DeduplicatingMessageService } from './core/services/toast.service';
+import { environment } from '../environments/environment';
 
 function initializeApp(authService: AuthService) {
   return () => {
-    // Prevent 404 on initial load if no session exists
-    const token = localStorage.getItem('token') || localStorage.getItem('refreshToken');
-    if (!token) {
+    // Attempt session restoration on initial app load / page refresh:
+    // 1. If we have a saved token or refreshToken in localStorage (development / fallback)
+    // 2. OR if we're in cookie mode (production HttpOnly cookie) or have a remembered user
+    let token: string | null = null;
+    let refreshToken: string | null = null;
+    let rememberedUser: string | null = null;
+    try {
+      token = localStorage.getItem('token');
+      refreshToken = localStorage.getItem('refreshToken');
+      rememberedUser = localStorage.getItem('chmsu_remembered_user');
+    } catch {}
+
+    const hasStoredToken = !!(token || refreshToken);
+    const isCookieMode = (environment as any).auth?.storageType === 'cookie';
+
+    if (!hasStoredToken && !isCookieMode && !rememberedUser) {
       return of(null);
     }
     return authService.refreshToken().pipe(

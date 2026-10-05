@@ -14,10 +14,14 @@ import { ToastModule } from 'primeng/toast';
 import { InputTextModule } from 'primeng/inputtext';
 import { BadgeModule } from 'primeng/badge';
 import { TooltipModule } from 'primeng/tooltip';
+import { KnobModule } from 'primeng/knob';
+import { ProgressBarModule } from 'primeng/progressbar';
 import { MessageService } from 'primeng/api';
 
 import { LmsApiService } from '../../../core/service/lms/lms-api.service';
+import { AnalyticsApiService } from '../../../core/service/analytics/analytics-api.service';
 import { StudentSelfServiceSummaryDto, EnrolledCourseSummaryDto } from '../../../core/models/lms.model';
+import { StudentSelfTelemetry, DispatchedIntervention, MilestoneDto } from '../../../core/models/analytics.model';
 import { AuthService } from '../../../core/service/authentication/auth-service';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 
@@ -44,6 +48,8 @@ export interface StandingInfo {
     InputTextModule,
     BadgeModule,
     TooltipModule,
+    KnobModule,
+    ProgressBarModule,
     EmptyStateComponent
   ],
   templateUrl: './student-self-service-portal.component.html',
@@ -52,11 +58,15 @@ export interface StandingInfo {
 })
 export class StudentSelfServicePortalComponent implements OnInit {
   private readonly lmsApi = inject(LmsApiService);
+  private readonly analyticsApi = inject(AnalyticsApiService);
   private readonly authService = inject(AuthService);
   private readonly messageService = inject(MessageService);
 
   readonly portalData = signal<StudentSelfServiceSummaryDto | null>(null);
+  readonly telemetryData = signal<StudentSelfTelemetry | null>(null);
   readonly isLoading = signal<boolean>(false);
+  readonly isLoadingTelemetry = signal<boolean>(false);
+  readonly acknowledgingId = signal<number | null>(null);
   readonly searchQuery = signal<string>('');
   readonly expandedSectionId = signal<number | null>(null);
 
@@ -102,8 +112,19 @@ export class StudentSelfServicePortalComponent implements OnInit {
     }
   });
 
+  // Dimensions list for template iteration
+  readonly dimensionEntries = computed<{ name: string; score: number }[]>(() => {
+    const telemetry = this.telemetryData();
+    if (!telemetry || !telemetry.dimensionScores) return [];
+    return Object.entries(telemetry.dimensionScores).map(([name, score]) => ({
+      name,
+      score: Math.round(score)
+    }));
+  });
+
   ngOnInit(): void {
     this.loadPortalSummary();
+    this.loadSelfTelemetry();
   }
 
   loadPortalSummary(): void {
@@ -121,6 +142,53 @@ export class StudentSelfServicePortalComponent implements OnInit {
           detail: 'Failed to retrieve student self-service portal data.'
         });
         this.isLoading.set(false);
+      }
+    });
+  }
+
+  loadSelfTelemetry(): void {
+    this.isLoadingTelemetry.set(true);
+    this.analyticsApi.getStudentSelfTelemetry().subscribe({
+      next: (data) => {
+        this.telemetryData.set(data);
+        this.isLoadingTelemetry.set(false);
+      },
+      error: () => {
+        // Fallback gracefully without blocking the whole page
+        this.isLoadingTelemetry.set(false);
+      }
+    });
+  }
+
+  acknowledgeIntervention(intervention: DispatchedIntervention): void {
+    if (intervention.status === 'ACKNOWLEDGED' || intervention.status === 'RESOLVED') {
+      return;
+    }
+    this.acknowledgingId.set(intervention.id);
+    this.analyticsApi.acknowledgeStudentIntervention(intervention.id).subscribe({
+      next: () => {
+        this.acknowledgingId.set(null);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Intervention Acknowledged',
+          detail: 'Your acknowledgment has been recorded.'
+        });
+        // Update local status
+        const current = this.telemetryData();
+        if (current) {
+          const updatedRecs = current.recommendations.map(r =>
+            r.id === intervention.id ? { ...r, status: 'ACKNOWLEDGED' as const } : r
+          );
+          this.telemetryData.set({ ...current, recommendations: updatedRecs });
+        }
+      },
+      error: () => {
+        this.acknowledgingId.set(null);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Action Failed',
+          detail: 'Could not record acknowledgment. Please try again.'
+        });
       }
     });
   }
@@ -157,5 +225,23 @@ export class StudentSelfServicePortalComponent implements OnInit {
     if (upper === 'HOLD' || upper === 'PENDING') return 'warn';
     if (upper === 'BLOCKED') return 'danger';
     return 'info';
+  }
+
+  getRiskSeverity(level: string | undefined): 'success' | 'warn' | 'danger' | 'info' {
+    if (!level) return 'info';
+    switch (level.toUpperCase()) {
+      case 'LOW': return 'success';
+      case 'MODERATE': return 'info';
+      case 'HIGH': return 'warn';
+      case 'CRITICAL': return 'danger';
+      default: return 'info';
+    }
+  }
+
+  getWellnessColor(score: number): string {
+    if (score >= 80) return '#10b981';
+    if (score >= 60) return '#3b82f6';
+    if (score >= 40) return '#f59e0b';
+    return '#ef4444';
   }
 }

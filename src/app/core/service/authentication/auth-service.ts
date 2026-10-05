@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, Service, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { environment } from '../../../../environments/environment';
-import { Observable, tap, catchError, throwError } from 'rxjs';
+import { Observable, tap, catchError, throwError, finalize, shareReplay } from 'rxjs';
 import { RegisterRequest, LoginRequest, AuthResponse, UserContext } from '../../models/auth.model';
 import { resetInterceptorState } from '../../interceptors/authentication/auth-interceptor';
 
@@ -86,27 +86,77 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.baseUrl}/login`, credentials, {
       withCredentials: true // Accepts HttpOnly, Partitioned REFRESH_TOKEN cookie
     }).pipe(
-      tap(res => this.accessTokenSignal.set(res.accessToken))
-    );
-  }
-
-  refreshToken(): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.baseUrl}/refresh`, {}, {
-      withCredentials: true // Sends REFRESH_TOKEN cookie automatically
-    }).pipe(
-      tap(res => this.accessTokenSignal.set(res.accessToken)),
-      catchError(err => {
-        this.clearAuth();
-        this.router.navigate(['/login']);
-        return throwError(() => err);
+      tap(res => {
+        this.accessTokenSignal.set(res.accessToken);
+        if (res.accessToken) {
+          try { localStorage.setItem('token', res.accessToken); } catch {}
+        }
+        if (res.refreshToken) {
+          try { localStorage.setItem('refreshToken', res.refreshToken); } catch {}
+        }
+        try {
+          const user = this.currentUser();
+          if (user?.username) {
+            localStorage.setItem('chmsu_remembered_user', user.username);
+          }
+        } catch {}
       })
     );
   }
 
+  private refreshInProgress$: Observable<AuthResponse> | null = null;
+
+  refreshToken(): Observable<AuthResponse> {
+    if (this.refreshInProgress$) {
+      return this.refreshInProgress$;
+    }
+
+    let savedRefreshToken: string | null = null;
+    try {
+      savedRefreshToken = localStorage.getItem('refreshToken');
+    } catch {}
+
+    this.refreshInProgress$ = this.http.post<AuthResponse>(`${this.baseUrl}/refresh`, 
+      { refreshToken: savedRefreshToken || undefined }, 
+      {
+        withCredentials: true // Sends REFRESH_TOKEN cookie automatically
+      }
+    ).pipe(
+      tap(res => {
+        this.accessTokenSignal.set(res.accessToken);
+        if (res.accessToken) {
+          try { localStorage.setItem('token', res.accessToken); } catch {}
+        }
+        if (res.refreshToken) {
+          try { localStorage.setItem('refreshToken', res.refreshToken); } catch {}
+        }
+      }),
+      catchError(err => {
+        this.clearAuth();
+        this.router.navigate(['/login']);
+        return throwError(() => err);
+      }),
+      finalize(() => {
+        this.refreshInProgress$ = null;
+      }),
+      shareReplay(1)
+    );
+
+    return this.refreshInProgress$;
+  }
+
   logout(): Observable<void> {
-    return this.http.post<void>(`${this.baseUrl}/logout`, {}, {
-      withCredentials: true
-    }).pipe(
+    let savedRefreshToken: string | null = null;
+    try {
+      savedRefreshToken = localStorage.getItem('refreshToken');
+    } catch {}
+
+    return this.http.post<void>(`${this.baseUrl}/logout`, 
+      { refreshToken: savedRefreshToken || undefined }, 
+      {
+        withCredentials: true
+      }
+    ).pipe(
       tap(() => {
         this.clearAuth();
         this.router.navigate(['/login']);
@@ -116,10 +166,21 @@ export class AuthService {
 
   setAccessToken(token: string | null): void {
     this.accessTokenSignal.set(token);
+    try {
+      if (token) {
+        localStorage.setItem('token', token);
+      } else {
+        localStorage.removeItem('token');
+      }
+    } catch {}
   }
 
   clearAuth(): void {
     this.accessTokenSignal.set(null);
+    try {
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+    } catch {}
     resetInterceptorState();
   }
 }

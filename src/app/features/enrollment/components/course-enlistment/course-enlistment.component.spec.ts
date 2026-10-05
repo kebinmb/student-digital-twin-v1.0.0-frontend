@@ -61,4 +61,60 @@ describe('CourseEnlistmentComponent', () => {
     component.confirmDropSection(mockItem);
     expect(confirmCalled).toBe(true);
   });
+
+  it('should block drop section and show warning when enrollment is closed for student', () => {
+    const store = TestBed.inject(EnrollmentStore);
+    const messageService = TestBed.inject(MessageService);
+    let msgSummary = '';
+    messageService.add = (msg: any) => {
+      msgSummary = msg.summary;
+    };
+
+    store.terms.set([
+      {
+        id: 1,
+        academicYearId: 1,
+        termType: 'FIRST_SEM',
+        startDate: '2026-08-01',
+        endDate: '2026-12-15',
+        enrollmentOpen: false,
+        termName: 'AY 2026-2027 - 1st Semester'
+      }
+    ]);
+    store.setSelectedTermId(1);
+
+    const authService = (component as any).authService;
+    vi.spyOn(authService, 'hasRole').mockImplementation((role: any) => role === 'STUDENT');
+
+    component.confirmDropSection(mockItem);
+    expect(msgSummary).toBe('Enrollment Closed');
+  });
+
+  it('should block finalize enrollment and show warning when enrollment is closed for student', () => {
+    const store = TestBed.inject(EnrollmentStore);
+    const messageService = TestBed.inject(MessageService);
+    let msgSummary = '';
+    messageService.add = (msg: any) => {
+      msgSummary = msg.summary;
+    };
+
+    store.terms.set([
+      {
+        id: 1,
+        academicYearId: 1,
+        termType: 'FIRST_SEM',
+        startDate: '2026-08-01',
+        endDate: '2026-12-15',
+        enrollmentOpen: false,
+        termName: 'AY 2026-2027 - 1st Semester'
+      }
+    ]);
+    store.setSelectedTermId(1);
+
+    const authService = (component as any).authService;
+    vi.spyOn(authService, 'hasRole').mockImplementation((role: any) => role === 'STUDENT');
+
+    component.confirmFinalizeEnrollment();
+    expect(msgSummary).toBe('Enrollment Closed');
+  });
 });

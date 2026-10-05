@@ -425,3 +425,262 @@
 .font-bold {
   font-weight: 700;
 }
+
+/* ==========================================================================
+   DIGITAL TWIN WELLNESS & TELEMETRY STYLES
+   ========================================================================== */
+.twin-telemetry-banner {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 1.25rem;
+  background: var(--p-surface-0, #ffffff);
+  border: 1px solid var(--p-surface-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 1.25rem;
+  box-shadow: var(--chmsu-shadow-card);
+}
+
+@media (max-width: 900px) {
+  .twin-telemetry-banner {
+    grid-template-columns: 1fr;
+  }
+}
+
+.wellness-ring-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: var(--p-surface-50, #f8fafc);
+  border: 1px solid var(--p-surface-200, #e2e8f0);
+  border-radius: 10px;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.wellness-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.twin-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--chmsu-green-main, #116834);
+}
+
+.sync-text {
+  font-size: 0.6875rem;
+  color: var(--p-surface-500, #64748b);
+}
+
+.knob-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.wellness-caption {
+  margin-top: 0.5rem;
+}
+
+.status-pill {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  display: inline-block;
+}
+
+.twin-right-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.dimension-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.875rem;
+}
+
+@media (max-width: 600px) {
+  .dimension-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dim-card {
+  background: var(--p-surface-50, #f8fafc);
+  border: 1px solid var(--p-surface-200, #e2e8f0);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dim-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dim-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--p-surface-700, #334155);
+}
+
+.dim-val {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--p-surface-900, #0f172a);
+}
+
+.milestones-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--p-surface-200, #e2e8f0);
+}
+
+.milestone-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--p-surface-600, #475569);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.milestone-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.milestone-chip {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* ==========================================================================
+   RECOMMENDATIONS & INTERVENTIONS STYLES
+   ========================================================================== */
+.recommendations-container {
+  background: var(--p-surface-0, #ffffff);
+  border: 1px solid var(--p-surface-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 1.25rem;
+  box-shadow: var(--chmsu-shadow-card);
+}
+
+.rec-header {
+  margin-bottom: 1rem;
+}
+
+.rec-title-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.rec-bell-icon {
+  font-size: 1.25rem;
+  color: #f59e0b;
+  margin-top: 0.15rem;
+}
+
+.rec-heading {
+  font-family: var(--font-family-heading);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--p-surface-900, #0f172a);
+  margin: 0;
+}
+
+.rec-subheading {
+  font-size: 0.75rem;
+  color: var(--p-surface-500, #64748b);
+  margin: 0.15rem 0 0;
+}
+
+.rec-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.rec-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: var(--p-surface-50, #f8fafc);
+  border: 1px solid var(--p-surface-200, #e2e8f0);
+  border-radius: 8px;
+  padding: 0.875rem 1.125rem;
+  transition: all 0.2s ease;
+}
+
+.rec-card.acknowledged {
+  opacity: 0.8;
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.rec-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.rec-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rec-text {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--p-surface-800, #1e293b);
+  margin: 0;
+}
+
+.rec-timestamp {
+  font-size: 0.6875rem;
+  color: var(--p-surface-500, #64748b);
+}
+
+.rec-action {
+  flex-shrink: 0;
+}
+
+.acknowledged-tag {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #10b981;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}

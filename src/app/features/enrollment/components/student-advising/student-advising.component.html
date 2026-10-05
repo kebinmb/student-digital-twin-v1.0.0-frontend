@@ -97,6 +97,7 @@
     </div>
     }
 
+    @if (!store.isEnrollmentClosed() || !isStudentUser()) {
     <!-- Unit Cap Progress Bar -->
     <div class="unit-cap-container mt-4">
       <div class="unit-cap-header">
@@ -116,6 +117,7 @@
         [styleClass]="store.isUnitCapReached() ? 'unit-bar-full' : 'unit-bar-normal'">
       </p-progressbar>
     </div>
+    }
     }
   </header>
 
@@ -289,13 +291,15 @@
           <th>Prerequisite Status</th>
           <th>Prerequisite Details</th>
           <th>Available Sections</th>
-          <th style="width: 140px; text-align: center;">Action</th>
+          @if (!store.isEnrollmentClosed() || !isStudentUser()) {
+            <th style="width: 140px; text-align: center;">Action</th>
+          }
         </tr>
       </ng-template>
 
       <ng-template pTemplate="body" let-course>
-        <tr (click)="course.eligibilityStatus === 'ELIGIBLE' ? openSectionChooser(course) : null"
-          [class.cursor-pointer]="course.eligibilityStatus === 'ELIGIBLE'" class="hover:bg-slate-100">
+        <tr (click)="(!store.isEnrollmentClosed() || !isStudentUser()) && course.eligibilityStatus === 'ELIGIBLE' ? openSectionChooser(course) : null"
+          [class.cursor-pointer]="(!store.isEnrollmentClosed() || !isStudentUser()) && course.eligibilityStatus === 'ELIGIBLE'" class="hover:bg-slate-100">
           <td>
             <div class="course-identity">
               <span class="course-code font-mono font-bold-navy">{{ course.code }}</span>
@@ -343,6 +347,7 @@
             <span class="text-muted text-xs">No sections scheduled</span>
             }
           </td>
+          @if (!store.isEnrollmentClosed() || !isStudentUser()) {
           <td style="text-align: center;" (click)="$event.stopPropagation()">
             @if (course.eligibilityStatus === 'ALREADY_PASSED') {
             <span
@@ -357,6 +362,7 @@
             </button>
             }
           </td>
+          }
         </tr>
       </ng-template>
 
@@ -369,14 +375,16 @@
           <td><p-skeleton width="90px"></p-skeleton></td>
           <td><p-skeleton width="140px"></p-skeleton></td>
           <td><p-skeleton width="100px"></p-skeleton></td>
-          <td><p-skeleton width="100px"></p-skeleton></td>
+          @if (!store.isEnrollmentClosed() || !isStudentUser()) {
+            <td><p-skeleton width="100px"></p-skeleton></td>
+          }
         </tr>
         }
       </ng-template>
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="7" class="empty-state-cell">
+          <td [attr.colspan]="(!store.isEnrollmentClosed() || !isStudentUser()) ? 7 : 6" class="empty-state-cell">
             <div class="empty-state-card flex-col flex-center">
               <div class="empty-state-icon flex-center">
                 <i class="pi pi-inbox"></i>
