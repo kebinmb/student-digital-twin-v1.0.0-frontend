@@ -112,11 +112,8 @@
 
 .timetable-card {
   background: var(--chmsu-white, #ffffff);
-  border-left: 4px solid var(--status-blue-text, #2563eb);
-  border-top: 1px solid var(--chmsu-slate-200, #e2e8f0);
-  border-right: 1px solid var(--chmsu-slate-200, #e2e8f0);
-  border-bottom: 1px solid var(--chmsu-slate-200, #e2e8f0);
-  border-radius: 6px;
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
+  border-radius: 8px;
   padding: 0.625rem 0.75rem;
   display: flex;
   flex-direction: column;
@@ -127,11 +124,13 @@
 
 .timetable-card:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border-color: var(--chmsu-slate-300, #cbd5e1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
 }
 
 .timetable-card.lab-card {
-  border-left-color: var(--status-amber-text, #d97706);
+  border-color: var(--status-amber-border, #fde68a);
+  background: #fffdfa;
 }
 
 .card-time {

@@ -228,20 +228,22 @@
 
 .kpi-card {
   background: var(--p-surface-0, #ffffff);
-  border: 1px solid var(--p-surface-200, #e2e8f0);
+  border: 1px solid var(--p-surface-200, #e2e8f0) !important;
+  border-left: 1px solid var(--p-surface-200, #e2e8f0) !important;
   border-radius: var(--chmsu-border-radius-lg, 12px);
   padding: 0.75rem 1rem;
   box-shadow: var(--chmsu-shadow-card, 0 1px 3px rgba(0,0,0,0.05));
   height: 72px;
   display: flex;
   align-items: center;
-  /* border-left: 3px solid var(--p-surface-300, #cbd5e1); */
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
 
-/* .kpi-card.border-green { border-left-color: var(--status-emerald-text, #047857); }
-.kpi-card.border-blue { border-left-color: var(--status-blue-text, #0369a1); }
-.kpi-card.border-rose { border-left-color: var(--status-rose-text, #b91c1c); }
-.kpi-card.border-amber { border-left-color: var(--status-amber-text, #b45309); } */
+.kpi-card:hover {
+  border-color: var(--p-surface-300, #cbd5e1) !important;
+  box-shadow: 0 3px 8px -1px rgba(15, 23, 42, 0.07);
+  transform: translateY(-1px);
+}
 
 .kpi-card-inner {
   display: flex;
@@ -785,7 +787,7 @@
   cursor: pointer;
   position: relative;
   transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
-  border-left: 3px solid transparent;
+  border: 1px solid var(--p-surface-200, #e2e8f0);
 }
 
 .notice-item:hover {
@@ -804,15 +806,15 @@
 
 .notice-item.unread {
   background: var(--p-surface-0, #ffffff);
-  border-left-color: var(--chmsu-green-main, #116834);
+  border-color: var(--p-surface-300, #cbd5e1);
 }
 
 .notice-item.unread.urgent {
-  border-left-color: var(--status-rose-text, #b91c1c);
+  border-color: var(--status-rose-border, #fecaca);
 }
 
 .notice-item.unread.important {
-  border-left-color: var(--status-amber-text, #b45309);
+  border-color: var(--status-amber-border, #fde68a);
 }
 
 .notice-item-main {
@@ -1076,11 +1078,11 @@
 }
 
 .window-metric-card.window-active {
-  border-left: 4px solid var(--chmsu-green-main, #116834);
+  border-color: var(--status-emerald-border, #a7f3d0);
 }
 
 .window-metric-card.window-verified {
-  border-left: 4px solid var(--status-blue-text, #0369a1);
+  border-color: var(--status-blue-border, #bae6fd);
 }
 
 .window-card-header {

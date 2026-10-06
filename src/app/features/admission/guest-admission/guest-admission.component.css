@@ -562,7 +562,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  border-left: 2px solid var(--chmsu-green-light, #86efac);
+  border-left: 2px solid var(--chmsu-slate-200, #e2e8f0);
   margin-left: 0.35rem;
 }
 

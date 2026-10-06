@@ -42,31 +42,76 @@
   @if (activeCohort() === 'ENROLLED' && stats(); as s) {
   <div class="kpi-grid">
     <div class="kpi-card border-green">
-      <span class="kpi-title">Total Equity Declarations</span>
-      <span class="kpi-value">{{ s.totalProfilesCount }} Students</span>
-      <span class="kpi-subtext text-green">
-        <i class="pi pi-check-circle"></i> {{ s.countVerified }} Verified | {{ s.countPendingVerification }} Pending
-      </span>
+      <div class="kpi-card-inner">
+        <div class="kpi-icon-box green">
+          <i class="pi pi-shield"></i>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-header">
+            <span class="kpi-title">Total Equity Declarations</span>
+          </div>
+          <div class="kpi-value text-green">{{ s.totalProfilesCount }}</div>
+          <div class="kpi-subtext text-green">
+            <i class="pi pi-check-circle"></i> {{ s.countVerified }} Verified | {{ s.countPendingVerification }} Pending
+          </div>
+        </div>
+      </div>
     </div>
     <div class="kpi-card border-blue">
-      <span class="kpi-title">4Ps / Listahanan / TES</span>
-      <span class="kpi-value text-blue">{{ s.count4psBeneficiaries }} / {{ s.countListahananNhts }} / {{ s.countUnifastTesAwardees }}</span>
-      <span class="kpi-subtext">RA 10931 UniFAST &amp; DSWD 4Ps</span>
+      <div class="kpi-card-inner">
+        <div class="kpi-icon-box blue">
+          <i class="pi pi-id-card"></i>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-header">
+            <span class="kpi-title">4Ps / Listahanan / TES</span>
+          </div>
+          <div class="kpi-value text-blue">{{ s.count4psBeneficiaries }} / {{ s.countListahananNhts }} / {{ s.countUnifastTesAwardees }}</div>
+          <div class="kpi-subtext">RA 10931 UniFAST &amp; DSWD 4Ps</div>
+        </div>
+      </div>
     </div>
     <div class="kpi-card border-rose">
-      <span class="kpi-title">Indigenous Peoples &amp; PWD</span>
-      <span class="kpi-value text-rose">{{ s.countIndigenousPeoples }} IP | {{ s.countPersonsWithDisabilities }} PWD</span>
-      <span class="kpi-subtext">RA 8371 NCIP / RA 7277 PDAO</span>
+      <div class="kpi-card-inner">
+        <div class="kpi-icon-box rose">
+          <i class="pi pi-heart"></i>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-header">
+            <span class="kpi-title">Indigenous &amp; PWD</span>
+          </div>
+          <div class="kpi-value text-rose">{{ s.countIndigenousPeoples }} IP | {{ s.countPersonsWithDisabilities }} PWD</div>
+          <div class="kpi-subtext">RA 8371 NCIP / RA 7277 PDAO</div>
+        </div>
+      </div>
     </div>
     <div class="kpi-card border-amber">
-      <span class="kpi-title">Solo Parents &amp; Orphans</span>
-      <span class="kpi-value text-amber">{{ s.countSoloParents }} Solo | {{ s.countOrphans }} Orphans</span>
-      <span class="kpi-subtext">RA 11861 &amp; {{ s.countRaisedBySoloParents }} Dependent Raised</span>
+      <div class="kpi-card-inner">
+        <div class="kpi-icon-box amber">
+          <i class="pi pi-user"></i>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-header">
+            <span class="kpi-title">Solo Parents &amp; Orphans</span>
+          </div>
+          <div class="kpi-value text-amber">{{ s.countSoloParents }} Solo | {{ s.countOrphans }} Orphans</div>
+          <div class="kpi-subtext">RA 11861 &amp; {{ s.countRaisedBySoloParents }} Dependent Raised</div>
+        </div>
+      </div>
     </div>
     <div class="kpi-card border-amber">
-      <span class="kpi-title">Agri / E-CLIP / Low-Income</span>
-      <span class="kpi-value text-amber">{{ s.countFarmerFisherfolk }} RSBSA | {{ s.countBottom40IncomeBracket }} B40</span>
-      <span class="kpi-subtext">EO 70 ({{ s.countRebelReturneeFamilies }}) &amp; GIDA ({{ s.countGidaResidents }})</span>
+      <div class="kpi-card-inner">
+        <div class="kpi-icon-box amber">
+          <i class="pi pi-compass"></i>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-header">
+            <span class="kpi-title">Agri / E-CLIP / Low-Income</span>
+          </div>
+          <div class="kpi-value text-amber">{{ s.countFarmerFisherfolk }} RSBSA | {{ s.countBottom40IncomeBracket }} B40</div>
+          <div class="kpi-subtext">EO 70 ({{ s.countRebelReturneeFamilies }}) &amp; GIDA ({{ s.countGidaResidents }})</div>
+        </div>
+      </div>
     </div>
   </div>
   }
@@ -75,31 +120,76 @@
   @if (activeCohort() === 'ADMISSION' && applicantStats(); as appStats) {
   <div class="kpi-grid">
     <div class="kpi-card border-green">
-      <span class="kpi-title">Post-Exam Applicants</span>
-      <span class="kpi-value">{{ appStats.totalPostExamCount }} Applicants</span>
-      <span class="kpi-subtext text-green">
-        <i class="pi pi-check-circle"></i> {{ appStats.examPassedCount }} Passed | {{ appStats.examFailedCount }} Failed
-      </span>
+      <div class="kpi-card-inner">
+        <div class="kpi-icon-box green">
+          <i class="pi pi-users"></i>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-header">
+            <span class="kpi-title">Post-Exam Applicants</span>
+          </div>
+          <div class="kpi-value text-green">{{ appStats.totalPostExamCount }}</div>
+          <div class="kpi-subtext text-green">
+            <i class="pi pi-check-circle"></i> {{ appStats.examPassedCount }} Passed | {{ appStats.examFailedCount }} Failed
+          </div>
+        </div>
+      </div>
     </div>
     <div class="kpi-card border-blue">
-      <span class="kpi-title">4Ps &amp; Low Income</span>
-      <span class="kpi-value text-blue">{{ appStats.count4psBeneficiaries }} 4Ps | {{ appStats.countBottom40IncomeBracket }} B40</span>
-      <span class="kpi-subtext">RA 10931 Priority Target Groups</span>
+      <div class="kpi-card-inner">
+        <div class="kpi-icon-box blue">
+          <i class="pi pi-id-card"></i>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-header">
+            <span class="kpi-title">4Ps &amp; Low Income</span>
+          </div>
+          <div class="kpi-value text-blue">{{ appStats.count4psBeneficiaries }} 4Ps | {{ appStats.countBottom40IncomeBracket }} B40</div>
+          <div class="kpi-subtext">RA 10931 Priority Target Groups</div>
+        </div>
+      </div>
     </div>
     <div class="kpi-card border-rose">
-      <span class="kpi-title">Indigenous Peoples &amp; PWD</span>
-      <span class="kpi-value text-rose">{{ appStats.countIndigenousPeoples }} IP | {{ appStats.countPersonsWithDisabilities }} PWD</span>
-      <span class="kpi-subtext">RA 8371 NCIP / RA 7277 PDAO</span>
+      <div class="kpi-card-inner">
+        <div class="kpi-icon-box rose">
+          <i class="pi pi-heart"></i>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-header">
+            <span class="kpi-title">Indigenous &amp; PWD</span>
+          </div>
+          <div class="kpi-value text-rose">{{ appStats.countIndigenousPeoples }} IP | {{ appStats.countPersonsWithDisabilities }} PWD</div>
+          <div class="kpi-subtext">RA 8371 NCIP / RA 7277 PDAO</div>
+        </div>
+      </div>
     </div>
     <div class="kpi-card border-amber">
-      <span class="kpi-title">Solo Parents &amp; Orphans</span>
-      <span class="kpi-value text-amber">{{ appStats.countSoloParents }} Solo | {{ appStats.countOrphans }} Orphans</span>
-      <span class="kpi-subtext">RA 11861 &amp; DSWD Certified</span>
+      <div class="kpi-card-inner">
+        <div class="kpi-icon-box amber">
+          <i class="pi pi-user"></i>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-header">
+            <span class="kpi-title">Solo Parents &amp; Orphans</span>
+          </div>
+          <div class="kpi-value text-amber">{{ appStats.countSoloParents }} Solo | {{ appStats.countOrphans }} Orphans</div>
+          <div class="kpi-subtext">RA 11861 &amp; DSWD Certified</div>
+        </div>
+      </div>
     </div>
     <div class="kpi-card border-amber">
-      <span class="kpi-title">Agri &amp; First-Gen College</span>
-      <span class="kpi-value text-amber">{{ appStats.countFarmerFisherfolk }} RSBSA | {{ appStats.countFirstGenerationCollege }} 1st Gen</span>
-      <span class="kpi-subtext">DA Registered &amp; First-in-Family</span>
+      <div class="kpi-card-inner">
+        <div class="kpi-icon-box amber">
+          <i class="pi pi-compass"></i>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-header">
+            <span class="kpi-title">Agri &amp; First-Gen College</span>
+          </div>
+          <div class="kpi-value text-amber">{{ appStats.countFarmerFisherfolk }} RSBSA | {{ appStats.countFirstGenerationCollege }} 1st Gen</div>
+          <div class="kpi-subtext">DA Registered &amp; First-in-Family</div>
+        </div>
+      </div>
     </div>
   </div>
   }

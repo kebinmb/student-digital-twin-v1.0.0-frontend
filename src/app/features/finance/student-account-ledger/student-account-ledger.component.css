@@ -263,30 +263,50 @@
 
 .metric-card {
   background: var(--chmsu-white, #ffffff);
-  border: 1px solid var(--chmsu-slate-200, #e2e8f0);
-  border-radius: var(--chmsu-border-radius-md, 8px);
-  padding: 1rem;
+  border: 1px solid var(--chmsu-slate-200, #e2e8f0) !important;
+  border-left: 1px solid var(--chmsu-slate-200, #e2e8f0) !important;
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 0.75rem 1rem;
   box-shadow: var(--chmsu-shadow-card);
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
+  gap: 0.75rem;
+  min-height: 72px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
 
-.metric-card.border-red { border-left: 4px solid var(--status-rose-text, #dc2626); }
-.metric-card.border-green { border-left: 4px solid var(--chmsu-green-main, #116834); }
-.metric-card.border-blue { border-left: 4px solid var(--status-blue-text, #0284c7); }
+.metric-card:hover {
+  border-color: var(--chmsu-slate-300, #cbd5e1) !important;
+  box-shadow: 0 3px 8px -1px rgba(15, 23, 42, 0.07);
+  transform: translateY(-1px);
+}
+
+.metric-card-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
 
 .metric-label {
-  font-size: 0.6875rem;
+  font-size: 0.625rem;
   font-weight: 700;
+  text-transform: uppercase;
   color: var(--chmsu-slate-500, #64748b);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .metric-val {
-  font-size: 1.35rem;
+  font-family: var(--font-family-mono);
+  font-size: 1.25rem;
   font-weight: 700;
-  margin-top: 0.25rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  margin-top: 0.15rem;
 }
 
 .metric-val.text-red { color: var(--status-rose-text, #dc2626); }
@@ -339,8 +359,7 @@
 
 .student-locked-profile-card {
   background: var(--chmsu-white, #ffffff);
-  border: 1px solid var(--status-emerald-border, rgba(16, 185, 129, 0.25));
-  border-left: 4px solid var(--chmsu-green-main, #116834);
+  border: 1px solid var(--status-emerald-border, #a7f3d0);
   border-radius: var(--chmsu-border-radius-lg, 12px);
   padding: 1.25rem 1.5rem;
   box-shadow: var(--chmsu-shadow-card);

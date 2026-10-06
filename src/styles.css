@@ -701,7 +701,6 @@ input::placeholder {
 .telemetry-alert-banner.alert-urgent {
   background: var(--status-rose-bg, #fef2f2);
   border: 1px solid var(--status-rose-border, #fecaca);
-  border-left: 3px solid #dc2626;
 }
 
 .alert-icon {
@@ -736,7 +735,6 @@ input::placeholder {
   gap: 0.875rem;
   background: var(--p-surface-0, #ffffff);
   border: 1px solid var(--p-surface-200, #e2e8f0);
-  border-left: 3px solid var(--chmsu-green-main, #116834);
   border-radius: var(--chmsu-border-radius-md, 8px);
   padding: 0.875rem 1rem;
 }
@@ -753,7 +751,6 @@ input::placeholder {
   gap: 0.875rem;
   background: var(--p-surface-0, #ffffff);
   border: 1px solid var(--p-surface-200, #e2e8f0);
-  border-left: 3px solid var(--chmsu-green-main, #116834);
   border-radius: var(--chmsu-border-radius-md, 8px);
   padding: 0.875rem 1rem;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -1022,18 +1019,17 @@ input::placeholder {
   border: 1px solid var(--p-surface-200, #e2e8f0);
   border-radius: 8px;
   padding: 0.75rem 0.875rem;
-  border-left: 3px solid var(--chmsu-green-main, #116834);
   transition: all 0.2s ease;
 }
 
 .preview-notice-card.urgent {
-  border-left-color: #dc2626;
-  background: #fffcfc;
+  border-color: var(--status-rose-border, #fecaca);
+  background: var(--status-rose-bg, #fef2f2);
 }
 
 .preview-notice-card.important {
-  border-left-color: #d97706;
-  background: #fffdfa;
+  border-color: var(--status-amber-border, #fde68a);
+  background: var(--status-amber-bg, #fffbeb);
 }
 
 /* Footer layout */
@@ -1576,29 +1572,167 @@ input::placeholder {
   gap: 0.5rem;
 }
 
-/* Standard Institutional KPI Ribbon & Bento Accents */
+/* ==========================================================================
+   STUDENT DIGITAL TWIN TELEMETRY KPI METRIC RIBBON & CARDS (CANONICAL)
+   ========================================================================== */
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .kpi-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.kpi-card {
+  background: var(--p-surface-0, #ffffff);
+  border: 1px solid var(--p-surface-200, #e2e8f0) !important;
+  border-left: 1px solid var(--p-surface-200, #e2e8f0) !important;
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 0.75rem 1rem;
+  box-shadow: var(--chmsu-shadow-card, 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03));
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+  box-sizing: border-box;
+}
+
+.kpi-card:hover {
+  border-color: var(--p-surface-300, #cbd5e1) !important;
+  box-shadow: 0 3px 8px -1px rgba(15, 23, 42, 0.07);
+  transform: translateY(-1px);
+}
+
+/* Border semantic modifiers - NO left borders, refined hover tints */
 .kpi-card.border-green {
-  border-left: 4px solid var(--chmsu-green-main, #116834);
+  border-left: 1px solid var(--p-surface-200, #e2e8f0) !important;
 }
+.kpi-card.border-green:hover {
+  border-color: var(--status-emerald-border, #a7f3d0) !important;
+}
+
 .kpi-card.border-blue {
-  border-left: 4px solid #0284c7;
+  border-left: 1px solid var(--p-surface-200, #e2e8f0) !important;
 }
+.kpi-card.border-blue:hover {
+  border-color: var(--status-blue-border, #bae6fd) !important;
+}
+
 .kpi-card.border-amber {
-  border-left: 4px solid var(--chmsu-gold-main, #d97706);
+  border-left: 1px solid var(--p-surface-200, #e2e8f0) !important;
 }
+.kpi-card.border-amber:hover {
+  border-color: var(--status-amber-border, #fde68a) !important;
+}
+
 .kpi-card.border-rose {
-  border-left: 4px solid #e11d48;
+  border-left: 1px solid var(--p-surface-200, #e2e8f0) !important;
+}
+.kpi-card.border-rose:hover {
+  border-color: var(--status-rose-border, #fecaca) !important;
 }
 
-.kpi-value.text-green { color: var(--chmsu-green-main, #116834); }
-.kpi-value.text-blue { color: #0284c7; }
-.kpi-value.text-amber { color: var(--chmsu-gold-main, #d97706); }
-.kpi-value.text-rose { color: #e11d48; }
+.kpi-card-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
 
-.kpi-icon-box.green { background: var(--status-emerald-bg, #ecfdf5); color: var(--status-emerald-text, #047857); }
-.kpi-icon-box.blue { background: var(--status-blue-bg, #f0f9ff); color: var(--status-blue-text, #0369a1); }
-.kpi-icon-box.amber { background: var(--status-amber-bg, #fffbeb); color: var(--status-amber-text, #b45309); }
-.kpi-icon-box.rose { background: var(--status-rose-bg, #fef2f2); color: var(--status-rose-text, #b91c1c); }
+.kpi-icon-box {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.875rem;
+}
+
+.kpi-icon-box.green {
+  background: var(--status-emerald-bg, #ecfdf5);
+  color: var(--status-emerald-text, #047857);
+}
+
+.kpi-icon-box.blue {
+  background: var(--status-blue-bg, #f0f9ff);
+  color: var(--status-blue-text, #0369a1);
+}
+
+.kpi-icon-box.amber {
+  background: var(--status-amber-bg, #fffbeb);
+  color: var(--status-amber-text, #b45309);
+}
+
+.kpi-icon-box.rose {
+  background: var(--status-rose-bg, #fef2f2);
+  color: var(--status-rose-text, #b91c1c);
+}
+
+.kpi-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  overflow: hidden;
+}
+
+.kpi-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+}
+
+.kpi-title {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--p-surface-500, #64748b);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kpi-value {
+  font-family: var(--font-family-mono);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--p-surface-900, #0f172a);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.kpi-value.text-green { color: var(--status-emerald-text, #047857); }
+.kpi-value.text-blue  { color: var(--status-blue-text, #0369a1); }
+.kpi-value.text-amber { color: var(--status-amber-text, #b45309); }
+.kpi-value.text-rose  { color: var(--status-rose-text, #b91c1c); }
+
+.kpi-subtext {
+  font-size: 0.6875rem;
+  color: var(--p-surface-500, #64748b);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 0.15rem;
+}
+
+.kpi-risk-badge {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--status-rose-text, #b91c1c);
+}
 
 .action-link {
   color: var(--chmsu-green-main, #116834);

@@ -295,19 +295,34 @@
   } @else {
     <!-- Summary Cards -->
     <div class="summary-metric-grid">
-      <div class="metric-card border-red">
-        <span class="metric-label">TOTAL BILLED CHARGES (DEBITS)</span>
-        <span class="metric-val text-red">₱{{ totalDebits() | number:'1.2-2' }}</span>
+      <div class="metric-card">
+        <div class="kpi-icon-box rose">
+          <i class="pi pi-arrow-up-right"></i>
+        </div>
+        <div class="metric-card-body">
+          <span class="metric-label">TOTAL BILLED CHARGES (DEBITS)</span>
+          <span class="metric-val text-red">₱{{ totalDebits() | number:'1.2-2' }}</span>
+        </div>
       </div>
-      <div class="metric-card border-green">
-        <span class="metric-label">TOTAL PAYMENTS & SUBSIDIES (CREDITS)</span>
-        <span class="metric-val text-green">₱{{ totalCredits() | number:'1.2-2' }}</span>
+      <div class="metric-card">
+        <div class="kpi-icon-box green">
+          <i class="pi pi-arrow-down-left"></i>
+        </div>
+        <div class="metric-card-body">
+          <span class="metric-label">TOTAL PAYMENTS & SUBSIDIES (CREDITS)</span>
+          <span class="metric-val text-green">₱{{ totalCredits() | number:'1.2-2' }}</span>
+        </div>
       </div>
-      <div class="metric-card border-blue">
-        <span class="metric-label">CURRENT NET RUNNING BALANCE</span>
-        <span class="metric-val" [ngClass]="{'text-orange': currentBalance() > 0, 'text-green': currentBalance() <= 0}">
-          ₱{{ currentBalance() | number:'1.2-2' }}
-        </span>
+      <div class="metric-card">
+        <div class="kpi-icon-box blue">
+          <i class="pi pi-wallet"></i>
+        </div>
+        <div class="metric-card-body">
+          <span class="metric-label">CURRENT NET RUNNING BALANCE</span>
+          <span class="metric-val" [ngClass]="{'text-orange': currentBalance() > 0, 'text-green': currentBalance() <= 0}">
+            ₱{{ currentBalance() | number:'1.2-2' }}
+          </span>
+        </div>
       </div>
     </div>
   }

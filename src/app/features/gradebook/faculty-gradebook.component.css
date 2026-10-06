@@ -434,10 +434,18 @@
 .gb-kpi-box {
   display: flex;
   flex-direction: column;
-  padding: 0.5rem 0.75rem;
-  background: var(--p-surface-50, #f8fafc);
+  padding: 0.75rem 1rem;
+  background: var(--p-surface-0, #ffffff);
   border: 1px solid var(--p-surface-200, #e2e8f0);
-  border-radius: 6px;
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  box-shadow: var(--chmsu-shadow-card);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.gb-kpi-box:hover {
+  border-color: var(--p-surface-300, #cbd5e1);
+  box-shadow: 0 3px 8px -1px rgba(15, 23, 42, 0.07);
+  transform: translateY(-1px);
 }
 
 .gb-kpi-caption {
@@ -446,6 +454,9 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--p-surface-500, #64748b);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .gb-kpi-caption.kpi-pass {
@@ -457,28 +468,34 @@
 }
 
 .gb-kpi-number {
-  font-size: 1.125rem;
+  font-family: var(--font-family-mono);
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--p-surface-900, #0f172a);
   margin-top: 0.15rem;
   font-variant-numeric: tabular-nums;
+  line-height: 1.1;
 }
 
 .gb-kpi-number.number-pass {
-  color: var(--p-primary-600, #116834);
+  color: var(--status-emerald-text, #047857);
 }
 
 .gb-kpi-number.number-def {
-  color: #d97706;
+  color: var(--status-amber-text, #b45309);
 }
 
 .number-mono {
-  font-family: var(--font-mono);
+  font-family: var(--font-family-mono);
 }
 
 .gb-kpi-footnote {
-  font-size: 0.625rem;
+  font-size: 0.6875rem;
   color: var(--p-surface-400, #94a3b8);
+  margin-top: 0.15rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ==========================================================================
@@ -489,19 +506,17 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.45rem 0.75rem;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 .alert-error {
   background-color: #fef2f2;
   border: 1px solid #fecaca;
-  border-left: 3px solid #dc2626;
 }
 
 .alert-warn {
   background-color: #fffbeb;
   border: 1px solid #fde68a;
-  border-left: 3px solid #d97706;
 }
 
 .alert-icon {

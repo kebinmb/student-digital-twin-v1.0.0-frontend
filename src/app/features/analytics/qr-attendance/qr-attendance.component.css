@@ -28,9 +28,7 @@
   min-height: 52px;
 }
 
-.student-toolbar {
-  border-left: 4px solid var(--status-emerald-text, #047857);
-}
+
 
 .header-branding {
   display: flex;

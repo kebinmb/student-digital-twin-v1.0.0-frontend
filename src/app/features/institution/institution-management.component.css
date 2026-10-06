@@ -127,7 +127,6 @@
   gap: 0.5rem;
   background-color: var(--status-amber-bg, #fffbeb);
   border: 1px solid var(--status-amber-border, #fde68a);
-  border-left: 3px solid var(--status-amber-text, #b45309);
   border-radius: 6px;
   padding: 0.5rem 0.875rem;
 }

@@ -86,13 +86,20 @@
 }
 
 .metric-card {
-  background: var(--p-surface-50, #f8fafc);
+  background: var(--p-surface-0, #ffffff);
   border: 1px solid var(--p-surface-200, #e2e8f0);
-  border-radius: var(--chmsu-border-radius-md, 8px);
+  border-radius: var(--chmsu-border-radius-lg, 12px);
   padding: 1rem;
   display: flex;
   flex-direction: column;
   align-items: center;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+}
+
+.metric-card:hover {
+  border-color: var(--p-surface-300, #cbd5e1);
+  box-shadow: 0 3px 8px -1px rgba(15, 23, 42, 0.07);
+  transform: translateY(-1px);
 }
 
 .metric-label {

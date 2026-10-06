@@ -14,7 +14,6 @@
   border-radius: var(--chmsu-border-radius-md, 8px);
   background-color: #fef2f2;
   border: 1px solid #fecaca;
-  border-left: 4px solid #ef4444;
   color: #991b1b;
   display: flex;
   align-items: center;

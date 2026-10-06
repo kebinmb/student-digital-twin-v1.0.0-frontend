@@ -299,31 +299,76 @@
     @if (interviewQueueSummary(); as s) {
     <div class="kpi-grid">
       <div class="kpi-card border-green">
-        <span class="kpi-title">Post-Exam Queue</span>
-        <span class="kpi-value">{{ s.totalCount }} Candidates</span>
-        <span class="kpi-subtext text-green">
-          <i class="pi pi-check-circle"></i> {{ s.countHighPriority }} High Affirmative Priority
-        </span>
+        <div class="kpi-card-inner">
+          <div class="kpi-icon-box green">
+            <i class="pi pi-users"></i>
+          </div>
+          <div class="kpi-body">
+            <div class="kpi-header">
+              <span class="kpi-title">Post-Exam Queue</span>
+            </div>
+            <div class="kpi-value text-green">{{ s.totalCount }}</div>
+            <div class="kpi-subtext text-green">
+              <i class="pi pi-check-circle"></i> {{ s.countHighPriority }} Affirmative Priority
+            </div>
+          </div>
+        </div>
       </div>
       <div class="kpi-card border-blue">
-        <span class="kpi-title">4Ps & Low Income</span>
-        <span class="kpi-value text-blue">{{ s.count4ps }} 4Ps | {{ s.countBottom40 }} B40</span>
-        <span class="kpi-subtext">RA 10931 Priority Target Groups</span>
+        <div class="kpi-card-inner">
+          <div class="kpi-icon-box blue">
+            <i class="pi pi-id-card"></i>
+          </div>
+          <div class="kpi-body">
+            <div class="kpi-header">
+              <span class="kpi-title">4Ps & Low Income</span>
+            </div>
+            <div class="kpi-value text-blue">{{ s.count4ps }} / {{ s.countBottom40 }}</div>
+            <div class="kpi-subtext">RA 10931 Target Groups</div>
+          </div>
+        </div>
       </div>
       <div class="kpi-card border-rose">
-        <span class="kpi-title">Indigenous Peoples & PWD</span>
-        <span class="kpi-value text-rose">{{ s.countIp }} IP | {{ s.countPwd }} PWD</span>
-        <span class="kpi-subtext">RA 8371 NCIP / RA 7277 PDAO</span>
+        <div class="kpi-card-inner">
+          <div class="kpi-icon-box rose">
+            <i class="pi pi-heart"></i>
+          </div>
+          <div class="kpi-body">
+            <div class="kpi-header">
+              <span class="kpi-title">Indigenous & PWD</span>
+            </div>
+            <div class="kpi-value text-rose">{{ s.countIp }} / {{ s.countPwd }}</div>
+            <div class="kpi-subtext">RA 8371 NCIP / RA 7277 PDAO</div>
+          </div>
+        </div>
       </div>
       <div class="kpi-card border-amber">
-        <span class="kpi-title">Solo Parents & Orphans</span>
-        <span class="kpi-value text-amber">{{ s.countSolo }} Solo | {{ s.countOrphan }} Orphans</span>
-        <span class="kpi-subtext">RA 11861 & DSWD Certified</span>
+        <div class="kpi-card-inner">
+          <div class="kpi-icon-box amber">
+            <i class="pi pi-user"></i>
+          </div>
+          <div class="kpi-body">
+            <div class="kpi-header">
+              <span class="kpi-title">Solo Parents & Orphans</span>
+            </div>
+            <div class="kpi-value text-amber">{{ s.countSolo }} / {{ s.countOrphan }}</div>
+            <div class="kpi-subtext">RA 11861 & DSWD Certified</div>
+          </div>
+        </div>
       </div>
       <div class="kpi-card border-amber">
-        <span class="kpi-title">Agri & First-Gen College</span>
-        <span class="kpi-value text-amber">{{ s.countAgri }} RSBSA | {{ s.countFirstGen }} 1st Gen</span>
-        <span class="kpi-subtext">DA Registered & First-in-Family</span>
+        <div class="kpi-card-inner">
+          <div class="kpi-icon-box amber">
+            <i class="pi pi-compass"></i>
+          </div>
+          <div class="kpi-body">
+            <div class="kpi-header">
+              <span class="kpi-title">Agri & First-Gen</span>
+            </div>
+            <div class="kpi-value text-amber">{{ s.countAgri }} / {{ s.countFirstGen }}</div>
+            <div class="kpi-subtext">DA RSBSA & First-in-Family</div>
+          </div>
+        </div>
       </div>
     </div>
     }
