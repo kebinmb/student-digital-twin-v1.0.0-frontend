@@ -1,8 +1,10 @@
 // File: src/app/features/finance/cashier-terminal/cashier-terminal.component.ts
 
-import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, inject, ChangeDetectionStrategy, effect } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
+import { LmsApiService } from '../../../core/service/lms/lms-api.service';
 
 // PrimeNG Modules
 import { TableModule } from 'primeng/table';
@@ -22,6 +24,7 @@ import { MessageService } from 'primeng/api';
 
 import { FinancialApiService } from '../../../core/service/financial/financial-api.service';
 import { TermService } from '../../../core/services/institution.service';
+import { AcademicPeriodStore } from '../../../core/services/academic-period.store';
 import { EnrollmentApiService } from '../../../core/service/enrollment/enrollment-api.service';
 import { UserApiService } from '../../../core/service/user/user-api.service';
 import { Term } from '../../../core/models/institution.model';
@@ -63,12 +66,16 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
   styleUrl: './cashier-terminal.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class CashierTerminalComponent implements OnInit {
+export class CashierTerminalComponent implements OnInit, OnDestroy {
   private readonly financialApi = inject(FinancialApiService);
   private readonly termService = inject(TermService);
+  readonly periodStore = inject(AcademicPeriodStore);
   private readonly enrollmentApi = inject(EnrollmentApiService);
   private readonly userApi = inject(UserApiService);
+  private readonly lmsApi = inject(LmsApiService);
   private readonly messageService = inject(MessageService);
+
+  private studentStreamSub?: Subscription;
 
   // Search Controls Signals
   readonly searchStudentId = signal<number | null>(null);
@@ -143,6 +150,19 @@ export class CashierTerminalComponent implements OnInit {
     return Math.max(0, t - p);
   });
 
+  constructor() {
+    effect(() => {
+      const globalTermId = this.periodStore.selectedTermId();
+      if (globalTermId && globalTermId !== this.selectedTermId()) {
+        this.selectedTermId.set(globalTermId);
+        this.searchTermId.set(globalTermId);
+        if (this.searchStudentId()) {
+          this.lookupStudentInvoice();
+        }
+      }
+    });
+  }
+
   ngOnInit(): void {
     this.loadActiveBooklet();
     this.loadTerms();
@@ -194,9 +214,10 @@ export class CashierTerminalComponent implements OnInit {
 
     this.termService.getActive().subscribe({
       next: (active) => {
-        if (active) {
-          this.selectedTermId.set(active.id);
-          this.searchTermId.set(active.id);
+        const targetId = this.periodStore.selectedTermId() || (active ? active.id : null);
+        if (targetId) {
+          this.selectedTermId.set(targetId);
+          this.searchTermId.set(targetId);
         }
       },
       error: () => {}
@@ -207,6 +228,7 @@ export class CashierTerminalComponent implements OnInit {
     this.selectedTermId.set(termId);
     if (termId) {
       this.searchTermId.set(termId);
+      this.periodStore.setTerm(termId);
       if (this.searchStudentId()) {
         this.lookupStudentInvoice();
       }
@@ -228,11 +250,25 @@ export class CashierTerminalComponent implements OnInit {
   }
 
   onStudentSelect(studentId: number | null): void {
+    this.studentStreamSub?.unsubscribe();
     this.searchStudentId.set(studentId);
     const student = this.searchedStudents().find((s) => s.id === studentId) || null;
     this.selectedStudent.set(student);
     if (studentId) {
       this.lookupStudentInvoice();
+      this.studentStreamSub = this.lmsApi.subscribeToStudentEvents(studentId).subscribe({
+        next: (event) => {
+          if (event.eventType === 'ENROLLMENT_UPDATED' || event.eventType === 'CLEARANCE_UPDATED' || event.eventType === 'STANDING_UPDATED') {
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Billing Ledger Re-evaluation',
+              detail: `Real-time student change detected (${event.eventType}). Refreshing assessment invoice...`
+            });
+            this.lookupStudentInvoice();
+          }
+        },
+        error: () => {}
+      });
     } else {
       this.clearSearch();
     }
@@ -389,10 +425,15 @@ export class CashierTerminalComponent implements OnInit {
   }
 
   clearSearch(): void {
+    this.studentStreamSub?.unsubscribe();
     this.searchStudentId.set(null);
     this.selectedStudent.set(null);
     this.activeInvoice.set(null);
     this.studentReceipts.set([]);
+  }
+
+  ngOnDestroy(): void {
+    this.studentStreamSub?.unsubscribe();
   }
 
   processPayment(): void {

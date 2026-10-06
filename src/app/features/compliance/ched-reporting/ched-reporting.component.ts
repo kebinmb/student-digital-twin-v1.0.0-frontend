@@ -1,6 +1,4 @@
-// File: src/app/features/compliance/ched-reporting/ched-reporting.component.ts
-
-import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -17,6 +15,7 @@ import { MessageService } from 'primeng/api';
 import { ComplianceApiService } from '../../../core/service/compliance/compliance-api.service';
 import { CampusService, TermService } from '../../../core/services/institution.service';
 import { Campus, TermResponse } from '../../../core/models/institution.model';
+import { AcademicPeriodStore } from '../../../core/services/academic-period.store';
 import {
   ChedFormE1InstitutionalDto,
   ChedFormE3EnrolmentDto,
@@ -49,12 +48,25 @@ export class ChedReportingComponent implements OnInit {
   private readonly complianceApi = inject(ComplianceApiService);
   private readonly campusService = inject(CampusService);
   private readonly termService = inject(TermService);
+  readonly periodStore = inject(AcademicPeriodStore);
   private readonly messageService = inject(MessageService);
 
   // Form Controls Signals
   readonly campusId = signal<number | null>(null);
   readonly termId = signal<number | null>(null);
   readonly activeTab = signal<'E1' | 'E3' | 'E4' | 'E5'>('E1');
+
+  constructor() {
+    effect(() => {
+      const globalTermId = this.periodStore.selectedTermId();
+      if (globalTermId && globalTermId !== this.termId()) {
+        this.termId.set(globalTermId);
+        if (this.activeTab() === 'E3') this.loadFormE3();
+        if (this.activeTab() === 'E4') this.loadFormE4();
+        if (this.activeTab() === 'E5') this.loadFormE5();
+      }
+    });
+  }
 
   // Institution Options Signals
   readonly campuses = signal<Campus[]>([]);
@@ -147,9 +159,14 @@ export class ChedReportingComponent implements OnInit {
   onTermChange(newTermId: number | null): void {
     this.termId.set(newTermId);
     if (newTermId) {
+      this.periodStore.setTerm(newTermId);
       if (this.activeTab() === 'E3') this.loadFormE3();
       if (this.activeTab() === 'E4') this.loadFormE4();
       if (this.activeTab() === 'E5') this.loadFormE5();
+    } else {
+      this.formE3.set([]);
+      this.formE4.set([]);
+      this.formE5.set([]);
     }
   }
 
@@ -195,6 +212,7 @@ export class ChedReportingComponent implements OnInit {
         });
       },
       error: (err) => {
+        this.formE3.set([]);
         this.isLoading.set(false);
         this.messageService.add({
           severity: 'error',
@@ -221,6 +239,7 @@ export class ChedReportingComponent implements OnInit {
         });
       },
       error: (err) => {
+        this.formE4.set([]);
         this.isLoading.set(false);
         this.messageService.add({
           severity: 'error',
@@ -247,6 +266,7 @@ export class ChedReportingComponent implements OnInit {
         });
       },
       error: (err) => {
+        this.formE5.set([]);
         this.isLoading.set(false);
         this.messageService.add({
           severity: 'error',

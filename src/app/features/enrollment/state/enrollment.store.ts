@@ -1,6 +1,6 @@
 // File: src/app/features/enrollment/state/enrollment.store.ts
 
-import { inject, Injectable, signal, computed, DestroyRef } from '@angular/core';
+import { inject, Injectable, signal, computed, DestroyRef, effect } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { EnrollmentApiService } from '../../../core/service/enrollment/enrollment-api.service';
 import { TermService } from '../../../core/services/institution.service';
@@ -16,6 +16,7 @@ import {
   TransfereeCreditingSummaryResponse
 } from '../../../core/models/enrollment.model';
 import { TermResponse } from '../../../core/models/institution.model';
+import { AcademicPeriodStore } from '../../../core/services/academic-period.store';
 import { catchError, finalize, forkJoin, of, tap } from 'rxjs';
 import { AuthService } from '../../../core/service/authentication/auth-service';
 
@@ -26,6 +27,7 @@ export class EnrollmentStore {
   private readonly enrollmentApi = inject(EnrollmentApiService);
   private readonly termService = inject(TermService);
   private readonly authService = inject(AuthService);
+  private readonly academicPeriodStore = inject(AcademicPeriodStore);
   private readonly destroyRef = inject(DestroyRef);
 
   private currentStudentId: number | null = null;
@@ -43,6 +45,15 @@ export class EnrollmentStore {
   readonly isLoading = signal<boolean>(false);
   readonly isEnlisting = signal<boolean>(false);
   readonly errorMessage = signal<string | null>(null);
+
+  constructor() {
+    effect(() => {
+      const globalTermId = this.academicPeriodStore.selectedTermId();
+      if (globalTermId && globalTermId !== this.selectedTermId()) {
+        this.setSelectedTermId(globalTermId);
+      }
+    });
+  }
 
   // Computed Derivations
   readonly totalUnits = computed(() => {
@@ -108,6 +119,7 @@ export class EnrollmentStore {
     }
     this.currentTermId = termId;
     this.selectedTermId.set(termId);
+    this.academicPeriodStore.setTerm(termId);
     const sid = this.studentId();
     if (sid && sid > 0) {
       this.loadStudentAdvising(sid, termId);
@@ -258,8 +270,14 @@ export class EnrollmentStore {
         }));
         this.terms.set(formattedTerms);
         if (formattedTerms.length > 0 && !this.selectedTermId()) {
-          const activeTerm = formattedTerms.find(t => t.isActive) || formattedTerms[0];
-          this.setSelectedTermId(activeTerm.id);
+          const globalId = this.academicPeriodStore.selectedTermId();
+          const activeTerm = (globalId ? formattedTerms.find(t => t.id === globalId) : null)
+            || formattedTerms.find(t => t.isActive)
+            || formattedTerms.find(t => t.isCurrent)
+            || formattedTerms[0];
+          if (activeTerm) {
+            this.setSelectedTermId(activeTerm.id);
+          }
         }
       }),
       catchError(() => {

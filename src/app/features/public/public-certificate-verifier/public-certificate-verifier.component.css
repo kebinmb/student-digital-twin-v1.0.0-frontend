@@ -1,0 +1,17 @@
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .certificate-badge-card,
+  .certificate-badge-card * {
+    visibility: visible;
+  }
+  .certificate-badge-card {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    border: none !important;
+    box-shadow: none !important;
+  }
+}

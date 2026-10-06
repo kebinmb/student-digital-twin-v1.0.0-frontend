@@ -1326,7 +1326,7 @@
             </div>
             <div class="stat-val">{{ studentAcademicPerf() }}%</div>
             <p-progressBar [value]="studentAcademicPerf()" [showValue]="false" styleClass="tile-progress"></p-progressBar>
-            <div class="tile-caption">Above required passing mark</div>
+            <div class="tile-caption">{{ todayClasses.length > 0 ? 'Above required passing mark' : 'No term records' }}</div>
           </div>
 
           <div class="stat-card bento-tile accent-blue">
@@ -1336,7 +1336,7 @@
             </div>
             <div class="stat-val">{{ studentAttendanceRate() }}%</div>
             <p-progressBar [value]="studentAttendanceRate()" [showValue]="false" styleClass="tile-progress"></p-progressBar>
-            <div class="tile-caption">Attendance record confirmed</div>
+            <div class="tile-caption">{{ todayClasses.length > 0 ? 'Attendance record confirmed' : 'No classes scheduled' }}</div>
           </div>
 
           <div class="stat-card bento-tile accent-amber">
@@ -1344,9 +1344,9 @@
               <span class="stat-label">Tuition Subsidy</span>
               <div class="tile-icon-box amber"><i class="pi pi-shield"></i></div>
             </div>
-            <div class="stat-val">{{ studentPortalSummary() ? '100%' : '0%' }}</div>
-            <p-progressBar [value]="studentPortalSummary() ? 100 : 0" [showValue]="false" styleClass="tile-progress"></p-progressBar>
-            <div class="tile-caption">UniFAST Free Tuition active</div>
+            <div class="stat-val">{{ (todayClasses.length > 0 && studentPortalSummary()) ? '100%' : '0%' }}</div>
+            <p-progressBar [value]="(todayClasses.length > 0 && studentPortalSummary()) ? 100 : 0" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <div class="tile-caption">{{ todayClasses.length > 0 ? 'UniFAST Free Tuition active' : 'Not Enrolled in Term' }}</div>
           </div>
 
           <div class="stat-card bento-tile accent-rose">

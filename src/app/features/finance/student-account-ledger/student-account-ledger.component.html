@@ -469,6 +469,13 @@
         </div>
       </div>
     </div>
+  } @else if (searchStudentId()) {
+    <app-empty-state
+      icon="pi pi-receipt"
+      title="No Assessment Invoice Found"
+      description="No tuition assessment invoice has been generated for the selected academic term."
+      severity="info">
+    </app-empty-state>
   }
 
   <!-- Ledger Transaction History Table -->

@@ -2,6 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable, shareReplay, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { AuthService } from '../authentication/auth-service';
+import { ResilientSseService } from '../../services/resilient-sse.service';
 import {
   CreateRoomRequest,
   CreateScheduleSlotRequest,
@@ -16,11 +18,23 @@ import {
   UpdateTermClassHourLimitRequest
 } from '../../models/scheduling.model';
 
+export interface SectionRealtimeEvent {
+  eventType: 'ENLISTMENT_UPDATE' | 'GRADE_STATUS_UPDATE';
+  termId: number;
+  sectionId: number;
+  sectionCode?: string;
+  enrolledCount?: number;
+  maxCapacity?: number;
+  gradeStatus?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class SchedulingApiService {
   private readonly http = inject(HttpClient);
+  private readonly authService = inject(AuthService);
+  private readonly resilientSse = inject(ResilientSseService);
   private readonly baseUrl = `${environment.apiUrl}/v1/scheduling`;
 
   private allRooms$?: Observable<RoomResponse[]>;
@@ -122,5 +136,12 @@ export class SchedulingApiService {
     this.invalidateRoomsCache();
     this.invalidateTermsCache();
     this.invalidateInstructorsCache();
+  }
+
+  subscribeToSectionEvents(termId: number = 0): Observable<SectionRealtimeEvent> {
+    return this.resilientSse.createStream<SectionRealtimeEvent>(
+      `/v1/scheduling/sections/stream?termId=${termId}`,
+      ['enlistment-updated', 'grade-status-updated']
+    );
   }
 }

@@ -322,6 +322,65 @@
   display: flex;
 }
 
+.global-period-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  background: var(--p-surface-50, #f8fafc);
+  border: 1px solid var(--border-color);
+  border-radius: 9999px;
+  padding: 0.2rem 0.5rem 0.2rem 0.625rem;
+  transition: all 0.2s ease;
+}
+
+.global-period-pill:hover {
+  background: #ffffff;
+  border-color: #059669;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.period-calendar-icon {
+  font-size: 0.8125rem;
+  color: #059669;
+}
+
+:host ::ng-deep .topbar-period-dropdown.p-select {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  /* height: 24px; */
+}
+
+:host ::ng-deep .topbar-period-dropdown .p-select-label {
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  color: #1e293b !important;
+  padding: 0 0.25rem 0 0 !important;
+}
+
+.period-status-badge {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.125rem 0.375rem;
+  border-radius: 9999px;
+  line-height: 1;
+}
+
+.period-status-badge.status-open {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.period-status-badge.status-grading {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
 .context-badge {
   display: inline-block;
   font-size: 0.6875rem;

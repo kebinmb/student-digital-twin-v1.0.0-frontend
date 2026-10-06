@@ -26,11 +26,14 @@ import {
   TelemetryKpiSummary
 } from '../../models/analytics.model';
 
+import { AuthService } from '../authentication/auth-service';
+
 @Injectable({
   providedIn: 'root'
 })
 export class AnalyticsApiService {
   private readonly http = inject(HttpClient);
+  private readonly authService = inject(AuthService);
 
   startAttendanceSession(request: StartAttendanceSessionRequest): Observable<AttendanceSessionResponse> {
     return this.http.post<AttendanceSessionResponse>(`${environment.apiUrl}/v1/attendance/session/start`, request).pipe(
@@ -124,7 +127,9 @@ export class AnalyticsApiService {
 
   subscribeToSessionStream(sessionId: number): Observable<AttendanceRecordResponse> {
     return new Observable<AttendanceRecordResponse>(observer => {
-      const eventSource = new EventSource(`${environment.apiUrl}/v1/attendance/stream/${sessionId}`);
+      const token = this.authService.accessToken();
+      const tokenParam = token ? `?access_token=${encodeURIComponent(token)}` : '';
+      const eventSource = new EventSource(`${environment.apiUrl}/v1/attendance/stream/${sessionId}${tokenParam}`);
       eventSource.addEventListener('attendance-scan', (event: any) => {
         try {
           const data = JSON.parse(event.data);

@@ -38,6 +38,55 @@ export interface Term {
 
 export type TermResponse = Term;
 
+export interface HonorStudent {
+  studentId: number;
+  studentNumber: string;
+  fullName: string;
+  programCode: string;
+  honorCategory: 'PRESIDENTS_LIST' | 'DEANS_LIST' | 'HONORABLE_MENTION' | string;
+  termGpa: number;
+  totalUnits: number;
+  rank: number;
+}
+
+export interface TermHonorRollReport {
+  termId: number;
+  termName: string;
+  programId?: number | null;
+  totalEvaluated: number;
+  totalQualified: number;
+  honorees: HonorStudent[];
+}
+
+export interface CertificateVerification {
+  certificateId: string;
+  studentId: number;
+  studentNumber: string;
+  studentName: string;
+  termId: number;
+  termName: string;
+  programCode: string;
+  honorCategory: string;
+  gpa: number;
+  verificationHash: string;
+  issuedAt: string;
+  qrVerificationDataUrl: string;
+  isRevoked?: boolean;
+  revocationReason?: string;
+  revokedAt?: string;
+}
+
+export interface CertificateRevocationSummary {
+  id: number;
+  certificateId: string;
+  revokedByUserId?: number;
+  revokedByUsername?: string;
+  revocationReason: string;
+  revokedAt: string;
+  reinstatedAt?: string;
+  isActive: boolean;
+}
+
 export interface CreateTermRequest {
   academicYearId: number;
   termType: TermType;

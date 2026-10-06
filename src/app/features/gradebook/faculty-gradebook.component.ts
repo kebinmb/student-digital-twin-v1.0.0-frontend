@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, ChangeDetectionStrategy, DestroyRef, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -23,6 +23,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { EnrollmentApiService } from '../../core/service/enrollment/enrollment-api.service';
 import { SchedulingApiService } from '../../core/service/scheduling/scheduling-api.service';
 import { TermService } from '../../core/services/institution.service';
+import { AcademicPeriodStore } from '../../core/services/academic-period.store';
 import { AuthService } from '../../core/service/authentication/auth-service';
 import { SectionDetailResponse } from '../../core/models/scheduling.model';
 import { TermResponse } from '../../core/models/institution.model';
@@ -74,12 +75,14 @@ export class FacultyGradebookComponent implements OnInit {
   private readonly enrollmentApi = inject(EnrollmentApiService);
   private readonly schedulingApi = inject(SchedulingApiService);
   private readonly termService = inject(TermService);
+  readonly periodStore = inject(AcademicPeriodStore);
   readonly authService = inject(AuthService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly messageService = inject(MessageService);
 
   private sectionsSub?: Subscription;
   private rosterSub?: Subscription;
+  private sectionEventsSub?: Subscription;
 
   // Active Tab State
   readonly activeTab = signal<'ROSTER' | 'CLASS_RECORD'>('ROSTER');
@@ -335,6 +338,15 @@ export class FacultyGradebookComponent implements OnInit {
     }));
   });
 
+  constructor() {
+    effect(() => {
+      const globalTermId = this.periodStore.selectedTermId();
+      if (globalTermId && globalTermId !== this.selectedTermId()) {
+        this.onTermSelect(globalTermId);
+      }
+    });
+  }
+
   ngOnInit(): void {
     this.loadTerms();
     if (this.isDean() || this.isRegistrar() || this.isAdmin()) {
@@ -348,7 +360,10 @@ export class FacultyGradebookComponent implements OnInit {
       next: (terms: TermResponse[]) => {
         this.terms.set(terms || []);
         if (terms && terms.length > 0) {
-          const active = terms.find(t => t.isActive) || terms[0];
+          const globalId = this.periodStore.selectedTermId();
+          const active = (globalId ? terms.find(t => t.id === globalId) : null)
+            || terms.find(t => t.isActive)
+            || terms[0];
           this.onTermSelect(active.id);
         } else {
           this.isLoading.set(false);
@@ -365,6 +380,8 @@ export class FacultyGradebookComponent implements OnInit {
     const id = typeof termId === 'object' && termId !== null ? termId.value : Number(termId);
     if (!id) return;
 
+    this.periodStore.setTerm(id);
+
     if (this.sectionsSub) {
       this.sectionsSub.unsubscribe();
       this.sectionsSub = undefined;
@@ -373,12 +390,55 @@ export class FacultyGradebookComponent implements OnInit {
       this.rosterSub.unsubscribe();
       this.rosterSub = undefined;
     }
+    if (this.sectionEventsSub) {
+      this.sectionEventsSub.unsubscribe();
+      this.sectionEventsSub = undefined;
+    }
 
     this.selectedTermId.set(id);
     this.selectedSectionId.set(null);
     this.roster.set(null);
     this.editableStudents.set([]);
     this.classRecordMatrix.set(null);
+
+    // Subscribe to real-time section events (grade verification & live enrollment changes)
+    this.sectionEventsSub = this.schedulingApi.subscribeToSectionEvents(id).subscribe({
+      next: (event) => {
+        if (event.eventType === 'GRADE_STATUS_UPDATE' && event.sectionId) {
+          this.sections.update(list => list.map(s =>
+            s.id === event.sectionId
+              ? { ...s, gradeStatus: (event.gradeStatus as any) || s.gradeStatus }
+              : s
+          ));
+          if (this.selectedSectionId() === event.sectionId) {
+            this.roster.update(r => r ? { ...r, gradeStatus: (event.gradeStatus as any) } : null);
+            const statusSummary = event.gradeStatus === 'VERIFIED' ? 'Grades Verified'
+              : event.gradeStatus === 'SEALED' ? 'Grades Sealed'
+              : event.gradeStatus === 'DRAFT' ? 'Grades Returned to Draft'
+              : 'Grades Submitted';
+            const detailMsg = event.gradeStatus === 'VERIFIED'
+              ? `Dean/Chairperson verified grades for section ${event.sectionCode || ''}.`
+              : event.gradeStatus === 'SEALED'
+              ? `Registrar officially sealed grades for section ${event.sectionCode || ''}.`
+              : event.gradeStatus === 'DRAFT'
+              ? `Grades for section ${event.sectionCode || ''} returned to DRAFT for revision.`
+              : `Grades for section ${event.sectionCode || ''} submitted for verification.`;
+            this.messageService.add({
+              severity: event.gradeStatus === 'DRAFT' ? 'warn' : 'info',
+              summary: statusSummary,
+              detail: detailMsg
+            });
+          }
+        } else if (event.eventType === 'ENLISTMENT_UPDATE' && event.sectionId) {
+          this.sections.update(list => list.map(s =>
+            s.id === event.sectionId
+              ? { ...s, enrolledCount: event.enrolledCount !== undefined ? event.enrolledCount : s.enrolledCount }
+              : s
+          ));
+        }
+      },
+      error: () => {}
+    });
 
     this.isLoading.set(true);
     this.sectionsSub = this.schedulingApi.getSectionsByTerm(id)
@@ -389,11 +449,19 @@ export class FacultyGradebookComponent implements OnInit {
           if (secs && secs.length > 0) {
             this.onSectionSelect(secs[0].id);
           } else {
+            this.selectedSectionId.set(null);
+            this.roster.set(null);
+            this.editableStudents.set([]);
+            this.classRecordMatrix.set(null);
             this.isLoading.set(false);
           }
         },
         error: () => {
           this.sections.set([]);
+          this.selectedSectionId.set(null);
+          this.roster.set(null);
+          this.editableStudents.set([]);
+          this.classRecordMatrix.set(null);
           this.isLoading.set(false);
         }
       });
@@ -545,6 +613,8 @@ export class FacultyGradebookComponent implements OnInit {
       totalRaw += (row.finalRawPercentage * finalWeight) / 100;
       hasRaw = true;
     }
+
+    row.totalRawPercentage = hasRaw ? Math.round(totalRaw * 100) / 100 : null;
 
     if (row.totalRawPercentage !== null) {
       row.transmutedGrade = this.transmutePercentageToChedGrade(row.totalRawPercentage);
@@ -955,7 +1025,8 @@ export class FacultyGradebookComponent implements OnInit {
     this.isSaving.set(true);
     this.enrollmentApi.saveSectionGrades(sectionId, {
       grades: payload,
-      submitForVerification: false
+      submitForVerification: false,
+      expectedUpdatedAtEpochMs: this.roster()?.updatedAtEpochMs ?? null
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: res => {
         this.messageService.add({
@@ -970,7 +1041,7 @@ export class FacultyGradebookComponent implements OnInit {
         this.messageService.add({
           severity: 'error',
           summary: 'Save Failed',
-          detail: err.error?.detail || 'Failed to save grade entries.'
+          detail: err.error?.detail || err.error?.message || 'Failed to save grade entries. Roster may have been modified concurrently.'
         });
         this.isSaving.set(false);
       }
@@ -998,7 +1069,8 @@ export class FacultyGradebookComponent implements OnInit {
         this.isSaving.set(true);
         this.enrollmentApi.saveSectionGrades(sectionId, {
           grades: payload,
-          submitForVerification: true
+          submitForVerification: true,
+          expectedUpdatedAtEpochMs: this.roster()?.updatedAtEpochMs ?? null
         }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
           next: res => {
             this.messageService.add({

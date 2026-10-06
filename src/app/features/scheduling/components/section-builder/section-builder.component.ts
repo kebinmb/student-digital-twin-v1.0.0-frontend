@@ -32,6 +32,7 @@ import { CreateSectionRequest, ScheduleSlotDto, SectionDetailResponse, UpdateSec
 import { CurriculumApiService } from '../../../../core/service/curriculum/curriculum-api.service';
 import { CourseItemDto } from '../../../../core/models/curriculum-designer.model';
 import { AuthService } from '../../../../core/service/authentication/auth-service';
+import { AcademicPeriodStore } from '../../../../core/services/academic-period.store';
 
 function timeOrderValidator(): ValidatorFn {
   return (group: AbstractControl): ValidationErrors | null => {
@@ -82,6 +83,7 @@ function nonWhitespaceValidator(): ValidatorFn {
 })
 export class SectionBuilderComponent implements OnInit {
   readonly store = inject(SchedulingStore);
+  readonly periodStore = inject(AcademicPeriodStore);
   readonly auth = inject(AuthService);
   private readonly fb = inject(FormBuilder);
   private readonly messageService = inject(MessageService);
@@ -167,6 +169,13 @@ export class SectionBuilderComponent implements OnInit {
       if (this.store.openModalRequest()) {
         this.store.openModalRequest.set(false);
         this.openCreateModal();
+      }
+    });
+
+    effect(() => {
+      const termId = this.store.selectedTermId();
+      if (termId && this.sectionForm && this.sectionForm.get('termId')) {
+        this.sectionForm.get('termId')?.setValue(termId, { emitEvent: false });
       }
     });
   }
@@ -464,6 +473,25 @@ export class SectionBuilderComponent implements OnInit {
     if (this.sectionForm.get('courseId')?.value !== id) {
       this.sectionForm.get('courseId')?.setValue(id);
     }
+
+    // Auto-prefill slot duration and type based on course lecture/lab units
+    const course = this.availableCourses().find(c => c.courseId === id);
+    if (course && this.scheduleSlotsArray.length === 1) {
+      const firstSlot = this.scheduleSlotsArray.at(0);
+      const isDefault = firstSlot.get('startTime')?.value === '08:00' && firstSlot.get('endTime')?.value === '10:00';
+      if (isDefault) {
+        if (course.lectureUnits && course.lectureUnits > 0) {
+          firstSlot.get('scheduleType')?.setValue('LECTURE');
+          if (course.lectureUnits === 3) {
+            firstSlot.get('endTime')?.setValue('11:00');
+          }
+        } else if (course.labUnits && course.labUnits > 0) {
+          firstSlot.get('scheduleType')?.setValue('LABORATORY');
+          firstSlot.get('endTime')?.setValue('11:00');
+        }
+      }
+    }
+
     this.formSlots.set(this.sectionForm.value.scheduleSlots || []);
     this.cdr.markForCheck();
   }
@@ -631,6 +659,7 @@ export class SectionBuilderComponent implements OnInit {
     if (id !== null) {
       this.store.selectedTermId.set(id);
       this.store.loadSections(id);
+      this.periodStore.setTerm(id);
       this.cdr.markForCheck();
     }
   }

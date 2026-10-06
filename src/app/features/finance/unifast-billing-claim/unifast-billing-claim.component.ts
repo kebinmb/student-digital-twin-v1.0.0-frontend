@@ -18,6 +18,8 @@ import { MessageService } from 'primeng/api';
 import { FinancialApiService } from '../../../core/service/financial/financial-api.service';
 import { TermService, CampusService } from '../../../core/services/institution.service';
 import { Term, Campus } from '../../../core/models/institution.model';
+import { AcademicPeriodStore } from '../../../core/services/academic-period.store';
+import { effect } from '@angular/core';
 import {
   UnifastFheClaimDto,
   CreateUnifastClaimRequest,
@@ -53,6 +55,7 @@ export class UnifastBillingClaimComponent implements OnInit {
   private readonly financialApi = inject(FinancialApiService);
   private readonly termService = inject(TermService);
   private readonly campusService = inject(CampusService);
+  readonly periodStore = inject(AcademicPeriodStore);
   private readonly messageService = inject(MessageService);
 
   // Form Field Signals
@@ -60,6 +63,16 @@ export class UnifastBillingClaimComponent implements OnInit {
   readonly availableCampuses = signal<Campus[]>([]);
   readonly searchTermId = signal<number | null>(null);
   readonly createCampusId = signal<number | null>(null);
+
+  constructor() {
+    effect(() => {
+      const globalTermId = this.periodStore.selectedTermId();
+      if (globalTermId && globalTermId !== this.searchTermId()) {
+        this.searchTermId.set(globalTermId);
+        this.loadClaimBatches();
+      }
+    });
+  }
 
   // Component Signals
   readonly claimBatches = signal<UnifastFheClaimDto[]>([]);
@@ -91,10 +104,17 @@ export class UnifastBillingClaimComponent implements OnInit {
       error: () => this.availableTerms.set([])
     });
 
+    const globalTermId = this.periodStore.selectedTermId();
+    if (globalTermId) {
+      this.searchTermId.set(globalTermId);
+      this.loadClaimBatches();
+      return;
+    }
+
     this.termService.getActive().subscribe({
       next: (active) => {
         if (active) {
-          this.searchTermId.set(active.id);
+          this.searchTermId.set(this.periodStore.selectedTermId() || active.id);
           this.loadClaimBatches();
         }
       },
@@ -102,7 +122,7 @@ export class UnifastBillingClaimComponent implements OnInit {
         // Fallback: if active term endpoint fails, load first available term
         const terms = this.availableTerms();
         if (terms.length > 0) {
-          this.searchTermId.set(terms[0].id);
+          this.searchTermId.set(this.periodStore.selectedTermId() || terms[0].id);
           this.loadClaimBatches();
         }
       }
@@ -124,7 +144,10 @@ export class UnifastBillingClaimComponent implements OnInit {
   onTermChange(termId: number | null): void {
     this.searchTermId.set(termId);
     if (termId) {
+      this.periodStore.setTerm(termId);
       this.loadClaimBatches();
+    } else {
+      this.claimBatches.set([]);
     }
   }
 

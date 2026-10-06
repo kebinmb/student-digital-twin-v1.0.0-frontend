@@ -1,0 +1,204 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<!-- Page Header -->
+<div class="page-header">
+  <div class="header-content">
+    <div class="header-left">
+      <i class="pi pi-shield header-icon"></i>
+      <div>
+        <h2 class="page-title">Certificate Revocation Audit Log</h2>
+        <p class="page-subtitle">
+          Active revocations across all honor roll certificates
+        </p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <p-button
+        icon="pi pi-file-excel"
+        label="Export CSV"
+        severity="success"
+        [outlined]="true"
+        size="small"
+        (onClick)="exportCsv()"
+        [loading]="isExporting()"
+        pTooltip="Download complete revocation audit trail as CSV"
+        tooltipPosition="bottom"
+      />
+      <p-button
+        icon="pi pi-print"
+        label="Print Report"
+        severity="info"
+        [outlined]="true"
+        size="small"
+        (onClick)="exportHtmlReport()"
+        [loading]="isExporting()"
+        pTooltip="Open institutional printable audit report"
+        tooltipPosition="bottom"
+      />
+      <p-button
+        icon="pi pi-refresh"
+        label="Refresh"
+        severity="secondary"
+        [outlined]="true"
+        size="small"
+        (onClick)="refreshList()"
+        [loading]="isLoading()"
+        pTooltip="Reload revocation list"
+        tooltipPosition="left"
+      />
+    </div>
+  </div>
+</div>
+
+<p-divider />
+
+<!-- Stats Banner -->
+@if (!isLoading()) {
+  <div class="stats-banner">
+    <div class="stat-card stat-danger">
+      <i class="pi pi-ban"></i>
+      <div>
+        <span class="stat-value">{{ revocations().length }}</span>
+        <span class="stat-label">Active Revocations</span>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Revocation Table -->
+<p-card styleClass="audit-card">
+  @if (isLoading()) {
+    <div class="skeleton-container">
+      @for (i of [1, 2, 3, 4, 5]; track i) {
+        <p-skeleton height="3rem" styleClass="mb-2" />
+      }
+    </div>
+  } @else {
+    <p-table
+      #revTable
+      [value]="revocations()"
+      [paginator]="true"
+      [rows]="15"
+      [rowsPerPageOptions]="[10, 15, 25, 50]"
+      [globalFilterFields]="['certificateId', 'revokedByUsername', 'revocationReason']"
+      styleClass="p-datatable-sm p-datatable-gridlines"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Showing {first}–{last} of {totalRecords} revocations"
+      emptyMessage="No active certificate revocations found."
+      dataKey="certificateId"
+    >
+      <ng-template pTemplate="caption">
+        <div class="table-toolbar">
+          <span class="p-input-icon-left search-wrapper">
+            <i class="pi pi-search"></i>
+            <input
+              pInputText
+              type="text"
+              placeholder="Search by cert ID, revoked by, reason…"
+              class="search-input"
+              [(ngModel)]="globalFilter"
+              (input)="revTable.filterGlobal(globalFilter, 'contains')"
+            />
+          </span>
+          <p-tag
+            [value]="revocations().length + ' active'"
+            severity="danger"
+            icon="pi pi-ban"
+          />
+        </div>
+      </ng-template>
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="certificateId">
+            Certificate ID <p-sortIcon field="certificateId" />
+          </th>
+          <th pSortableColumn="revokedByUsername">
+            Revoked By <p-sortIcon field="revokedByUsername" />
+          </th>
+          <th>Reason</th>
+          <th pSortableColumn="revokedAt">
+            Revoked At <p-sortIcon field="revokedAt" />
+          </th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-rev>
+        <tr>
+          <!-- Certificate ID -->
+          <td>
+            <code class="cert-uuid" [pTooltip]="rev.certificateId" tooltipPosition="top">
+              {{ (rev.certificateId?.length ?? 0) > 14
+                  ? (rev.certificateId | slice: 0 : 14) + '…'
+                  : rev.certificateId }}
+            </code>
+          </td>
+
+          <!-- Revoked By -->
+          <td>
+            <div class="student-cell">
+              <i class="pi pi-user student-icon"></i>
+              <span>{{ rev.revokedByUsername || '—' }}</span>
+            </div>
+          </td>
+
+          <!-- Reason -->
+          <td>
+            <span
+              class="reason-text"
+              [pTooltip]="rev.revocationReason"
+              tooltipPosition="top"
+            >
+              {{ (rev.revocationReason?.length ?? 0) > 50
+                  ? (rev.revocationReason | slice: 0 : 50) + '…'
+                  : (rev.revocationReason || '—') }}
+            </span>
+          </td>
+
+          <!-- Revoked At -->
+          <td>
+            <span class="timestamp">
+              {{ rev.revokedAt ? (rev.revokedAt | date: 'MMM d, y, h:mm a') : '—' }}
+            </span>
+          </td>
+
+          <!-- Status Badge -->
+          <td>
+            <p-tag value="REVOKED" severity="danger" icon="pi pi-ban" />
+          </td>
+
+          <!-- Actions -->
+          <td>
+            <p-button
+              icon="pi pi-undo"
+              label="Reinstate"
+              severity="success"
+              size="small"
+              [outlined]="true"
+              [loading]="isReinstating() === rev.certificateId"
+              [disabled]="isReinstating() !== null"
+              (onClick)="promptReinstate(rev)"
+              pTooltip="Remove revocation and reinstate this certificate"
+              tooltipPosition="left"
+            />
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6">
+            <div class="empty-state">
+              <i class="pi pi-check-circle empty-icon"></i>
+              <p class="empty-title">No Active Revocations</p>
+              <p class="empty-sub">All honor roll certificates are currently in good standing.</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  }
+</p-card>

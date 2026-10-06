@@ -35,6 +35,12 @@ export const routes: Routes = [
     title: 'Public Guest Admission & Entrance Exam Reservation'
   },
   {
+    path: 'verify/honor-certificate',
+    loadComponent: () =>
+      import('./features/public/public-certificate-verifier/public-certificate-verifier.component').then(m => m.PublicCertificateVerifierComponent),
+    title: 'Public Honor Certificate Verification — Carlos Hilado Memorial State University'
+  },
+  {
     path: 'forbidden',
     loadComponent: () =>
       import('./features/forbidden/forbidden.component').then(m => m.ForbiddenComponent),
@@ -118,6 +124,13 @@ export const routes: Routes = [
           import('./features/admin/lms-config/lms-config.component').then(m => m.LmsConfigComponent)
       },
       {
+        path: 'admin/webhooks',
+        canActivate: [roleGuard(['ADMIN'])],
+        loadComponent: () =>
+          import('./features/admin/webhook-manager/webhook-manager.component').then(m => m.WebhookManagerComponent),
+        title: 'Institutional Webhook Subscriptions — SDT Administration'
+      },
+      {
         path: 'admission-management',
         canActivate: [roleGuard(['ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'GUIDANCE'])],
         loadComponent: () =>
@@ -125,19 +138,19 @@ export const routes: Routes = [
       },
       {
         path: 'analytics/digital-twin',
-        canActivate: [roleGuard(['ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE', 'STUDENT'])],
+        canActivate: [roleGuard(['ADMIN', 'SUPER_ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE', 'STUDENT'])],
         loadComponent: () =>
           import('./features/analytics/digital-twin-dashboard/digital-twin-dashboard.component').then(m => m.DigitalTwinAnalyticsDashboardComponent)
       },
       {
         path: 'analytics/early-warning',
-        canActivate: [roleGuard(['ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE'])],
+        canActivate: [roleGuard(['ADMIN', 'SUPER_ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE'])],
         loadComponent: () =>
           import('./features/analytics/early-warning-radar/early-warning-radar.component').then(m => m.EarlyWarningRadarComponent)
       },
       {
         path: 'analytics/qr-attendance',
-        canActivate: [roleGuard(['ADMIN', 'FACULTY', 'STUDENT'])],
+        canActivate: [roleGuard(['ADMIN', 'SUPER_ADMIN', 'FACULTY', 'STUDENT'])],
         loadComponent: () =>
           import('./features/analytics/qr-attendance/qr-attendance.component').then(m => m.QrAttendanceScannerComponent)
       },

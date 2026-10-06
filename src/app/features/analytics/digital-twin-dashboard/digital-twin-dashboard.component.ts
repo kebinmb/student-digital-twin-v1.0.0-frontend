@@ -1,7 +1,8 @@
-import { Component, OnInit, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, ChangeDetectionStrategy, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, NonNullableFormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { ProgressBarModule } from 'primeng/progressbar';
@@ -22,6 +23,7 @@ import { MessageService } from 'primeng/api';
 
 import { AnalyticsApiService } from '../../../core/service/analytics/analytics-api.service';
 import { EnrollmentApiService } from '../../../core/service/enrollment/enrollment-api.service';
+import { AcademicPeriodStore } from '../../../core/services/academic-period.store';
 import { 
   DigitalTwinRiskProfileDto, 
   StudentTelemetryAdminSummary, 
@@ -67,10 +69,29 @@ export class DigitalTwinAnalyticsDashboardComponent implements OnInit {
   private readonly analyticsApi = inject(AnalyticsApiService);
   private readonly enrollmentApi = inject(EnrollmentApiService);
   private readonly authService = inject(AuthService);
+  readonly periodStore = inject(AcademicPeriodStore);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly messageService = inject(MessageService);
   private readonly fb = inject(NonNullableFormBuilder);
+
+  constructor() {
+    effect(() => {
+      const globalTermId = this.periodStore.selectedTermId();
+      if (globalTermId) {
+        if (this.isAdmin()) {
+          this.fetchAdminTelemetry();
+          this.fetchAdminTelemetryKpi();
+        } else if (this.isFaculty()) {
+          this.fetchFacultyAssignedSections();
+          this.fetchFacultyTelemetry();
+          this.fetchFacultyTelemetryKpi();
+        } else if (this.isStudent()) {
+          this.loadStudentViewData();
+        }
+      }
+    });
+  }
 
   // PrimeNG Select Option Arrays
   readonly riskLevelOptions = [
@@ -151,6 +172,10 @@ export class DigitalTwinAnalyticsDashboardComponent implements OnInit {
   readonly selectedStudentForDispatch = signal<StudentTelemetryAdminSummary | null>(null);
   readonly isDispatching = signal<boolean>(false);
 
+  // Twin Inspection Drawer Signals
+  readonly isInspectModalOpen = signal<boolean>(false);
+  readonly selectedStudentForInspect = signal<StudentTelemetryAdminSummary | null>(null);
+
   // Role Checks
   readonly isAdmin = computed(() => this.authService.hasRole('ADMIN') || this.authService.hasRole('SUPER_ADMIN'));
   readonly isFaculty = computed(() => !this.isAdmin() && (this.authService.hasRole('FACULTY') || this.authService.hasRole('CHAIRPERSON') || this.authService.hasRole('DEAN')));
@@ -229,21 +254,26 @@ export class DigitalTwinAnalyticsDashboardComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.filterForm.valueChanges.subscribe((values) => {
-      if (values.searchQuery !== undefined) this.adminSearchQuery.set(values.searchQuery || '');
-      if (values.riskLevel !== undefined) this.adminRiskLevelFilter.set(values.riskLevel || 'ALL');
-      if (values.interventionStatus !== undefined) this.adminInterventionStatusFilter.set(values.interventionStatus || 'ALL');
-      if (values.sectionId !== undefined) {
-        const parsed = values.sectionId && values.sectionId !== 'ALL' ? Number(values.sectionId) : null;
-        this.selectedFacultySectionId.set(parsed);
-      }
-      this.adminPageIndex.set(0);
-      if (this.isFaculty()) {
-        this.fetchFacultyTelemetry();
-      } else if (this.isAdmin()) {
-        this.fetchAdminTelemetry();
-      }
-    });
+    this.filterForm.valueChanges
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr))
+      )
+      .subscribe((values) => {
+        if (values.searchQuery !== undefined) this.adminSearchQuery.set(values.searchQuery || '');
+        if (values.riskLevel !== undefined) this.adminRiskLevelFilter.set(values.riskLevel || 'ALL');
+        if (values.interventionStatus !== undefined) this.adminInterventionStatusFilter.set(values.interventionStatus || 'ALL');
+        if (values.sectionId !== undefined) {
+          const parsed = values.sectionId && values.sectionId !== 'ALL' ? Number(values.sectionId) : null;
+          this.selectedFacultySectionId.set(parsed);
+        }
+        this.adminPageIndex.set(0);
+        if (this.isFaculty()) {
+          this.fetchFacultyTelemetry();
+        } else if (this.isAdmin()) {
+          this.fetchAdminTelemetry();
+        }
+      });
 
     if (this.isAdmin()) {
       this.fetchAdminTelemetry();
@@ -464,8 +494,20 @@ export class DigitalTwinAnalyticsDashboardComponent implements OnInit {
   }
 
   inspectStudentTwin(studentId: number): void {
-    this.currentStudentId.set(studentId);
-    this.loadRiskProfile(studentId);
+    const numericId = Number(studentId);
+    const student = this.adminTelemetryList().find(s => Number(s.studentId) === numericId);
+    this.selectedStudentForInspect.set(student || null);
+    this.currentStudentId.set(numericId);
+    this.isInspectModalOpen.set(true);
+    this.loadRiskProfile(numericId);
+  }
+
+  openDispatchFromInspect(): void {
+    const student = this.selectedStudentForInspect();
+    if (student) {
+      this.isInspectModalOpen.set(false);
+      this.openDispatchModal(student);
+    }
   }
 
   acknowledgeStudentRecommendation(interventionId: number): void {
@@ -597,6 +639,19 @@ export class DigitalTwinAnalyticsDashboardComponent implements OnInit {
       next: (profile) => {
         this.riskProfile.set(profile);
         this.currentStudentId.set(profile.studentId);
+        if (!this.selectedStudentForInspect() || this.selectedStudentForInspect()?.studentId !== profile.studentId) {
+          this.selectedStudentForInspect.set({
+            studentId: profile.studentId,
+            studentNumber: profile.studentNumber,
+            fullName: profile.studentName,
+            sectionCode: '',
+            programOrCohort: profile.programCode || '',
+            riskLevel: profile.compositeRiskLevel,
+            riskScore: profile.predictedDropoutProbability || profile.academicRiskScore || 0,
+            activeInterventions: [],
+            lastTelemetrySync: profile.evaluatedAt || new Date().toISOString()
+          });
+        }
         this.isLoading.set(false);
         if (isRecalculation) {
           this.messageService.add({

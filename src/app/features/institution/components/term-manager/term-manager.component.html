@@ -114,6 +114,14 @@
               </p-button>
             }
             <p-button
+              icon="pi pi-award"
+              size="small"
+              [text]="true"
+              severity="warn"
+              title="View Honor Roll"
+              (onClick)="openHonorRoll(t)">
+            </p-button>
+            <p-button
               icon="pi pi-pencil"
               size="small"
               [text]="true"
@@ -241,6 +249,14 @@
           (onClick)="isDetailDrawerOpen.set(false)">
         </p-button>
         <div class="flex items-center gap-2">
+          <p-button 
+            label="Honor Roll" 
+            icon="pi pi-award" 
+            severity="warn" 
+            [outlined]="true" 
+            size="small"
+            (onClick)="openHonorRoll(selectedTermForDetail()!)">
+          </p-button>
           @if (canManageWindows() && selectedTermForDetail() && !selectedTermForDetail()!.isActive) {
             <p-button 
               label="Activate Term" 
@@ -349,6 +365,256 @@
         </p-button>
       </div>
     </form>
+  </p-dialog>
+
+  <!-- End-of-Term Honor Roll Modal Dialog -->
+  <p-dialog
+    [header]="'Academic Honor Roll — ' + (activeHonorRollTerm() ? formatTermType(activeHonorRollTerm()!.termType) : '')"
+    [visible]="isHonorRollDialogOpen()"
+    (visibleChange)="isHonorRollDialogOpen.set($event)"
+    [modal]="true"
+    [breakpoints]="{ '960px': '85vw', '640px': '95vw' }"
+    [style]="{ width: '920px', maxWidth: '95vw' }"
+    [contentStyle]="{ 'overflow-x': 'hidden' }">
+
+    @if (isLoadingHonorRoll()) {
+      <div class="p-4 space-y-3">
+        <p-skeleton height="50px" borderRadius="8px"></p-skeleton>
+        <p-skeleton height="200px" borderRadius="8px"></p-skeleton>
+      </div>
+    } @else if (honorRollReport(); as report) {
+      <div class="honor-roll-content space-y-4">
+        <!-- Metric Summary Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 my-3">
+          <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-center">
+            <span class="text-xs text-slate-500 block font-medium">Total Evaluated</span>
+            <span class="text-xl font-bold text-slate-800 font-mono">{{ report.totalEvaluated }}</span>
+          </div>
+          <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-center">
+            <span class="text-xs text-emerald-600 block font-medium">Total Qualified</span>
+            <span class="text-xl font-bold text-emerald-800 font-mono">{{ report.totalQualified }}</span>
+          </div>
+          <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg text-center">
+            <span class="text-xs text-amber-700 block font-medium">President's List</span>
+            <span class="text-xl font-bold text-amber-700 font-mono">{{ getPresidentsCount(report) }}</span>
+          </div>
+          <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
+            <span class="text-xs text-blue-700 block font-medium">Dean's List</span>
+            <span class="text-xl font-bold text-blue-700 font-mono">{{ getDeansCount(report) }}</span>
+          </div>
+        </div>
+
+        <!-- Filter & Export Controls -->
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200 mb-3">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-semibold text-slate-700">Filter Program:</span>
+            <p-select
+              [options]="programOptions()"
+              [ngModel]="selectedProgramFilter()"
+              (ngModelChange)="onProgramFilterChange($event)"
+              placeholder="All Programs"
+              optionLabel="label"
+              optionValue="value"
+              size="small"
+              styleClass="w-60 text-xs">
+            </p-select>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <p-button
+              label="Export CSV Roster"
+              icon="pi pi-download"
+              size="small"
+              severity="secondary"
+              [outlined]="true"
+              [disabled]="report.honorees.length === 0"
+              (onClick)="exportHonorRollCsv()">
+            </p-button>
+            <p-button
+              label="Batch Certificates (.zip)"
+              icon="pi pi-folder"
+              size="small"
+              severity="help"
+              [outlined]="true"
+              [loading]="isDownloadingZip()"
+              [disabled]="report.honorees.length === 0"
+              pTooltip="Download all verified certificates packaged by academic program"
+              tooltipPosition="bottom"
+              (onClick)="downloadBatchZip()">
+            </p-button>
+          </div>
+        </div>
+
+        <!-- Honorees Table -->
+        <p-table
+          [value]="report.honorees"
+          [paginator]="true"
+          [rows]="8"
+          [rowsPerPageOptions]="[8, 15, 30]"
+          size="small"
+          styleClass="p-datatable-striped"
+          responsiveLayout="scroll">
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 70px; text-align: center;">Rank</th>
+              <th>Student No.</th>
+              <th>Full Name</th>
+              <th>Program</th>
+              <th style="text-align: center;">Category</th>
+              <th style="text-align: center;">Term GPA</th>
+              <th style="text-align: center;">Units</th>
+              <th style="width: 110px; text-align: center;">Certificate</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-h>
+            <tr>
+              <td style="text-align: center;">
+                <span class="font-bold text-slate-700 font-mono">#{{ h.rank }}</span>
+              </td>
+              <td class="font-mono text-xs">{{ h.studentNumber }}</td>
+              <td class="font-semibold text-slate-800">{{ h.fullName }}</td>
+              <td><span class="text-xs font-semibold text-slate-600">{{ h.programCode }}</span></td>
+              <td style="text-align: center;">
+                @if (h.honorCategory === 'PRESIDENTS_LIST') {
+                  <p-tag value="President's List" severity="warn" icon="pi pi-star-fill"></p-tag>
+                } @else if (h.honorCategory === 'DEANS_LIST') {
+                  <p-tag value="Dean's List" severity="success" icon="pi pi-award"></p-tag>
+                } @else {
+                  <p-tag [value]="h.honorCategory" severity="info"></p-tag>
+                }
+              </td>
+              <td style="text-align: center;">
+                <span class="font-mono font-bold text-emerald-700">{{ h.termGpa.toFixed(2) }}</span>
+              </td>
+              <td style="text-align: center;">
+                <span class="font-mono text-xs text-slate-600">{{ h.totalUnits }}</span>
+              </td>
+              <td style="text-align: center;">
+                <p-button
+                  icon="pi pi-file-pdf"
+                  severity="help"
+                  [outlined]="true"
+                  size="small"
+                  pTooltip="Generate Cryptographically Verified Certificate"
+                  tooltipPosition="left"
+                  (onClick)="viewHonorCertificate(h)">
+                </p-button>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="8" class="text-center py-6 text-slate-500 text-sm">
+                No students qualified for the honor roll in this term under the selected program criteria (Min 15 units, GPA &le; 1.75, no grade &gt; 2.00).
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    }
+  </p-dialog>
+
+  <!-- Official Cryptographic Certificate Modal Dialog -->
+  <p-dialog
+    [(visible)]="isCertificateDialogOpen"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    header="Official Certificate of Academic Honor"
+    styleClass="w-full max-w-2xl"
+    (onHide)="isCertificateDialogOpen.set(false)">
+    
+    @if (isLoadingCertificate()) {
+      <div class="p-6 space-y-4">
+        <p-skeleton height="40px" borderRadius="8px"></p-skeleton>
+        <p-skeleton height="200px" borderRadius="12px"></p-skeleton>
+      </div>
+    } @else if (selectedCertificate(); as cert) {
+      <div class="certificate-container p-6 border-4 border-amber-600 bg-amber-50/30 rounded-xl relative overflow-hidden text-center shadow-lg">
+        <div class="watermark absolute inset-0 opacity-5 pointer-events-none flex items-center justify-center">
+          <img src="chmsu-logo.png" alt="Watermark" class="w-96 h-96 object-contain" />
+        </div>
+
+        <div class="relative z-10 flex flex-col items-center">
+          <img src="chmsu-logo.png" alt="University Logo" class="w-16 h-16 object-contain mb-2" />
+          <h2 class="text-xs uppercase tracking-widest text-emerald-800 font-bold m-0">Carlos Hilado Memorial State University</h2>
+          <p class="text-[10px] text-slate-500 tracking-wider uppercase mb-4">Office of the University Registrar &middot; Academic Honors Division</p>
+
+          <span class="text-xs italic text-slate-600">This certificate of distinction is proudly conferred upon</span>
+          <h1 class="text-2xl font-serif font-black text-slate-900 my-2 tracking-wide border-b-2 border-amber-500 pb-1 px-6 inline-block">
+            {{ cert.studentName }}
+          </h1>
+          <p class="text-xs font-mono text-slate-600 mb-2">Student ID: {{ cert.studentNumber }} &middot; Program: {{ cert.programCode }}</p>
+
+          <p class="text-sm text-slate-700 max-w-lg mx-auto leading-relaxed mt-2">
+            for exceptional scholastic performance by achieving a Term Grade Point Average of
+            <strong class="font-mono text-emerald-800 text-base">{{ cert.gpa.toFixed(2) }}</strong>,
+            earning placement on the official
+          </p>
+
+          <div class="my-4 px-6 py-2 bg-gradient-to-r from-amber-500 to-amber-700 text-white font-serif font-bold text-lg rounded-full shadow-md uppercase tracking-wider inline-block">
+            {{ cert.honorCategory === 'PRESIDENTS_LIST' ? "President's List of Scholars" : "Dean's List of Honors" }}
+          </div>
+
+          <p class="text-xs text-slate-600">Given this {{ cert.issuedAt }} for {{ cert.termName }}.</p>
+
+          @if (cert.isRevoked) {
+            <div class="mt-4 p-3 rounded-lg bg-red-100 border border-red-300 w-full text-left">
+              <div class="flex items-center gap-2 text-red-800 font-bold text-xs uppercase mb-1">
+                <i class="pi pi-ban text-red-600"></i> Certificate Revoked in Registry
+              </div>
+              <p class="text-xs text-red-700 m-0">Reason: <strong>{{ cert.revocationReason || 'Sanction applied' }}</strong></p>
+              @if (cert.revokedAt) {
+                <p class="text-[10px] text-red-500 m-0 mt-1">Revoked At: {{ cert.revokedAt }}</p>
+              }
+            </div>
+          }
+
+          <!-- Cryptographic Verification Footer -->
+          <div class="mt-6 pt-4 border-t border-amber-200 w-full flex items-center justify-between gap-4 text-left">
+            <div class="flex items-center gap-3">
+              <img [src]="cert.qrVerificationDataUrl" alt="QR Verification" class="w-20 h-20 border border-slate-300 rounded p-1 bg-white" />
+              <div>
+                <span class="text-[10px] font-bold text-slate-700 uppercase tracking-wider block">Cryptographic SHA-256 Digest:</span>
+                <span class="font-mono text-[9px] text-slate-500 break-all max-w-xs block">{{ cert.verificationHash }}</span>
+                <span class="text-[9px] font-semibold mt-1 block" [ngClass]="cert.isRevoked ? 'text-red-700' : 'text-emerald-700'">
+                  <i [class]="cert.isRevoked ? 'pi pi-ban' : 'pi pi-verified'"></i>
+                  {{ cert.isRevoked ? 'REVOKED &middot; ID: ' + cert.certificateId : 'Digitally Signed &middot; Certificate ID: ' + cert.certificateId }}
+                </span>
+              </div>
+            </div>
+
+            <div class="flex flex-col gap-2">
+              @if (!cert.isRevoked) {
+                <p-button
+                  label="Print Certificate"
+                  icon="pi pi-print"
+                  severity="success"
+                  size="small"
+                  (onClick)="printCertificate()">
+                </p-button>
+                <p-button
+                  label="Revoke"
+                  icon="pi pi-ban"
+                  severity="danger"
+                  [outlined]="true"
+                  size="small"
+                  (onClick)="promptRevocation()">
+                </p-button>
+              } @else {
+                <p-button
+                  label="Reinstate"
+                  icon="pi pi-refresh"
+                  severity="info"
+                  size="small"
+                  (onClick)="reinstateCurrentCertificate()">
+                </p-button>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    }
   </p-dialog>
 </div>
 

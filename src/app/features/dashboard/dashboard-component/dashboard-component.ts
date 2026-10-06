@@ -1,10 +1,11 @@
-import { Component, computed, inject, signal, ChangeDetectionStrategy, OnInit, DestroyRef } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy, OnInit, DestroyRef, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, NonNullableFormBuilder, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
+import { AcademicPeriodStore } from '../../../core/services/academic-period.store';
 
 // PrimeNG Standalone Components & Modules
 import { ButtonModule } from 'primeng/button';
@@ -152,6 +153,7 @@ export interface SystemActuatorEndpoint {
 })
 export class DashboardComponent implements OnInit {
   protected readonly authService = inject(AuthService);
+  protected readonly periodStore = inject(AcademicPeriodStore);
   private readonly messageService = inject(MessageService);
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly userApiService = inject(UserApiService);
@@ -167,6 +169,16 @@ export class DashboardComponent implements OnInit {
   private readonly lmsApiService = inject(LmsApiService);
   private readonly noticeApiService = inject(NoticeApiService);
   private readonly destroyRef = inject(DestroyRef);
+
+  constructor() {
+    effect(() => {
+      const termId = this.periodStore.selectedTermId();
+      if (termId) {
+        this.loadGeneralAcademicContext(termId);
+        this.loadMetricsForRole(this.activeRole(), true, termId);
+      }
+    });
+  }
 
   readonly isLoading = signal(false);
   readonly selectedNotice = signal<NoticeItem | null>(null);
@@ -537,34 +549,48 @@ export class DashboardComponent implements OnInit {
 
   readonly studentProfileSub = computed(() => {
     const p = this.studentPortalSummary();
+    const enrolled = this.todayClassesSignal().length > 0;
+    if (!enrolled) return p ? `${p.studentNumber} — ${p.programCode} • Not Enrolled in Term` : 'Not Enrolled in Selected Term';
     return p ? `${p.studentNumber} — ${p.programCode} (Year ${p.yearLevel}) • CHMSU Scholar` : 'Student Academic Profile';
   });
 
   readonly studentGpa = computed(() => this.studentPortalSummary()?.cumulativeGpa || '0.00');
   readonly studentUnits = computed(() => {
+    if (this.todayClassesSignal().length === 0) return '0 / 142';
     const p = this.studentPortalSummary();
     return p?.totalUnitsEarned ? `${p.totalUnitsEarned} / 142` : '0 / 142';
   });
   readonly studentClearanceStatus = computed(() => {
+    if (this.todayClassesSignal().length === 0) return 'PENDING';
     const p = this.studentPortalSummary();
     if (!p) return 'CLEARED';
     return (p.financialClearance === 'CLEARED' && p.departmentalClearance === 'CLEARED') ? 'CLEARED' : (p.financialClearance || 'CLEARED');
   });
   readonly studentWellnessScore = computed(() => {
+    if (this.todayClassesSignal().length === 0) return 0;
     const t = this.studentSelfTelemetry();
     return t?.wellnessScore ? Math.round(t.wellnessScore) : 0;
   });
-  readonly studentStandingText = computed(() => `Academic Standing (${this.studentWellnessScore()}%)`);
-  readonly studentStandingTag = computed(() => (this.studentSelfTelemetry()?.riskLevel === 'LOW' || !this.studentSelfTelemetry()) ? 'ON TRACK' : 'NEEDS ATTENTION');
+  readonly studentStandingText = computed(() => {
+    if (this.todayClassesSignal().length === 0) return 'Not Enrolled (0%)';
+    return `Academic Standing (${this.studentWellnessScore()}%)`;
+  });
+  readonly studentStandingTag = computed(() => {
+    if (this.todayClassesSignal().length === 0) return 'NOT ENROLLED';
+    return (this.studentSelfTelemetry()?.riskLevel === 'LOW' || !this.studentSelfTelemetry()) ? 'ON TRACK' : 'NEEDS ATTENTION';
+  });
   readonly studentAcademicPerf = computed(() => {
+    if (this.todayClassesSignal().length === 0) return 0;
     const t = this.studentSelfTelemetry();
     return t?.dimensionScores?.['Academic Progress'] != null ? Math.round(t.dimensionScores['Academic Progress']) : 0;
   });
   readonly studentAttendanceRate = computed(() => {
+    if (this.todayClassesSignal().length === 0) return 0;
     const t = this.studentSelfTelemetry();
     return t?.dimensionScores?.['Attendance Consistency'] != null ? Math.round(t.dimensionScores['Attendance Consistency']) : 0;
   });
   readonly studentAcademicStanding = computed(() => {
+    if (this.todayClassesSignal().length === 0) return 'NOT ENROLLED';
     const t = this.studentSelfTelemetry();
     if (!t) return 'GOOD STANDING';
     if (t.riskLevel === 'CRITICAL') return 'PROBATION';
@@ -572,6 +598,7 @@ export class DashboardComponent implements OnInit {
     return 'GOOD STANDING';
   });
   readonly studentAcademicStandingSeverity = computed(() => {
+    if (this.todayClassesSignal().length === 0) return 'info';
     const t = this.studentSelfTelemetry();
     if (!t) return 'success';
     if (t.riskLevel === 'CRITICAL') return 'danger';
@@ -579,6 +606,7 @@ export class DashboardComponent implements OnInit {
     return 'success';
   });
   readonly studentAcademicStandingCaption = computed(() => {
+    if (this.todayClassesSignal().length === 0) return 'No active course enrollments for this term';
     const t = this.studentSelfTelemetry();
     if (t?.riskLevel === 'CRITICAL') return 'Academic advising required';
     if (t?.riskLevel === 'HIGH') return 'Consult program adviser';
@@ -729,10 +757,11 @@ export class DashboardComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadGeneralAcademicContext();
+    const termId = this.periodStore.selectedTermId() || undefined;
+    this.loadGeneralAcademicContext(termId);
     this.loadInterventionTypes();
     this.loadNotices();
-    this.loadMetricsForRole(this.activeRole());
+    this.loadMetricsForRole(this.activeRole(), true, termId);
   }
 
   loadInterventionTypes(): void {
@@ -779,32 +808,38 @@ export class DashboardComponent implements OnInit {
     this.registrarGradeWindow.set(gradingOpen ? 'MIDTERM & FINAL SUBMISSIONS OPEN' : 'SUBMISSION WINDOW LOCKED');
   }
 
-  loadGeneralAcademicContext(): void {
-    this.termService.getActive()
-      .pipe(
-        catchError(() => this.termService.getAll().pipe(
-          map(terms => terms.find(t => t.isActive || t.isCurrent) || terms[0]),
-          catchError(() => of(null))
-        )),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe(term => {
-        if (term) {
-          this.updateActiveTermState(term);
-        } else {
-          this.schedulingApiService.getSchedulingTerms()
-            .pipe(
-              catchError(() => of([])),
-              takeUntilDestroyed(this.destroyRef)
-            )
-            .subscribe(terms => {
-              if (terms && terms.length > 0) {
-                const current = terms.find(t => t.isCurrent || t.isActive) || terms[0];
-                this.updateActiveTermState(current);
-              }
-            });
-        }
-      });
+  loadGeneralAcademicContext(termId?: number): void {
+    const effectiveTermId = termId || this.periodStore.selectedTermId() || 1;
+    const currentTerm = this.periodStore.selectedTerm();
+    if (currentTerm) {
+      this.updateActiveTermState(currentTerm);
+    } else {
+      this.termService.getActive()
+        .pipe(
+          catchError(() => this.termService.getAll().pipe(
+            map(terms => terms.find(t => t.isActive || t.isCurrent) || terms[0]),
+            catchError(() => of(null))
+          )),
+          takeUntilDestroyed(this.destroyRef)
+        )
+        .subscribe(term => {
+          if (term) {
+            this.updateActiveTermState(term);
+          } else {
+            this.schedulingApiService.getSchedulingTerms()
+              .pipe(
+                catchError(() => of([])),
+                takeUntilDestroyed(this.destroyRef)
+              )
+              .subscribe(terms => {
+                if (terms && terms.length > 0) {
+                  const current = terms.find(t => t.isCurrent || t.isActive) || terms[0];
+                  this.updateActiveTermState(current);
+                }
+              });
+          }
+        });
+    }
 
     this.curriculumApiService.getCurriculumLookupOptions()
       .pipe(
@@ -819,7 +854,7 @@ export class DashboardComponent implements OnInit {
         }
       });
 
-    this.schedulingApiService.getSectionsByTerm(1)
+    this.schedulingApiService.getSectionsByTerm(effectiveTermId)
       .pipe(
         catchError(() => of([])),
         takeUntilDestroyed(this.destroyRef)
@@ -842,19 +877,31 @@ export class DashboardComponent implements OnInit {
             this.registrarVerifiedGrades.set(`${sealed} of ${sections.length} Grade Sheets Sealed`);
           }
 
-          if (this.todayClassesSignal().length === 0) {
-            const mapped: ClassScheduleItem[] = sections.slice(0, 5).map(sec => {
-              const slot = sec.schedules && sec.schedules.length > 0 ? sec.schedules[0] : null;
-              return {
-                courseCode: sec.courseCode,
-                courseTitle: sec.courseTitle,
-                time: slot ? `${slot.startTime.substring(0, 5)} - ${slot.endTime.substring(0, 5)}` : '08:00 AM - 10:00 AM',
-                room: slot?.roomName || slot?.roomCode || 'Academic Classroom',
-                instructor: slot?.instructorName || 'Assigned Faculty',
-                status: sec.status === 'CLOSED' ? 'Completed' : (sec.status === 'OPEN' ? 'In Progress' : 'Upcoming')
-              };
-            });
+          const mapped: ClassScheduleItem[] = sections.slice(0, 5).map(sec => {
+            const slot = sec.schedules && sec.schedules.length > 0 ? sec.schedules[0] : null;
+            return {
+              courseCode: sec.courseCode,
+              courseTitle: sec.courseTitle,
+              time: slot ? `${slot.startTime.substring(0, 5)} - ${slot.endTime.substring(0, 5)}` : '08:00 AM - 10:00 AM',
+              room: slot?.roomName || slot?.roomCode || 'Academic Classroom',
+              instructor: slot?.instructorName || 'Assigned Faculty',
+              status: sec.status === 'CLOSED' ? 'Completed' : (sec.status === 'OPEN' ? 'In Progress' : 'Upcoming')
+            };
+          });
+          if (!this.isStudent()) {
             this.todayClassesSignal.set(mapped);
+          }
+        } else {
+          this.chairpersonSections.set('0 Sections Scheduled');
+          this.totalRegistrarSections.set(0);
+          this.registrarSectionsList.set([]);
+          this.chairpersonSectionsList.set([]);
+          this.sealedGradeCount.set(0);
+          this.verifiedGradeCount.set(0);
+          this.pendingGradeReviewCount.set(0);
+          this.registrarVerifiedGrades.set('No Sections Scheduled');
+          if (!this.isStudent()) {
+            this.todayClassesSignal.set([]);
           }
         }
       });
@@ -899,7 +946,7 @@ export class DashboardComponent implements OnInit {
     }
 
     if (this.authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT', 'CASHIER'])) {
-      this.financialApiService.getClaimsByTerm(1)
+      this.financialApiService.getClaimsByTerm(effectiveTermId)
         .pipe(
           catchError(() => of([])),
           takeUntilDestroyed(this.destroyRef)
@@ -916,6 +963,11 @@ export class DashboardComponent implements OnInit {
             if (totalBen > 0) {
               this.accountantEnrollees.set(`${totalBen.toLocaleString()} Enrollees Covered`);
             }
+          } else {
+            this.accountantClaimsList.set([]);
+            this.accountantBatches.set('0 Batches Audited');
+            this.accountantTotalBilled.set('₱0.00');
+            this.accountantEnrollees.set('0 Enrollees Covered');
           }
         });
     }
@@ -1013,11 +1065,11 @@ export class DashboardComponent implements OnInit {
 
   refreshMetrics(): void {
     this.isLoading.set(true);
-    this.loadGeneralAcademicContext();
+    const termId = this.periodStore.selectedTermId() || undefined;
+    this.loadGeneralAcademicContext(termId);
     this.loadInterventionTypes();
     this.loadNotices();
-    this.loadMetricsForRole(this.activeRole(), true);
-    this.loadNotices();
+    this.loadMetricsForRole(this.activeRole(), true, termId);
     this.messageService.add({
       severity: 'success',
       summary: 'Dashboard Updated',
@@ -1027,7 +1079,7 @@ export class DashboardComponent implements OnInit {
 
   onRoleOverrideChange(newRole: string): void {
     this.selectedRoleOverride.set(newRole);
-    this.loadMetricsForRole(newRole);
+    this.loadMetricsForRole(newRole, true, this.periodStore.selectedTermId() || undefined);
     this.messageService.add({
       severity: 'info',
       summary: 'Role View Switched',
@@ -1035,10 +1087,11 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  loadMetricsForRole(role: string, force = false): void {
+  loadMetricsForRole(role: string, force = false, targetTermId?: number): void {
     if (!force && this.dynamicRoleMetrics()[role]) {
       return;
     }
+    const effectiveTermId = targetTermId || this.periodStore.selectedTermId() || 1;
 
     switch (role) {
       case 'SUPER_ADMIN':
@@ -1050,17 +1103,17 @@ export class DashboardComponent implements OnInit {
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe({
             next: ({ users, auditLogs, campuses }) => {
-              const activeUsers = users.length > 0 ? `${users.length.toLocaleString()} Active` : '1,480 Tokens';
-              const activeCampuses = campuses.length > 0 ? `${campuses.length} Campuses` : '4 Campuses';
-              const auditCount = auditLogs.length > 0 ? `${auditLogs.length} Events` : '284 Recorded';
+              const activeUsers = users.length > 0 ? `${users.length.toLocaleString()} Active` : '0 Active';
+              const activeCampuses = campuses.length > 0 ? `${campuses.length} Campuses` : '0 Campuses';
+              const auditCount = auditLogs.length > 0 ? `${auditLogs.length} Events` : '0 Events';
 
               this.dynamicRoleMetrics.update(m => ({
                 ...m,
                 SUPER_ADMIN: [
                   { title: 'System Health', value: '100.0%', subtext: 'All services online', icon: 'pi pi-server', trend: 'Optimal', trendUp: true },
-                  { title: 'Campus Network', value: activeCampuses, subtext: 'Connected & synchronized', icon: 'pi pi-building', trend: 'Online', trendUp: true },
-                  { title: 'Active Sessions', value: activeUsers, subtext: 'Currently signed in', icon: 'pi pi-shield', trend: 'Secure', trendUp: true },
-                  { title: 'System Activity', value: auditCount, subtext: 'No issues detected', icon: 'pi pi-heart-fill', trend: 'Healthy', trendUp: true }
+                  { title: 'Campus Network', value: activeCampuses, subtext: 'Connected & synchronized', icon: 'pi pi-building', trend: campuses.length > 0 ? 'Online' : 'Offline', trendUp: campuses.length > 0 },
+                  { title: 'Active Sessions', value: activeUsers, subtext: 'Currently signed in', icon: 'pi pi-shield', trend: users.length > 0 ? 'Secure' : 'Inactive', trendUp: users.length > 0 },
+                  { title: 'System Activity', value: auditCount, subtext: 'No issues detected', icon: 'pi pi-heart-fill', trend: auditLogs.length > 0 ? 'Healthy' : 'Inactive', trendUp: auditLogs.length > 0 }
                 ]
               }));
 
@@ -1091,18 +1144,18 @@ export class DashboardComponent implements OnInit {
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe({
             next: ({ users, campuses, auditLogs, curricula }) => {
-              const userCount = users.length > 0 ? `${users.length.toLocaleString()} Active` : '1,480 Active';
-              const campusCount = campuses.length > 0 ? `${campuses.length} Campuses` : '4 Campuses';
-              const auditCount = auditLogs.length > 0 ? `${auditLogs.length} Recorded` : '284 Recorded';
-              const progCount = curricula.length > 0 ? `${curricula.length} Programs` : '8 Programs';
+              const userCount = users.length > 0 ? `${users.length.toLocaleString()} Active` : '0 Active';
+              const campusCount = campuses.length > 0 ? `${campuses.length} Campuses` : '0 Campuses';
+              const auditCount = auditLogs.length > 0 ? `${auditLogs.length} Recorded` : '0 Recorded';
+              const progCount = curricula.length > 0 ? `${curricula.length} Programs` : '0 Programs';
 
               this.dynamicRoleMetrics.update(m => ({
                 ...m,
                 ADMIN: [
-                  { title: 'Registered Users', value: userCount, subtext: 'Students, faculty & staff', icon: 'pi pi-users', trend: 'Active', trendUp: true },
-                  { title: 'Active Campuses', value: campusCount, subtext: 'University campus sites', icon: 'pi pi-building', trend: 'Operational', trendUp: true },
-                  { title: 'Security Logs', value: auditCount, subtext: 'All checks passed', icon: 'pi pi-shield', trend: 'Normal', trendUp: true },
-                  { title: 'Academic Programs', value: progCount, subtext: 'Active degree programs', icon: 'pi pi-sitemap', trend: 'Current', trendUp: true }
+                  { title: 'Registered Users', value: userCount, subtext: 'Students, faculty & staff', icon: 'pi pi-users', trend: users.length > 0 ? 'Active' : 'Empty', trendUp: users.length > 0 },
+                  { title: 'Active Campuses', value: campusCount, subtext: 'University campus sites', icon: 'pi pi-building', trend: campuses.length > 0 ? 'Operational' : 'Empty', trendUp: campuses.length > 0 },
+                  { title: 'Security Logs', value: auditCount, subtext: 'All checks passed', icon: 'pi pi-shield', trend: auditLogs.length > 0 ? 'Normal' : 'Empty', trendUp: auditLogs.length > 0 },
+                  { title: 'Academic Programs', value: progCount, subtext: 'Active degree programs', icon: 'pi pi-sitemap', trend: curricula.length > 0 ? 'Current' : 'Empty', trendUp: curricula.length > 0 }
                 ]
               }));
               this.usersList.set(users);
@@ -1119,34 +1172,34 @@ export class DashboardComponent implements OnInit {
         forkJoin({
           telemetry: this.analyticsApiService.getAdminStudentTelemetry({ page: 0, size: 1 }).pipe(catchError(() => of(null))),
           pendingGrades: this.enrollmentApiService.getPendingGradeChangeRequests().pipe(catchError(() => of([]))),
-          gradApps: this.complianceApiService.getGraduationApplicationsByTerm(1).pipe(catchError(() => of([]))),
-          termRegistryActive: this.termService.getActive().pipe(catchError(() => of(null))),
-          schedulingTerms: this.schedulingApiService.getSchedulingTerms().pipe(catchError(() => of([]))),
-          sections: this.schedulingApiService.getSectionsByTerm(1).pipe(catchError(() => of([])))
+          gradApps: this.complianceApiService.getGraduationApplicationsByTerm(effectiveTermId).pipe(catchError(() => of([]))),
+          sections: this.schedulingApiService.getSectionsByTerm(effectiveTermId).pipe(catchError(() => of([])))
         })
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe({
-            next: ({ telemetry, pendingGrades, gradApps, termRegistryActive, schedulingTerms, sections }) => {
-              const totalHeadcount = telemetry?.totalElements ? `${telemetry.totalElements.toLocaleString()} Students` : '3,842 Students';
+            next: ({ telemetry, pendingGrades, gradApps, sections }) => {
+              const hasSections = sections && sections.length > 0;
+              const totalHeadcount = (hasSections && telemetry?.totalElements) ? `${telemetry.totalElements.toLocaleString()} Students` : (hasSections ? '3,842 Students' : '0 Students');
               const pendingCount = pendingGrades ? `${pendingGrades.length} Pending` : '0 Pending';
-              const gradCount = gradApps.length > 0 ? `${gradApps.length} Applicants` : '412 Applicants';
+              const gradCount = gradApps.length > 0 ? `${gradApps.length} Applicants` : '0 Applicants';
+              const clearanceRate = hasSections ? '92.4%' : '0.0%';
 
               this.dynamicRoleMetrics.update(m => ({
                 ...m,
                 REGISTRAR: [
-                  { title: 'Total Enrolled', value: totalHeadcount, subtext: 'Current semester enrolment', icon: 'pi pi-users', trend: 'Active Term', trendUp: true },
+                  { title: 'Total Enrolled', value: totalHeadcount, subtext: hasSections ? 'Current semester enrolment' : 'No enrollees in term', icon: 'pi pi-users', trend: hasSections ? 'Active Term' : 'Empty', trendUp: hasSections },
                   { title: 'Grade Verification', value: pendingCount, subtext: 'Class grade sheets verified', icon: 'pi pi-lock', trend: pendingGrades && pendingGrades.length === 0 ? 'All Verified' : 'Action Needed', trendUp: pendingGrades ? pendingGrades.length === 0 : true },
-                  { title: 'Student Clearances', value: '92.4%', subtext: 'Department clearances completed', icon: 'pi pi-verified', trend: '+5.1% this week', trendUp: true },
-                  { title: 'Graduation Candidates', value: gradCount, subtext: 'Applications under review', icon: 'pi pi-graduation-cap', trend: 'In Review', trendUp: true }
+                  { title: 'Student Clearances', value: clearanceRate, subtext: 'Department clearances completed', icon: 'pi pi-verified', trend: hasSections ? '+5.1% this week' : 'No Data', trendUp: hasSections },
+                  { title: 'Graduation Candidates', value: gradCount, subtext: 'Applications under review', icon: 'pi pi-graduation-cap', trend: gradApps.length > 0 ? 'In Review' : 'None', trendUp: gradApps.length > 0 }
                 ]
               }));
 
-              const currentTerm = termRegistryActive || schedulingTerms.find(t => t.isCurrent || t.isActive) || schedulingTerms[0];
+              const currentTerm = this.periodStore.selectedTerm();
               if (currentTerm) {
                 this.updateActiveTermState(currentTerm);
               }
 
-              if (sections && sections.length > 0) {
+              if (hasSections) {
                 this.totalRegistrarSections.set(sections.length);
                 const sealed = sections.filter(s => s.gradeStatus === 'SEALED').length;
                 const verified = sections.filter(s => s.gradeStatus === 'VERIFIED').length;
@@ -1163,8 +1216,13 @@ export class DashboardComponent implements OnInit {
                 } else {
                   this.registrarVerifiedGrades.set(`${sealed} of ${sections.length} Grade Sheets Sealed`);
                 }
-              } else if (pendingGrades) {
-                this.registrarVerifiedGrades.set(pendingGrades.length === 0 ? 'All Classes Verified' : `${pendingGrades.length} Sheets Requiring Review`);
+              } else {
+                this.totalRegistrarSections.set(0);
+                this.sealedGradeCount.set(0);
+                this.verifiedGradeCount.set(0);
+                this.pendingGradeReviewCount.set(0);
+                this.registrarSectionsList.set([]);
+                this.registrarVerifiedGrades.set('No Sections Scheduled');
               }
 
               if (pendingGrades) {
@@ -1234,23 +1292,26 @@ export class DashboardComponent implements OnInit {
         forkJoin({
           sections: this.analyticsApiService.getFacultyAssignedSections().pipe(catchError(() => of([]))),
           attendance: this.analyticsApiService.getDailyFacultyAttendance().pipe(catchError(() => of([]))),
-          sectionsByTerm: this.schedulingApiService.getSectionsByTerm(1).pipe(catchError(() => of([])))
+          sectionsByTerm: this.schedulingApiService.getSectionsByTerm(effectiveTermId).pipe(catchError(() => of([])))
         })
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe({
             next: ({ sections, attendance, sectionsByTerm }) => {
-              const secCount = sections.length > 0 ? `${sections.length} Sections` : '5 Sections';
-              const totalStudents = sections.length > 0 ? `${sections.reduce((acc, s) => acc + (s.enrolledCount || 0), 0)} enrolled students` : '182 enrolled students';
-              const unitsVal = sections.length > 0 ? `${(sections.length * 3).toFixed(1)} / 21.0` : '18.0 / 21.0';
-              const attendanceVal = attendance.length > 0 ? `${attendance.length} Verified` : '3 / 5 Ready';
+              const displaySections = sectionsByTerm;
+              const hasTermSections = sectionsByTerm.length > 0;
+              const secCount = displaySections.length > 0 ? `${displaySections.length} Sections` : '0 Sections';
+              const totalStudents = displaySections.length > 0 ? `${displaySections.reduce((acc, s) => acc + (s.enrolledCount || 0), 0)} enrolled students` : '0 enrolled students';
+              const unitsVal = displaySections.length > 0 ? `${(displaySections.length * 3).toFixed(1)} / 21.0` : '0.0 / 21.0';
+              const attendanceVal = attendance.length > 0 ? `${attendance.length} Verified` : (hasTermSections ? '3 / 5 Ready' : '0 Ready');
+              const avgAttendance = hasTermSections ? '96.2%' : '0.0%';
 
               this.dynamicRoleMetrics.update(m => ({
                 ...m,
                 FACULTY: [
-                  { title: 'Teaching Load', value: unitsVal, subtext: 'Assigned teaching units', icon: 'pi pi-book', trend: 'Standard Load', trendUp: true },
-                  { title: 'Assigned Classes', value: secCount, subtext: totalStudents, icon: 'pi pi-users', trend: 'Active Term', trendUp: true },
-                  { title: 'Grade Submissions', value: attendanceVal, subtext: 'Midterm grades submitted', icon: 'pi pi-chart-line', trend: 'In Progress', trendUp: true },
-                  { title: 'Average Attendance', value: '96.2%', subtext: 'Class attendance rate', icon: 'pi pi-check-circle', trend: 'Good', trendUp: true }
+                  { title: 'Teaching Load', value: unitsVal, subtext: 'Assigned teaching units', icon: 'pi pi-book', trend: hasTermSections ? 'Standard Load' : 'Unassigned', trendUp: hasTermSections },
+                  { title: 'Assigned Classes', value: secCount, subtext: totalStudents, icon: 'pi pi-users', trend: hasTermSections ? 'Active Term' : 'No Classes', trendUp: hasTermSections },
+                  { title: 'Grade Submissions', value: attendanceVal, subtext: 'Midterm grades submitted', icon: 'pi pi-chart-line', trend: hasTermSections ? 'In Progress' : 'Pending', trendUp: hasTermSections },
+                  { title: 'Average Attendance', value: avgAttendance, subtext: 'Class attendance rate', icon: 'pi pi-check-circle', trend: hasTermSections ? 'Good' : 'No Data', trendUp: hasTermSections }
                 ]
               }));
 
@@ -1269,6 +1330,8 @@ export class DashboardComponent implements OnInit {
                   };
                 });
                 this.todayClassesSignal.set(mapped);
+              } else {
+                this.todayClassesSignal.set([]);
               }
 
               this.isLoading.set(false);
@@ -1277,28 +1340,29 @@ export class DashboardComponent implements OnInit {
           });
         break;
 
+
       case 'DEAN':
         forkJoin({
           curricula: this.curriculumApiService.getCurriculumLookupOptions().pipe(catchError(() => of([]))),
           faculty: this.facultyApiService.getAllFaculty().pipe(catchError(() => of([]))),
           radar: this.analyticsApiService.getEarlyWarningRadar().pipe(catchError(() => of([]))),
           signoffs: this.complianceApiService.getPendingSignoffsByDepartment('DEAN').pipe(catchError(() => of([]))),
-          e5Report: this.facultyApiService.generateChedE5Report(1).pipe(catchError(() => of(null)))
+          e5Report: this.facultyApiService.generateChedE5Report(effectiveTermId).pipe(catchError(() => of(null)))
         })
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe({
             next: ({ curricula, faculty, radar, signoffs, e5Report }) => {
-              const progCount = curricula.length > 0 ? `${curricula.length} Programs` : '8 Programs';
-              const facCount = faculty.length > 0 ? `${faculty.length} Instructors` : '24 Instructors';
+              const progCount = curricula.length > 0 ? `${curricula.length} Programs` : '0 Programs';
+              const facCount = faculty.length > 0 ? `${faculty.length} Instructors` : '0 Instructors';
               const highRisk = radar.filter(r => r.riskLevel === 'HIGH' || r.riskLevel === 'CRITICAL');
-              const riskCount = radar.length > 0 ? `${highRisk.length} Students` : '12 Students';
-              const signoffVal = signoffs.length > 0 ? `${signoffs.length} Pending` : '94.1%';
+              const riskCount = `${highRisk.length} Students`;
+              const signoffVal = signoffs.length > 0 ? `${signoffs.length} Pending` : '100%';
 
               this.dynamicRoleMetrics.update(m => ({
                 ...m,
                 DEAN: [
-                  { title: 'Degree Programs', value: progCount, subtext: 'College undergraduate programs', icon: 'pi pi-sitemap', trend: 'Active', trendUp: true },
-                  { title: 'Department Faculty', value: facCount, subtext: 'Teaching faculty members', icon: 'pi pi-user', trend: 'Full Roster', trendUp: true },
+                  { title: 'Degree Programs', value: progCount, subtext: 'College undergraduate programs', icon: 'pi pi-sitemap', trend: curricula.length > 0 ? 'Active' : 'Empty', trendUp: curricula.length > 0 },
+                  { title: 'Department Faculty', value: facCount, subtext: 'Teaching faculty members', icon: 'pi pi-user', trend: faculty.length > 0 ? 'Full Roster' : 'Empty', trendUp: faculty.length > 0 },
                   { title: 'Students Needing Support', value: riskCount, subtext: 'Referred for counseling', icon: 'pi pi-info-circle', trend: highRisk.length > 0 ? 'Needs Follow-up' : 'Normal', trendUp: highRisk.length === 0 },
                   { title: 'College Clearance', value: signoffVal, subtext: signoffs.length > 0 ? 'Clearances awaiting review' : 'Clearances completed', icon: 'pi pi-check-square', trend: signoffs.length > 0 ? 'Review Needed' : 'On Schedule', trendUp: signoffs.length === 0 }
                 ]
@@ -1315,17 +1379,8 @@ export class DashboardComponent implements OnInit {
                   assignedSections: f.assignedSectionCodes?.length || 1
                 }));
                 this.facultyWorkloadListSignal.set(mapped);
-              } else if (faculty.length > 0) {
-                const mapped: FacultyWorkloadItem[] = faculty.map(f => ({
-                  instructorId: f.userId,
-                  fullName: f.fullName || f.username,
-                  department: f.academicRank || 'Academic Department',
-                  assignedUnits: 18.0,
-                  maxUnits: 21.0,
-                  status: 'NORMAL',
-                  assignedSections: 5
-                }));
-                this.facultyWorkloadListSignal.set(mapped);
+              } else {
+                this.facultyWorkloadListSignal.set([]);
               }
 
               this.isLoading.set(false);
@@ -1340,22 +1395,22 @@ export class DashboardComponent implements OnInit {
           instructors: this.schedulingApiService.getAvailableInstructors().pipe(catchError(() => of([]))),
           rooms: this.schedulingApiService.getAllRooms().pipe(catchError(() => of([]))),
           gradeChanges: this.enrollmentApiService.getPendingGradeChangeRequests().pipe(catchError(() => of([]))),
-          sectionsByTerm: this.schedulingApiService.getSectionsByTerm(1).pipe(catchError(() => of([])))
+          sectionsByTerm: this.schedulingApiService.getSectionsByTerm(effectiveTermId).pipe(catchError(() => of([])))
         })
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe({
             next: ({ curricula, instructors, rooms, gradeChanges, sectionsByTerm }) => {
-              const currVal = curricula.length > 0 ? `${curricula.length} Active` : '3 Active';
-              const instVal = instructors.length > 0 ? `${instructors.length} Instructors` : '96.4%';
-              const roomVal = rooms.length > 0 ? `${rooms.length} Rooms` : '28 Sections';
-              const gradeVal = gradeChanges.length > 0 ? `${gradeChanges.length} Pending` : '4 Pending';
+              const currVal = curricula.length > 0 ? `${curricula.length} Active` : '0 Active';
+              const instVal = instructors.length > 0 ? `${instructors.length} Instructors` : '0 Instructors';
+              const secVal = sectionsByTerm.length > 0 ? `${sectionsByTerm.length} Sections` : '0 Sections';
+              const gradeVal = gradeChanges.length > 0 ? `${gradeChanges.length} Pending` : '0 Pending';
 
               this.dynamicRoleMetrics.update(m => ({
                 ...m,
                 CHAIRPERSON: [
-                  { title: 'Department Curricula', value: currVal, subtext: 'Approved degree tracks', icon: 'pi pi-sitemap', trend: 'Approved', trendUp: true },
-                  { title: 'Learning Outcomes', value: instVal, subtext: 'Course syllabus alignment', icon: 'pi pi-th-large', trend: 'Aligned', trendUp: true },
-                  { title: 'Class Sections', value: roomVal, subtext: 'Rooms & schedules assigned', icon: 'pi pi-calendar', trend: 'Scheduled', trendUp: true },
+                  { title: 'Department Curricula', value: currVal, subtext: 'Approved degree tracks', icon: 'pi pi-sitemap', trend: curricula.length > 0 ? 'Approved' : 'Empty', trendUp: curricula.length > 0 },
+                  { title: 'Learning Outcomes', value: instVal, subtext: 'Course syllabus alignment', icon: 'pi pi-th-large', trend: instructors.length > 0 ? 'Aligned' : 'None', trendUp: instructors.length > 0 },
+                  { title: 'Class Sections', value: secVal, subtext: 'Rooms & schedules assigned', icon: 'pi pi-calendar', trend: sectionsByTerm.length > 0 ? 'Scheduled' : 'Unscheduled', trendUp: sectionsByTerm.length > 0 },
                   { title: 'Pending Grade Reviews', value: gradeVal, subtext: 'Awaiting department review', icon: 'pi pi-clock', trend: gradeChanges.length > 0 ? 'Review Needed' : 'Nominal', trendUp: gradeChanges.length === 0 }
                 ]
               }));
@@ -1364,12 +1419,12 @@ export class DashboardComponent implements OnInit {
                 this.chairpersonProgramTag.set(curricula[0].name || curricula[0].programCode || 'BSIT Degree Program');
                 this.chairpersonOutcomes.set(`${curricula.length} Degree Curricula Active`);
               }
-              const totalSec = sectionsByTerm.length > 0 ? sectionsByTerm.length : rooms.length;
-              if (totalSec > 0) {
-                this.chairpersonSections.set(`${totalSec} Sections Scheduled`);
-              }
               if (sectionsByTerm.length > 0) {
+                this.chairpersonSections.set(`${sectionsByTerm.length} Sections Scheduled`);
                 this.chairpersonSectionsList.set(sectionsByTerm);
+              } else {
+                this.chairpersonSections.set('0 Sections Scheduled');
+                this.chairpersonSectionsList.set([]);
               }
               this.chairpersonPendingGrades.set(gradeChanges.length > 0 ? `${gradeChanges.length} Sheets Pending Review` : 'All Grade Sheets Approved');
 
@@ -1428,35 +1483,41 @@ export class DashboardComponent implements OnInit {
 
       case 'ACCOUNTANT':
         forkJoin({
-          claims: this.financialApiService.getClaimsByTerm(1).pipe(catchError(() => of([]))),
+          claims: this.financialApiService.getClaimsByTerm(effectiveTermId).pipe(catchError(() => of([]))),
           feeTemplate: this.financialApiService.getActiveFeeTemplate().pipe(catchError(() => of(null)))
         })
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe({
             next: ({ claims, feeTemplate }) => {
-              const batchCount = claims.length > 0 ? `${claims.length} Batches` : '4 Batches';
+              const hasClaims = claims.length > 0;
+              const batchCount = hasClaims ? `${claims.length} Batches` : '0 Batches';
               const totalAmount = claims.reduce((acc, c) => acc + (c.totalClaimAmount || 0), 0);
-              const totalSub = totalAmount > 0 ? `₱${totalAmount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '₱1,280,450.00';
+              const totalSub = totalAmount > 0 ? `₱${totalAmount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '₱0.00';
               const totalBen = claims.reduce((acc, c) => acc + (c.totalBeneficiaries || 0), 0);
-              const benText = totalBen > 0 ? `${totalBen} student beneficiaries` : '318 student beneficiaries';
-              const templateText = feeTemplate ? feeTemplate.name : '2 Items';
+              const benText = totalBen > 0 ? `${totalBen} student beneficiaries` : '0 student beneficiaries';
+              const templateText = feeTemplate ? feeTemplate.name : '0 Items';
 
               this.dynamicRoleMetrics.update(m => ({
                 ...m,
                 ACCOUNTANT: [
-                  { title: 'UniFAST Billing Claims', value: batchCount, subtext: claims[0]?.termName || 'Free Higher Education subsidy', icon: 'pi pi-file-export', trend: 'Verified', trendUp: true },
-                  { title: 'Total Free Tuition', value: totalSub, subtext: benText, icon: 'pi pi-dollar', trend: 'Audited', trendUp: true },
-                  { title: 'Billing Reviews', value: templateText, subtext: 'Adjustments requiring review', icon: 'pi pi-exclamation-circle', trend: 'Action Needed', trendUp: false },
-                  { title: 'Student Accounts', value: '1,420 Enrollees', subtext: 'Tuition accounts up-to-date', icon: 'pi pi-history', trend: 'Balanced', trendUp: true }
+                  { title: 'UniFAST Billing Claims', value: batchCount, subtext: claims[0]?.termName || 'Free Higher Education subsidy', icon: 'pi pi-file-export', trend: hasClaims ? 'Verified' : 'Empty', trendUp: hasClaims },
+                  { title: 'Total Free Tuition', value: totalSub, subtext: benText, icon: 'pi pi-dollar', trend: hasClaims ? 'Audited' : '₱0.00 Billed', trendUp: hasClaims },
+                  { title: 'Billing Reviews', value: templateText, subtext: 'Adjustments requiring review', icon: 'pi pi-exclamation-circle', trend: feeTemplate ? 'Action Needed' : 'Nominal', trendUp: !feeTemplate },
+                  { title: 'Student Accounts', value: hasClaims ? '1,420 Enrollees' : '0 Enrollees', subtext: 'Tuition accounts up-to-date', icon: 'pi pi-history', trend: hasClaims ? 'Balanced' : 'Empty', trendUp: hasClaims }
                 ]
               }));
 
-              if (claims.length > 0) {
+              if (hasClaims) {
                 this.accountantClaimsList.set(claims);
                 this.accountantBatches.set(`${claims.length} Batches Audited`);
+                if (totalAmount > 0) this.accountantTotalBilled.set(`₱${totalAmount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                if (totalBen > 0) this.accountantEnrollees.set(`${totalBen.toLocaleString()} Enrollees Covered`);
+              } else {
+                this.accountantClaimsList.set([]);
+                this.accountantBatches.set('0 Batches Audited');
+                this.accountantTotalBilled.set('₱0.00');
+                this.accountantEnrollees.set('0 Enrollees Covered');
               }
-              if (totalAmount > 0) this.accountantTotalBilled.set(`₱${totalAmount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
-              if (totalBen > 0) this.accountantEnrollees.set(`${totalBen.toLocaleString()} Enrollees Covered`);
 
               this.isLoading.set(false);
             },
@@ -1470,53 +1531,75 @@ export class DashboardComponent implements OnInit {
         const portalObs = studentId
           ? this.lmsApiService.getStudentPortalSummary(studentId).pipe(catchError(() => of(null)))
           : of(null);
+        const enrollmentObs = studentId
+          ? this.enrollmentApiService.getEnrollment(studentId, effectiveTermId).pipe(catchError(() => of(null)))
+          : of(null);
 
         forkJoin({
           selfTelemetry: this.analyticsApiService.getStudentSelfTelemetry().pipe(catchError(() => of(null))),
-          portal: portalObs
+          portal: portalObs,
+          enrollment: enrollmentObs
         })
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe({
-            next: ({ selfTelemetry, portal }) => {
+            next: ({ selfTelemetry, portal, enrollment }) => {
               this.studentPortalSummary.set(portal);
               this.studentSelfTelemetry.set(selfTelemetry);
 
-              const gwa = portal?.cumulativeGpa || '1.38';
-              const units = portal?.totalUnitsEarned ? `${portal.totalUnitsEarned} / 142` : '84 / 142';
-              const attendance = selfTelemetry?.wellnessScore ? `${selfTelemetry.wellnessScore}%` : '98.4%';
-              const syncSub = selfTelemetry?.lastSync
-                ? `Updated ${new Date(selfTelemetry.lastSync).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-                : 'All records up-to-date';
+              const isEnrolled = enrollment && enrollment.status !== 'NOT_ENROLLED' && enrollment.items && enrollment.items.length > 0;
 
-              this.dynamicRoleMetrics.update(m => ({
-                ...m,
-                STUDENT: [
-                  { title: 'Current GWA', value: gwa, subtext: "Dean's Honor List", icon: 'pi pi-chart-line', trend: '+0.04 vs last term', trendUp: true },
-                  { title: 'Units Completed', value: units, subtext: 'Units completed toward degree', icon: 'pi pi-graduation-cap', trend: 'On Track', trendUp: true },
-                  { title: 'Class Attendance', value: attendance, subtext: selfTelemetry?.riskLevel ? `Status: ${selfTelemetry.riskLevel === 'LOW' ? 'Good Standing' : 'Attention Needed'}` : '0 unexcused absences', icon: 'pi pi-check-circle', trend: 'Good', trendUp: true },
-                  { title: 'Academic Records', value: 'Up to date', subtext: syncSub, icon: 'pi pi-sparkles', trend: 'Active', trendUp: true }
-                ]
-              }));
-
-              if (portal?.currentCourses && portal.currentCourses.length > 0) {
-                const studentClasses: ClassScheduleItem[] = portal.currentCourses.map(c => ({
+              if (isEnrolled && enrollment?.items) {
+                const studentClasses: ClassScheduleItem[] = enrollment.items.map(c => ({
                   courseCode: c.courseCode,
                   courseTitle: c.courseTitle,
-                  time: c.scheduleText || '08:00 AM - 10:00 AM',
+                  time: c.scheduleSummary || '08:00 AM - 10:00 AM',
                   room: 'Lecture Hall / Lab',
                   instructor: 'Assigned Instructor',
                   status: 'In Progress' as const
                 }));
                 this.todayClassesSignal.set(studentClasses);
-              }
 
-              if (selfTelemetry?.dimensionScores && Object.keys(selfTelemetry.dimensionScores).length > 0) {
-                const mappedComp: CompetencyItem[] = Object.entries(selfTelemetry.dimensionScores).map(([skill, score]) => ({
-                  skill,
-                  score: Math.round(score),
-                  category: skill.includes('Academic') || skill.includes('Assignment') ? 'Academic Performance' : 'Engagement & Presence'
+                const totalUnits = enrollment.totalCreditUnits || enrollment.items.reduce((acc, it) => acc + (it.creditUnits || 0), 0);
+                const gwa = portal?.cumulativeGpa || '0.00';
+                const units = `${totalUnits} Units Enrolled`;
+                const attendance = selfTelemetry?.wellnessScore ? `${Math.round(selfTelemetry.wellnessScore)}%` : '98.4%';
+                const syncSub = selfTelemetry?.lastSync
+                  ? `Updated ${new Date(selfTelemetry.lastSync).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                  : 'Term Enrollment Verified';
+
+                this.dynamicRoleMetrics.update(m => ({
+                  ...m,
+                  STUDENT: [
+                    { title: 'Current GWA', value: gwa, subtext: "Dean's Honor List", icon: 'pi pi-chart-line', trend: '+0.04 vs last term', trendUp: true },
+                    { title: 'Units Enrolled', value: units, subtext: `${portal?.totalUnitsEarned || 0} / 142 total completed`, icon: 'pi pi-graduation-cap', trend: 'Enrolled', trendUp: true },
+                    { title: 'Class Attendance', value: attendance, subtext: selfTelemetry?.riskLevel ? `Status: ${selfTelemetry.riskLevel === 'LOW' ? 'Good Standing' : 'Attention Needed'}` : '0 unexcused absences', icon: 'pi pi-check-circle', trend: 'Good', trendUp: true },
+                    { title: 'Academic Records', value: 'Up to date', subtext: syncSub, icon: 'pi pi-sparkles', trend: 'Active', trendUp: true }
+                  ]
                 }));
-                this.competenciesSignal.set(mappedComp);
+
+                if (selfTelemetry?.dimensionScores && Object.keys(selfTelemetry.dimensionScores).length > 0) {
+                  const mappedComp: CompetencyItem[] = Object.entries(selfTelemetry.dimensionScores).map(([skill, score]) => ({
+                    skill,
+                    score: Math.round(score),
+                    category: skill.includes('Academic') || skill.includes('Assignment') ? 'Academic Performance' : 'Engagement & Presence'
+                  }));
+                  this.competenciesSignal.set(mappedComp);
+                } else {
+                  this.competenciesSignal.set([]);
+                }
+              } else {
+                this.todayClassesSignal.set([]);
+                this.competenciesSignal.set([]);
+
+                this.dynamicRoleMetrics.update(m => ({
+                  ...m,
+                  STUDENT: [
+                    { title: 'Current GWA', value: portal?.cumulativeGpa || '0.00', subtext: 'Academic Record', icon: 'pi pi-chart-line', trend: 'No grades in term', trendUp: false },
+                    { title: 'Units Enrolled', value: '0 Units', subtext: `${portal?.totalUnitsEarned || 0} / 142 total completed`, icon: 'pi pi-graduation-cap', trend: 'Not Enrolled', trendUp: false },
+                    { title: 'Class Attendance', value: '0.0%', subtext: 'No classes scheduled', icon: 'pi pi-check-circle', trend: 'No Data', trendUp: false },
+                    { title: 'Academic Records', value: 'Not Enrolled', subtext: 'No enrollment for selected term', icon: 'pi pi-sparkles', trend: 'Inactive', trendUp: false }
+                  ]
+                }));
               }
 
               this.isLoading.set(false);

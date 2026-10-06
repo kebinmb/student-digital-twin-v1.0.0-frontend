@@ -7,6 +7,7 @@ import { CourseCatalogManagerComponent } from './components/course-catalog-manag
 import { CiloPiloMatrixComponent } from './components/cilo-pilo-matrix/cilo-pilo-matrix.component';
 import { GradingScaleManagerComponent } from './components/grading-scale-manager/grading-scale-manager.component';
 import { FinancialFoundationsComponent } from './components/financial-foundations/financial-foundations.component';
+import { CertificateAuditComponent } from './components/certificate-audit/certificate-audit.component';
 
 export const INSTITUTION_ROUTES: Routes = [
   {
@@ -47,6 +48,11 @@ export const INSTITUTION_ROUTES: Routes = [
         path: 'financials',
         component: FinancialFoundationsComponent,
         canActivate: [roleGuard(['ADMIN', 'DEAN', 'REGISTRAR', 'CHAIRPERSON'])]
+      },
+      {
+        path: 'certificates',
+        component: CertificateAuditComponent,
+        canActivate: [roleGuard(['ADMIN', 'REGISTRAR', 'DEAN'])]
       }
     ]
   }

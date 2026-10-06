@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy, effect } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -17,6 +17,7 @@ import { FinancialApiService } from '../../../core/service/financial/financial-a
 import { AuthService } from '../../../core/service/authentication/auth-service';
 import { EnrollmentApiService } from '../../../core/service/enrollment/enrollment-api.service';
 import { TermService } from '../../../core/services/institution.service';
+import { AcademicPeriodStore } from '../../../core/services/academic-period.store';
 import { Term } from '../../../core/models/institution.model';
 import { StudentProfileResponse, StudentSearchResultDto, StudentEnrollmentResponse } from '../../../core/models/enrollment.model';
 import {
@@ -56,6 +57,7 @@ export class StudentAccountLedgerComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly enrollmentApi = inject(EnrollmentApiService);
   private readonly termService = inject(TermService);
+  readonly periodStore = inject(AcademicPeriodStore);
   private readonly messageService = inject(MessageService);
 
   // RBAC & Student Profile State
@@ -101,38 +103,27 @@ export class StudentAccountLedgerComponent implements OnInit {
     return entries[entries.length - 1].runningBalance;
   });
 
-  // Derived / Fallback Invoice for Fee Breakdown & UniFAST Benefits display (Financial Foundations)
+  // Derived Invoice for Fee Breakdown & UniFAST Benefits display
   readonly displayInvoice = computed<StudentAssessmentInvoiceDto | null>(() => {
-    const inv = this.activeInvoice();
-    if (inv) return inv;
-
-    const profile = this.currentStudentProfile();
-    const studentId = this.searchStudentId();
-    if (profile || studentId) {
-      return {
-        id: 1,
-        invoiceNumber: 'INV-2026-00042',
-        studentEnrollmentId: 1,
-        studentProfileId: studentId || profile?.id || 1,
-        studentNumber: profile?.studentNumber || '2026-00042',
-        studentName: profile?.username || 'Enrolled Student',
-        termId: this.selectedTermId() || 1,
-        termName: 'AY 2026-2027 First Semester',
-        totalTuitionFee: 5400.00,
-        totalLabFee: 1500.00,
-        totalMiscFee: 1850.00,
-        totalGrossAssessment: 8750.00,
-        fheSubsidyAmount: 8750.00,
-        scholarshipDiscountAmount: 0.00,
-        netAssessedAmount: 0.00,
-        totalPaidAmount: 0.00,
-        outstandingBalance: 0.00,
-        status: 'FHE_COVERED',
-        fheEligible: true
-      };
-    }
-    return null;
+    return this.activeInvoice();
   });
+
+  constructor() {
+    effect(() => {
+      const globalTermId = this.periodStore.selectedTermId();
+      if (globalTermId && globalTermId !== this.selectedTermId()) {
+        this.selectedTermId.set(globalTermId);
+        const studentId = this.searchStudentId();
+        if (studentId) {
+          this.loadStudentInvoice(studentId, globalTermId);
+        }
+        const assessStudent = this.assessStudentId();
+        if (assessStudent) {
+          this.resolveEnrollmentForAssessment(assessStudent, globalTermId);
+        }
+      }
+    });
+  }
 
   ngOnInit(): void {
     this.loadTerms();
@@ -301,9 +292,14 @@ export class StudentAccountLedgerComponent implements OnInit {
 
   onTermChange(termId: number | null): void {
     this.selectedTermId.set(termId);
+    if (termId) {
+      this.periodStore.setTerm(termId);
+    }
     const studentId = this.searchStudentId();
     if (studentId && termId) {
       this.loadStudentInvoice(studentId, termId);
+    } else {
+      this.activeInvoice.set(null);
     }
     const assessStudent = this.assessStudentId();
     if (assessStudent && termId) {

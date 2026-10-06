@@ -709,6 +709,15 @@
         </ng-template>
       </p-table>
     </section>
+  } @else {
+    <div class="empty-roster-wrapper py-12 px-6">
+      <app-empty-state
+        icon="pi pi-calendar-times"
+        title="No Class Sections Scheduled"
+        description="There are no class sections or grade rosters available for the selected academic term."
+        severity="info">
+      </app-empty-state>
+    </div>
   }
 
   <!-- Dialog for Adding Assessment Activity -->

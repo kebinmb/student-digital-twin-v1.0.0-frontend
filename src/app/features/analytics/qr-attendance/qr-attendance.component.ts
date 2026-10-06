@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit, OnDestroy, ChangeDetectionStrategy, ElementRef, ViewChild } from '@angular/core';
+import { Component, inject, signal, computed, effect, OnInit, OnDestroy, ChangeDetectionStrategy, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
@@ -15,15 +15,19 @@ import { TooltipModule } from 'primeng/tooltip';
 import { KnobModule } from 'primeng/knob';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { AvatarModule } from 'primeng/avatar';
+import { DialogModule } from 'primeng/dialog';
+import { BadgeModule } from 'primeng/badge';
 
 import { AnalyticsApiService } from '../../../core/service/analytics/analytics-api.service';
 import { SchedulingApiService } from '../../../core/service/scheduling/scheduling-api.service';
 import { EnrollmentApiService } from '../../../core/service/enrollment/enrollment-api.service';
+import { AcademicPeriodStore } from '../../../core/services/academic-period.store';
 import { AttendanceRecordResponse, AttendanceSessionResponse, FacultyAttendanceRecordResponse } from '../../../core/models/analytics.model';
 import { StudentProfileResponse } from '../../../core/models/enrollment.model';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import jsQR from 'jsqr';
 import { AuthService } from '../../../core/service/authentication/auth-service';
+import { OfflineAttendanceSyncService } from '../../../core/services/offline-attendance-sync.service';
 
 export interface ScheduleOption {
   label: string;
@@ -48,6 +52,8 @@ export interface ScheduleOption {
     KnobModule,
     ProgressBarModule,
     AvatarModule,
+    DialogModule,
+    BadgeModule,
     EmptyStateComponent
   ],
   templateUrl: './qr-attendance.component.html',
@@ -56,10 +62,26 @@ export interface ScheduleOption {
 })
 export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
   protected readonly authService = inject(AuthService);
+  protected readonly offlineSyncService = inject(OfflineAttendanceSyncService);
+  protected readonly periodStore = inject(AcademicPeriodStore);
   private readonly analyticsApi = inject(AnalyticsApiService);
   private readonly schedulingApi = inject(SchedulingApiService);
   private readonly enrollmentApi = inject(EnrollmentApiService);
   private readonly messageService = inject(MessageService);
+
+  constructor() {
+    effect(() => {
+      const globalTermId = this.periodStore.selectedTermId();
+      if (globalTermId) {
+        if (this.isStudent()) {
+          this.loadStudentProfileAndHistory();
+        } else {
+          this.fetchSectionsForTerm(globalTermId);
+          this.loadDailyAttendance();
+        }
+      }
+    });
+  }
 
   @ViewChild('scannerVideo') scannerVideoRef?: ElementRef<HTMLVideoElement>;
 
@@ -90,12 +112,12 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
   readonly studentLateCount = computed(() => this.studentHistoryRecords().filter(r => r.attendanceStatus === 'LATE').length);
   readonly studentOnTimeRate = computed(() => {
     const total = this.studentTotalSessions();
-    if (total === 0) return 100;
+    if (total === 0) return 0;
     return Math.round((this.studentPresentCount() / total) * 100);
   });
   readonly studentGeofenceRate = computed(() => {
     const total = this.studentTotalSessions();
-    if (total === 0) return 100;
+    if (total === 0) return 0;
     const valid = this.studentHistoryRecords().filter(r => r.isGeofenceValid).length;
     return Math.round((valid / total) * 100);
   });
@@ -429,6 +451,18 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
 
     this.isScanning.set(true);
     this.obtainGeolocation((lat, lon) => {
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        this.offlineSyncService.enqueueScan(seed, studentId, lat, lon, fingerprint);
+        this.isScanning.set(false);
+        this.qrSeedInput.set('');
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Offline Check-In Queued',
+          detail: 'Offline network detected. Your check-in was saved locally and will auto-upload when back online.'
+        });
+        return;
+      }
+
       this.analyticsApi.scanAttendance({
         qrSeed: seed,
         studentId: studentId,
@@ -453,6 +487,17 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           this.isScanning.set(false);
+          if (err?.status === 0 || (typeof navigator !== 'undefined' && !navigator.onLine)) {
+            this.offlineSyncService.enqueueScan(seed, studentId, lat, lon, fingerprint);
+            this.qrSeedInput.set('');
+            this.messageService.add({
+              severity: 'warn',
+              summary: 'Offline Check-In Queued',
+              detail: 'Connection interrupted. Check-in saved locally and will sync when network is restored.'
+            });
+            return;
+          }
+
           const errorMsg = err?.error?.detail || err?.error?.message || 'Geofence verification failed or QR code expired.';
           this.messageService.add({
             severity: 'error',
@@ -464,10 +509,65 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
     });
   }
 
+  async triggerSyncQueue(): Promise<void> {
+    const res = await this.offlineSyncService.syncQueue();
+    if (res.synced > 0) {
+      for (const rec of res.records) {
+        this.studentHistoryRecords.update(prev => [rec, ...prev.filter(r => r.recordId !== rec.recordId)]);
+        this.dailyRecords.update(prev => [rec, ...prev.filter(r => r.recordId !== rec.recordId)]);
+      }
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Offline Scans Synced',
+        detail: `Successfully uploaded ${res.synced} offline attendance record(s).`
+      });
+    } else if (res.failed > 0) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Sync Attention Needed',
+        detail: `${res.failed} offline scan(s) failed validation.`
+      });
+    }
+  }
+
+  readonly showOfflineQueueDialog = signal<boolean>(false);
+
+  openOfflineQueueModal(): void {
+    this.showOfflineQueueDialog.set(true);
+  }
+
+  dismissOfflineItem(id: string): void {
+    this.offlineSyncService.dismissItem(id);
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Scan Dismissed',
+      detail: 'Offline scan removed from local resolution queue.'
+    });
+  }
+
+  retryOfflineItem(id: string): void {
+    this.offlineSyncService.retryItem(id);
+  }
+
+  clearAllOfflineScans(): void {
+    this.offlineSyncService.clearQueue();
+    this.showOfflineQueueDialog.set(false);
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Queue Cleared',
+      detail: 'All offline attendance scans have been cleared.'
+    });
+  }
+
   // =========================================================================
   // INSTRUCTOR / FACULTY SPECIFIC METHODS
   // =========================================================================
   loadAssignedSchedules(): void {
+    const termId = this.periodStore.selectedTermId();
+    if (termId) {
+      this.fetchSectionsForTerm(termId);
+      return;
+    }
     this.schedulingApi.getSchedulingTerms().subscribe({
       next: (terms) => {
         const activeTerm = terms && terms.length > 0 ? (terms.find(t => t.isActive) || terms[0]) : null;
@@ -476,11 +576,15 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
         } else {
           this.scheduleOptions.set([]);
           this.selectedScheduleId.set(null);
+          this.dailyRecords.set([]);
+          this.activeSession.set(null);
         }
       },
       error: () => {
         this.scheduleOptions.set([]);
         this.selectedScheduleId.set(null);
+        this.dailyRecords.set([]);
+        this.activeSession.set(null);
       }
     });
   }
@@ -523,11 +627,17 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
           }
         } else {
           this.scheduleOptions.set([]);
+          this.selectedScheduleId.set(null);
+          this.dailyRecords.set([]);
+          this.activeSession.set(null);
           this.filterSectionOptions.set([{ label: 'All Assigned Sections', value: null }]);
         }
       },
       error: () => {
         this.scheduleOptions.set([]);
+        this.selectedScheduleId.set(null);
+        this.dailyRecords.set([]);
+        this.activeSession.set(null);
         this.filterSectionOptions.set([{ label: 'All Assigned Sections', value: null }]);
       }
     });

@@ -1,0 +1,355 @@
+<div class="webhook-manager-container">
+  <p-toast position="top-right"></p-toast>
+
+  <!-- Institutional Sticky Header Toolbar -->
+  <div class="institutional-toolbar-card">
+    <div class="header-branding">
+      <div class="header-icon-box">
+        <i class="pi pi-send header-icon"></i>
+      </div>
+      <div class="header-text-group">
+        <div class="badge-row">
+          <span class="badge-tag slate">INSTITUTIONAL INTEGRATIONS</span>
+          <span class="badge-tag gold">HMAC-SHA256 SIGNED</span>
+        </div>
+        <h1 class="header-title">Institutional Webhook Subscriptions</h1>
+        <p class="header-subtitle">
+          Real-time event streaming dispatch to external SIS, accounting ledgers, and LMS platforms with automatic exponential retry.
+        </p>
+      </div>
+    </div>
+    <div class="header-actions-group">
+      <p-button 
+        label="Refresh Webhooks" 
+        icon="pi pi-refresh" 
+        severity="secondary" 
+        [outlined]="true" 
+        (onClick)="loadWebhooks()">
+      </p-button>
+      <p-button 
+        label="Register Webhook Endpoint" 
+        icon="pi pi-plus" 
+        severity="primary" 
+        (onClick)="openCreateDialog()">
+      </p-button>
+    </div>
+  </div>
+
+  <!-- Key Metrics Row -->
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-icon-box navy">
+        <i class="pi pi-share-alt"></i>
+      </div>
+      <div class="metric-content">
+        <span class="metric-label">Total Webhooks</span>
+        <span class="metric-value">{{ totalWebhooks() }}</span>
+      </div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-icon-box green">
+        <i class="pi pi-check-circle"></i>
+      </div>
+      <div class="metric-content">
+        <span class="metric-label">Active Dispatches</span>
+        <span class="metric-value">{{ activeWebhooks() }}</span>
+      </div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-icon-box gold">
+        <i class="pi pi-shield"></i>
+      </div>
+      <div class="metric-content">
+        <span class="metric-label">Security Signature</span>
+        <span class="metric-value">HMAC-SHA256</span>
+      </div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-icon-box slate">
+        <i class="pi pi-replay"></i>
+      </div>
+      <div class="metric-content">
+        <span class="metric-label">Retry Policy</span>
+        <span class="metric-value">5 Attempts Exp.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Webhooks Table Card -->
+  <div class="table-card">
+    <p-table 
+      [value]="webhooks()" 
+      [loading]="isLoading()" 
+      [paginator]="true" 
+      [rows]="10" 
+      [rowsPerPageOptions]="[10, 25, 50]" 
+      styleClass="institutional-table" 
+      responsiveLayout="scroll">
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Webhook Name</th>
+          <th>Destination Endpoint URL</th>
+          <th>Subscribed Event Streams</th>
+          <th class="text-center">Status</th>
+          <th>Registered Date</th>
+          <th class="text-center">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-wh>
+        <tr>
+          <td>
+            <div class="font-bold-navy">{{ wh.name }}</div>
+            <div class="text-xs text-muted">ID: #{{ wh.id }}</div>
+          </td>
+          <td>
+            <div class="font-mono url-cell" [title]="wh.targetUrl">
+              <i class="pi pi-external-link url-icon"></i>
+              {{ wh.targetUrl }}
+            </div>
+          </td>
+          <td>
+            <div class="event-chips-wrapper">
+              @for (evt of splitEvents(wh.subscribedEvents); track evt) {
+                <span class="event-chip">{{ evt }}</span>
+              }
+            </div>
+          </td>
+          <td class="text-center">
+            <p-tag 
+              [value]="wh.active ? 'ACTIVE' : 'PAUSED'" 
+              [severity]="wh.active ? 'success' : 'warn'">
+            </p-tag>
+          </td>
+          <td>
+            <span class="text-sm text-secondary">{{ wh.createdAt | date:'mediumDate' }}</span>
+          </td>
+          <td class="text-center actions-cell">
+            <button 
+              type="button" 
+              class="action-btn ping-btn" 
+              [pTooltip]="testingPingId() === wh.id ? 'Sending signed test ping...' : 'Send Signed Test Ping'" 
+              tooltipPosition="top"
+              [disabled]="testingPingId() === wh.id"
+              (click)="testPingWebhook(wh)">
+              <i [class]="testingPingId() === wh.id ? 'pi pi-spin pi-spinner' : 'pi pi-bolt'"></i>
+            </button>
+            <button 
+              type="button" 
+              class="action-btn info-btn" 
+              pTooltip="View Deliveries & Audit Logs" 
+              tooltipPosition="top"
+              (click)="viewDeliveries(wh)">
+              <i class="pi pi-list"></i>
+            </button>
+            <button 
+              type="button" 
+              class="action-btn toggle-btn" 
+              [class.active-mode]="wh.active"
+              [pTooltip]="wh.active ? 'Pause Webhook' : 'Activate Webhook'" 
+              tooltipPosition="top"
+              (click)="toggleWebhookStatus(wh)">
+              <i [class]="wh.active ? 'pi pi-pause' : 'pi pi-play'"></i>
+            </button>
+            <button 
+              type="button" 
+              class="action-btn danger-btn" 
+              pTooltip="Delete Webhook" 
+              tooltipPosition="top"
+              (click)="deleteWebhook(wh)">
+              <i class="pi pi-trash"></i>
+            </button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="empty-cell">
+            <div class="empty-state-box">
+              <i class="pi pi-send empty-icon"></i>
+              <h3>No Webhook Endpoints Configured</h3>
+              <p>Register external webhooks to stream academic distinctions, tuition discounts, and standing changes automatically.</p>
+              <p-button label="Register First Webhook" icon="pi pi-plus" (onClick)="openCreateDialog()"></p-button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- Register Webhook Dialog -->
+  <p-dialog 
+    header="Register Institutional Webhook Endpoint" 
+    [(visible)]="isCreateDialogVisible" 
+    [modal]="true" 
+    [style]="{ width: '640px' }"
+    [closable]="!isSaving()">
+
+    <form [formGroup]="webhookForm" class="dialog-form" (ngSubmit)="submitWebhook()">
+      <div class="form-group">
+        <label for="whName" class="form-label">Integration / Service Name <span class="required">*</span></label>
+        <input 
+          id="whName" 
+          type="text" 
+          pInputText 
+          formControlName="name" 
+          placeholder="e.g. Finance Ledger Sync, CHED HEMIS Streamer" 
+          class="w-full">
+      </div>
+
+      <div class="form-group">
+        <label for="whUrl" class="form-label">Target URL (HTTPS Recommended) <span class="required">*</span></label>
+        <input 
+          id="whUrl" 
+          type="url" 
+          pInputText 
+          formControlName="targetUrl" 
+          placeholder="https://api.external-system.edu.ph/webhooks/sdt" 
+          class="w-full font-mono">
+      </div>
+
+      <div class="form-group">
+        <div class="secret-label-row">
+          <label for="whSecret" class="form-label">HMAC-SHA256 Signing Secret <span class="required">*</span></label>
+          <button type="button" class="text-link-btn" (click)="regenerateSecret()">
+            <i class="pi pi-refresh"></i> Regenerate
+          </button>
+        </div>
+        <input 
+          id="whSecret" 
+          type="text" 
+          pInputText 
+          formControlName="secretKey" 
+          class="w-full font-mono">
+        <p class="field-hint">
+          Every POST request includes an <code>X-SDT-Signature: sha256=...</code> header computed with this secret.
+        </p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Subscribed Event Triggers <span class="required">*</span></label>
+        <div class="events-toggle-list">
+          @for (evt of availableEvents; track evt.code) {
+            <button 
+              type="button" 
+              class="event-selector-btn"
+              [class.selected]="isEventSelected(evt.code)"
+              (click)="toggleEventSelection(evt.code)">
+              <i [class]="isEventSelected(evt.code) ? 'pi pi-check-square' : 'pi pi-square'"></i>
+              <span>{{ evt.label }}</span>
+              <code class="event-code-tag">{{ evt.code }}</code>
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="dialog-footer-actions">
+        <p-button 
+          label="Cancel" 
+          severity="secondary" 
+          [outlined]="true" 
+          [disabled]="isSaving()"
+          (onClick)="isCreateDialogVisible.set(false)">
+        </p-button>
+        <p-button 
+          label="Save & Activate Webhook" 
+          icon="pi pi-check" 
+          severity="primary" 
+          [loading]="isSaving()" 
+          type="submit">
+        </p-button>
+      </div>
+    </form>
+  </p-dialog>
+
+  <!-- Deliveries Inspection Dialog -->
+  <p-dialog 
+    [header]="'Deliveries & Audit Log: ' + (selectedWebhook()?.name || '')" 
+    [(visible)]="isDeliveriesDialogVisible" 
+    [modal]="true" 
+    [style]="{ width: '900px' }">
+
+    <div class="deliveries-dialog-body">
+      @if (selectedWebhook(); as wh) {
+        <div class="webhook-meta-banner">
+          <div>
+            <strong>Target URL:</strong> <code class="font-mono text-sm">{{ wh.targetUrl }}</code>
+          </div>
+          <div>
+            <p-tag [value]="wh.active ? 'ACTIVE' : 'PAUSED'" [severity]="wh.active ? 'success' : 'warn'"></p-tag>
+          </div>
+        </div>
+      }
+
+      <p-table 
+        [value]="deliveries()" 
+        [loading]="isDeliveriesLoading()" 
+        [paginator]="true" 
+        [rows]="5" 
+        styleClass="institutional-table" 
+        responsiveLayout="scroll">
+
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Delivery ID</th>
+            <th>Event Type</th>
+            <th>HTTP Status</th>
+            <th class="text-center">Attempts</th>
+            <th>Last Attempt</th>
+            <th>Next Retry</th>
+            <th class="text-center">Action</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-del>
+          <tr>
+            <td class="font-mono">#{{ del.id }}</td>
+            <td>
+              <span class="event-chip">{{ del.eventType }}</span>
+            </td>
+            <td>
+              <p-tag 
+                [value]="del.responseHttpCode ? del.responseHttpCode + '' : del.status" 
+                [severity]="getHttpCodeSeverity(del.responseHttpCode)">
+              </p-tag>
+            </td>
+            <td class="text-center font-mono">
+              {{ del.attemptCount }} / {{ del.maxAttempts }}
+            </td>
+            <td class="text-xs">
+              {{ del.lastAttemptAt ? (del.lastAttemptAt | date:'short') : 'Pending' }}
+            </td>
+            <td class="text-xs">
+              {{ del.nextRetryAt ? (del.nextRetryAt | date:'short') : 'N/A' }}
+            </td>
+            <td class="text-center">
+              @if (del.status !== 'DELIVERED') {
+                <button 
+                  type="button" 
+                  class="action-btn retry-btn" 
+                  pTooltip="Retry Webhook Dispatch Now" 
+                  tooltipPosition="top"
+                  [disabled]="isRetrying()"
+                  (click)="retryDelivery(del)">
+                  <i class="pi pi-replay"></i>
+                </button>
+              } @else {
+                <i class="pi pi-check text-green" title="Delivered successfully"></i>
+              }
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="7" class="empty-cell">
+              No delivery records dispatched yet for this endpoint.
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </p-dialog>
+</div>

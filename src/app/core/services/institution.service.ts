@@ -35,6 +35,9 @@ import {
   ScholarshipDiscount,
   SliceResponse,
   Term,
+  TermHonorRollReport,
+  CertificateVerification,
+  CertificateRevocationSummary,
   UpdateAcademicYearRequest,
   UpdateCampusRequest,
   UpdateCourseOutcomeRequest,
@@ -241,6 +244,51 @@ export class TermService {
     return this.http.put<Term>(`${this.baseUrl}/${id}/add-drop-window?open=${open}`, {}).pipe(
       tap(() => this.invalidateCache())
     );
+  }
+
+  getHonorRoll(id: number, programId?: number): Observable<TermHonorRollReport> {
+    let params = new HttpParams();
+    if (programId != null) {
+      params = params.set('programId', programId.toString());
+    }
+    return this.http.get<TermHonorRollReport>(`${this.baseUrl}/${id}/honor-roll`, { params });
+  }
+
+  getHonorCertificate(id: number, studentId: number): Observable<CertificateVerification> {
+    return this.http.get<CertificateVerification>(`${this.baseUrl}/${id}/honor-certificate/${studentId}`);
+  }
+
+  downloadCertificatesZip(id: number, programId?: number): Observable<Blob> {
+    let params = new HttpParams();
+    if (programId != null) {
+      params = params.set('programId', programId.toString());
+    }
+    return this.http.get(`${this.baseUrl}/${id}/honor-certificates/zip`, {
+      params,
+      responseType: 'blob'
+    });
+  }
+
+  revokeCertificate(certificateId: string, reason: string): Observable<CertificateRevocationSummary> {
+    return this.http.post<CertificateRevocationSummary>(`${environment.apiUrl}/v1/institution/certificates/revoke`, {
+      certificateId,
+      reason
+    });
+  }
+
+  reinstateCertificate(certificateId: string): Observable<CertificateRevocationSummary> {
+    return this.http.post<CertificateRevocationSummary>(`${environment.apiUrl}/v1/institution/certificates/reinstate?certificateId=${encodeURIComponent(certificateId)}`, {});
+  }
+
+  getActiveCertificateRevocations(): Observable<CertificateRevocationSummary[]> {
+    return this.http.get<CertificateRevocationSummary[]>(`${environment.apiUrl}/v1/institution/certificates/revocations`);
+  }
+
+  exportCertificateRevocations(format: 'csv' | 'html'): Observable<Blob> {
+    return this.http.get(`${environment.apiUrl}/v1/institution/certificates/revocations/export`, {
+      params: new HttpParams().set('format', format),
+      responseType: 'blob'
+    });
   }
 
   delete(id: number): Observable<void> {

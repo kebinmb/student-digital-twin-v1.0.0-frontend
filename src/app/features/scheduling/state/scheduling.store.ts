@@ -1,6 +1,6 @@
 // File: src/app/features/scheduling/state/scheduling.store.ts
 
-import { inject, Injectable, signal, computed, DestroyRef } from '@angular/core';
+import { inject, Injectable, signal, computed, DestroyRef, effect } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SchedulingApiService } from '../../../core/service/scheduling/scheduling-api.service';
 import { ProgramService, TermService } from '../../../core/services/institution.service';
@@ -17,7 +17,8 @@ import {
 } from '../../../core/models/scheduling.model';
 import { CurriculumLookupOption } from '../../../core/models/curriculum-designer.model';
 import { EnrollmentStore } from '../../enrollment/state/enrollment.store';
-import { catchError, finalize, forkJoin, map, of, tap } from 'rxjs';
+import { AcademicPeriodStore } from '../../../core/services/academic-period.store';
+import { catchError, finalize, forkJoin, map, of, tap, Subscription } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -28,7 +29,10 @@ export class SchedulingStore {
   private readonly curriculumApi = inject(CurriculumApiService);
   private readonly programService = inject(ProgramService);
   private readonly enrollmentStore = inject(EnrollmentStore);
+  private readonly academicPeriodStore = inject(AcademicPeriodStore);
   private readonly destroyRef = inject(DestroyRef);
+
+  private sectionEventsSub?: Subscription;
 
   // Signals
   readonly terms = signal<SchedulingTermDto[]>([]);
@@ -70,6 +74,16 @@ export class SchedulingStore {
   });
 
   readonly totalSections = computed(() => this.sections().length);
+
+  constructor() {
+    effect(() => {
+      const globalTermId = this.academicPeriodStore.selectedTermId();
+      if (globalTermId && globalTermId !== this.selectedTermId()) {
+        this.selectedTermId.set(globalTermId);
+        this.loadSections(globalTermId);
+      }
+    });
+  }
 
   loadInitialData(): void {
     this.isLoading.set(true);
@@ -126,7 +140,11 @@ export class SchedulingStore {
         this.programs.set(programs);
 
         if (terms.length > 0 && !this.selectedTermId()) {
-          const activeTerm = terms.find(t => t.isActive) || terms.find(t => t.isCurrent) || terms[0];
+          const globalTermId = this.academicPeriodStore.selectedTermId();
+          const activeTerm = (globalTermId ? terms.find(t => t.id === globalTermId) : null)
+            || terms.find(t => t.isActive)
+            || terms.find(t => t.isCurrent)
+            || terms[0];
           if (activeTerm) {
             this.selectedTermId.set(activeTerm.id);
             this.loadSections(activeTerm.id);
@@ -152,10 +170,37 @@ export class SchedulingStore {
     this.isLoading.set(true);
     this.errorMessage.set(null);
 
+    if (this.sectionEventsSub) {
+      this.sectionEventsSub.unsubscribe();
+      this.sectionEventsSub = undefined;
+    }
+
     this.schedulingApi.getSectionsByTerm(termId).pipe(
       takeUntilDestroyed(this.destroyRef),
-      tap(sections => this.sections.set(sections)),
+      tap(sections => {
+        this.sections.set(sections || []);
+        // Subscribe to real-time section events (enlistment count & grade verification status)
+        this.sectionEventsSub = this.schedulingApi.subscribeToSectionEvents(termId).subscribe({
+          next: (event) => {
+            if (event.eventType === 'ENLISTMENT_UPDATE' && event.sectionId) {
+              this.sections.update(list => list.map(s =>
+                s.id === event.sectionId
+                  ? { ...s, enrolledCount: event.enrolledCount !== undefined ? event.enrolledCount : s.enrolledCount }
+                  : s
+              ));
+            } else if (event.eventType === 'GRADE_STATUS_UPDATE' && event.sectionId) {
+              this.sections.update(list => list.map(s =>
+                s.id === event.sectionId
+                  ? { ...s, gradeStatus: event.gradeStatus || s.gradeStatus }
+                  : s
+              ));
+            }
+          },
+          error: () => {}
+        });
+      }),
       catchError(err => {
+        this.sections.set([]);
         this.errorMessage.set(err.error?.detail || 'Failed to load class sections.');
         return of([]);
       }),

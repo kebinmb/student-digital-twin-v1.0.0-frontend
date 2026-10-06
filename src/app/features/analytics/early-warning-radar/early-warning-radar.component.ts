@@ -156,6 +156,9 @@ export class EarlyWarningRadarComponent implements OnInit {
           summary: 'Intervention Dispatched',
           detail: `Case #${savedCase.id} created for ${student.studentName}. Status: ${savedCase.status}`
         });
+        this.radarItems.update(items =>
+          items.map(it => it.studentId === student.studentId ? { ...it, hasActiveIntervention: true, suggestedAction: `Active Case #${savedCase.id} (${savedCase.status})` } : it)
+        );
         if (this.selectedStudent()?.studentId === student.studentId) {
           this.analyticsApi.getStudentInterventions(student.studentId).subscribe(list => {
             this.studentInterventions.set(list || []);

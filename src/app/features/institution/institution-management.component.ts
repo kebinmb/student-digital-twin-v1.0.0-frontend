@@ -48,7 +48,8 @@ export class InstitutionManagementComponent implements OnInit {
     { label: 'Course Catalog', value: 'courses', icon: 'pi pi-book' },
     { label: 'OBE Matrix (CILO-PILO)', value: 'cilo-pilo-matrix', icon: 'pi pi-th-large' },
     { label: 'Grading Scales', value: 'grading-scales', icon: 'pi pi-chart-bar' },
-    { label: 'Financial Foundations', value: 'financials', icon: 'pi pi-dollar' }
+    { label: 'Financial Foundations', value: 'financials', icon: 'pi pi-dollar' },
+    { label: 'Certificate Revocations', value: 'certificates', icon: 'pi pi-shield' }
   ];
 
   ngOnInit(): void {

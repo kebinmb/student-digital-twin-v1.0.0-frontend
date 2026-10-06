@@ -3,6 +3,30 @@
   <!-- Toolbar / Filter Bar -->
   <div class="timetable-toolbar">
     <div class="filter-item">
+      <label class="filter-label">Academic Term:</label>
+      <p-select 
+        [options]="store.terms()" 
+        optionLabel="termName" 
+        optionValue="id" 
+        [ngModel]="store.selectedTermId()" 
+        (onChange)="onTermChange($event.value)"
+        [filter]="true"
+        filterPlaceholder="Search term..."
+        placeholder="Select Academic Term"
+        appendTo="body"
+        styleClass="term-select-filter">
+        <ng-template let-t pTemplate="item">
+          <div class="select-room-option flex-between">
+            <span class="room-code font-bold-navy">{{ t.termName }}</span>
+            @if (t.isActive) {
+              <p-tag value="ACTIVE" severity="success" styleClass="mini-tag"></p-tag>
+            }
+          </div>
+        </ng-template>
+      </p-select>
+    </div>
+
+    <div class="filter-item">
       <label class="filter-label">Filter by Classroom / Facility:</label>
       <p-select 
         [options]="store.rooms()" 

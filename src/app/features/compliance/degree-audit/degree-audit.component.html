@@ -233,5 +233,14 @@
         </div>
       </div>
     </div>
+  } @else if (!isLoading()) {
+    <app-empty-state
+      icon="pi pi-graduation-cap"
+      title="No Degree Audit Records Found"
+      description="No graduation degree audit has been performed for the selected student and academic term. Select an applicant or search student to run the degree audit."
+      actionLabel="Run Degree Audit"
+      actionIcon="pi pi-search"
+      (actionClick)="runDegreeAudit()">
+    </app-empty-state>
   }
 </div>

@@ -120,6 +120,28 @@
           [attr.aria-label]="isSidebarCollapsed() ? 'Expand navigation menu' : 'Collapse navigation menu'">
           <i class="pi pi-bars"></i>
         </button>
+
+        <!-- Global Academic Period Selector Pill -->
+        @if (periodStore.terms().length > 0) {
+          <div class="global-period-pill" [pTooltip]="'Active Global Academic Period'" tooltipPosition="bottom">
+            <i class="pi pi-calendar period-calendar-icon" aria-hidden="true"></i>
+            <p-select
+              [options]="termOptions()"
+              [ngModel]="periodStore.selectedTermId()"
+              (ngModelChange)="onPeriodChange($event)"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Academic Period"
+              styleClass="topbar-period-dropdown"
+              aria-label="Global Academic Period">
+            </p-select>
+            @if (periodStore.isEnrollmentOpen()) {
+              <span class="period-status-badge status-open">Enrollment</span>
+            } @else if (periodStore.isGradingOpen()) {
+              <span class="period-status-badge status-grading">Grading</span>
+            }
+          </div>
+        }
       </div>
 
       <!-- ZONE 2: Institutional Brand Motto (Centered & Responsive) -->

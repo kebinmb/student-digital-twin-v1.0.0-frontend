@@ -559,7 +559,8 @@
 
 <!-- Action Overlay: Dispatch AI Intervention Right Drawer -->
 <p-drawer
-  [(visible)]="isDispatchModalOpen"
+  [visible]="isDispatchModalOpen()"
+  (visibleChange)="isDispatchModalOpen.set($event)"
   position="right"
   [style]="{ width: '480px' }"
   styleClass="institutional-drawer"
@@ -639,3 +640,163 @@
     </div>
   }
 </p-drawer>
+
+<!-- Action Overlay: Inspect Student Digital Twin Right Drawer -->
+<p-drawer
+  [visible]="isInspectModalOpen()"
+  (visibleChange)="isInspectModalOpen.set($event)"
+  position="right"
+  [style]="{ width: '560px', maxWidth: '95vw' }"
+  styleClass="institutional-drawer"
+  header="Student Academic Twin & Telemetry"
+>
+  <div class="drawer-content flex flex-col gap-4">
+    <!-- Student Identity Header Banner -->
+    @if (selectedStudentForInspect(); as student) {
+      <div class="target-student-banner">
+        <p-avatar [label]="getInitials(student.fullName)" shape="circle" size="large" styleClass="target-avatar"></p-avatar>
+        <div class="target-student-info">
+          <div class="target-student-name">{{ student.fullName }}</div>
+          <div class="target-student-sub">{{ student.studentNumber }} — {{ student.sectionCode || student.programOrCohort }}</div>
+          <div class="target-student-risk flex items-center gap-2 mt-1">
+            <span class="risk-label text-xs text-surface-500">Telemetry Risk:</span>
+            <p-tag [value]="student.riskLevel" [severity]="getRiskSeverity(student.riskLevel)" size="small"></p-tag>
+            @if (student.riskScore != null) {
+              <span class="text-xs font-mono font-semibold text-surface-600">({{ student.riskScore | number:'1.1-1' }}%)</span>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Loading State -->
+    @if (isLoading()) {
+      <div class="flex flex-col gap-3 py-6 items-center justify-center">
+        <i class="pi pi-spin pi-spinner text-3xl text-emerald-700"></i>
+        <span class="text-xs text-surface-500">Evaluating multi-vector ML telemetry...</span>
+      </div>
+    } @else if (riskProfile(); as profile) {
+      <!-- Multi-Vector Health Metrics Grid -->
+      <div class="bento-grid-4col inspect-bento-grid">
+        <div class="stat-card bento-tile accent-green">
+          <div class="tile-header">
+            <span class="stat-label">Retention Index</span>
+            <div class="tile-icon-box green"><i class="pi pi-shield"></i></div>
+          </div>
+          <div class="stat-val">{{ retentionRate() }}%</div>
+          <p-progressBar [value]="retentionRate()" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+          <div class="tile-caption">ML Retention Target</div>
+        </div>
+
+        <div class="stat-card bento-tile accent-blue">
+          <div class="tile-header">
+            <span class="stat-label">Academic Health</span>
+            <div class="tile-icon-box blue"><i class="pi pi-book"></i></div>
+          </div>
+          <div class="stat-val">{{ academicHealthScore() }}%</div>
+          <p-progressBar [value]="academicHealthScore()" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+          <div class="tile-caption">GPA & Unit Cadence</div>
+        </div>
+
+        <div class="stat-card bento-tile accent-amber">
+          <div class="tile-header">
+            <span class="stat-label">Attendance Health</span>
+            <div class="tile-icon-box amber"><i class="pi pi-calendar"></i></div>
+          </div>
+          <div class="stat-val">{{ attendanceHealthScore() }}%</div>
+          <p-progressBar [value]="attendanceHealthScore()" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+          <div class="tile-caption">Geofenced QR Presence</div>
+        </div>
+
+        <div class="stat-card bento-tile accent-rose">
+          <div class="tile-header">
+            <span class="stat-label">Predicted Dropout</span>
+            <div class="tile-icon-box rose"><i class="pi pi-chart-line"></i></div>
+          </div>
+          <div class="stat-val">{{ (profile.predictedDropoutProbability * 100) | number:'1.1-1' }}%</div>
+          <p-progressBar [value]="profile.predictedDropoutProbability * 100" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+          <div class="tile-caption">Random Forest + XGBoost</div>
+        </div>
+      </div>
+
+      <!-- Vector Risk Dimension Breakdown -->
+      <div class="content-card">
+        <h4 class="section-title text-sm font-semibold mb-3">
+          <i class="pi pi-chart-pie header-icon-blue"></i>
+          Multi-Vector Risk Diagnostics
+        </h4>
+        <div class="flex flex-col gap-3">
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="font-medium text-surface-700">Academic Risk Dimension (GPA / Failing Units)</span>
+              <span class="font-mono font-bold">{{ profile.academicRiskScore }}%</span>
+            </div>
+            <p-progressBar [value]="profile.academicRiskScore" [showValue]="false" [style]="{ height: '6px' }"></p-progressBar>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="font-medium text-surface-700">Attendance Risk Dimension (Absences / Lateness)</span>
+              <span class="font-mono font-bold">{{ profile.attendanceRiskScore }}%</span>
+            </div>
+            <p-progressBar [value]="profile.attendanceRiskScore" [showValue]="false" [style]="{ height: '6px' }"></p-progressBar>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="font-medium text-surface-700">Socioeconomic Equity Dimension (UniFAST RA 10931)</span>
+              <span class="font-mono font-bold">{{ profile.socioeconomicRiskScore }}%</span>
+            </div>
+            <p-progressBar [value]="profile.socioeconomicRiskScore" [showValue]="false" [style]="{ height: '6px' }"></p-progressBar>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Recommended Interventions -->
+      <div class="content-card">
+        <h4 class="section-title text-sm font-semibold mb-3">
+          <i class="pi pi-lightbulb header-icon-amber"></i>
+          AI Recommended Clinical Interventions
+        </h4>
+        @if (profile.recommendedInterventions && profile.recommendedInterventions.length > 0) {
+          <div class="advisory-list">
+            @for (rec of profile.recommendedInterventions; track rec) {
+              <div class="advisory-item">
+                <div class="advisory-icon-wrapper">
+                  <i class="pi pi-info-circle advisory-icon"></i>
+                </div>
+                <span class="advisory-text">{{ humanizeInterventionType(rec) }}</span>
+              </div>
+            }
+          </div>
+        } @else {
+          <app-empty-state
+            icon="pi pi-check-circle"
+            title="Telemetry Optimal"
+            description="No risk flags or urgent clinical interventions recommended at this time."
+            severity="success"
+          ></app-empty-state>
+        }
+      </div>
+    }
+
+    <!-- Drawer Footer Actions -->
+    <div class="drawer-actions mt-auto pt-4 border-t border-surface-200">
+      <p-button
+        label="Close"
+        severity="secondary"
+        [outlined]="true"
+        size="small"
+        (onClick)="isInspectModalOpen.set(false)"
+      ></p-button>
+      <p-button
+        label="Dispatch Intervention"
+        icon="pi pi-send"
+        severity="warn"
+        size="small"
+        (onClick)="openDispatchFromInspect()"
+      ></p-button>
+    </div>
+  </div>
+</p-drawer>
+

@@ -12,8 +12,9 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { MessageModule } from 'primeng/message';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
-import { AcademicYearService, TermService } from '../../../../core/services/institution.service';
-import { AcademicYear, Term, TermType } from '../../../../core/models/institution.model';
+import { AcademicYearService, ProgramService, TermService } from '../../../../core/services/institution.service';
+import { AcademicPeriodStore } from '../../../../core/services/academic-period.store';
+import { AcademicYear, Term, TermType, TermHonorRollReport, HonorStudent, CertificateVerification } from '../../../../core/models/institution.model';
 import { AuthService } from '../../../../core/service/authentication/auth-service';
 
 interface TermForm {
@@ -50,6 +51,8 @@ import { Skeleton } from 'primeng/skeleton';
 export class TermManagerComponent implements OnInit {
   private readonly termService = inject(TermService);
   private readonly ayService = inject(AcademicYearService);
+  private readonly programService = inject(ProgramService);
+  private readonly periodStore = inject(AcademicPeriodStore);
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly authService = inject(AuthService);
@@ -264,6 +267,8 @@ export class TermManagerComponent implements OnInit {
           next: () => {
             this.messageService.add({ severity: 'success', summary: 'Term Activated', detail: `${this.formatTermType(t.termType)} is now active.` });
             this.loadAcademicYears();
+            this.periodStore.refresh();
+            this.periodStore.setTerm(t.id);
           },
           error: (err) => {
             this.messageService.add({ severity: 'error', summary: 'Activation Failed', detail: err.error?.detail || 'Failed to activate term.' });
@@ -287,6 +292,7 @@ export class TermManagerComponent implements OnInit {
           detail: `Enrollment window is now ${updated.enrollmentOpen ? 'OPEN' : 'CLOSED'}.`
         });
         this.loadTermsForSelectedAy();
+        this.periodStore.refresh();
         if (this.selectedTermForDetail()?.id === t.id) {
           this.selectedTermForDetail.set(updated);
         }
@@ -311,6 +317,7 @@ export class TermManagerComponent implements OnInit {
           detail: `Grading window is now ${updated.gradingOpen ? 'OPEN' : 'CLOSED'}.`
         });
         this.loadTermsForSelectedAy();
+        this.periodStore.refresh();
         if (this.selectedTermForDetail()?.id === t.id) {
           this.selectedTermForDetail.set(updated);
         }
@@ -336,6 +343,218 @@ export class TermManagerComponent implements OnInit {
           error: (err) => {
             this.messageService.add({ severity: 'error', summary: 'Deletion Guarded', detail: err.error?.detail || 'Cannot delete active operational term.' });
           }
+        });
+      }
+    });
+  }
+
+  // Honor Roll State & Methods
+  readonly isHonorRollDialogOpen = signal<boolean>(false);
+  readonly honorRollReport = signal<TermHonorRollReport | null>(null);
+  readonly isLoadingHonorRoll = signal<boolean>(false);
+  readonly selectedProgramFilter = signal<number | null>(null);
+  readonly programOptions = signal<{ label: string; value: number | null }[]>([{ label: 'All Programs', value: null }]);
+  readonly activeHonorRollTerm = signal<Term | null>(null);
+
+  openHonorRoll(t: Term): void {
+    this.activeHonorRollTerm.set(t);
+    this.selectedProgramFilter.set(null);
+    this.isHonorRollDialogOpen.set(true);
+    this.loadHonorRoll(t.id, null);
+    this.loadProgramOptions();
+  }
+
+  loadProgramOptions(): void {
+    this.programService.getAll().subscribe({
+      next: (programs) => {
+        const opts = [
+          { label: 'All Programs', value: null },
+          ...programs.map(p => ({ label: `${p.code} - ${p.name}`, value: p.id }))
+        ];
+        this.programOptions.set(opts);
+      },
+      error: () => {
+        // Fallback to default
+      }
+    });
+  }
+
+  loadHonorRoll(termId: number, programId?: number | null): void {
+    this.isLoadingHonorRoll.set(true);
+    this.termService.getHonorRoll(termId, programId || undefined).subscribe({
+      next: (report) => {
+        this.honorRollReport.set(report);
+        this.isLoadingHonorRoll.set(false);
+      },
+      error: (err) => {
+        this.isLoadingHonorRoll.set(false);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Honor Roll Error',
+          detail: err.error?.detail || 'Failed to load term honor roll.'
+        });
+      }
+    });
+  }
+
+  onProgramFilterChange(progId: number | null): void {
+    this.selectedProgramFilter.set(progId);
+    const term = this.activeHonorRollTerm();
+    if (term) {
+      this.loadHonorRoll(term.id, progId);
+    }
+  }
+
+  getPresidentsCount(report: TermHonorRollReport): number {
+    return report.honorees.filter(h => h.honorCategory === 'PRESIDENTS_LIST').length;
+  }
+
+  getDeansCount(report: TermHonorRollReport): number {
+    return report.honorees.filter(h => h.honorCategory === 'DEANS_LIST').length;
+  }
+
+  readonly isCertificateDialogOpen = signal<boolean>(false);
+  readonly selectedCertificate = signal<CertificateVerification | null>(null);
+  readonly isLoadingCertificate = signal<boolean>(false);
+
+  viewHonorCertificate(h: HonorStudent): void {
+    const term = this.activeHonorRollTerm();
+    if (!term) return;
+
+    this.isLoadingCertificate.set(true);
+    this.isCertificateDialogOpen.set(true);
+    this.termService.getHonorCertificate(term.id, h.studentId).subscribe({
+      next: (cert) => {
+        this.selectedCertificate.set(cert);
+        this.isLoadingCertificate.set(false);
+      },
+      error: (err) => {
+        this.isLoadingCertificate.set(false);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Certificate Error',
+          detail: err.error?.detail || 'Failed to retrieve certificate details.'
+        });
+      }
+    });
+  }
+
+  printCertificate(): void {
+    window.print();
+  }
+
+  promptRevocation(): void {
+    const cert = this.selectedCertificate();
+    if (!cert) return;
+    const reason = window.prompt(`Enter reason for revoking certificate ${cert.certificateId}:`, 'Academic integrity investigation');
+    if (!reason || reason.trim().length === 0) return;
+
+    this.termService.revokeCertificate(cert.certificateId, reason.trim()).subscribe({
+      next: (summary) => {
+        this.selectedCertificate.update(c => c ? {
+          ...c,
+          isRevoked: true,
+          revocationReason: summary.revocationReason,
+          revokedAt: summary.revokedAt
+        } : null);
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Certificate Revoked',
+          detail: `Certificate ${cert.certificateId} has been flagged as revoked.`
+        });
+      },
+      error: (err) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Revocation Failed',
+          detail: err.error?.detail || 'Failed to revoke certificate in registry.'
+        });
+      }
+    });
+  }
+
+  reinstateCurrentCertificate(): void {
+    const cert = this.selectedCertificate();
+    if (!cert) return;
+    this.termService.reinstateCertificate(cert.certificateId).subscribe({
+      next: () => {
+        this.selectedCertificate.update(c => c ? {
+          ...c,
+          isRevoked: false,
+          revocationReason: undefined,
+          revokedAt: undefined
+        } : null);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Certificate Reinstated',
+          detail: `Certificate ${cert.certificateId} has been reinstated.`
+        });
+      },
+      error: (err) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Reinstatement Failed',
+          detail: err.error?.detail || 'Failed to reinstate certificate.'
+        });
+      }
+    });
+  }
+
+  exportHonorRollCsv(): void {
+    const report = this.honorRollReport();
+    if (!report || report.honorees.length === 0) return;
+
+    const headers = ['Rank', 'Student Number', 'Full Name', 'Program', 'Honor Category', 'Term GPA', 'Total Units'];
+    const rows = report.honorees.map(h => [
+      h.rank,
+      `"${h.studentNumber}"`,
+      `"${h.fullName}"`,
+      `"${h.programCode}"`,
+      `"${h.honorCategory}"`,
+      h.termGpa.toFixed(2),
+      h.totalUnits
+    ]);
+
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `HonorRoll_Term_${report.termId}_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  readonly isDownloadingZip = signal<boolean>(false);
+
+  downloadBatchZip(): void {
+    const report = this.honorRollReport();
+    if (!report) return;
+
+    this.isDownloadingZip.set(true);
+    this.termService.downloadCertificatesZip(report.termId, this.selectedProgramFilter() || undefined).subscribe({
+      next: (blob) => {
+        this.isDownloadingZip.set(false);
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `Term_${report.termId}_Honor_Certificates.zip`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Zip Export Complete',
+          detail: 'Batch certificates archive downloaded successfully.'
+        });
+      },
+      error: () => {
+        this.isDownloadingZip.set(false);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Download Failed',
+          detail: 'Failed to generate batch certificates zip archive.'
         });
       }
     });

@@ -1013,3 +1013,17 @@
     flex-wrap: wrap;
   }
 }
+
+/* ==========================================================================
+   10. INSPECTION DRAWER STYLES
+   ========================================================================== */
+.inspect-bento-grid {
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 0.75rem !important;
+}
+
+@media (max-width: 500px) {
+  .inspect-bento-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

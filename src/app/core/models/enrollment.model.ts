@@ -209,6 +209,7 @@ export interface SectionRosterResponse {
   enrolledCount: number;
   maxCapacity: number;
   students: RosterStudentDto[];
+  updatedAtEpochMs?: number | null;
 }
 
 export interface GradeEntryDto {
@@ -220,6 +221,7 @@ export interface GradeEntryDto {
 export interface SaveSectionGradesRequest {
   grades: GradeEntryDto[];
   submitForVerification: boolean;
+  expectedUpdatedAtEpochMs?: number | null;
 }
 
 export interface GradeActionResponse {

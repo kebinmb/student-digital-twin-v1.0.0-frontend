@@ -32,6 +32,8 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
 import { AuthService } from '../../../core/service/authentication/auth-service';
 import { TermService } from '../../../core/services/institution.service';
 import { EnrollmentApiService } from '../../../core/service/enrollment/enrollment-api.service';
+import { AcademicPeriodStore } from '../../../core/services/academic-period.store';
+import { effect } from '@angular/core';
 
 interface StudentSuggestionOption {
   label: string;
@@ -78,6 +80,7 @@ export class StudentClearanceComponent implements OnInit {
   private readonly enrollmentApi = inject(EnrollmentApiService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly messageService = inject(MessageService);
+  readonly periodStore = inject(AcademicPeriodStore);
 
   // User Role & Context Signals
   readonly isStudentUser = signal<boolean>(false);
@@ -88,6 +91,24 @@ export class StudentClearanceComponent implements OnInit {
   searchTermId: number | null = null;
   initiatePurpose: string = 'GRADUATION';
   readonly activeTermDisplay = signal<string>('Loading Active Term...');
+
+  constructor() {
+    effect(() => {
+      const globalTermId = this.periodStore.selectedTermId();
+      if (globalTermId && globalTermId !== this.searchTermId) {
+        this.searchTermId = globalTermId;
+        const currentTerm = this.periodStore.selectedTerm();
+        if (currentTerm) {
+          const yearCode = currentTerm.academicYearCode || '';
+          const type = currentTerm.termName || currentTerm.termType || `Term ${currentTerm.id}`;
+          this.activeTermDisplay.set(yearCode ? `${type} (${yearCode})` : `${type}`);
+        }
+        if (this.searchStudentNumber?.trim()) {
+          this.loadClearanceStatus();
+        }
+      }
+    });
+  }
 
   readonly purposes = [
     { label: 'Graduation & Special Order', value: 'GRADUATION', icon: 'pi pi-graduation-cap' },
@@ -136,9 +157,20 @@ export class StudentClearanceComponent implements OnInit {
   }
 
   loadActiveTerm(): void {
+    const selected = this.periodStore.selectedTerm();
+    const selectedId = this.periodStore.selectedTermId();
+    if (selected && selectedId) {
+      this.searchTermId = selectedId;
+      const yearCode = selected.academicYearCode || (selected as any).academicYear?.code || '';
+      const termTypeName = selected.termName || selected.termType || `Term ${selected.id}`;
+      this.activeTermDisplay.set(yearCode ? `${termTypeName} (${yearCode})` : `${termTypeName}`);
+      this.initUserContext();
+      return;
+    }
+
     this.termService.getActive().subscribe({
       next: (term) => {
-        this.searchTermId = term.id;
+        this.searchTermId = this.periodStore.selectedTermId() || term.id;
         const yearCode = term.academicYearCode || (term as any).academicYear?.code || '';
         const termTypeName = term.termName || term.termType || `Term ${term.id}`;
         const displayLabel = yearCode ? `${termTypeName} (${yearCode})` : `${termTypeName}`;
@@ -146,7 +178,7 @@ export class StudentClearanceComponent implements OnInit {
         this.initUserContext();
       },
       error: () => {
-        this.searchTermId = 10;
+        this.searchTermId = this.periodStore.selectedTermId() || 10;
         this.activeTermDisplay.set('1st Semester AY 2025-2026 (Active)');
         this.initUserContext();
       }

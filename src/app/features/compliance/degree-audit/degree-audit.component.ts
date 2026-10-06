@@ -1,6 +1,6 @@
 // File: src/app/features/compliance/degree-audit/degree-audit.component.ts
 
-import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, signal, computed, effect, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -28,6 +28,8 @@ import { HasRoleDirective } from '../../../core/directives/has-role.directive';
 import { AuthService } from '../../../core/service/authentication/auth-service';
 import { EnrollmentApiService } from '../../../core/service/enrollment/enrollment-api.service';
 import { TermService } from '../../../core/services/institution.service';
+import { AcademicPeriodStore } from '../../../core/services/academic-period.store';
+import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 
 interface StudentOption {
   label: string;
@@ -52,7 +54,8 @@ interface StudentOption {
     DialogModule,
     ProgressBarModule,
     SelectModule,
-    HasRoleDirective
+    HasRoleDirective,
+    EmptyStateComponent
   ],
   templateUrl: './degree-audit.component.html',
   styleUrl: './degree-audit.component.css',
@@ -63,7 +66,20 @@ export class DegreeAuditComponent implements OnInit {
   protected readonly authService = inject(AuthService);
   private readonly enrollmentApi = inject(EnrollmentApiService);
   private readonly termService = inject(TermService);
+  protected readonly periodStore = inject(AcademicPeriodStore);
   private readonly messageService = inject(MessageService);
+
+  constructor() {
+    effect(() => {
+      const globalTermId = this.periodStore.selectedTermId();
+      if (globalTermId && globalTermId !== this.applyTermId) {
+        this.applyTermId = globalTermId;
+        if (this.searchStudentId) {
+          this.runDegreeAudit();
+        }
+      }
+    });
+  }
 
   // User Role & Context Signals
   readonly isStudentRole = computed(() => this.authService.hasRole('STUDENT'));
@@ -110,8 +126,11 @@ export class DegreeAuditComponent implements OnInit {
     this.termService.getAll().subscribe({
       next: (termsList) => {
         this.terms.set(termsList);
+        const globalTermId = this.periodStore.selectedTermId();
         const active = termsList.find((t) => t.isActive);
-        if (active) {
+        if (globalTermId) {
+          this.applyTermId = globalTermId;
+        } else if (active) {
           this.applyTermId = active.id;
         } else if (termsList.length > 0) {
           this.applyTermId = termsList[0].id;
@@ -121,7 +140,7 @@ export class DegreeAuditComponent implements OnInit {
         this.termService.getActive().subscribe({
           next: (active) => {
             this.terms.set([active]);
-            this.applyTermId = active.id;
+            this.applyTermId = this.periodStore.selectedTermId() || active.id;
           }
         });
       }

@@ -5,6 +5,7 @@ import { SelectModule } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { SchedulingStore } from '../../state/scheduling.store';
+import { AcademicPeriodStore } from '../../../../core/services/academic-period.store';
 
 import { Skeleton } from 'primeng/skeleton';
 
@@ -30,6 +31,7 @@ export interface GridSlotItem {
 })
 export class TimetableGridComponent {
   readonly store = inject(SchedulingStore);
+  readonly periodStore = inject(AcademicPeriodStore);
 
   readonly addSchedule = output<void>();
 
@@ -68,6 +70,17 @@ export class TimetableGridComponent {
 
   getSlotsForDay(day: string): GridSlotItem[] {
     return this.filteredSchedules().filter(item => item.dayOfWeek === day);
+  }
+
+  onTermChange(termId: number | { value: number } | string | null): void {
+    const id = (termId && typeof termId === 'object' && 'value' in termId)
+      ? termId.value
+      : (termId !== null && termId !== undefined ? Number(termId) : null);
+    if (id !== null) {
+      this.store.selectedTermId.set(id);
+      this.store.loadSections(id);
+      this.periodStore.setTerm(id);
+    }
   }
 
   onRoomChange(roomId: number | { value: number } | string | null): void {

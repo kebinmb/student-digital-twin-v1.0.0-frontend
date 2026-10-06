@@ -43,7 +43,7 @@
         <div class="identity-stats">
           <div class="stat-unit">
             <span class="stat-label">Cumulative GPA</span>
-            <span class="stat-val gpa-val">{{ (studentProfile()?.cumulativeGpa || 1.38) | number:'1.2-2' }}</span>
+            <span class="stat-val gpa-val">{{ (studentProfile()?.cumulativeGpa || 0) | number:'1.2-2' }}</span>
           </div>
           <div class="hairline-divider"></div>
           <div class="stat-unit">
@@ -58,8 +58,8 @@
           <div class="hairline-divider"></div>
           <div class="stat-unit">
             <p-tag
-              [value]="studentOnTimeRate() >= 85 ? 'GOOD STANDING' : 'ATTENDANCE NOTICE'"
-              [severity]="studentOnTimeRate() >= 85 ? 'success' : 'warn'"
+              [value]="studentTotalSessions() === 0 ? 'NO SESSIONS' : (studentOnTimeRate() >= 85 ? 'GOOD STANDING' : 'ATTENDANCE NOTICE')"
+              [severity]="studentTotalSessions() === 0 ? 'info' : (studentOnTimeRate() >= 85 ? 'success' : 'warn')"
               [rounded]="true"
             ></p-tag>
           </div>
@@ -85,8 +85,8 @@
             <span class="stat-val health-rate-val">{{ studentOnTimeRate() }}% Punctuality Index</span>
             <div class="tag-row">
               <p-tag
-                [value]="studentOnTimeRate() >= 85 ? 'OPTIMAL' : 'MONITORING'"
-                [severity]="studentOnTimeRate() >= 85 ? 'success' : 'warn'"
+                [value]="studentTotalSessions() === 0 ? 'NO SESSIONS' : (studentOnTimeRate() >= 85 ? 'OPTIMAL' : 'MONITORING')"
+                [severity]="studentTotalSessions() === 0 ? 'info' : (studentOnTimeRate() >= 85 ? 'success' : 'warn')"
                 size="small"
               ></p-tag>
               <span class="sync-time">
@@ -106,7 +106,7 @@
               </div>
             </div>
             <div class="stat-val">{{ studentTotalSessions() }}</div>
-            <p-progressBar [value]="100" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <p-progressBar [value]="studentTotalSessions() > 0 ? 100 : 0" [showValue]="false" styleClass="tile-progress"></p-progressBar>
             <div class="tile-caption">Verified Class Check-Ins</div>
           </div>
 
@@ -130,7 +130,7 @@
               </div>
             </div>
             <div class="stat-val">{{ studentPresentCount() }}</div>
-            <p-progressBar [value]="studentTotalSessions() > 0 ? (studentPresentCount() / studentTotalSessions()) * 100 : 100" [showValue]="false" styleClass="tile-progress"></p-progressBar>
+            <p-progressBar [value]="studentTotalSessions() > 0 ? (studentPresentCount() / studentTotalSessions()) * 100 : 0" [showValue]="false" styleClass="tile-progress"></p-progressBar>
             <div class="tile-caption">Classroom Attendance Logged</div>
           </div>
 
@@ -160,14 +160,40 @@
               <p class="panel-subtext">Point your camera at your instructor's dynamic 15-minute QR code or enter the QR seed code below.</p>
             </div>
           </div>
-          <p-button
-            [label]="isCameraActive() ? 'Close Camera' : 'Open Camera Scanner'"
-            [icon]="isCameraActive() ? 'pi pi-camera-slash' : 'pi pi-camera'"
-            [severity]="isCameraActive() ? 'secondary' : 'info'"
-            [outlined]="true"
-            size="small"
-            (onClick)="toggleCameraScanner()"
-          ></p-button>
+          <div class="flex items-center gap-2">
+            @if (offlineSyncService.queue().length > 0) {
+              <p-button
+                [label]="'Offline Queue (' + offlineSyncService.queue().length + ')'"
+                icon="pi pi-list"
+                [severity]="offlineSyncService.conflictCount() > 0 ? 'danger' : 'secondary'"
+                size="small"
+                [outlined]="true"
+                (onClick)="openOfflineQueueModal()"
+                pTooltip="Inspect queued offline scans and conflict resolution items"
+                tooltipPosition="bottom"
+              ></p-button>
+            }
+            @if (offlineSyncService.pendingCount() > 0) {
+              <p-button
+                [label]="'Sync ' + offlineSyncService.pendingCount() + ' Offline Scan' + (offlineSyncService.pendingCount() > 1 ? 's' : '')"
+                icon="pi pi-cloud-upload"
+                severity="warn"
+                size="small"
+                [loading]="offlineSyncService.isSyncing()"
+                (onClick)="triggerSyncQueue()"
+                pTooltip="Upload cached offline scans to university attendance ledger"
+                tooltipPosition="bottom">
+              </p-button>
+            }
+            <p-button
+              [label]="isCameraActive() ? 'Close Camera' : 'Open Camera Scanner'"
+              [icon]="isCameraActive() ? 'pi pi-camera-slash' : 'pi pi-camera'"
+              [severity]="isCameraActive() ? 'secondary' : 'info'"
+              [outlined]="true"
+              size="small"
+              (onClick)="toggleCameraScanner()"
+            ></p-button>
+          </div>
         </div>
 
         <!-- Live Camera Viewport -->
@@ -343,7 +369,8 @@
               optionLabel="label"
               optionValue="value"
               placeholder="Select Assigned Class Section..."
-              styleClass="full-width-select"
+              size = small
+              class="full-width-select"
             ></p-select>
           </div>
 
@@ -464,8 +491,15 @@
           </div>
         </div>
 
-        <p-table [value]="facultyDailyRecords()" [loading]="isLoadingFaculty()" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 20]" styleClass="institutional-table">
-          <ng-template pTemplate="header">
+<p-table 
+  [value]="facultyDailyRecords()" 
+  [loading]="isLoadingFaculty()" 
+  [paginator]="true" 
+  [rows]="10" 
+  [rowsPerPageOptions]="[5, 10, 20]" 
+  paginatorDropdownAppendTo="body"
+  class="institutional-table" 
+  size="small">          <ng-template pTemplate="header">
             <tr>
               <th>Verified At</th>
               <th>Instructor / Host</th>
@@ -535,7 +569,8 @@
               optionLabel="label"
               optionValue="value"
               placeholder="All Sections"
-              styleClass="filter-select"
+              size="small"
+              class="filter-select"
             ></p-select>
           </div>
 
@@ -644,4 +679,97 @@
       </p-table>
     </div>
   }
+
+  <!-- Offline & Conflict Resolution Modal Dialog -->
+  <p-dialog
+    header="Offline Attendance Queue & Conflict Resolution"
+    [visible]="showOfflineQueueDialog()"
+    (visibleChange)="showOfflineQueueDialog.set($event)"
+    [modal]="true"
+    [style]="{ width: '700px', maxWidth: '95vw' }"
+  >
+    <div class="p-3">
+      <div class="flex items-center justify-between mb-3 pb-2 border-b">
+        <div>
+          <span class="text-sm text-muted">Locally cached records awaiting sync or manual resolution</span>
+        </div>
+        <div class="flex gap-2">
+          <p-button
+            label="Sync All"
+            icon="pi pi-cloud-upload"
+            size="small"
+            severity="warn"
+            [loading]="offlineSyncService.isSyncing()"
+            (onClick)="triggerSyncQueue()"
+          ></p-button>
+          <p-button
+            label="Clear Queue"
+            icon="pi pi-trash"
+            size="small"
+            severity="danger"
+            [outlined]="true"
+            (onClick)="clearAllOfflineScans()"
+          ></p-button>
+        </div>
+      </div>
+
+      @if (offlineSyncService.queue().length === 0) {
+        <div class="text-center py-6 text-muted">
+          <i class="pi pi-check-circle text-3xl text-green-500 mb-2"></i>
+          <p class="font-medium">All offline scans are synced and cleared.</p>
+        </div>
+      } @else {
+        <div class="space-y-3">
+          @for (item of offlineSyncService.queue(); track item.id) {
+            <div
+              class="p-3 rounded border flex items-center justify-between gap-3"
+              [class.bg-red-50]="item.status === 'CONFLICT' || item.status === 'FAILED'"
+              [class.border-red-200]="item.status === 'CONFLICT' || item.status === 'FAILED'"
+              [class.bg-surface-50]="item.status === 'QUEUED' || item.status === 'SYNCING'"
+            >
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-1">
+                  <p-tag
+                    [value]="item.status"
+                    [severity]="item.status === 'CONFLICT' ? 'danger' : (item.status === 'FAILED' ? 'warn' : 'info')"
+                  ></p-tag>
+                  <code class="text-xs font-mono">{{ item.id }}</code>
+                  <span class="text-xs text-muted">{{ item.queuedAt | date:'short' }}</span>
+                </div>
+                <div class="text-xs text-muted mb-1">
+                  Student ID: <strong>{{ item.studentId }}</strong> | Seed: <code class="text-xs">{{ item.qrSeed | slice:0:16 }}...</code>
+                </div>
+                @if (item.errorMessage) {
+                  <div class="text-xs text-red-600 font-medium">
+                    <i class="pi pi-exclamation-triangle"></i> {{ item.errorMessage }}
+                  </div>
+                }
+              </div>
+
+              <div class="flex items-center gap-2">
+                @if (item.status === 'CONFLICT' || item.status === 'FAILED') {
+                  <p-button
+                    icon="pi pi-refresh"
+                    pTooltip="Retry Sync"
+                    size="small"
+                    severity="secondary"
+                    [outlined]="true"
+                    (onClick)="retryOfflineItem(item.id)"
+                  ></p-button>
+                }
+                <p-button
+                  icon="pi pi-times"
+                  pTooltip="Dismiss Scan"
+                  size="small"
+                  severity="danger"
+                  [outlined]="true"
+                  (onClick)="dismissOfflineItem(item.id)"
+                ></p-button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </p-dialog>
 </div>

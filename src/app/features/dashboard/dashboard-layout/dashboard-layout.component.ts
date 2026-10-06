@@ -11,8 +11,11 @@ import { Menu } from 'primeng/menu';
 import { MenuItem } from 'primeng/api';
 
 import { AuthService } from '../../../core/service/authentication/auth-service';
+import { AcademicPeriodStore } from '../../../core/services/academic-period.store';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
+import { SelectModule } from 'primeng/select';
+import { TagModule } from 'primeng/tag';
 
 export interface NavItem {
   label: string;
@@ -42,7 +45,9 @@ export interface NavSection {
     Badge,
     Menu,
     ButtonModule,
-    TooltipModule
+    TooltipModule,
+    SelectModule,
+    TagModule
   ],
   templateUrl: './dashboard-layout.component.html',
   styleUrls: ['./dashboard-layout.component.css'],
@@ -50,7 +55,31 @@ export interface NavSection {
 })
 export class DashboardLayoutComponent implements OnInit, OnDestroy {
   protected readonly authService = inject(AuthService);
+  protected readonly periodStore = inject(AcademicPeriodStore);
   private readonly router = inject(Router);
+
+  // Global Academic Period
+  readonly termOptions = computed(() => {
+    return this.periodStore.terms().map(t => ({
+      label: t.academicYearCode ? `${t.academicYearCode} - ${this.formatTermType(t.termType)}${t.isActive ? ' (Active)' : ''}` : `Term ${t.id}`,
+      value: t.id
+    }));
+  });
+
+  formatTermType(type: string): string {
+    if (!type) return '';
+    if (type === '1ST_SEM' || type === 'FIRST_SEM') return '1st Sem';
+    if (type === '2ND_SEM' || type === 'SECOND_SEM') return '2nd Sem';
+    if (type === 'SUMMER') return 'Summer';
+    return type.replace(/_/g, ' ');
+  }
+
+  onPeriodChange(termId: number | { value: number } | null): void {
+    const id = typeof termId === 'object' && termId !== null ? termId.value : Number(termId);
+    if (id) {
+      this.periodStore.setTerm(id);
+    }
+  }
 
   // Responsive and collapse state signals
   readonly isSidebarOpen = signal(false); // Mobile drawer state
@@ -79,8 +108,8 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
       items: [
         { label: 'Dashboard Overview', icon: 'pi pi-home', routerLink: '/dashboard', exact: true },
         { label: 'Student Self-Service', icon: 'pi pi-user-edit', routerLink: '/dashboard/portal/student', roles: ['STUDENT'] },
-        { label: 'Student Academic Insights', icon: 'pi pi-sparkles', routerLink: '/dashboard/analytics/digital-twin', roles: ['ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE', 'STUDENT'] },
-        { label: 'QR Attendance Check-In', icon: 'pi pi-qrcode', routerLink: '/dashboard/analytics/qr-attendance', roles: ['ADMIN', 'FACULTY', 'STUDENT'] }
+        { label: 'Student Academic Insights', icon: 'pi pi-sparkles', routerLink: '/dashboard/analytics/digital-twin', roles: ['ADMIN', 'SUPER_ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE', 'STUDENT'] },
+        { label: 'QR Attendance Check-In', icon: 'pi pi-qrcode', routerLink: '/dashboard/analytics/qr-attendance', roles: ['ADMIN', 'SUPER_ADMIN', 'FACULTY', 'STUDENT'] }
       ]
     },
     {
@@ -118,7 +147,8 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
         { label: 'Student Support Alerts', icon: 'pi pi-info-circle', routerLink: '/dashboard/analytics/early-warning', badge: 'ALERT', badgeSeverity: 'warn', roles: ['ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE'] },
         { label: 'User Management', icon: 'pi pi-users', routerLink: '/dashboard/users', roles: ['ADMIN', 'REGISTRAR'] },
         { label: 'Faculty Profiles', icon: 'pi pi-briefcase', routerLink: '/dashboard/faculty-accounts', roles: ['ADMIN', 'REGISTRAR'] },
-        { label: 'LMS & Portal Settings', icon: 'pi pi-desktop', routerLink: '/dashboard/admin/lms-config', roles: ['ADMIN'] }
+        { label: 'LMS & Portal Settings', icon: 'pi pi-desktop', routerLink: '/dashboard/admin/lms-config', roles: ['ADMIN'] },
+        { label: 'Institutional Webhooks', icon: 'pi pi-send', routerLink: '/dashboard/admin/webhooks', roles: ['ADMIN'] }
       ]
     }
   ];
