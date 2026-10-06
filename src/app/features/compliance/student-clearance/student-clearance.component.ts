@@ -198,9 +198,9 @@ export class StudentClearanceComponent implements OnInit {
           }
         },
         error: () => {
-          const userId = this.authService.getUserId();
-          if (userId) {
-            this.searchStudentNumber = userId.toString();
+          const studentIdent = this.authService.getStudentNumber() || this.authService.getStudentProfileId()?.toString() || this.authService.getUserId()?.toString();
+          if (studentIdent) {
+            this.searchStudentNumber = studentIdent;
             this.loadClearanceStatus();
           }
         }

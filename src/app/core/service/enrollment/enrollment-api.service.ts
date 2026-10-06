@@ -65,6 +65,10 @@ export class EnrollmentApiService {
     return this.http.get<StudentEnrollmentResponse>(`${this.baseUrl}/student/${studentId}/term/${termId}`);
   }
 
+  getMyEnrollment(termId: number): Observable<StudentEnrollmentResponse> {
+    return this.http.get<StudentEnrollmentResponse>(`${this.baseUrl}/me/term/${termId}`);
+  }
+
   getEnrollmentsByTerm(termId: number): Observable<StudentEnrollmentResponse[]> {
     return this.http.get<StudentEnrollmentResponse[]>(`${this.baseUrl}/term/${termId}`);
   }

@@ -594,7 +594,7 @@ export class DigitalTwinAnalyticsDashboardComponent implements OnInit {
         this.isLoading.set(false);
       },
       error: () => {
-        const fallbackId = this.authService.getUserId() || 1;
+        const fallbackId = this.authService.getStudentProfileId() || this.studentProfile()?.id || this.authService.getUserId() || 1;
         this.currentStudentId.set(fallbackId);
         this.loadRiskProfile(fallbackId);
       }
@@ -616,7 +616,7 @@ export class DigitalTwinAnalyticsDashboardComponent implements OnInit {
           });
         },
         error: () => {
-          const studentId = this.currentStudentId() || this.studentProfile()?.id || this.authService.getUserId() || 1;
+          const studentId = this.currentStudentId() || this.studentProfile()?.id || this.authService.getStudentProfileId() || this.authService.getUserId() || 1;
           this.loadRiskProfile(studentId, true);
         }
       });

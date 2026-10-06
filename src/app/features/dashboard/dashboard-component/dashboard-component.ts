@@ -1527,13 +1527,15 @@ export class DashboardComponent implements OnInit {
 
       case 'STUDENT':
       default: {
-        const studentId = this.authService.currentUser()?.id;
-        const portalObs = studentId
-          ? this.lmsApiService.getStudentPortalSummary(studentId).pipe(catchError(() => of(null)))
-          : of(null);
-        const enrollmentObs = studentId
-          ? this.enrollmentApiService.getEnrollment(studentId, effectiveTermId).pipe(catchError(() => of(null)))
-          : of(null);
+        const portalObs = this.lmsApiService.getMyStudentPortalSummary().pipe(catchError(() => of(null)));
+        const enrollmentObs = this.enrollmentApiService.getMyEnrollment(effectiveTermId).pipe(
+          catchError(() => {
+            const profileId = this.authService.getStudentProfileId();
+            return profileId
+              ? this.enrollmentApiService.getEnrollment(profileId, effectiveTermId).pipe(catchError(() => of(null)))
+              : of(null);
+          })
+        );
 
         forkJoin({
           selfTelemetry: this.analyticsApiService.getStudentSelfTelemetry().pipe(catchError(() => of(null))),

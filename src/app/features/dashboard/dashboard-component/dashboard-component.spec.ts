@@ -162,7 +162,7 @@ describe('DashboardComponent', () => {
   it('should trigger refreshMetrics and invoke telemetry reload', () => {
     const spy = vi.spyOn(component, 'loadMetricsForRole');
     component.refreshMetrics();
-    expect(spy).toHaveBeenCalledWith(component.activeRole(), true);
+    expect(spy).toHaveBeenCalledWith(component.activeRole(), true, undefined);
   });
 
   it('should update displayedMetrics when dynamicRoleMetrics are present', () => {

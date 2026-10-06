@@ -193,9 +193,9 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
         this.loadStudentAttendanceHistory(profile.id);
       },
       error: () => {
-        const userId = this.authService.getUserId();
-        if (userId) {
-          this.loadStudentAttendanceHistory(userId);
+        const studentId = this.authService.getStudentProfileId() || this.authService.getUserId();
+        if (studentId) {
+          this.loadStudentAttendanceHistory(studentId);
         } else {
           this.isLoadingHistory.set(false);
           this.studentHistoryRecords.set([]);
@@ -215,7 +215,7 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
       },
       error: () => {
         // Fallback to numeric endpoint
-        const targetId = studentId || this.studentProfile()?.id || this.authService.getUserId() || 1;
+        const targetId = studentId || this.studentProfile()?.id || this.authService.getStudentProfileId() || this.authService.getUserId() || 1;
         this.analyticsApi.getStudentAttendanceSlice(targetId, 0, 50).subscribe({
           next: (slice) => {
             this.studentHistoryRecords.set(slice?.content || []);
@@ -377,9 +377,9 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
           this.performScanRequest(seed, profile.id);
         },
         error: () => {
-          const userId = this.authService.getUserId();
-          if (userId) {
-            this.performScanRequest(seed, userId);
+          const studentId = this.authService.getStudentProfileId() || this.authService.getUserId();
+          if (studentId) {
+            this.performScanRequest(seed, studentId);
           } else {
             this.isScanning.set(false);
             this.messageService.add({

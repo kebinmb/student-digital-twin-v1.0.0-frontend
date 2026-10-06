@@ -59,15 +59,16 @@ describe('InstitutionManagementComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should have 6 tabs configured', () => {
-    expect(component.tabs.length).toBe(6);
+  it('should have 7 tabs configured', () => {
+    expect(component.tabs.length).toBe(7);
     expect(component.tabs.map(t => t.value)).toEqual([
       'academic-periods',
       'hierarchy',
       'courses',
       'cilo-pilo-matrix',
       'grading-scales',
-      'financials'
+      'financials',
+      'certificates'
     ]);
   });
 

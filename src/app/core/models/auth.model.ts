@@ -32,4 +32,6 @@ export interface UserContext {
   roles: string[];
   collegeId?: number | null;
   programId?: number | null;
+  studentProfileId?: number | null;
+  studentNumber?: string | null;
 }

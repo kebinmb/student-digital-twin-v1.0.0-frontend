@@ -166,9 +166,9 @@ export class DegreeAuditComponent implements OnInit {
   }
 
   private fallbackUserIdAudit(): void {
-    const userId = this.authService.getUserId();
-    if (userId) {
-      this.searchStudentId = userId;
+    const studentId = this.authService.getStudentProfileId() || this.authService.getUserId();
+    if (studentId) {
+      this.searchStudentId = studentId;
       this.runDegreeAudit();
     } else {
       this.isLoading.set(false);

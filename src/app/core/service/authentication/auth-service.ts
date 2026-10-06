@@ -50,6 +50,12 @@ export class AuthService {
         const parsedProgramId = rawProgramId !== undefined && rawProgramId !== null ? Number(rawProgramId) : null;
         const programId = parsedProgramId !== null && !isNaN(parsedProgramId) ? parsedProgramId : null;
 
+        const rawStudentProfileId = payload.student_profile_id ?? payload.studentProfileId;
+        const parsedStudentProfileId = rawStudentProfileId !== undefined && rawStudentProfileId !== null ? Number(rawStudentProfileId) : null;
+        const studentProfileId = parsedStudentProfileId !== null && !isNaN(parsedStudentProfileId) ? parsedStudentProfileId : null;
+
+        const studentNumber = payload.student_number || payload.studentNumber || null;
+
         return {
           id: userId,
           username: payload.preferred_username || payload.username || 'Student User',
@@ -57,7 +63,9 @@ export class AuthService {
           role: primaryRole,
           roles: normalizedRoles,
           collegeId,
-          programId
+          programId,
+          studentProfileId,
+          studentNumber
         };
       } catch {
         return { id: null, username: '', email: '', role: 'GUEST', roles: [] };
@@ -66,6 +74,14 @@ export class AuthService {
 
     getUserId(): number | null {
       return this.currentUser().id;
+    }
+
+    getStudentProfileId(): number | null {
+      return this.currentUser().studentProfileId ?? null;
+    }
+
+    getStudentNumber(): string | null {
+      return this.currentUser().studentNumber ?? null;
     }
 
     hasAnyRole(requiredRoles: string[]): boolean {

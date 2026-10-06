@@ -167,8 +167,8 @@ export class StudentSelfServicePortalComponent implements OnInit, OnDestroy {
   }
 
   private subscribeToRealtimeEvents(): void {
-    const sid = this.authService.getUserId() || 1;
-    this.studentEventsSub = this.lmsApi.subscribeToStudentEvents(sid).subscribe({
+    const studentProfileId = this.authService.getStudentProfileId();
+    this.studentEventsSub = this.lmsApi.subscribeToStudentEvents(studentProfileId || undefined).subscribe({
       next: (event) => {
         if (event.eventType === 'GRADE_RELEASED') {
           this.messageService.add({
@@ -224,11 +224,17 @@ export class StudentSelfServicePortalComponent implements OnInit, OnDestroy {
 
   loadTermPortalData(termId: number): void {
     this.isLoading.set(true);
-    const sid = this.authService.getUserId() || 1;
 
     forkJoin({
-      summary: this.lmsApi.getStudentPortalSummary(sid).pipe(catchError(() => of(null))),
-      enrollment: this.enrollmentApi.getEnrollment(sid, termId).pipe(catchError(() => of(null)))
+      summary: this.lmsApi.getMyStudentPortalSummary().pipe(catchError(() => of(null))),
+      enrollment: this.enrollmentApi.getMyEnrollment(termId).pipe(
+        catchError(() => {
+          const profileId = this.authService.getStudentProfileId();
+          return profileId
+            ? this.enrollmentApi.getEnrollment(profileId, termId).pipe(catchError(() => of(null)))
+            : of(null);
+        })
+      )
     }).subscribe({
       next: ({ summary, enrollment }) => {
         const isEnrolled = enrollment && enrollment.status !== 'NOT_ENROLLED' && enrollment.items && enrollment.items.length > 0;
@@ -247,6 +253,7 @@ export class StudentSelfServicePortalComponent implements OnInit, OnDestroy {
           }));
         }
 
+        const profileId = summary?.studentId || this.authService.getStudentProfileId() || 1;
         if (summary) {
           this.portalData.set({
             ...summary,
@@ -255,8 +262,8 @@ export class StudentSelfServicePortalComponent implements OnInit, OnDestroy {
           this.offlineService.savePass({ ...summary, currentCourses: activeCourses }, this.academicStanding().label);
         } else {
           this.portalData.set({
-            studentId: sid,
-            studentNumber: enrollment?.studentNumber || '',
+            studentId: profileId,
+            studentNumber: enrollment?.studentNumber || this.authService.getStudentNumber() || '',
             studentName: this.authService.currentUser()?.username || 'Student User',
             programCode: 'BSIT',
             yearLevel: 3,
