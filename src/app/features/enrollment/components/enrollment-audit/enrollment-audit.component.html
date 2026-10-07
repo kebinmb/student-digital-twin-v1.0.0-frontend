@@ -1,27 +1,4 @@
 <div class="audit-wrapper">
-
-  <!-- Filter & Term Selector Toolbar -->
-  <div class="audit-toolbar">
-    <div class="filter-item">
-      <label class="filter-label">Academic Term:</label>
-      <p-select 
-        [options]="store.terms()" 
-        optionLabel="termName" 
-        optionValue="id" 
-        [ngModel]="store.selectedTermId()" 
-        (onChange)="onTermSelect($event.value)"
-        placeholder="Select Academic Term"
-        appendTo="body"
-        styleClass="w-72">
-      </p-select>
-    </div>
-
-    <div class="audit-metrics">
-      <span class="metric-label">Total Student Enrollments:</span>
-      <span class="metric-val">{{ store.termEnrollments().length }}</span>
-    </div>
-  </div>
-
   <!-- High-Density Enrollments Audit Table -->
   <div class="table-container">
     <p-table 

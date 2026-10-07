@@ -438,6 +438,10 @@ export class EnrollmentStore {
       this.termEnrollments.set([]);
       return;
     }
+    if (!this.authService.hasAnyRole(['ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR'])) {
+      this.termEnrollments.set([]);
+      return;
+    }
     this.isLoading.set(true);
     this.enrollmentApi.getEnrollmentsByTerm(termId).pipe(
       takeUntilDestroyed(this.destroyRef),

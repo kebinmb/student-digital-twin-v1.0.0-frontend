@@ -13,46 +13,6 @@
   color: var(--chmsu-green-main, #116834);
 }
 
-.clearance-lock-alert {
-  padding: 0.75rem 1rem;
-  margin-top: 0.75rem;
-  border-radius: var(--chmsu-border-radius-md, 8px);
-  background-color: var(--status-amber-bg, #fffbeb);
-  border: 1px solid var(--status-amber-border, #fde68a);
-  color: var(--status-amber-text, #b45309);
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.enrollment-closed-alert {
-  padding: 0.75rem 1rem;
-  margin-top: 0.75rem;
-  border-radius: var(--chmsu-border-radius-md, 8px);
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #991b1b;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.lock-icon {
-  font-size: 1.25rem;
-  color: var(--chmsu-gold-main, #d97706);
-  flex-shrink: 0;
-}
-
-.enrollment-closed-alert .lock-icon {
-  color: #dc2626;
-}
-
-.lock-text {
-  font-size: 0.8125rem;
-  margin-left: 0.25rem;
-  line-height: 1.4;
-}
-
 .header-card {
   background: var(--chmsu-white, #ffffff);
   border: 1px solid var(--chmsu-slate-200, #e2e8f0);
@@ -75,7 +35,7 @@
 }
 
 .module-title {
-  margin: 0 0 0.25rem 0;
+  margin: 0 0 0.75rem 0;
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--chmsu-navy-900, #0f172a);
@@ -128,11 +88,6 @@
   max-width: 100%;
 }
 
-.term-selector-box {
-  width: 16rem;
-  max-width: 100%;
-}
-
 /* Student Meta Information Grid */
 .student-meta-grid {
   display: grid;
@@ -169,10 +124,6 @@
   gap: 0.35rem;
   flex-wrap: wrap;
   margin-top: 0.15rem;
-}
-
-.form-label-icon {
-  color: var(--chmsu-green-main, #116834);
 }
 
 .first-year-badge {
@@ -260,6 +211,7 @@
 
 /* Unit Cap Metric Container */
 .unit-cap-container {
+  margin-top: 10px;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -289,6 +241,75 @@
 .cap-danger {
   color: #dc2626;
   font-weight: 700;
+}
+
+/* Helper Utilities */
+.font-bold-navy {
+  color: var(--chmsu-navy-900, #0f172a);
+  font-weight: 700;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.items-baseline {
+  align-items: baseline;
+}
+
+.gap-xs { gap: 0.25rem; }
+.gap-sm { gap: 0.5rem; }
+.gap-md { gap: 0.75rem; }
+.gap-lg { gap: 1rem; }
+
+.full-width-input {
+  width: 100%;
+}
+
+.full-width-select {
+  width: 100%;
+}
+
+.badge-slate {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  background: var(--chmsu-slate-100, #f1f5f9);
+  color: var(--chmsu-navy-800, #1e293b);
+  padding: 0.125rem 0.4rem;
+  border-radius: 4px;
+  border: 1px solid var(--chmsu-slate-300, #cbd5e1);
+}
+
+.badge-green {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  background: var(--status-emerald-bg, #ecfdf5);
+  color: var(--status-emerald-text, #047857);
+  padding: 0.125rem 0.4rem;
+  border-radius: 4px;
+  border: 1px solid var(--status-emerald-border, #a7f3d0);
 }
 
 /* ==========================================================================
@@ -377,6 +398,7 @@
 .hint-text strong {
   color: var(--chmsu-navy-900, #0f172a);
 }
+
 /* ==========================================================================
    Transferee Classification Callout Alert
    ========================================================================== */
@@ -431,11 +453,11 @@
   color: #78350f;
   font-weight: 700;
 }
+
 /* ==========================================================================
    PrimeNG p-select Component Strict Flex & Icon Alignment Overrides
    ========================================================================== */
 
-/* Dropdown Host Shell */
 :host ::ng-deep .p-select {
   display: inline-flex !important;
   align-items: center !important;
@@ -445,7 +467,6 @@
   box-sizing: border-box !important;
 }
 
-/* Dropdown Selected Label Wrapper */
 :host ::ng-deep .p-select .p-select-label {
   display: flex !important;
   align-items: center !important;
@@ -456,7 +477,6 @@
   overflow: hidden !important;
 }
 
-/* Dropdown Trigger Chevron & Clear Icons */
 :host ::ng-deep .p-select .p-select-dropdown,
 :host ::ng-deep .p-select .p-select-clear-icon {
   display: flex !important;
@@ -467,7 +487,6 @@
   flex-shrink: 0 !important;
 }
 
-/* Filter/Search Bar in Dropdown Overlay */
 :host ::ng-deep .p-select-overlay .p-select-filter {
   height: 2.25rem !important;
   font-size: 0.8125rem !important;
@@ -485,7 +504,6 @@
   pointer-events: none !important;
 }
 
-/* General Input Icon Field Overrides */
 :host ::ng-deep .p-iconfield {
   position: relative !important;
   display: inline-flex !important;
@@ -509,7 +527,6 @@
   height: 2.625rem !important;
 }
 
-/* Custom Dropdown Item Templates */
 .dropdown-item-content {
   display: inline-flex;
   align-items: center;
@@ -536,7 +553,6 @@
   text-overflow: ellipsis;
 }
 
-/* Student Selector Items */
 .student-selected-item {
   display: inline-flex;
   align-items: center;
@@ -562,7 +578,6 @@
   flex-shrink: 0;
 }
 
-/* Import Dropdown Specifics */
 :host ::ng-deep .import-app-dropdown.p-select {
   height: 2.625rem !important;
   background-color: #ffffff !important;
@@ -579,7 +594,6 @@
   box-shadow: 0 0 0 2px rgba(17, 104, 52, 0.15) !important;
 }
 
-/* Progress Bar Overrides */
 :host ::ng-deep .p-progressbar {
   height: 8px !important;
   border-radius: 9999px !important;
@@ -685,7 +699,6 @@
   border-radius: 4px;
 }
 
-/* Filter Controls Inside Table Header */
 .search-filter-container {
   display: flex;
   align-items: center;
@@ -760,7 +773,6 @@
   color: var(--chmsu-navy-700, #334155);
 }
 
-/* Form Fields & Two-Column Rows */
 .form-field {
   display: flex;
   flex-direction: column;
@@ -785,6 +797,7 @@
   color: var(--chmsu-navy-800, #1e293b);
   text-transform: uppercase;
   letter-spacing: 0.03em;
+  margin-bottom: 4px !important;
 }
 
 .required-star {
@@ -799,7 +812,6 @@
   margin-top: 0.15rem;
 }
 
-/* Modal Context Bar */
 .modal-context-bar {
   display: flex;
   align-items: center;
@@ -948,14 +960,12 @@
   gap: 0.375rem;
 }
 
-/* Interactive Equivalency Preview Card */
 .equivalency-preview-card {
   border-radius: var(--chmsu-border-radius-md, 8px);
   background-color: var(--chmsu-slate-50, #f8fafc);
   border: 1px solid var(--chmsu-slate-200, #e2e8f0);
 }
 
-/* Empty State Card */
 .empty-state-cell {
   text-align: center;
   padding: 3rem 1.5rem !important;
@@ -1013,7 +1023,6 @@
   text-underline-offset: 2px;
 }
 
-/* Dialog Headers and Layout */
 .dialog-header-layout {
   display: flex;
   align-items: center;
@@ -1067,7 +1076,6 @@
   align-items: center;
 }
 
-/* Course Context Grid (Section Chooser) */
 .course-context-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -1106,7 +1114,6 @@
   color: var(--chmsu-slate-500, #64748b);
 }
 
-/* Table Container in Modal */
 .dialog-table-container {
   border: 1px solid var(--chmsu-slate-200, #e2e8f0);
   border-radius: 8px;
@@ -1156,7 +1163,6 @@
   box-shadow: 0 0 0 2px #fee2e2;
 }
 
-/* Timetable Rows */
 .timetable-slot-row {
   display: flex;
   align-items: center;
@@ -1183,7 +1189,6 @@
   color: var(--chmsu-navy-900, #0f172a);
 }
 
-/* Capacity Progress Meter Box */
 .capacity-meter-box {
   display: flex;
   flex-direction: column;
@@ -1248,7 +1253,6 @@
   background-color: #dc2626;
 }
 
-/* Footer Status Feedback */
 .footer-status-badge {
   display: inline-flex;
   align-items: center;
@@ -1271,7 +1275,6 @@
   border: 1px solid var(--status-amber-border, #fde68a);
 }
 
-/* Responsive Adaptations */
 @media (max-width: 768px) {
   .header-main {
     flex-direction: column;
@@ -1296,8 +1299,7 @@
     width: 100%;
   }
 
-  .student-switcher-box,
-  .term-selector-box {
+  .student-switcher-box {
     width: 100% !important;
   }
 }

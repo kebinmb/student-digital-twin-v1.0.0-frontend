@@ -8,9 +8,6 @@
           <i class="pi pi-user-edit header-icon-emerald"></i>
           Academic Advising & Subject Enlistment
         </h2>
-        <p class="module-subtitle">
-          CHED CMO No. 25, s. 2015 Three-Tier Compliance: Automated Prerequisite Verification & Unit Cap Gatekeeper
-        </p>
       </div>
 
       <!-- Primary Actions Grouped on Top-Right -->
@@ -82,21 +79,6 @@
       </div>
     </div>
 
-    @if (adv.isClearedForEnrollment === false || (adv.financialClearance && adv.financialClearance !== 'CLEARED') ||
-    (adv.departmentalClearance && adv.departmentalClearance !== 'CLEARED')) {
-    <div class="clearance-lock-alert">
-      <i class="pi pi-lock lock-icon"></i>
-      <div>
-        <strong>Self-Enrollment Gate Locked:</strong>
-        <span class="lock-text">
-          Student account has active administrative holds (Financial: {{ adv.financialClearance || 'CLEARED' }},
-          Departmental: {{ adv.departmentalClearance || 'CLEARED' }}). Course enlistment and confirmation are restricted
-          until all clearances are verified as CLEARED.
-        </span>
-      </div>
-    </div>
-    }
-
     @if (!store.isEnrollmentClosed() || !isStudentUser()) {
     <!-- Unit Cap Progress Bar -->
     <div class="unit-cap-container mt-4">
@@ -127,7 +109,6 @@
     <div class="filter-controls-group">
       <div class="student-switcher-box">
         <label for="student-select" class="form-label">
-          <i class="pi pi-user form-label-icon text-xs"></i>
           <span>Select Student Profile:</span>
         </label>
         <p-select id="student-select" [options]="store.searchedStudents()" [ngModel]="store.studentId()"
@@ -173,18 +154,6 @@
               </div>
             </div>
           </ng-template>
-        </p-select>
-      </div>
-
-      <!-- Academic Term Selector -->
-      <div class="term-selector-box">
-        <label for="term-select" class="form-label">
-          <i class="pi pi-calendar form-label-icon text-xs"></i>
-          <span>Academic Term:</span>
-        </label>
-        <p-select id="term-select" [options]="store.terms()" [ngModel]="store.selectedTermId()"
-          (onChange)="onTermSelect($event.value)" [panelStyle]="{ 'min-width': '18rem' }" optionLabel="termName"
-          optionValue="id" placeholder="Select Term" styleClass="w-full">
         </p-select>
       </div>
     </div>

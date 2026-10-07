@@ -1,49 +1,38 @@
 <!-- File: src/app/features/portal/student-self-service-portal/student-self-service-portal.component.html -->
 <p-toast></p-toast>
 
-<div class="portal-container">
-  <!-- Institutional Header & Toolbar -->
-  <div class="portal-toolbar-card">
+<div class="dashboard-container">
+
+  <!-- 1. Bento Hero Student Identity Cockpit Card -->
+  <div class="dashboard-toolbar-card">
     <div class="header-branding">
-      <div class="header-icon-box">
-        <i class="pi pi-user header-icon"></i>
-      </div>
+      <p-avatar
+        [label]="(portalData()?.studentName || telemetryData()?.fullName || 'S').charAt(0)"
+        size="xlarge"
+        shape="circle"
+        styleClass="identity-avatar flex-shrink-0" />
+
       <div class="header-text-group">
-        <div class="badge-row">
-          <span class="badge-tag green">
-            Student Academic Portal & Digital Twin
-          </span>
-          @if (portalData(); as data) {
-            <p-tag
-              [value]="academicStanding().label"
-              [severity]="academicStanding().severity"
-              [icon]="'pi ' + academicStanding().icon"
-              styleClass="standing-tag"
-            ></p-tag>
-          }
-          @if (telemetryData(); as telemetry) {
-            <p-tag
-              [value]="'Risk: ' + telemetry.riskLevel"
-              [severity]="getRiskSeverity(telemetry.riskLevel)"
-              icon="pi pi-shield"
-              styleClass="standing-tag"
-            ></p-tag>
-          }
-        </div>
-        <h1 class="header-title">Welcome Back, {{ portalData()?.studentName || telemetryData()?.fullName || 'Student' }}</h1>
+
+        <h1 class="header-title">
+          {{ portalData()?.studentName || telemetryData()?.fullName || 'Student' }}
+        </h1>
         <p class="header-subtitle">
-          Student ID: <span class="font-mono-bold">{{ portalData()?.studentNumber || '—' }}</span> &middot;
-          Program: <span class="font-semibold-navy">{{ portalData()?.programCode || '—' }}</span> &middot;
+          Student ID: <span class="font-mono-bold">{{ portalData()?.studentNumber || '—' }}</span> &bull;
+          Program: <span class="font-semibold-navy">{{ portalData()?.programCode || '—' }}</span> &bull;
           Year Level: <span class="font-semibold-navy">Year {{ portalData()?.yearLevel || '1' }}</span>
         </p>
       </div>
     </div>
-    <div class="header-actions-group flex items-center gap-2">
+
+    <!-- Header Actions -->
+    <div class="header-actions-group">
       @if (!offlineService.isOnline()) {
         <p-tag
           value="Offline Mode"
           severity="warn"
           icon="pi pi-wifi"
+          [rounded]="true"
           pTooltip="Offline cached campus pass active"
           tooltipPosition="bottom">
         </p-tag>
@@ -51,13 +40,14 @@
       <p-button
         label="Digital Campus Pass"
         icon="pi pi-id-card"
-        severity="help"
+        severity="secondary"
         [outlined]="true"
         size="small"
         (onClick)="openOfflinePass()"
         pTooltip="View offline verified student ID, barcode & schedule pass"
-        tooltipPosition="bottom">
-      </p-button>
+        tooltipPosition="bottom"
+        aria-label="View Digital Campus Pass" />
+
       @if (webPushService.isSupported()) {
         <p-button
           [label]="webPushService.isSubscribed() ? 'Push Active' : 'Enable Push'"
@@ -68,8 +58,9 @@
           [loading]="webPushService.isLoading()"
           (onClick)="toggleWebPush()"
           [pTooltip]="webPushService.isSubscribed() ? 'Browser push alerts active (' + webPushService.activeDevices() + ' device). Click to pause.' : 'Enable real-time background browser notifications for grades & clearance'"
-          tooltipPosition="bottom">
-        </p-button>
+          tooltipPosition="bottom"
+          [attr.aria-label]="webPushService.isSubscribed() ? 'Pause browser push notifications' : 'Enable browser push notifications'" />
+
         @if (webPushService.isSubscribed()) {
           <p-button
             icon="pi pi-sliders-h"
@@ -78,116 +69,242 @@
             size="small"
             (onClick)="openPushPreferences()"
             pTooltip="Configure push notification alert categories"
-            tooltipPosition="bottom">
-          </p-button>
+            tooltipPosition="bottom"
+            aria-label="Configure Push Notification Preferences" />
         }
       }
+
       @if (academicStanding().label.includes('List')) {
         <p-button
           label="Honor Certificate"
           icon="pi pi-file-pdf"
-          severity="warn"
+          severity="secondary"
           [outlined]="true"
           size="small"
           (onClick)="openHonorCertificate()"
           pTooltip="View and print official academic honor certificate"
-          tooltipPosition="bottom">
-        </p-button>
+          tooltipPosition="bottom"
+          aria-label="View Academic Honor Certificate" />
       }
+
       <p-button
         label="Refresh Portal"
         icon="pi pi-refresh"
         severity="secondary"
-        [outlined]="true"
+        [text]="true"
         size="small"
         [loading]="isLoading() || isLoadingTelemetry()"
         (onClick)="loadPortalSummary(); loadSelfTelemetry()"
         pTooltip="Synchronize latest academic and telemetry records"
         tooltipPosition="bottom"
-      ></p-button>
+        aria-label="Refresh Portal Summary Data" />
     </div>
   </div>
 
-  <!-- DIGITAL TWIN WELLNESS & TELEMETRY SECTION -->
-  @if (telemetryData(); as telemetry) {
-    <div class="twin-telemetry-banner">
-      <div class="twin-left-col">
-        <div class="wellness-ring-card">
-          <div class="wellness-header">
-            <span class="twin-badge">Digital Twin Wellness Index</span>
-            <span class="sync-text">Updated {{ telemetry.lastSync | date:'shortTime' }}</span>
-          </div>
-          <div class="knob-container">
-            <p-knob
-              [ngModel]="telemetry.wellnessScore"
-              [readonly]="true"
-              [size]="130"
-              [strokeWidth]="10"
-              valueTemplate="{value}%"
-              [valueColor]="getWellnessColor(telemetry.wellnessScore)"
-              rangeColor="#e2e8f0"
-            ></p-knob>
-          </div>
-          <div class="wellness-caption">
-            <span class="status-pill" [style.background]="getWellnessColor(telemetry.wellnessScore) + '22'" [style.color]="getWellnessColor(telemetry.wellnessScore)">
-              {{ telemetry.wellnessScore >= 75 ? 'Optimal Progress' : (telemetry.wellnessScore >= 50 ? 'Steady Engagement' : 'Needs Support') }}
-            </span>
+  <!-- 2. Bento 4-Column Metric Grid (Academic Metrics & Multi-Department Clearances) -->
+  @if (portalData(); as data) {
+    <div class="bento-grid-4col mb-4">
+      <!-- Accounting & Cashier Clearance Bento Card -->
+      <div class="bento-card stat-card">
+        <div class="tile-header">
+          <span class="stat-label">Accounting & Cashier</span>
+          <div class="tile-icon-box amber">
+            <i class="pi pi-wallet" aria-hidden="true"></i>
           </div>
         </div>
+        <div class="tag-wrapper">
+          <p-tag
+            [value]="data.financialClearance"
+            [severity]="getClearanceSeverity(data.financialClearance)"
+            [icon]="data.financialClearance === 'CLEARED' ? 'pi pi-check' : 'pi pi-exclamation-triangle'"
+            [rounded]="true" />
+        </div>
+        <div class="tile-caption">Tuition Assessment & Cashier Audit</div>
       </div>
 
-      <div class="twin-right-col">
-        <div class="dimension-grid">
-          @for (dim of dimensionEntries(); track dim.name) {
-            <div class="dim-card">
-              <div class="dim-header">
-                <span class="dim-name">{{ dim.name }}</span>
-                <span class="dim-val font-mono">{{ dim.score }}%</span>
-              </div>
-              <p-progressbar [value]="dim.score" [showValue]="false" styleClass="dim-bar" [style]="{'height': '8px'}"></p-progressbar>
-            </div>
-          }
-        </div>
-
-        @if (telemetry.milestones && telemetry.milestones.length > 0) {
-          <div class="milestones-row">
-            <span class="milestone-title"><i class="pi pi-sparkles"></i> Milestones:</span>
-            <div class="milestone-chips">
-              @for (m of telemetry.milestones; track m.id) {
-                <span class="milestone-chip" [pTooltip]="m.description" tooltipPosition="top">
-                  <i class="pi pi-check-circle"></i> {{ m.title }}
-                </span>
-              }
-            </div>
+      <!-- College Dean Clearance Bento Card -->
+      <div class="bento-card stat-card">
+        <div class="tile-header">
+          <span class="stat-label">College Dean</span>
+          <div class="tile-icon-box green">
+            <i class="pi pi-building" aria-hidden="true"></i>
           </div>
-        }
+        </div>
+        <div class="tag-wrapper">
+          <p-tag
+            [value]="data.departmentalClearance"
+            [severity]="getClearanceSeverity(data.departmentalClearance)"
+            [icon]="data.departmentalClearance === 'CLEARED' ? 'pi pi-check' : 'pi pi-info-circle'"
+            [rounded]="true" />
+        </div>
+        <div class="tile-caption">Academic Program & Department Sign-off</div>
+      </div>
+
+      <!-- University Library Clearance Bento Card -->
+      <div class="bento-card stat-card">
+        <div class="tile-header">
+          <span class="stat-label">University Library</span>
+          <div class="tile-icon-box blue">
+            <i class="pi pi-bookmark" aria-hidden="true"></i>
+          </div>
+        </div>
+        <div class="tag-wrapper">
+          <p-tag
+            [value]="data.departmentalClearance"
+            [severity]="getClearanceSeverity(data.departmentalClearance)"
+            [icon]="data.departmentalClearance === 'CLEARED' ? 'pi pi-check' : 'pi pi-info-circle'"
+            [rounded]="true" />
+        </div>
+        <div class="tile-caption">Book Returns & Circulation Audit</div>
+      </div>
+
+      <!-- Science & Computer Lab Clearance Bento Card -->
+      <div class="bento-card stat-card">
+        <div class="tile-header">
+          <span class="stat-label">Science & Computer Lab</span>
+          <div class="tile-icon-box purple">
+            <i class="pi pi-desktop" aria-hidden="true"></i>
+          </div>
+        </div>
+        <div class="tag-wrapper">
+          <p-tag
+            [value]="data.departmentalClearance"
+            [severity]="getClearanceSeverity(data.departmentalClearance)"
+            [icon]="data.departmentalClearance === 'CLEARED' ? 'pi pi-check' : 'pi pi-info-circle'"
+            [rounded]="true" />
+        </div>
+        <div class="tile-caption">Apparatus & Terminal Sign-off</div>
+      </div>
+
+      <!-- Student Affairs Clearance Bento Card -->
+      <div class="bento-card stat-card">
+        <div class="tile-header">
+          <span class="stat-label">Student Affairs</span>
+          <div class="tile-icon-box amber">
+            <i class="pi pi-users" aria-hidden="true"></i>
+          </div>
+        </div>
+        <div class="tag-wrapper">
+          <p-tag
+            [value]="data.departmentalClearance"
+            [severity]="getClearanceSeverity(data.departmentalClearance)"
+            [icon]="data.departmentalClearance === 'CLEARED' ? 'pi pi-check' : 'pi pi-info-circle'"
+            [rounded]="true" />
+        </div>
+        <div class="tile-caption">Discipline, Guidance & Activity Audit</div>
+      </div>
+
+      <!-- Overall Term Clearance Status Bento Card -->
+      <div class="bento-card stat-card">
+        <div class="tile-header">
+          <span class="stat-label">Overall Term Clearance</span>
+          <div class="tile-icon-box green">
+            <i class="pi pi-shield" aria-hidden="true"></i>
+          </div>
+        </div>
+        <div class="tag-wrapper">
+          <p-tag
+            [value]="data.financialClearance === 'CLEARED' && data.departmentalClearance === 'CLEARED' ? 'CLEARED FOR ENROLMENT' : 'CLEARANCE PENDING'"
+            [severity]="data.financialClearance === 'CLEARED' && data.departmentalClearance === 'CLEARED' ? 'success' : 'warn'"
+            [rounded]="true" />
+        </div>
+        <div class="tile-caption">Unified Gate & Enrollment Clearance</div>
       </div>
     </div>
+  }
 
-    <!-- Active Support Recommendations & Acknowledgment Banner -->
-    @if (telemetry.recommendations && telemetry.recommendations.length > 0) {
-      <div class="recommendations-container">
-        <div class="rec-header">
-          <div class="rec-title-group">
-            <i class="pi pi-bell rec-bell-icon"></i>
-            <div>
-              <h3 class="rec-heading">Advisory Support & Interventions</h3>
-              <p class="rec-subheading">Personalized academic and counseling recommendations from your digital twin</p>
-            </div>
+  <!-- 3. Self-Service Action Center Bento Split Grid -->
+  @if (portalData(); as data) {
+    <div class="two-column-grid">
+      <!-- Self-Service Enrolment Card -->
+      <div class="bento-card content-card">
+        <div class="bento-card-header">
+          <div>
+            <h3 class="bento-card-title">
+              <i class="pi pi-users header-icon-sm" aria-hidden="true"></i> Self-Service Enrolment
+            </h3>
+            <p class="bento-card-subtitle">Enlist in section slots and submit semester load</p>
           </div>
         </div>
-        <div class="rec-list">
+        <div class="action-card-body">
+          <p class="action-description">
+            Register for available class section slots, build your weekly timetable schedule, and confirm your official term study load.
+          </p>
+          <div class="action-footer">
+            <span class="font-semibold-navy">Active Load: <strong>{{ totalActiveUnits() }} Units</strong></span>
+            <p-button
+              label="Launch Self-Enrolment"
+              icon="pi pi-th-large"
+              severity="primary"
+              size="small"
+              (onClick)="navigateToEnrolment()"
+              pTooltip="Select section slots & confirm official term enrollment"
+              tooltipPosition="top"
+              aria-label="Launch Self-Enrolment Module" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Course Advising & Degree Audit Card -->
+      <div class="bento-card content-card">
+        <div class="bento-card-header">
+          <div>
+            <h3 class="bento-card-title">
+              <i class="pi pi-chart-bar header-icon-sm" aria-hidden="true"></i> Course Advising & Degree Audit
+            </h3>
+            <p class="bento-card-subtitle">Verify CHED CMO prospectus pre-requisite progress</p>
+          </div>
+        </div>
+        <div class="action-card-body">
+          <p class="action-description">
+            Audit your degree curriculum checklist, check pre-requisite compliance, and view recommended subject course sequences.
+          </p>
+          <div class="action-footer">
+            <span class="font-semibold-navy">Earned: <strong>{{ data.totalUnitsEarned }} Units</strong></span>
+            <p-button
+              label="View Course Advising"
+              icon="pi pi-list"
+              severity="secondary"
+              [outlined]="true"
+              size="small"
+              [routerLink]="'/dashboard/compliance/audit'"
+              pTooltip="Audit degree prospectus progress and pre-requisite eligibility"
+              tooltipPosition="top"
+              aria-label="View Course Advising & Degree Audit Module" />
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- 4. Advisory Support & Interventions Bento Card -->
+  @if (telemetryData(); as telemetry) {
+    @if (telemetry.recommendations && telemetry.recommendations.length > 0) {
+      <div class="bento-card table-card">
+        <div class="bento-card-header">
+          <div>
+            <h3 class="bento-card-title">
+              <i class="pi pi-lightbulb header-icon-amber" aria-hidden="true"></i> Advisory Support & Interventions
+            </h3>
+            <p class="bento-card-subtitle">Personalized academic and counseling recommendations from your digital twin</p>
+          </div>
+        </div>
+
+        <div class="advisory-list">
           @for (rec of telemetry.recommendations; track rec.id) {
-            <div class="rec-card" [class.acknowledged]="rec.status === 'ACKNOWLEDGED' || rec.status === 'RESOLVED'">
-              <div class="rec-content">
-                <div class="rec-badge-row">
-                  <p-tag [value]="rec.interventionType" severity="info" size="small"></p-tag>
-                  <p-tag [value]="rec.status" [severity]="rec.status === 'ACKNOWLEDGED' || rec.status === 'RESOLVED' ? 'success' : 'warn'" size="small"></p-tag>
-                </div>
-                <p class="rec-text">{{ rec.triggerReason }}</p>
-                <span class="rec-timestamp">Dispatched: {{ rec.dispatchedAt | date:'mediumDate' }}</span>
+            <div class="advisory-item">
+              <div class="advisory-icon-wrapper">
+                <i class="pi pi-bell" aria-hidden="true"></i>
               </div>
-              <div class="rec-action">
+              <div class="advisory-content">
+                <div class="badge-row">
+                  <p-tag [value]="rec.interventionType" severity="info" [rounded]="true" size="small"></p-tag>
+                  <p-tag [value]="rec.status" [severity]="rec.status === 'ACKNOWLEDGED' || rec.status === 'RESOLVED' ? 'success' : 'warn'" [rounded]="true" size="small"></p-tag>
+                </div>
+                <div class="advisory-text">{{ rec.triggerReason }}</div>
+                <div class="advisory-subtext">Dispatched: {{ rec.dispatchedAt | date:'mediumDate' }}</div>
+              </div>
+              <div class="advisory-action">
                 @if (rec.status !== 'ACKNOWLEDGED' && rec.status !== 'RESOLVED') {
                   <p-button
                     label="Acknowledge"
@@ -198,10 +315,10 @@
                     (onClick)="acknowledgeIntervention(rec)"
                     pTooltip="Confirm you have received and read this recommendation"
                     tooltipPosition="left"
-                  ></p-button>
+                    [attr.aria-label]="'Acknowledge recommendation: ' + rec.triggerReason" />
                 } @else {
-                  <span class="acknowledged-tag">
-                    <i class="pi pi-check-circle"></i> Acknowledged
+                  <span class="acknowledged-status">
+                    <i class="pi pi-check-circle" aria-hidden="true"></i> Acknowledged
                   </span>
                 }
               </div>
@@ -212,176 +329,86 @@
     }
   }
 
+  <!-- 5. Active Term Enrolled Subjects Table Bento Card -->
   @if (isLoading()) {
-    <!-- Loading Skeletons -->
-    <div class="stat-grid mb-4">
-      <p-skeleton height="110px" borderRadius="12px"></p-skeleton>
-      <p-skeleton height="110px" borderRadius="12px"></p-skeleton>
-      <p-skeleton height="110px" borderRadius="12px"></p-skeleton>
-      <p-skeleton height="110px" borderRadius="12px"></p-skeleton>
-    </div>
-    <div class="table-card">
+    <div class="bento-card table-card">
       <p-skeleton height="40px" styleClass="mb-3" borderRadius="8px"></p-skeleton>
       <p-skeleton height="200px" borderRadius="8px"></p-skeleton>
     </div>
   } @else if (portalData(); as data) {
-    <!-- Self-Service Enrolment & Academic Advising Action Banner -->
-    <div class="enrolment-card mb-4 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex flex-wrap items-center justify-between gap-3 shadow-sm">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-lg bg-emerald-700 text-white flex items-center justify-center font-bold text-lg flex-shrink-0">
-          <i class="pi pi-user-plus"></i>
-        </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <h2 class="text-base font-bold text-slate-900 m-0">Self-Service Enrolment & Course Advising</h2>
-            <p-tag
-              [value]="data.financialClearance === 'CLEARED' && data.departmentalClearance === 'CLEARED' ? 'CLEARED FOR ENROLMENT' : 'CLEARANCE PENDING'"
-              [severity]="data.financialClearance === 'CLEARED' && data.departmentalClearance === 'CLEARED' ? 'success' : 'warn'"
-              [rounded]="true"
-              size="small"
-            ></p-tag>
-          </div>
-          <p class="text-xs text-slate-600 m-0 mt-1">
-            Enlist in active term class sections, evaluate CHED CMO 25 prerequisites, and confirm official enrollment.
-          </p>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-2">
-        <p-button
-          label="Proceed to Self-Enrolment"
-          icon="pi pi-arrow-right"
-          severity="success"
-          size="small"
-          [routerLink]="'/dashboard/enrollment'"
-          pTooltip="Select section slots & confirm term enrollment"
-          tooltipPosition="left"
-        ></p-button>
-      </div>
-    </div>
-
-    <!-- Academic Snapshot Metrics Bento Grid -->
-    <div class="stat-grid">
-      <!-- Cumulative GPA Card -->
-      <div class="stat-card hover-lift">
-        <div class="stat-icon-box green">
-          <i class="pi pi-graduation-cap"></i>
-        </div>
-        <div class="stat-info">
-          <span class="stat-label">Cumulative GPA</span>
-          <span class="stat-val font-mono">{{ data.cumulativeGpa }}</span>
-          <span class="stat-subtext">Scale: 1.00 (Highest) - 3.00 (Passing)</span>
-        </div>
-      </div>
-
-      <!-- Total Units Earned Card -->
-      <div class="stat-card hover-lift">
-        <div class="stat-icon-box blue">
-          <i class="pi pi-book"></i>
-        </div>
-        <div class="stat-info">
-          <span class="stat-label">Units Earned</span>
-          <span class="stat-val font-mono">{{ data.totalUnitsEarned }} Units</span>
-          <span class="stat-subtext green-text">
-            <i class="pi pi-check-circle"></i> {{ totalActiveUnits() }} Active Units Enrolled
-          </span>
-        </div>
-      </div>
-
-      <!-- Financial Status Clearance Card -->
-      <div class="stat-card hover-lift">
-        <div class="stat-icon-box amber">
-          <i class="pi pi-wallet"></i>
-        </div>
-        <div class="stat-info">
-          <span class="stat-label">Financial Clearance</span>
-          <div class="tag-wrapper">
-            <p-tag
-              [value]="data.financialClearance"
-              [severity]="getClearanceSeverity(data.financialClearance)"
-              [icon]="data.financialClearance === 'CLEARED' ? 'pi pi-check' : 'pi pi-exclamation-triangle'"
-            ></p-tag>
-          </div>
-          <span class="stat-subtext">Cashier & Assessment Ledger Audit</span>
-        </div>
-      </div>
-
-      <!-- Departmental Clearance Card -->
-      <div class="stat-card hover-lift">
-        <div class="stat-icon-box purple">
-          <i class="pi pi-shield"></i>
-        </div>
-        <div class="stat-info">
-          <span class="stat-label">Dept. Clearance</span>
-          <div class="tag-wrapper">
-            <p-tag
-              [value]="data.departmentalClearance"
-              [severity]="getClearanceSeverity(data.departmentalClearance)"
-              [icon]="data.departmentalClearance === 'CLEARED' ? 'pi pi-check' : 'pi pi-info-circle'"
-            ></p-tag>
-          </div>
-          <span class="stat-subtext">Dean & Library Sign-off</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Enrolled Courses Master-Detail Card -->
-    <div class="table-card">
-      <div class="table-card-header">
-        <div class="title-group">
-          <h2 class="table-title">
-            <i class="pi pi-calendar icon-green"></i> Active Term Enrolled Subjects
-          </h2>
-          <span class="subject-count-badge">
-            Showing {{ filteredCourses().length }} of {{ data.currentCourses.length }} Subjects Enrolled
-          </span>
+    <div class="bento-card table-card">
+      <!-- Table Header Toolbar -->
+      <div class="table-toolbar">
+        <div class="toolbar-heading">
+          <i class="pi pi-calendar header-icon-sm" aria-hidden="true"></i>
+          <h3 class="section-title">Active Term Enrolled Subjects</h3>
         </div>
 
+        <!-- Search Control -->
         <div class="toolbar-controls">
-          <!-- Search Filter Control -->
-          <div class="search-box">
-            <i class="pi pi-search search-icon"></i>
+          <div class="search-wrapper">
+            <i class="pi pi-search search-icon" aria-hidden="true"></i>
+            <label for="student-subject-search" class="sr-only">Search enrolled subjects</label>
             <input
+              id="student-subject-search"
               type="text"
               pInputText
               placeholder="Search code, title, schedule..."
               [ngModel]="searchQuery()"
               (ngModelChange)="searchQuery.set($event)"
-              class="search-input"
-            />
+              aria-label="Search enrolled subjects by code, title, or schedule" />
             @if (searchQuery()) {
-              <button class="clear-btn" (click)="clearSearch()" pTooltip="Clear Search" tooltipPosition="top">
-                <i class="pi pi-times"></i>
+              <button
+                type="button"
+                class="search-clear-btn"
+                (click)="clearSearch()"
+                pTooltip="Clear Search"
+                tooltipPosition="top"
+                aria-label="Clear subject search query">
+                <i class="pi pi-times" aria-hidden="true"></i>
               </button>
             }
           </div>
         </div>
       </div>
 
-      <!-- PrimeNG Subject Table -->
+      <!-- Institutional PrimeNG Table -->
       <p-table
-        [value]="filteredCourses()"
-        [paginator]="true"
-        [rows]="10"
-        [rowsPerPageOptions]="[5, 10, 20]"
-        styleClass="institutional-table"
-        responsiveLayout="scroll"
-        [rowHover]="true"
-      >
+  [value]="filteredCourses()"
+  [paginator]="true"
+  [rows]="10"
+  [showCurrentPageReport]="true"
+  currentPageReportTemplate="Showing {first} to {last} of {totalRecords} subjects"
+  [rowsPerPageOptions]="[5, 10, 20]"
+  paginatorDropdownAppendTo="body"
+  class="institutional-table p-datatable-striped p-datatable-gridlines"
+  responsiveLayout="scroll"
+  [rowHover]="true"
+>
         <ng-template pTemplate="header">
           <tr>
-            <th style="width: 3rem;"></th>
-            <th>Course Code</th>
-            <th>Course Title</th>
-            <th class="text-center">Units</th>
-            <th>Schedule & Room</th>
-            <th class="text-center">Grade Status</th>
-            <th class="text-center">Current Grade</th>
+            <th scope="col" style="width: 3rem;"><span class="sr-only">Expand Row</span></th>
+            <th scope="col" pSortableColumn="courseCode">
+              Course Code <p-sortIcon field="courseCode" />
+            </th>
+            <th scope="col" pSortableColumn="courseTitle">
+              Course Title <p-sortIcon field="courseTitle" />
+            </th>
+            <th scope="col" pSortableColumn="creditUnits" class="text-center" style="width: 6rem">
+              Units <p-sortIcon field="creditUnits" />
+            </th>
+            <th scope="col">Schedule & Room</th>
+            <th scope="col" pSortableColumn="gradeStatus" class="text-center">
+              Grade Status <p-sortIcon field="gradeStatus" />
+            </th>
+            <th scope="col" pSortableColumn="currentGrade" class="text-center" style="width: 8rem">
+              Current Grade <p-sortIcon field="currentGrade" />
+            </th>
           </tr>
         </ng-template>
 
         <ng-template pTemplate="body" let-course>
-          <tr [class.expanded-row]="expandedSectionId() === course.sectionId">
+          <tr [class.surface-100]="expandedSectionId() === course.sectionId">
             <td class="text-center">
               <p-button
                 [icon]="expandedSectionId() === course.sectionId ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
@@ -390,22 +417,26 @@
                 size="small"
                 severity="secondary"
                 (onClick)="toggleCourseExpand(course.sectionId)"
-                pTooltip="Toggle subject details"
+                pTooltip="View details"
                 tooltipPosition="right"
-              ></p-button>
+                [attr.aria-expanded]="expandedSectionId() === course.sectionId"
+                [attr.aria-controls]="'detail-panel-' + course.sectionId"
+                [attr.aria-label]="'Toggle details for subject ' + course.courseCode" />
             </td>
-            <td class="font-bold-green font-mono">{{ course.courseCode }}</td>
-            <td class="font-bold-navy">{{ course.courseTitle }}</td>
+            <td class="font-mono-bold text-primary">{{ course.courseCode }}</td>
+            <td class="font-bold text-900">{{ course.courseTitle }}</td>
             <td class="text-center font-mono font-bold">{{ course.creditUnits }}</td>
-            <td class="schedule-text">
-              <i class="pi pi-clock schedule-icon"></i> {{ course.scheduleText }}
+            <td class="text-xs">
+              <div class="schedule-cell flex align-items-center gap-1">
+                <i class="pi pi-clock text-400" aria-hidden="true"></i>
+                <span>{{ course.scheduleText }}</span>
+              </div>
             </td>
             <td class="text-center">
               <p-tag
                 [value]="course.gradeStatus || 'DRAFT'"
                 severity="secondary"
-                styleClass="status-sub-tag"
-              ></p-tag>
+                [rounded]="true" />
             </td>
             <td class="text-center">
               <span class="grade-chip" [class]="'grade-chip-' + getGradeSeverity(course.currentGrade)">
@@ -416,30 +447,28 @@
 
           <!-- Expandable Detail Row Panel -->
           @if (expandedSectionId() === course.sectionId) {
-            <tr class="detail-panel-row">
-              <td colspan="7">
-                <div class="expand-detail-container">
-                  <div class="detail-grid">
-                    <div class="detail-item">
-                      <span class="detail-label">Class Section Code</span>
-                      <span class="detail-val font-mono-bold">{{ course.sectionCode }}</span>
+            <tr>
+              <td colspan="7" class="p-0 border-none">
+                <div [id]="'detail-panel-' + course.sectionId" class="drawer-def-panel">
+                  <div class="drawer-def-grid">
+                    <div class="drawer-def-item">
+                      <span class="drawer-def-label">Class Section Code</span>
+                      <span class="font-mono-bold text-sm">{{ course.sectionCode }}</span>
                     </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Section Reference ID</span>
-                      <span class="detail-val font-mono">#SEC-{{ course.sectionId }}</span>
+                    <div class="drawer-def-item">
+                      <span class="drawer-def-label">Section Reference ID</span>
+                      <span class="font-mono text-sm">#SEC-{{ course.sectionId }}</span>
                     </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Assigned Schedule</span>
-                      <span class="detail-val">{{ course.scheduleText }}</span>
+                    <div class="drawer-def-item">
+                      <span class="drawer-def-label">Assigned Schedule</span>
+                      <span class="text-sm">{{ course.scheduleText }}</span>
                     </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Grading Verification</span>
-                      <span class="detail-val">
-                        <p-tag
-                          [value]="course.gradeStatus === 'VERIFIED' ? 'Verified by Registrar' : (course.gradeStatus || 'Draft Enlistment')"
-                          [severity]="course.gradeStatus === 'VERIFIED' ? 'success' : 'info'"
-                        ></p-tag>
-                      </span>
+                    <div class="drawer-def-item">
+                      <span class="drawer-def-label">Grading Verification</span>
+                      <p-tag
+                        [value]="course.gradeStatus === 'VERIFIED' ? 'Verified by Registrar' : (course.gradeStatus || 'Draft Enlistment')"
+                        [severity]="course.gradeStatus === 'VERIFIED' ? 'success' : 'info'"
+                        [rounded]="true" />
                     </div>
                   </div>
                 </div>
@@ -448,10 +477,10 @@
           }
         </ng-template>
 
-        <!-- Integrated Shared Empty State Primitive -->
+        <!-- Empty State -->
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="7" class="empty-state-cell">
+            <td colspan="7" class="text-center py-6">
               @if (searchQuery()) {
                 <app-empty-state
                   icon="pi pi-search"
@@ -459,15 +488,13 @@
                   [description]="'No enrolled courses match your query \'' + searchQuery() + '\'. Try adjusting search terms.'"
                   actionLabel="Clear Search"
                   actionIcon="pi pi-filter-slash"
-                  (actionClick)="clearSearch()"
-                ></app-empty-state>
+                  (actionClick)="clearSearch()" />
               } @else {
                 <app-empty-state
                   icon="pi pi-book"
                   title="No Active Enrolled Subjects"
                   description="You currently have no active subject enrollments recorded for this academic term."
-                  severity="info"
-                ></app-empty-state>
+                  severity="info" />
               }
             </td>
           </tr>
@@ -475,8 +502,8 @@
       </p-table>
     </div>
   }
-
-  <!-- Offline Digital Campus Pass & Barcode Modal Dialog -->
+  <!-- Modal Dialogs (Preserved Signal Bindings) -->
+  <!-- Digital Pass Dialog -->
   <p-dialog
     header="Official Student Digital ID & Gate Pass"
     [visible]="isOfflinePassOpen()"
@@ -487,74 +514,68 @@
     [contentStyle]="{ 'overflow-x': 'hidden' }">
 
     @if (portalData(); as data) {
-      <div class="campus-pass-container p-4 bg-gradient-to-b from-slate-50 to-white rounded-xl border border-slate-200 space-y-4">
-        <!-- University Header Badge -->
-        <div class="text-center pb-2 border-b border-slate-200">
-          <div class="flex items-center justify-center gap-2 mb-1">
-            <span class="w-2.5 h-2.5 rounded-full" [class.bg-emerald-500]="offlineService.isOnline()" [class.bg-amber-500]="!offlineService.isOnline()"></span>
-            <span class="text-xs font-bold tracking-wider text-slate-600 uppercase">
+      <div class="dialog-pass-body">
+        <div class="pass-header-strip">
+          <div class="pass-online-dot">
+            <span class="live-dot-badge" [class.online]="offlineService.isOnline()"></span>
+            <span class="pass-status-text">
               {{ offlineService.isOnline() ? 'Live Verified Digital Twin Pass' : 'Offline Cached Gate Pass' }}
             </span>
           </div>
-          <h2 class="text-lg font-extrabold text-slate-900 m-0 tracking-tight">STUDENT IDENTITY PASS</h2>
+          <h2 class="pass-title">STUDENT IDENTITY PASS</h2>
         </div>
 
-        <!-- Student Photo / Details -->
-        <div class="flex items-center gap-4 bg-white p-3 rounded-lg border border-slate-100 shadow-xs">
-          <div class="w-16 h-16 rounded-full bg-emerald-700 text-white flex items-center justify-center font-bold text-2xl flex-shrink-0 shadow-sm">
+        <div class="pass-profile-card">
+          <div class="pass-avatar">
             {{ (data.studentName || 'S').charAt(0) }}
           </div>
-          <div class="space-y-0.5">
-            <h3 class="text-base font-bold text-slate-900 m-0">{{ data.studentName }}</h3>
-            <div class="text-xs font-mono font-semibold text-emerald-800">{{ data.studentNumber }}</div>
-            <div class="text-xs text-slate-600">{{ data.programCode }} &middot; Year {{ data.yearLevel }}</div>
+          <div class="pass-meta">
+            <h3 class="pass-name">{{ data.studentName }}</h3>
+            <div class="pass-number font-mono">{{ data.studentNumber }}</div>
+            <div class="pass-program">{{ data.programCode }} &middot; Year {{ data.yearLevel }}</div>
           </div>
         </div>
 
-        <!-- Scannable Barcode Box -->
-        <div class="barcode-box bg-white p-3 rounded-lg border border-slate-200 text-center shadow-xs">
-          <span class="text-[10px] font-bold tracking-widest text-slate-500 uppercase block mb-1">Scan for Campus Entry & Library Check-In</span>
-          <div [innerHTML]="getBarcodeSvg()" class="flex justify-center items-center overflow-hidden"></div>
+        <div class="pass-barcode-box">
+          <span class="barcode-label">Scan for Campus Entry & Library Check-In</span>
+          <div [innerHTML]="getBarcodeSvg()" class="barcode-svg-container"></div>
         </div>
 
-        <!-- Clearance & Standing Badges -->
-        <div class="grid grid-cols-2 gap-2 text-center">
-          <div class="p-2 bg-slate-50 rounded border border-slate-200">
-            <span class="text-[10px] text-slate-500 block uppercase font-bold">Financial Clearance</span>
-            <span class="text-xs font-bold font-mono" [class.text-emerald-700]="data.financialClearance === 'CLEARED'" [class.text-amber-700]="data.financialClearance !== 'CLEARED'">
+        <div class="pass-clearance-row">
+          <div class="pass-clearance-col">
+            <span class="clearance-label">Financial Clearance</span>
+            <span class="clearance-val font-mono" [class.cleared]="data.financialClearance === 'CLEARED'">
               {{ data.financialClearance }}
             </span>
           </div>
-          <div class="p-2 bg-slate-50 rounded border border-slate-200">
-            <span class="text-[10px] text-slate-500 block uppercase font-bold">Dept. Clearance</span>
-            <span class="text-xs font-bold font-mono" [class.text-emerald-700]="data.departmentalClearance === 'CLEARED'" [class.text-amber-700]="data.departmentalClearance !== 'CLEARED'">
+          <div class="pass-clearance-col">
+            <span class="clearance-label">Dept. Clearance</span>
+            <span class="clearance-val font-mono" [class.cleared]="data.departmentalClearance === 'CLEARED'">
               {{ data.departmentalClearance }}
             </span>
           </div>
         </div>
 
-        <!-- Compact Course Schedule Summary -->
-        <div class="schedule-summary pt-2">
-          <div class="text-xs font-bold text-slate-800 mb-2 flex items-center justify-between">
+        <div class="pass-courses-section">
+          <div class="courses-header">
             <span>Enrolled Subjects ({{ data.currentCourses?.length || 0 }})</span>
-            <span class="text-[10px] text-slate-500 font-normal">Active Term Schedule</span>
+            <span class="courses-subtitle">Active Term Schedule</span>
           </div>
-          <div class="max-h-36 overflow-y-auto space-y-1.5 pr-1">
+          <div class="courses-list">
             @for (course of data.currentCourses; track course.courseCode) {
-              <div class="p-2 bg-slate-50 rounded border border-slate-100 flex items-center justify-between text-xs">
+              <div class="course-item font-mono">
                 <div>
-                  <span class="font-bold text-slate-800 font-mono">{{ course.courseCode }}</span>
-                  <span class="text-[11px] text-slate-500 block">{{ course.scheduleText }}</span>
+                  <span class="course-code">{{ course.courseCode }}</span>
+                  <span class="course-schedule">{{ course.scheduleText }}</span>
                 </div>
-                <span class="font-mono font-bold text-slate-700">{{ course.creditUnits }}u</span>
+                <span class="course-units">{{ course.creditUnits }}u</span>
               </div>
             }
           </div>
         </div>
 
-        <!-- Offline Token Footer -->
-        <div class="pt-2 border-t border-slate-200 text-center">
-          <span class="text-[10px] font-mono text-slate-400 block">
+        <div class="pass-footer">
+          <span class="font-mono text-subtle">
             ID: {{ offlineService.cachedPass()?.verificationToken || 'OFFLINE-SYNCED' }}
           </span>
         </div>
@@ -562,71 +583,67 @@
     }
   </p-dialog>
 
-  <!-- Official Cryptographic Certificate Modal Dialog -->
+  <!-- Honor Certificate Dialog -->
   <p-dialog
-    [(visible)]="isCertificateDialogOpen"
+    header="Official Certificate of Academic Honor"
+    [visible]="isCertificateDialogOpen()"
+    (visibleChange)="isCertificateDialogOpen.set($event)"
     [modal]="true"
     [draggable]="false"
     [resizable]="false"
-    header="Official Certificate of Academic Honor"
     styleClass="w-full max-w-2xl"
     (onHide)="isCertificateDialogOpen.set(false)">
     
     @if (isLoadingCertificate()) {
-      <div class="p-6 space-y-4">
+      <div class="dialog-skel-body" role="status" aria-live="polite">
         <p-skeleton height="40px" borderRadius="8px"></p-skeleton>
         <p-skeleton height="200px" borderRadius="12px"></p-skeleton>
       </div>
     } @else if (selectedCertificate(); as cert) {
-      <div class="certificate-container p-6 border-4 border-amber-600 bg-amber-50/30 rounded-xl relative overflow-hidden text-center shadow-lg">
-        <div class="watermark absolute inset-0 opacity-5 pointer-events-none flex items-center justify-center">
-          <img src="chmsu-logo.png" alt="Watermark" class="w-96 h-96 object-contain" />
-        </div>
+      <div class="cert-body-card">
+        <div class="cert-content">
+          <img src="chmsu-logo.png" alt="University Logo" class="cert-logo" />
+          <h2 class="cert-uni-name">Carlos Hilado Memorial State University</h2>
+          <p class="cert-division">Office of the University Registrar &middot; Academic Honors Division</p>
 
-        <div class="relative z-10 flex flex-col items-center">
-          <img src="chmsu-logo.png" alt="University Logo" class="w-16 h-16 object-contain mb-2" />
-          <h2 class="text-xs uppercase tracking-widest text-emerald-800 font-bold m-0">Carlos Hilado Memorial State University</h2>
-          <p class="text-[10px] text-slate-500 tracking-wider uppercase mb-4">Office of the University Registrar &middot; Academic Honors Division</p>
-
-          <span class="text-xs italic text-slate-600">This certificate of distinction is proudly conferred upon</span>
-          <h1 class="text-2xl font-serif font-black text-slate-900 my-2 tracking-wide border-b-2 border-amber-500 pb-1 px-6 inline-block">
+          <span class="cert-confer">This certificate of distinction is proudly conferred upon</span>
+          <h1 class="cert-student-name">
             {{ cert.studentName }}
           </h1>
-          <p class="text-xs font-mono text-slate-600 mb-2">Student ID: {{ cert.studentNumber }} &middot; Program: {{ cert.programCode }}</p>
+          <p class="cert-student-meta font-mono">Student ID: {{ cert.studentNumber }} &middot; Program: {{ cert.programCode }}</p>
 
-          <p class="text-sm text-slate-700 max-w-lg mx-auto leading-relaxed mt-2">
+          <p class="cert-reason">
             for exceptional scholastic performance by achieving a Term Grade Point Average of
-            <strong class="font-mono text-emerald-800 text-base">{{ cert.gpa.toFixed(2) }}</strong>,
+            <strong class="font-mono cert-gpa">{{ cert.gpa.toFixed(2) }}</strong>,
             earning placement on the official
           </p>
 
-          <div class="my-4 px-6 py-2 bg-gradient-to-r from-amber-500 to-amber-700 text-white font-serif font-bold text-lg rounded-full shadow-md uppercase tracking-wider inline-block">
+          <div class="cert-honor-banner">
             {{ cert.honorCategory === 'PRESIDENTS_LIST' ? "President's List of Scholars" : "Dean's List of Honors" }}
           </div>
 
-          <p class="text-xs text-slate-600">Given this {{ cert.issuedAt }} for {{ cert.termName }}.</p>
+          <p class="cert-date">Given this {{ cert.issuedAt }} for {{ cert.termName }}.</p>
 
-          <!-- Cryptographic Verification Footer -->
-          <div class="mt-6 pt-4 border-t border-amber-200 w-full flex items-center justify-between gap-4 text-left">
-            <div class="flex items-center gap-3">
-              <img [src]="cert.qrVerificationDataUrl" alt="QR Verification" class="w-20 h-20 border border-slate-300 rounded p-1 bg-white" />
+          <div class="cert-footer-row">
+            <div class="cert-crypto-info">
+              <img [src]="cert.qrVerificationDataUrl" alt="QR Verification" class="cert-qr" />
               <div>
-                <span class="text-[10px] font-bold text-slate-700 uppercase tracking-wider block">Cryptographic SHA-256 Digest:</span>
-                <span class="font-mono text-[9px] text-slate-500 break-all max-w-xs block">{{ cert.verificationHash }}</span>
-                <span class="text-[9px] text-emerald-700 font-semibold mt-1 block">
-                  <i class="pi pi-verified"></i> Digitally Signed &middot; Certificate ID: {{ cert.certificateId }}
+                <span class="crypto-label">Cryptographic SHA-256 Digest:</span>
+                <span class="font-mono crypto-hash">{{ cert.verificationHash }}</span>
+                <span class="crypto-signed">
+                  <i class="pi pi-verified" aria-hidden="true"></i> Digitally Signed &middot; Certificate ID: {{ cert.certificateId }}
                 </span>
               </div>
             </div>
 
-            <div class="flex flex-col gap-2">
+            <div class="cert-action-btn">
               <p-button
                 label="Print Certificate"
                 icon="pi pi-print"
                 severity="success"
                 size="small"
-                (onClick)="printCertificate()">
-              </p-button>
+                (onClick)="printCertificate()"
+                aria-label="Print Certificate of Academic Honor" />
             </div>
           </div>
         </div>
@@ -634,94 +651,92 @@
     }
   </p-dialog>
 
-  <!-- Push Notification Preferences Dialog -->
+  <!-- Push Preferences Dialog -->
   <p-dialog
     header="Browser Push Notification Preferences"
-    [(visible)]="isPreferencesDialogOpen"
+    [visible]="isPreferencesDialogOpen()"
+    (visibleChange)="isPreferencesDialogOpen.set($event)"
     [modal]="true"
     [style]="{ width: '540px' }">
 
-    <div class="flex flex-col gap-3 py-2">
-      <p class="text-xs text-slate-600 mb-2">
+    <div class="pref-dialog-body">
+      <p class="pref-subtext">
         Configure which academic triggers send real-time browser push alerts to your active devices even when the portal is closed.
       </p>
 
-      <div class="flex items-center justify-between p-3 rounded-lg border border-slate-200 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors"
-           (click)="togglePref('notifyGrades')">
-        <div class="flex items-center gap-3">
-          <i class="pi pi-file-edit text-blue-600 text-lg"></i>
+      <div class="pref-item-card" (click)="togglePref('notifyGrades')">
+        <div class="pref-item-info">
+          <i class="pi pi-file-edit text-blue-600 text-lg" aria-hidden="true"></i>
           <div>
-            <div class="font-semibold text-sm text-slate-800">Grade Postings & Official Seals</div>
-            <div class="text-xs text-slate-500">Alerts when faculty post grades or registrar seals term marks.</div>
+            <div class="pref-title">Grade Postings & Official Seals</div>
+            <div class="pref-desc">Alerts when faculty post grades or registrar seals term marks.</div>
           </div>
         </div>
-        <i [class]="pushPrefs().notifyGrades ? 'pi pi-check-circle text-emerald-600 text-xl' : 'pi pi-circle text-slate-400 text-xl'"></i>
+        <i [class]="pushPrefs().notifyGrades ? 'pi pi-check-circle text-green-600 text-xl' : 'pi pi-circle text-400 text-xl'" aria-hidden="true"></i>
       </div>
 
-      <div class="flex items-center justify-between p-3 rounded-lg border border-slate-200 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors"
-           (click)="togglePref('notifyClearance')">
-        <div class="flex items-center gap-3">
-          <i class="pi pi-verified text-emerald-600 text-lg"></i>
+      <div class="pref-item-card" (click)="togglePref('notifyClearance')">
+        <div class="pref-item-info">
+          <i class="pi pi-verified text-green-600 text-lg" aria-hidden="true"></i>
           <div>
-            <div class="font-semibold text-sm text-slate-800">Department Clearance Sign-Offs</div>
-            <div class="text-xs text-slate-500">Alerts when Library, Cashier, Dean, or Guidance approve status.</div>
+            <div class="pref-title">Department Clearance Sign-Offs</div>
+            <div class="pref-desc">Alerts when Library, Cashier, Dean, or Guidance approve status.</div>
           </div>
         </div>
-        <i [class]="pushPrefs().notifyClearance ? 'pi pi-check-circle text-emerald-600 text-xl' : 'pi pi-circle text-slate-400 text-xl'"></i>
+        <i [class]="pushPrefs().notifyClearance ? 'pi pi-check-circle text-green-600 text-xl' : 'pi pi-circle text-400 text-xl'" aria-hidden="true"></i>
       </div>
 
-      <div class="flex items-center justify-between p-3 rounded-lg border border-slate-200 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors"
-           (click)="togglePref('notifyHonors')">
-        <div class="flex items-center gap-3">
-          <i class="pi pi-star text-amber-600 text-lg"></i>
+      <div class="pref-item-card" (click)="togglePref('notifyHonors')">
+        <div class="pref-item-info">
+          <i class="pi pi-star text-amber-600 text-lg" aria-hidden="true"></i>
           <div>
-            <div class="font-semibold text-sm text-slate-800">Dean's & President's List Honors</div>
-            <div class="text-xs text-slate-500">Instant recognition when end-of-term academic ranks are calculated.</div>
+            <div class="pref-title">Dean's & President's List Honors</div>
+            <div class="pref-desc">Instant recognition when end-of-term academic ranks are calculated.</div>
           </div>
         </div>
-        <i [class]="pushPrefs().notifyHonors ? 'pi pi-check-circle text-emerald-600 text-xl' : 'pi pi-circle text-slate-400 text-xl'"></i>
+        <i [class]="pushPrefs().notifyHonors ? 'pi pi-check-circle text-green-600 text-xl' : 'pi pi-circle text-400 text-xl'" aria-hidden="true"></i>
       </div>
 
-      <div class="flex items-center justify-between p-3 rounded-lg border border-slate-200 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors"
-           (click)="togglePref('notifyAttendance')">
-        <div class="flex items-center gap-3">
-          <i class="pi pi-qrcode text-purple-600 text-lg"></i>
+      <div class="pref-item-card" (click)="togglePref('notifyAttendance')">
+        <div class="pref-item-info">
+          <i class="pi pi-qrcode text-purple-600 text-lg" aria-hidden="true"></i>
           <div>
-            <div class="font-semibold text-sm text-slate-800">Attendance & Support Interventions</div>
-            <div class="text-xs text-slate-500">Alerts for QR check-ins and academic guidance recommendations.</div>
+            <div class="pref-title">Attendance & Support Interventions</div>
+            <div class="pref-desc">Alerts for QR check-ins and academic guidance recommendations.</div>
           </div>
         </div>
-        <i [class]="pushPrefs().notifyAttendance ? 'pi pi-check-circle text-emerald-600 text-xl' : 'pi pi-circle text-slate-400 text-xl'"></i>
+        <i [class]="pushPrefs().notifyAttendance ? 'pi pi-check-circle text-green-600 text-xl' : 'pi pi-circle text-400 text-xl'" aria-hidden="true"></i>
       </div>
 
-      <div class="flex items-center justify-between pt-4 border-t border-slate-200 mt-2">
+      <div class="pref-footer">
         <p-button
           label="Send Test Alert"
           icon="pi pi-bell"
           severity="secondary"
           [outlined]="true"
           size="small"
-          (onClick)="sendTestPushNotification()">
-        </p-button>
+          (onClick)="sendTestPushNotification()"
+          aria-label="Send test push notification alert" />
 
-        <div class="flex items-center gap-2">
+        <div class="header-actions-group">
           <p-button
             label="Cancel"
             severity="secondary"
             [outlined]="true"
             size="small"
-            (onClick)="isPreferencesDialogOpen.set(false)">
-          </p-button>
+            (onClick)="isPreferencesDialogOpen.set(false)"
+            aria-label="Cancel push notification preferences" />
           <p-button
             label="Save Preferences"
             icon="pi pi-check"
             severity="primary"
             size="small"
             [loading]="isSavingPreferences()"
-            (onClick)="savePushPreferences()">
-          </p-button>
+            (onClick)="savePushPreferences()"
+            aria-label="Save push notification preferences" />
         </div>
       </div>
     </div>
   </p-dialog>
+
 </div>

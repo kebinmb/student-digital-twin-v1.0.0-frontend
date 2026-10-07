@@ -16,9 +16,8 @@ import { ToastModule } from 'primeng/toast';
 import { InputTextModule } from 'primeng/inputtext';
 import { BadgeModule } from 'primeng/badge';
 import { TooltipModule } from 'primeng/tooltip';
-import { KnobModule } from 'primeng/knob';
-import { ProgressBarModule } from 'primeng/progressbar';
 import { DialogModule } from 'primeng/dialog';
+import { AvatarModule } from 'primeng/avatar';
 import { MessageService } from 'primeng/api';
 
 import { LmsApiService } from '../../../core/service/lms/lms-api.service';
@@ -57,9 +56,8 @@ export interface StandingInfo {
     InputTextModule,
     BadgeModule,
     TooltipModule,
-    KnobModule,
-    ProgressBarModule,
     DialogModule,
+    AvatarModule,
     EmptyStateComponent
   ],
   templateUrl: './student-self-service-portal.component.html',
@@ -144,16 +142,6 @@ export class StudentSelfServicePortalComponent implements OnInit, OnDestroy {
     } else {
       return { label: 'Academic Warning', severity: 'warn', icon: 'pi-exclamation-triangle' };
     }
-  });
-
-  // Dimensions list for template iteration
-  readonly dimensionEntries = computed<{ name: string; score: number }[]>(() => {
-    const telemetry = this.telemetryData();
-    if (!telemetry || !telemetry.dimensionScores) return [];
-    return Object.entries(telemetry.dimensionScores).map(([name, score]) => ({
-      name,
-      score: Math.round(score)
-    }));
   });
 
   ngOnInit(): void {
@@ -399,13 +387,6 @@ export class StudentSelfServicePortalComponent implements OnInit, OnDestroy {
       case 'CRITICAL': return 'danger';
       default: return 'info';
     }
-  }
-
-  getWellnessColor(score: number): string {
-    if (score >= 80) return '#10b981';
-    if (score >= 60) return '#3b82f6';
-    if (score >= 40) return '#f59e0b';
-    return '#ef4444';
   }
 
   getBarcodeSvg(): string {

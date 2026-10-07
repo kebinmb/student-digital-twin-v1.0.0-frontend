@@ -22,50 +22,6 @@
     <!-- STUDENT VIEW: ACADEMIC INSIGHTS COCKPIT & QR ATTENDANCE CHECK-IN         -->
     <!-- ========================================================================= -->
     <div class="student-cockpit">
-      <!-- 1. Fused Identity Strip Card (Student Academic Insights Reference) -->
-      <div class="identity-card">
-        <div class="identity-profile">
-          <p-avatar
-            [label]="getInitials(studentProfile()?.username || authService.currentUser()?.username || 'ST')"
-            shape="circle"
-            size="large"
-            styleClass="identity-avatar"
-          ></p-avatar>
-          <div class="identity-meta">
-            <h2 class="identity-name">{{ studentProfile()?.username || authService.currentUser()?.username || 'Student User' }}</h2>
-            <p class="identity-sub">
-              #{{ studentProfile()?.studentNumber || '2026-0000' }} &bull;
-              {{ studentProfile()?.programCode || 'BSIT' }} (Year {{ studentProfile()?.yearLevel || '3' }})
-            </p>
-          </div>
-        </div>
-
-        <div class="identity-stats">
-          <div class="stat-unit">
-            <span class="stat-label">Cumulative GPA</span>
-            <span class="stat-val gpa-val">{{ (studentProfile()?.cumulativeGpa || 0) | number:'1.2-2' }}</span>
-          </div>
-          <div class="hairline-divider"></div>
-          <div class="stat-unit">
-            <span class="stat-label">Total Sessions</span>
-            <span class="stat-val">{{ studentTotalSessions() }}</span>
-          </div>
-          <div class="hairline-divider"></div>
-          <div class="stat-unit">
-            <span class="stat-label">Clearance Gate</span>
-            <span class="clearance-pill">CLEARED</span>
-          </div>
-          <div class="hairline-divider"></div>
-          <div class="stat-unit">
-            <p-tag
-              [value]="studentTotalSessions() === 0 ? 'NO SESSIONS' : (studentOnTimeRate() >= 85 ? 'GOOD STANDING' : 'ATTENDANCE NOTICE')"
-              [severity]="studentTotalSessions() === 0 ? 'info' : (studentOnTimeRate() >= 85 ? 'success' : 'warn')"
-              [rounded]="true"
-            ></p-tag>
-          </div>
-        </div>
-      </div>
-
       <!-- 2. Integrated Health Gauge Card & Bento Metric Grid (4-Column) -->
       <div class="grid-section">
         <!-- Health Gauge Card (p-knob) -->
@@ -102,7 +58,7 @@
             <div class="tile-header">
               <span class="stat-label">Total Attended</span>
               <div class="tile-icon-box blue">
-                <i class="pi pi-calendar-check"></i>
+                <i class="pi pi-calendar-plus"></i>
               </div>
             </div>
             <div class="stat-val">{{ studentTotalSessions() }}</div>
@@ -126,7 +82,7 @@
             <div class="tile-header">
               <span class="stat-label">Present Count</span>
               <div class="tile-icon-box amber">
-                <i class="pi pi-user-check"></i>
+                <i class="pi pi-user-plus"></i>
               </div>
             </div>
             <div class="stat-val">{{ studentPresentCount() }}</div>

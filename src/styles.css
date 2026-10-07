@@ -1475,7 +1475,7 @@ input::placeholder {
 
 .header-branding {
   display: flex;
-  align-items: center;
+  /* align-items: center; */
   gap: 0.875rem;
 }
 

@@ -11,7 +11,7 @@
 }
 
 /* ==========================================================================
-   COMPACT INSTITUTIONAL HEADER
+   BENTO INSTITUTIONAL HEADER & NAVIGATION
    ========================================================================== */
 
 .enrollment-header {
@@ -20,15 +20,16 @@
   gap: 1rem;
   background: var(--chmsu-white, #ffffff);
   border: 1px solid var(--chmsu-border-color, #e2e8f0);
-  border-radius: var(--chmsu-border-radius-lg, 12px);
-  padding: 1rem 1.25rem;
-  box-shadow: var(--chmsu-shadow-card);
+  border-radius: var(--chmsu-border-radius-xl, 16px);
+  padding: 1.25rem 1.5rem;
+  box-shadow: var(--chmsu-shadow-card, 0 1px 3px rgba(0, 0, 0, 0.05));
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 @media (min-width: 900px) {
   .enrollment-header {
     flex-direction: row;
-    align-items: flex-end;
+    align-items: center;
     justify-content: space-between;
     gap: 1.5rem;
   }
@@ -41,41 +42,21 @@
   max-width: 44rem;
 }
 
-.institutional-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.625rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--chmsu-green-main, #116834);
-  background: var(--chmsu-green-soft, #f0fdf4);
-  border: 1px solid var(--status-emerald-border, #a7f3d0);
-  padding: 0.15rem 0.5rem;
-  border-radius: var(--chmsu-border-radius-sm, 6px);
-  width: fit-content;
-}
-
-.institutional-badge i {
-  font-size: 0.6875rem;
-}
-
 .portal-title {
   font-family: var(--font-family-heading);
   margin: 0;
-  font-size: 1.0625rem;
+  font-size: 1.125rem;
   font-weight: 700;
   color: var(--chmsu-navy-900, #0f172a);
   line-height: 1.3;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
 }
 
 .portal-description {
   margin: 0;
-  font-size: 0.75rem;
+  font-size: 0.78125rem;
   color: var(--chmsu-slate-500, #64748b);
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 /* Header Controls & View Switcher */
@@ -90,49 +71,35 @@
 @media (min-width: 640px) {
   .header-controls {
     flex-direction: row;
-    align-items: flex-end;
+    align-items: center;
   }
-}
-
-.global-term-box {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.term-box-label {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--chmsu-navy-800, #1e293b);
-}
-
-:host ::ng-deep .term-select-dropdown {
-  min-width: 200px;
 }
 
 /* PrimeNG SelectButton Customization */
 :host ::ng-deep .selectbutton-chmsu .p-button {
   font-size: 0.75rem;
-  padding: 0.45rem 0.75rem;
+  padding: 0.45rem 0.85rem;
   border-color: var(--chmsu-slate-300, #cbd5e1);
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  transition: all 0.15s ease;
 }
 
 :host ::ng-deep .selectbutton-chmsu .p-button.p-selectbutton-selected {
   background: var(--chmsu-green-main, #116834) !important;
   border-color: var(--chmsu-green-main, #116834) !important;
   color: #ffffff !important;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(17, 104, 52, 0.2);
 }
 
 .switcher-item {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.45rem;
 }
 
 .switcher-item i {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
 }
 
 .switcher-label {
@@ -145,7 +112,7 @@
   color: #ffffff;
   font-size: 0.625rem;
   font-weight: 700;
-  padding: 0.1rem 0.4rem;
+  padding: 0.125rem 0.45rem;
   border-radius: 9999px;
   line-height: 1;
 }
@@ -163,93 +130,23 @@
 }
 
 /* ==========================================================================
-   ENROLLMENT CLOSED BANNER (STUDENT NOTIFICATION)
+   BENTO CLOSED ENROLLMENT HERO CARD
    ========================================================================== */
-.enrollment-closed-banner {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  background: #fffbeb;
-  border: 1px solid #fde68a;
-  border-radius: var(--chmsu-border-radius-md, 8px);
-  padding: 1rem 1.25rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
 
-.closed-banner-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 9999px;
-  background: #fef3c7;
-  color: #b45309;
-  font-size: 1.125rem;
-  flex-shrink: 0;
-}
-
-.closed-banner-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  flex-grow: 1;
-}
-
-.closed-banner-title {
-  margin: 0;
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: #92400e;
-  line-height: 1.25;
-}
-
-.closed-banner-text {
-  margin: 0;
-  font-size: 0.8125rem;
-  color: #78350f;
-  line-height: 1.4;
-}
-
-.closed-banner-badge {
-  flex-shrink: 0;
-}
-
-.badge-status-closed {
-  display: inline-block;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  padding: 0.25rem 0.6rem;
-  border-radius: 4px;
-  background: #fef2f2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
-}
-
-@media (max-width: 640px) {
-  .enrollment-closed-banner {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-}
-
-/* ==========================================================================
-   DEDICATED CLOSED ENROLLMENT CARD (REPLACES MAIN CONTENT FOR STUDENTS)
-   ========================================================================== */
 .closed-enrollment-card {
   background: var(--chmsu-white, #ffffff);
   border: 1px solid var(--chmsu-border-color, #e2e8f0);
-  border-radius: var(--chmsu-border-radius-lg, 12px);
+  border-radius: var(--chmsu-border-radius-xl, 16px);
   padding: 2.5rem 2rem;
-  box-shadow: var(--chmsu-shadow-card);
+  box-shadow: var(--chmsu-shadow-card, 0 1px 3px rgba(0, 0, 0, 0.05));
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   gap: 1.75rem;
-  max-width: 52rem;
+  max-width: 56rem;
   margin: 1.5rem auto;
+  width: 100%;
 }
 
 .closed-card-hero {
@@ -263,13 +160,14 @@
   width: 4.5rem;
   height: 4.5rem;
   border-radius: 9999px;
-  background: #fef3c7;
-  color: #b45309;
+  background: var(--status-amber-bg, #fffbeb);
+  border: 1px solid var(--status-amber-border, #fde68a);
+  color: var(--status-amber-text, #b45309);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 2rem;
-  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.15);
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.15);
 }
 
 .closed-card-title {
@@ -278,6 +176,7 @@
   font-size: 1.35rem;
   font-weight: 800;
   color: var(--chmsu-navy-900, #0f172a);
+  letter-spacing: -0.015em;
 }
 
 .closed-card-lead {
@@ -296,27 +195,31 @@
 }
 
 .closed-info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 0.75rem;
-  text-align: left;
+  width: 100%;
 }
 
 .closed-info-item {
   background: var(--chmsu-slate-50, #f8fafc);
   border: 1px solid var(--chmsu-border-color, #e2e8f0);
-  border-radius: var(--chmsu-border-radius-md, 8px);
-  padding: 0.75rem 1rem;
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 0.875rem 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.35rem;
+  text-align: left;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.closed-info-item:hover {
+  border-color: var(--chmsu-slate-300, #cbd5e1);
+  box-shadow: var(--chmsu-shadow-subtle, 0 1px 3px rgba(15, 23, 42, 0.04));
 }
 
 .closed-info-item .info-label {
   font-size: 0.6875rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   color: var(--chmsu-slate-500, #64748b);
   display: flex;
   align-items: center;
@@ -324,14 +227,15 @@
 
 .closed-info-item .info-value {
   font-size: 0.875rem;
+  font-weight: 600;
   color: var(--chmsu-navy-900, #0f172a);
 }
 
 .closed-guidelines-box {
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  border-radius: var(--chmsu-border-radius-md, 8px);
-  padding: 1rem 1.25rem;
+  background: var(--status-emerald-bg, #ecfdf5);
+  border: 1px solid var(--status-emerald-border, #a7f3d0);
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 1.125rem 1.35rem;
   text-align: left;
 }
 
@@ -339,7 +243,7 @@
   margin: 0 0 0.5rem 0;
   font-size: 0.8125rem;
   font-weight: 700;
-  color: #166534;
+  color: var(--status-emerald-text, #047857);
   display: flex;
   align-items: center;
 }
@@ -348,12 +252,12 @@
   margin: 0;
   padding-left: 1.25rem;
   font-size: 0.8125rem;
-  color: #14532d;
+  color: var(--chmsu-green-deep, #0c5027);
   line-height: 1.5;
 }
 
 .guidelines-list li + li {
-  margin-top: 0.25rem;
+  margin-top: 0.35rem;
 }
 
 .closed-card-actions {
@@ -361,4 +265,3 @@
   justify-content: center;
   margin-top: 0.5rem;
 }
-
