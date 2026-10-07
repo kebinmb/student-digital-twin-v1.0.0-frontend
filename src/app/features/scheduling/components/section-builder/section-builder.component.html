@@ -1,15 +1,14 @@
 <div class="section-builder-wrapper">
   <p-confirmdialog key="schedulingConfirmDialog"></p-confirmdialog>
 
-  <!-- Header & Gate 1 Alert -->
+  <!-- Header Actions Strip & Gate 1 Alert -->
   <div class="section-builder-header flex-col gap-lg">
     <div class="header-content flex-between">
-      <div class="header-title-box flex-col">
-        <div class="header-badge-row flex-row gap-lg">
-          <h2 class="title">Class Section & Timetable Management</h2>
-          <span class="ched-cmo-pill flex-center badge-green badge-pill">CHED CMO No. 25, s. 2015 Compliant</span>
-        </div>
-        <p class="subtitle">Curriculum-governed section builder, dynamic weekly timetable allocator & faculty workload inspector</p>
+      <div class="header-badge-row flex-row gap-sm">
+        <span class="badge-green font-mono flex-row gap-xs">
+          <i class="pi pi-th-large"></i>
+          <span>Section Builder Matrix</span>
+        </span>
       </div>
       <div class="header-actions flex-row gap-lg">
         <p-button 
@@ -18,7 +17,7 @@
           severity="secondary" 
           [outlined]="true" 
           size="small"
-          styleClass="action-btn-secondary"
+          class="action-btn-secondary"
           (onClick)="openFacultyLoadModal()">
         </p-button>
         @if (canAddSchedule()) {
@@ -27,7 +26,7 @@
             icon="pi pi-plus" 
             severity="success" 
             size="small"
-            styleClass="action-btn-primary"
+            class="action-btn-primary"
             [disabled]="store.isLoading()"
             (onClick)="openCreateModal()">
           </p-button>
@@ -71,12 +70,12 @@
           filterPlaceholder="Search term..."
           placeholder="Select Academic Term"
           appendTo="body"
-          styleClass="w-full filter-select">
+          class="w-full filter-select">
           <ng-template let-t pTemplate="item">
             <div class="select-option-item flex-between">
               <span class="select-option-title font-semibold-navy">{{ t.termName }}</span>
               @if (t.isActive) {
-                <p-tag value="ACTIVE" severity="success" styleClass="mini-tag"></p-tag>
+                <p-tag value="ACTIVE" severity="success" class="mini-tag"></p-tag>
               }
             </div>
           </ng-template>
@@ -98,14 +97,14 @@
           filterPlaceholder="Search curriculum..."
           placeholder="Select Curriculum"
           appendTo="body"
-          styleClass="w-full filter-select">
+          class="w-full filter-select">
           <ng-template let-c pTemplate="item">
             <div class="select-option-item flex-between">
               <div class="curriculum-option-info flex-row">
                 <strong class="curriculum-code font-mono">{{ c.code }}</strong>
                 <span class="curriculum-name text-truncate">{{ c.name }}</span>
               </div>
-              <p-tag [value]="c.status" [severity]="c.status === 'ACTIVE' ? 'success' : 'warn'" styleClass="mini-tag"></p-tag>
+              <p-tag [value]="c.status" [severity]="c.status === 'ACTIVE' ? 'success' : 'warn'" class="mini-tag"></p-tag>
             </div>
           </ng-template>
         </p-select>
@@ -155,8 +154,7 @@
       [paginator]="true"
       [rows]="10"
       [rowsPerPageOptions]="[5, 10, 20]"
-      responsiveLayout="scroll"
-      styleClass="section-datatable institutional-table p-datatable-striped p-datatable-sm">
+      class="section-datatable institutional-table p-datatable-striped p-datatable-sm">
       
       <ng-template pTemplate="header">
         <tr>
@@ -263,7 +261,7 @@
             <p-tag 
               [value]="sec.status" 
               [severity]="getStatusSeverity(sec.status)"
-              styleClass="status-pill">
+              class="status-pill">
             </p-tag>
           </td>
           <td style="text-align: center;">
@@ -327,7 +325,7 @@
                   icon="pi pi-plus" 
                   severity="success" 
                   size="small" 
-                  styleClass="action-btn-primary"
+                  class="action-btn-primary"
                   (onClick)="openCreateModal()">
                 </p-button>
               }
@@ -354,7 +352,7 @@
     appendTo="body"
     [style]="{ width: '820px', maxWidth: '96vw' }"
     [contentStyle]="{ 'max-height': '74vh', 'overflow-y': 'auto' }"
-    styleClass="scheduling-custom-dialog section-create-dialog"
+    class="scheduling-custom-dialog section-create-dialog"
     (onHide)="closeCreateModal()">
     
     <ng-template #content pTemplate="content">
@@ -367,7 +365,7 @@
           <p-tag 
             [value]="store.selectedCurriculum()?.status || 'UNKNOWN'" 
             [severity]="store.isCurriculumActive() ? 'success' : 'danger'"
-            styleClass="context-tag">
+            class="context-tag">
           </p-tag>
         </div>
         <div class="context-item flex-row">
@@ -392,7 +390,7 @@
               (onChange)="onCourseSelect($event.value)"
               placeholder="Select Prescribed Course"
               appendTo="body"
-              styleClass="w-full">
+              class="w-full">
               <ng-template let-c pTemplate="item">
                 <div class="course-option-row flex-between">
                   <div class="course-option-info flex-row">
@@ -420,7 +418,7 @@
               filterPlaceholder="Search academic program..."
               placeholder="Select Academic Program"
               appendTo="body"
-              styleClass="w-full">
+              class="w-full">
               <ng-template let-p pTemplate="item">
                 <div class="program-option-row flex-between">
                   <strong class="program-code font-mono">{{ p.code }}</strong>
@@ -460,7 +458,7 @@
               optionLabel="label" 
               optionValue="value" 
               formControlName="yearLevel"
-              styleClass="w-full selectbutton-equal">
+              class="w-full selectbutton-equal">
             </p-selectbutton>
             @if (isControlInvalid('yearLevel')) {
               <small class="p-error">Year level selection is required.</small>
@@ -474,7 +472,7 @@
               optionLabel="label" 
               optionValue="value" 
               formControlName="sectionLetter"
-              styleClass="w-full selectbutton-equal">
+              class="w-full selectbutton-equal">
             </p-selectbutton>
             @if (isControlInvalid('sectionLetter')) {
               <small class="p-error">Section letter selection is required.</small>
@@ -547,7 +545,7 @@
           <div class="slots-header flex-between">
             <div class="slots-header-title flex-row gap-sm">
               <i class="pi pi-clock"></i>
-              <span>Timetable Slots & Room Allocations</span>
+              <span>Timetable Slots &amp; Room Allocations</span>
             </div>
             <p-button 
               type="button" 
@@ -555,7 +553,7 @@
               icon="pi pi-plus" 
               size="small" 
               [outlined]="true"
-              styleClass="add-slot-btn"
+              class="add-slot-btn"
               (onClick)="addSlot()">
             </p-button>
           </div>
@@ -623,7 +621,7 @@
                       optionValue="value" 
                       formControlName="scheduleType" 
                       appendTo="body"
-                      styleClass="w-full">
+                      class="w-full">
                     </p-select>
                   </div>
 
@@ -638,7 +636,7 @@
                       filterPlaceholder="Search room code or name..."
                       placeholder="Select Classroom / Lab"
                       appendTo="body"
-                      styleClass="w-full">
+                      class="w-full">
                       <ng-template let-r pTemplate="item">
                         <div class="room-option-item flex-between">
                           <div class="room-option-info flex-row gap-xs">
@@ -669,7 +667,7 @@
                       [showClear]="true"
                       placeholder="Assign Faculty (Optional)"
                       appendTo="body"
-                      styleClass="w-full">
+                      class="w-full">
                       <ng-template let-i pTemplate="item">
                         <div class="instructor-option-item flex-col gap-xs">
                           <span>{{ i.username }}</span>
@@ -790,7 +788,7 @@
             icon="pi pi-check" 
             severity="primary" 
             size="small"
-            styleClass="action-btn-primary create-section-submit-btn"
+            class="action-btn-primary create-section-submit-btn"
             [loading]="store.isSaving()"
             [disabled]="sectionForm.invalid || !isDurationValid() || store.isSaving()"
             (onClick)="submitSection()">
@@ -810,7 +808,7 @@
     [modal]="true"
     [blockScroll]="true"
     ariaLabelledBy="slot-details-drawer-title"
-    styleClass="institutional-drawer"
+    class="institutional-drawer"
     appendTo="body"
     (onHide)="closeSlotDetailsModal()">
     
@@ -839,7 +837,7 @@
               <p-tag 
                 [value]="selectedSectionForDetails()?.status" 
                 [severity]="getStatusSeverity(selectedSectionForDetails()?.status || '')"
-                styleClass="status-pill">
+                class="status-pill">
               </p-tag>
             </div>
             <div class="overview-meta-row">
@@ -933,7 +931,7 @@
               icon="pi pi-pencil" 
               severity="primary" 
               size="small"
-              styleClass="action-btn-primary"
+              class="action-btn-primary"
               (onClick)="closeSlotDetailsModal(); openEditModal(selectedSectionForDetails()!)">
             </p-button>
           }
@@ -943,7 +941,7 @@
             severity="secondary" 
             [outlined]="true"
             size="small"
-            styleClass="action-btn-secondary"
+            class="action-btn-secondary"
             (onClick)="closeSlotDetailsModal()">
           </p-button>
         </div>
@@ -967,7 +965,7 @@
     appendTo="body"
     [style]="{ width: '780px', maxWidth: '96vw' }"
     [contentStyle]="{ 'max-height': '74vh', 'overflow-y': 'auto' }"
-    styleClass="scheduling-custom-dialog faculty-workload-dialog"
+    class="scheduling-custom-dialog faculty-workload-dialog"
     (onHide)="closeFacultyLoadModal()">
 
     <ng-template pTemplate="content">
@@ -988,7 +986,7 @@
             (onChange)="onFacultyWorkloadSelect($event.value)"
             placeholder="Select Faculty Member"
             appendTo="body"
-            styleClass="w-full">
+            class="w-full">
             <ng-template let-i pTemplate="item">
               <div class="instructor-option-item flex-col gap-xs">
                 <span class="instructor-name font-semibold-navy"><strong>{{ i.username }}</strong></span>
@@ -1158,7 +1156,7 @@
                   icon="pi pi-check" 
                   severity="success" 
                   size="small"
-                  styleClass="action-btn-primary"
+                  class="action-btn-primary"
                   [loading]="store.isApprovingOverload()"
                   (onClick)="approveOverload()">
                 </p-button>
@@ -1223,7 +1221,7 @@
         severity="secondary" 
         [outlined]="true"
         size="small"
-        styleClass="action-btn-secondary"
+        class="action-btn-secondary"
         (onClick)="closeFacultyLoadModal()">
       </p-button>
     </ng-template>
@@ -1245,7 +1243,7 @@
     appendTo="body"
     [style]="{ width: '480px', maxWidth: '96vw' }"
     [contentStyle]="{ 'padding': '1.25rem 1.5rem' }"
-    styleClass="scheduling-custom-dialog session-duration-dialog"
+    class="scheduling-custom-dialog session-duration-dialog"
     (onHide)="closeEditMaxHoursModal()">
 
     <ng-template #content pTemplate="content">
@@ -1276,7 +1274,7 @@
         severity="secondary" 
         [outlined]="true"
         size="small"
-        styleClass="action-btn-secondary"
+        class="action-btn-secondary"
         (onClick)="closeEditMaxHoursModal()">
       </p-button>
       <p-button 
@@ -1284,7 +1282,7 @@
         icon="pi pi-check" 
         severity="primary" 
         size="small"
-        styleClass="action-btn-primary"
+        class="action-btn-primary"
         [loading]="store.isSaving()"
         (onClick)="saveMaxHoursPerClass()">
       </p-button>

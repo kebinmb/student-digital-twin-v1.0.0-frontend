@@ -85,7 +85,10 @@ export class AuthService {
     }
 
     hasAnyRole(requiredRoles: string[]): boolean {
-      const userRoles = this.currentUser().roles || [this.currentUser().role.toUpperCase()];
+      const userRoles = (this.currentUser().roles || [this.currentUser().role]).map(r => r.replace(/^ROLE_/, '').toUpperCase());
+      if (userRoles.includes('SUPER_ADMIN')) {
+        return true;
+      }
       const normalizedReq = requiredRoles.map(r => r.replace(/^ROLE_/, '').toUpperCase());
       return userRoles.some(r => normalizedReq.includes(r));
     }

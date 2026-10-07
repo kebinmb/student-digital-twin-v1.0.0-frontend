@@ -291,6 +291,10 @@
   color: var(--status-emerald-text, #047857);
 }
 
+.header-icon-blue {
+  color: var(--status-blue-text, #0369a1);
+}
+
 .toolbar-controls {
   display: flex;
   align-items: center;
@@ -662,9 +666,15 @@
   border: 1px solid var(--p-surface-200, #e2e8f0);
   border-radius: var(--chmsu-border-radius-lg, 12px);
   padding: 1.25rem;
-  box-shadow: var(--chmsu-shadow-card);
+  box-shadow: var(--chmsu-shadow-card, 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03));
   display: flex;
   flex-direction: column;
+  margin-bottom: 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.content-card:last-child {
+  margin-bottom: 0;
 }
 
 .advisory-list {
@@ -832,6 +842,7 @@
 .drawer-content {
   display: flex;
   flex-direction: column;
+  gap: 1rem;
   height: 100%;
 }
 
@@ -843,6 +854,7 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 :host ::ng-deep .target-avatar {
@@ -1020,10 +1032,65 @@
 .inspect-bento-grid {
   grid-template-columns: repeat(2, 1fr) !important;
   gap: 0.75rem !important;
+  margin-bottom: 1rem;
 }
 
 @media (max-width: 500px) {
   .inspect-bento-grid {
     grid-template-columns: 1fr !important;
   }
+}
+
+.drawer-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 0;
+  gap: 0.75rem;
+}
+
+.spinner-icon {
+  font-size: 1.75rem;
+  color: var(--chmsu-green-main, #116834);
+}
+
+.loading-text {
+  font-size: 0.75rem;
+  color: var(--p-surface-500, #64748b);
+}
+
+.risk-dimension-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.dimension-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.dimension-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+}
+
+.dimension-label {
+  font-weight: 600;
+  color: var(--p-surface-700, #334155);
+}
+
+.dimension-score {
+  font-family: var(--font-family-mono);
+  font-weight: 700;
+  color: var(--p-surface-900, #0f172a);
+}
+
+:host ::ng-deep .dimension-progress {
+  height: 6px !important;
+  border-radius: 3px;
 }

@@ -181,7 +181,7 @@ describe('DigitalTwinAnalyticsDashboardComponent', () => {
     expect(component.criticalRiskCount()).toBe(1);
 
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).toContain('Administrator Student Telemetry & AI Interventions');
+    expect(compiled.textContent).toContain('Administrator Student Telemetry & Interventions');
     expect(compiled.textContent).toContain('Alice Student');
     expect(compiled.textContent).toContain('CRITICAL');
   });

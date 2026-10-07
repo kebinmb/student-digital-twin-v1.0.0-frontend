@@ -1,20 +1,24 @@
-.scheduling-container {
+.dashboard-container {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
 }
 
-.scheduling-toolbar-card {
+.dashboard-toolbar-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 1rem;
   background: var(--p-surface-0, #ffffff);
-  border: 1px solid var(--p-surface-200, #e5e7eb);
-  border-radius: 10px;
-  padding: 1rem 1.25rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  border: 1px solid var(--p-surface-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 0.875rem 1.25rem;
+  box-shadow: var(--chmsu-shadow-card);
+  min-height: 52px;
 }
 
 .header-branding {
@@ -24,39 +28,46 @@
 }
 
 .header-icon-box {
+  width: 36px;
+  height: 36px;
+  background: var(--chmsu-green-main, #116834);
+  color: var(--p-surface-0, #ffffff);
+  border-radius: var(--chmsu-border-radius-md, 8px);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: 8px;
-  background: var(--p-primary-50, #e8f5e9);
-  border: 1px solid var(--p-primary-200, #c8e6c9);
+  flex-shrink: 0;
+  box-shadow: var(--chmsu-shadow-subtle);
 }
 
 .header-icon {
-  font-size: 1.25rem;
-  color: var(--p-primary-700, #116834);
+  font-size: 1.125rem;
+}
+
+.header-text-group {
+  display: flex;
+  flex-direction: column;
 }
 
 .header-title {
-  font-size: 1.25rem;
+  font-family: var(--font-family-heading);
+  font-size: 1.125rem;
   font-weight: 700;
   color: var(--p-surface-900, #0f172a);
   margin: 0;
   line-height: 1.2;
-  letter-spacing: -0.01em;
 }
 
 .header-subtitle {
-  font-size: 0.8125rem;
-  color: var(--p-surface-600, #64748b);
-  margin: 0.25rem 0 0 0;
+  font-size: 0.75rem;
+  color: var(--p-surface-500, #64748b);
+  margin: 0.15rem 0 0 0;
 }
 
-.view-switcher-group {
+.header-actions-group {
   display: flex;
   align-items: center;
+  gap: 0.5rem;
 }
 
 .switcher-item-wrapper {
@@ -67,7 +78,7 @@
 }
 
 .switcher-item-label {
-  font-weight: 500;
+  font-weight: 600;
   font-size: 0.75rem;
 }
 
@@ -78,4 +89,16 @@
 :host ::ng-deep .scheduling-view-switcher .p-togglebutton {
   padding: 0.5rem 0.875rem;
   border-radius: 6px;
+}
+
+@media (max-width: 768px) {
+  .dashboard-toolbar-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.875rem;
+  }
+  .header-actions-group {
+    width: 100%;
+    justify-content: flex-start;
+  }
 }

@@ -14,12 +14,12 @@
         filterPlaceholder="Search term..."
         placeholder="Select Academic Term"
         appendTo="body"
-        styleClass="term-select-filter">
+        class="term-select-filter">
         <ng-template let-t pTemplate="item">
           <div class="select-room-option flex-between">
             <span class="room-code font-bold-navy">{{ t.termName }}</span>
             @if (t.isActive) {
-              <p-tag value="ACTIVE" severity="success" styleClass="mini-tag"></p-tag>
+              <p-tag value="ACTIVE" severity="success" class="mini-tag"></p-tag>
             }
           </div>
         </ng-template>
@@ -39,7 +39,7 @@
         [showClear]="true"
         placeholder="All Facilities / Classrooms"
         appendTo="body"
-        styleClass="room-select-filter">
+        class="room-select-filter">
         <ng-template let-r pTemplate="item">
           <div class="select-room-option">
             <span class="room-code font-bold-navy"><strong>{{ r.code }}</strong> - {{ r.name }}</span>
@@ -88,8 +88,8 @@
             @if (store.isLoading()) {
               @for (s of [1, 2]; track s) {
                 <div class="timetable-card skeleton-card">
-                  <p-skeleton width="70%" height="0.875rem" styleClass="mb-2"></p-skeleton>
-                  <p-skeleton width="100%" height="1.25rem" styleClass="mb-2"></p-skeleton>
+                  <p-skeleton width="70%" height="0.875rem" class="mb-2"></p-skeleton>
+                  <p-skeleton width="100%" height="1.25rem" class="mb-2"></p-skeleton>
                   <p-skeleton width="50%" height="0.75rem"></p-skeleton>
                 </div>
               }

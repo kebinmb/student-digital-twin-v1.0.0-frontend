@@ -7,7 +7,7 @@
       <div class="header-text-group">
         <h1 class="header-title">
           @if (isAdmin()) {
-            Administrator Student Telemetry & AI Interventions
+            Administrator Student Telemetry & Interventions
           } @else if (isFaculty()) {
             Faculty Class Section Digital Twin Radar
           } @else {
@@ -490,69 +490,6 @@
           }
         </div>
       </div>
-
-      <!-- Quick Digital Twin Service Micro-Tiles -->
-      <div class="services-micro-grid">
-        <div
-          class="stat-card micro-tile hover-lift"
-          (click)="navigateToService('/financial/ledger')"
-          role="button"
-          tabindex="0"
-        >
-          <div class="stat-icon-box blue">
-            <i class="pi pi-credit-card"></i>
-          </div>
-          <div class="micro-info">
-            <span class="micro-title">UniFAST Ledger</span>
-            <span class="micro-subtext">Check subsidy balance & invoices</span>
-          </div>
-        </div>
-
-        <div
-          class="stat-card micro-tile hover-lift"
-          (click)="navigateToService('/analytics/qr-attendance')"
-          role="button"
-          tabindex="0"
-        >
-          <div class="stat-icon-box green">
-            <i class="pi pi-qrcode"></i>
-          </div>
-          <div class="micro-info">
-            <span class="micro-title">QR Attendance</span>
-            <span class="micro-subtext">Scan class session geofence</span>
-          </div>
-        </div>
-
-        <div
-          class="stat-card micro-tile hover-lift"
-          (click)="navigateToService('/curriculum/obe')"
-          role="button"
-          tabindex="0"
-        >
-          <div class="stat-icon-box amber">
-            <i class="pi pi-chart-line"></i>
-          </div>
-          <div class="micro-info">
-            <span class="micro-title">OBE Progress</span>
-            <span class="micro-subtext">Track PILO/CILO target mastery</span>
-          </div>
-        </div>
-
-        <div
-          class="stat-card micro-tile hover-lift"
-          (click)="navigateToService('/compliance/clearance')"
-          role="button"
-          tabindex="0"
-        >
-          <div class="stat-icon-box purple">
-            <i class="pi pi-verified"></i>
-          </div>
-          <div class="micro-info">
-            <span class="micro-title">Clearance Status</span>
-            <span class="micro-subtext">Track 5-department signoffs</span>
-          </div>
-        </div>
-      </div>
     </div>
   }
 </div>
@@ -650,7 +587,7 @@
   styleClass="institutional-drawer"
   header="Student Academic Twin & Telemetry"
 >
-  <div class="drawer-content flex flex-col gap-4">
+  <div class="drawer-content">
     <!-- Student Identity Header Banner -->
     @if (selectedStudentForInspect(); as student) {
       <div class="target-student-banner">
@@ -658,11 +595,11 @@
         <div class="target-student-info">
           <div class="target-student-name">{{ student.fullName }}</div>
           <div class="target-student-sub">{{ student.studentNumber }} — {{ student.sectionCode || student.programOrCohort }}</div>
-          <div class="target-student-risk flex items-center gap-2 mt-1">
-            <span class="risk-label text-xs text-surface-500">Telemetry Risk:</span>
+          <div class="target-student-risk">
+            <span class="risk-label">Telemetry Risk:</span>
             <p-tag [value]="student.riskLevel" [severity]="getRiskSeverity(student.riskLevel)" size="small"></p-tag>
             @if (student.riskScore != null) {
-              <span class="text-xs font-mono font-semibold text-surface-600">({{ student.riskScore | number:'1.1-1' }}%)</span>
+              <span class="risk-percentage">({{ student.riskScore | number:'1.1-1' }}%)</span>
             }
           </div>
         </div>
@@ -671,9 +608,9 @@
 
     <!-- Loading State -->
     @if (isLoading()) {
-      <div class="flex flex-col gap-3 py-6 items-center justify-center">
-        <i class="pi pi-spin pi-spinner text-3xl text-emerald-700"></i>
-        <span class="text-xs text-surface-500">Evaluating multi-vector ML telemetry...</span>
+      <div class="drawer-loading-state">
+        <i class="pi pi-spin pi-spinner spinner-icon"></i>
+        <span class="loading-text">Evaluating multi-vector ML telemetry...</span>
       </div>
     } @else if (riskProfile(); as profile) {
       <!-- Multi-Vector Health Metrics Grid -->
@@ -721,40 +658,40 @@
 
       <!-- Vector Risk Dimension Breakdown -->
       <div class="content-card">
-        <h4 class="section-title text-sm font-semibold mb-3">
+        <h4 class="section-title">
           <i class="pi pi-chart-pie header-icon-blue"></i>
           Multi-Vector Risk Diagnostics
         </h4>
-        <div class="flex flex-col gap-3">
-          <div>
-            <div class="flex justify-between text-xs mb-1">
-              <span class="font-medium text-surface-700">Academic Risk Dimension (GPA / Failing Units)</span>
-              <span class="font-mono font-bold">{{ profile.academicRiskScore }}%</span>
+        <div class="risk-dimension-list">
+          <div class="dimension-item">
+            <div class="dimension-header">
+              <span class="dimension-label">Academic Risk Dimension (GPA / Failing Units)</span>
+              <span class="dimension-score">{{ profile.academicRiskScore }}%</span>
             </div>
-            <p-progressBar [value]="profile.academicRiskScore" [showValue]="false" [style]="{ height: '6px' }"></p-progressBar>
+            <p-progressBar [value]="profile.academicRiskScore" [showValue]="false" styleClass="dimension-progress"></p-progressBar>
           </div>
 
-          <div>
-            <div class="flex justify-between text-xs mb-1">
-              <span class="font-medium text-surface-700">Attendance Risk Dimension (Absences / Lateness)</span>
-              <span class="font-mono font-bold">{{ profile.attendanceRiskScore }}%</span>
+          <div class="dimension-item">
+            <div class="dimension-header">
+              <span class="dimension-label">Attendance Risk Dimension (Absences / Lateness)</span>
+              <span class="dimension-score">{{ profile.attendanceRiskScore }}%</span>
             </div>
-            <p-progressBar [value]="profile.attendanceRiskScore" [showValue]="false" [style]="{ height: '6px' }"></p-progressBar>
+            <p-progressBar [value]="profile.attendanceRiskScore" [showValue]="false" styleClass="dimension-progress"></p-progressBar>
           </div>
 
-          <div>
-            <div class="flex justify-between text-xs mb-1">
-              <span class="font-medium text-surface-700">Socioeconomic Equity Dimension (UniFAST RA 10931)</span>
-              <span class="font-mono font-bold">{{ profile.socioeconomicRiskScore }}%</span>
+          <div class="dimension-item">
+            <div class="dimension-header">
+              <span class="dimension-label">Socioeconomic Equity Dimension (UniFAST RA 10931)</span>
+              <span class="dimension-score">{{ profile.socioeconomicRiskScore }}%</span>
             </div>
-            <p-progressBar [value]="profile.socioeconomicRiskScore" [showValue]="false" [style]="{ height: '6px' }"></p-progressBar>
+            <p-progressBar [value]="profile.socioeconomicRiskScore" [showValue]="false" styleClass="dimension-progress"></p-progressBar>
           </div>
         </div>
       </div>
 
       <!-- AI Recommended Interventions -->
       <div class="content-card">
-        <h4 class="section-title text-sm font-semibold mb-3">
+        <h4 class="section-title">
           <i class="pi pi-lightbulb header-icon-amber"></i>
           AI Recommended Clinical Interventions
         </h4>
@@ -781,7 +718,7 @@
     }
 
     <!-- Drawer Footer Actions -->
-    <div class="drawer-actions mt-auto pt-4 border-t border-surface-200">
+    <div class="drawer-actions">
       <p-button
         label="Close"
         severity="secondary"

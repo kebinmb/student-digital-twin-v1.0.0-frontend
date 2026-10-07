@@ -1170,16 +1170,16 @@ export class DashboardComponent implements OnInit {
 
       case 'REGISTRAR':
         forkJoin({
-          telemetry: this.analyticsApiService.getAdminStudentTelemetry({ page: 0, size: 1 }).pipe(catchError(() => of(null))),
           pendingGrades: this.enrollmentApiService.getPendingGradeChangeRequests().pipe(catchError(() => of([]))),
           gradApps: this.complianceApiService.getGraduationApplicationsByTerm(effectiveTermId).pipe(catchError(() => of([]))),
           sections: this.schedulingApiService.getSectionsByTerm(effectiveTermId).pipe(catchError(() => of([])))
         })
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe({
-            next: ({ telemetry, pendingGrades, gradApps, sections }) => {
+            next: ({ pendingGrades, gradApps, sections }) => {
               const hasSections = sections && sections.length > 0;
-              const totalHeadcount = (hasSections && telemetry?.totalElements) ? `${telemetry.totalElements.toLocaleString()} Students` : (hasSections ? '3,842 Students' : '0 Students');
+              const totalStudentsCount = hasSections ? sections.reduce((acc, sec) => acc + (sec.enrolledCount || 0), 0) : 0;
+              const totalHeadcount = hasSections ? `${totalStudentsCount.toLocaleString()} Students` : '0 Students';
               const pendingCount = pendingGrades ? `${pendingGrades.length} Pending` : '0 Pending';
               const gradCount = gradApps.length > 0 ? `${gradApps.length} Applicants` : '0 Applicants';
               const clearanceRate = hasSections ? '92.4%' : '0.0%';

@@ -1,25 +1,22 @@
-<div class="scheduling-container">
+<div class="dashboard-container">
   <!-- Institutional Sticky Header Toolbar -->
-  <div class="scheduling-toolbar-card">
+  <div class="dashboard-toolbar-card">
     <div class="header-branding">
-      <div class="header-icon-box">
-        <i class="pi pi-calendar-plus header-icon"></i>
-      </div>
-      <div>
-        <h1 class="header-title">Scheduling & Timetable Management</h1>
-        <p class="header-subtitle">CHED CMO No. 25, s. 2015 Compliant Course Section Allocator & Timetable Grid</p>
+      <div class="header-text-group">
+        <h1 class="header-title">Scheduling &amp; Timetable Management</h1>
+        <p class="header-subtitle">CHED CMO No. 25, s. 2015 Compliant Course Section Allocator &amp; Timetable Grid</p>
       </div>
     </div>
 
     <!-- View Switcher Tabs -->
-    <div class="view-switcher-group">
+    <div class="header-actions-group">
       <p-selectbutton 
         [options]="viewOptions" 
         [ngModel]="activeTab()" 
         (ngModelChange)="setTab($event)" 
         optionLabel="label" 
         optionValue="value"
-        styleClass="scheduling-view-switcher">
+        class="scheduling-view-switcher">
         <ng-template let-item pTemplate="item">
           <div class="switcher-item-wrapper">
             <i [class]="item.icon"></i>
@@ -38,8 +35,8 @@
       @defer (on viewport; prefetch on idle) {
         <app-timetable-grid (addSchedule)="setTab('sections')"></app-timetable-grid>
       } @placeholder {
-        <div class="p-4 border-round surface-100 flex align-items-center justify-content-center">
-          <i class="pi pi-spin pi-spinner mr-2 text-emerald-700"></i>
+        <div class="table-card flex align-items-center justify-content-center p-6 text-center">
+          <i class="pi pi-spin pi-spinner text-2xl text-emerald-700 mr-2"></i>
           <span class="text-slate-600 text-sm">Preparing weekly timetable matrix...</span>
         </div>
       } @loading (minimum 200ms) {
