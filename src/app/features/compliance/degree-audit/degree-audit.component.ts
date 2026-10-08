@@ -1,6 +1,7 @@
 // File: src/app/features/compliance/degree-audit/degree-audit.component.ts
 
-import { Component, OnInit, signal, computed, effect, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, signal, computed, effect, inject, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -68,6 +69,7 @@ export class DegreeAuditComponent implements OnInit {
   private readonly termService = inject(TermService);
   protected readonly periodStore = inject(AcademicPeriodStore);
   private readonly messageService = inject(MessageService);
+  private readonly destroyRef = inject(DestroyRef);
 
   constructor() {
     effect(() => {
@@ -123,28 +125,51 @@ export class DegreeAuditComponent implements OnInit {
   }
 
   private loadAcademicTerms(): void {
-    this.termService.getAll().subscribe({
-      next: (termsList) => {
-        this.terms.set(termsList);
-        const globalTermId = this.periodStore.selectedTermId();
-        const active = termsList.find((t) => t.isActive);
-        if (globalTermId) {
-          this.applyTermId = globalTermId;
-        } else if (active) {
-          this.applyTermId = active.id;
-        } else if (termsList.length > 0) {
-          this.applyTermId = termsList[0].id;
-        }
-      },
-      error: () => {
-        this.termService.getActive().subscribe({
-          next: (active) => {
-            this.terms.set([active]);
-            this.applyTermId = this.periodStore.selectedTermId() || active.id;
+    if (this.termService?.allTerms$?.pipe) {
+      this.termService.allTerms$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (termsList) => {
+          if (termsList && termsList.length > 0) {
+            this.terms.set(termsList);
+            const globalTermId = this.periodStore.selectedTermId();
+            const active = termsList.find((t) => t.isActive);
+            if (globalTermId) {
+              this.applyTermId = globalTermId;
+            } else if (active) {
+              this.applyTermId = active.id;
+            } else if (termsList.length > 0) {
+              this.applyTermId = termsList[0].id;
+            }
           }
-        });
-      }
-    });
+        }
+      });
+    }
+
+    if (this.termService?.getAll) {
+      this.termService.getAll().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (termsList) => {
+          this.terms.set(termsList);
+          const globalTermId = this.periodStore.selectedTermId();
+          const active = termsList.find((t) => t.isActive);
+          if (globalTermId) {
+            this.applyTermId = globalTermId;
+          } else if (active) {
+            this.applyTermId = active.id;
+          } else if (termsList.length > 0) {
+            this.applyTermId = termsList[0].id;
+          }
+        },
+        error: () => {
+          if (this.termService?.getActive) {
+            this.termService.getActive().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+              next: (active) => {
+                this.terms.set([active]);
+                this.applyTermId = this.periodStore.selectedTermId() || active.id;
+              }
+            });
+          }
+        }
+      });
+    }
   }
 
   private initStudentSelfAudit(): void {

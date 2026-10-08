@@ -36,6 +36,15 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
 };
 
 function handle401Error(req: HttpRequest<unknown>, next: HttpHandlerFn, authService: AuthService) {
+  let hasCredentials = false;
+  try {
+    hasCredentials = !!authService.accessToken() || (typeof localStorage !== 'undefined' && (!!localStorage.getItem('token') || !!localStorage.getItem('refreshToken')));
+  } catch {}
+
+  if (!hasCredentials) {
+    return throwError(() => new HttpErrorResponse({ status: 401, statusText: 'Unauthorized', url: req.url }));
+  }
+
   if (!isRefreshing) {
     isRefreshing = true;
     refreshTokenSubject.next(null);

@@ -32,6 +32,7 @@ import { StudentSelfTelemetry, DispatchedIntervention, MilestoneDto } from '../.
 import { AuthService } from '../../../core/service/authentication/auth-service';
 import { WebPushService, PushPreferences } from '../../../core/services/web-push.service';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+import { ClearanceService } from '../../../core/services/clearance.service';
 
 export interface StandingInfo {
   label: string;
@@ -75,17 +76,24 @@ export class StudentSelfServicePortalComponent implements OnInit, OnDestroy {
   private readonly termService = inject(TermService);
   readonly offlineService = inject(OfflineStudentCardService);
   readonly webPushService = inject(WebPushService);
+  readonly clearanceService = inject(ClearanceService);
 
   constructor() {
     effect(() => {
-      const globalTermId = this.periodStore.selectedTermId();
-      if (globalTermId) {
-        this.loadTermPortalData(globalTermId);
+      const term = this.periodStore.selectedTerm();
+      if (term?.id) {
+        this.loadTermPortalData(term.id);
       }
     });
   }
 
   private studentEventsSub?: Subscription;
+  private clearanceSub?: Subscription;
+
+  readonly activeTerm = computed(() => this.periodStore.selectedTerm());
+  readonly isEnrollmentOpen = computed(() => this.periodStore.isEnrollmentOpen());
+  readonly isGradingOpen = computed(() => this.periodStore.isGradingOpen());
+  readonly isAddDropOpen = computed(() => this.periodStore.isAddDropOpen());
 
   readonly portalData = signal<StudentSelfServiceSummaryDto | null>(null);
   readonly telemetryData = signal<StudentSelfTelemetry | null>(null);
@@ -144,19 +152,91 @@ export class StudentSelfServicePortalComponent implements OnInit, OnDestroy {
     }
   });
 
+  readonly isFullyCleared = computed(() => {
+    const msg = this.clearanceService.currentClearance();
+    if (msg) {
+      return msg.overallStatus === 'CLEARED';
+    }
+    const data = this.portalData();
+    return data?.financialClearance === 'CLEARED' && data?.departmentalClearance === 'CLEARED';
+  });
+
+  readonly overallClearanceLabel = computed(() => {
+    return this.isFullyCleared() ? 'CLEARED FOR ENROLMENT' : 'CLEARANCE PENDING';
+  });
+
+  readonly overallClearanceSeverity = computed<'success' | 'warn'>(() => {
+    return this.isFullyCleared() ? 'success' : 'warn';
+  });
+
+  getDepartmentStatus(dept: string): string {
+    const clearanceMsg = this.clearanceService.currentClearance();
+    if (clearanceMsg?.departments && clearanceMsg.departments.length > 0) {
+      const match = clearanceMsg.departments.find(d => d.departmentName.toUpperCase() === dept.toUpperCase());
+      if (match) {
+        return match.status === 'APPROVED' ? 'CLEARED' : match.status;
+      }
+    }
+    const data = this.portalData();
+    if (dept.toUpperCase() === 'ACCOUNTING') {
+      return data?.financialClearance || 'PENDING';
+    }
+    return data?.departmentalClearance || 'PENDING';
+  }
+
   ngOnInit(): void {
     this.loadPortalSummary();
     this.loadSelfTelemetry();
     this.subscribeToRealtimeEvents();
+
+    const studentProfileId = this.authService.getStudentProfileId();
+    if (studentProfileId) {
+      this.clearanceService.initializeForStudent(studentProfileId);
+    } else {
+      this.enrollmentApi.getCurrentStudentProfile().subscribe({
+        next: (profile) => {
+          if (profile?.id) {
+            this.clearanceService.initializeForStudent(profile.id);
+          }
+        },
+        error: () => {
+          const fallbackId = this.authService.getUserId();
+          if (fallbackId) {
+            this.clearanceService.initializeForStudent(fallbackId);
+          }
+        }
+      });
+    }
+
+    this.clearanceSub = this.clearanceService.clearance$.subscribe((msg) => {
+      if (msg) {
+        const acct = msg.departments?.find(d => d.departmentName?.toUpperCase() === 'ACCOUNTING');
+        const acctStatus = acct ? (acct.status === 'APPROVED' ? 'CLEARED' : acct.status) : undefined;
+        const allCleared = msg.overallStatus === 'CLEARED';
+        this.portalData.update(curr => {
+          if (!curr) return null;
+          return {
+            ...curr,
+            financialClearance: acctStatus || (allCleared ? 'CLEARED' : curr.financialClearance),
+            departmentalClearance: allCleared ? 'CLEARED' : (msg.overallStatus === 'REJECTED' ? 'BLOCKED' : curr.departmentalClearance)
+          };
+        });
+      }
+    });
   }
 
   ngOnDestroy(): void {
     this.studentEventsSub?.unsubscribe();
+    this.clearanceSub?.unsubscribe();
   }
 
   private subscribeToRealtimeEvents(): void {
+    if (typeof window === 'undefined' || typeof (window as any).EventSource === 'undefined') {
+      return;
+    }
     const studentProfileId = this.authService.getStudentProfileId();
-    this.studentEventsSub = this.lmsApi.subscribeToStudentEvents(studentProfileId || undefined).subscribe({
+    if (!studentProfileId) return;
+    this.studentEventsSub = this.lmsApi.subscribeToStudentEvents(studentProfileId).subscribe({
       next: (event) => {
         if (event.eventType === 'GRADE_RELEASED') {
           this.messageService.add({
@@ -172,6 +252,7 @@ export class StudentSelfServicePortalComponent implements OnInit, OnDestroy {
             detail: `${event.departmentType}: ${event.signoffStatus} (Overall: ${event.overallStatus})`
           });
           this.loadPortalSummary();
+          this.clearanceService.refresh();
         } else if (event.eventType === 'STANDING_UPDATED') {
           this.messageService.add({
             severity: 'info',
@@ -242,6 +323,9 @@ export class StudentSelfServicePortalComponent implements OnInit, OnDestroy {
         }
 
         const profileId = summary?.studentId || this.authService.getStudentProfileId() || 1;
+        if (profileId) {
+          this.clearanceService.initializeForStudent(profileId);
+        }
         if (summary) {
           this.portalData.set({
             ...summary,
@@ -405,37 +489,45 @@ export class StudentSelfServicePortalComponent implements OnInit, OnDestroy {
     this.isLoadingCertificate.set(true);
     this.isCertificateDialogOpen.set(true);
 
-    this.termService.getActive().subscribe({
-      next: (activeTerm) => {
-        if (!activeTerm) {
+    const activeTerm = this.periodStore.selectedTerm();
+    const fetchCert = (termId: number) => {
+      this.termService.getHonorCertificate(termId, student.studentId).subscribe({
+        next: (cert) => {
+          this.selectedCertificate.set(cert);
+          this.isLoadingCertificate.set(false);
+        },
+        error: (err) => {
           this.isLoadingCertificate.set(false);
           this.messageService.add({
-            severity: 'warn',
-            summary: 'No Active Term',
-            detail: 'Active term could not be determined.'
+            severity: 'info',
+            summary: 'Certificate Notice',
+            detail: err.error?.detail || 'Honor certificate not yet issued for the active term.'
           });
-          return;
         }
+      });
+    };
 
-        this.termService.getHonorCertificate(activeTerm.id, student.studentId).subscribe({
-          next: (cert) => {
-            this.selectedCertificate.set(cert);
-            this.isLoadingCertificate.set(false);
-          },
-          error: (err) => {
+    if (activeTerm?.id) {
+      fetchCert(activeTerm.id);
+    } else {
+      this.termService.getActive().subscribe({
+        next: (term) => {
+          if (!term) {
             this.isLoadingCertificate.set(false);
             this.messageService.add({
-              severity: 'info',
-              summary: 'Certificate Notice',
-              detail: err.error?.detail || 'Honor certificate not yet issued for the active term.'
+              severity: 'warn',
+              summary: 'No Active Term',
+              detail: 'Active term could not be determined.'
             });
+            return;
           }
-        });
-      },
-      error: () => {
-        this.isLoadingCertificate.set(false);
-      }
-    });
+          fetchCert(term.id);
+        },
+        error: () => {
+          this.isLoadingCertificate.set(false);
+        }
+      });
+    }
   }
 
   printCertificate(): void {

@@ -2,6 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, from, firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { AuthService } from '../service/authentication/auth-service';
 
 export interface VapidPublicKeyResponse {
   publicKey: string;
@@ -24,6 +25,7 @@ export interface PushPreferences {
 })
 export class WebPushService {
   private readonly http = inject(HttpClient);
+  private readonly authService = inject(AuthService, { optional: true });
   private readonly baseUrl = `${environment.apiUrl}/v1/push`;
 
   readonly isSupported = signal<boolean>(
@@ -53,8 +55,23 @@ export class WebPushService {
       const subscribed = sub !== null;
       this.isSubscribed.set(subscribed);
 
-      // Also refresh status from backend
-      this.refreshBackendStatus();
+      let isAuth = true;
+      if (this.authService) {
+        try {
+          if (typeof this.authService.isAuthenticated === 'function') {
+            isAuth = !!this.authService.isAuthenticated();
+          } else if (typeof this.authService.accessToken === 'function') {
+            isAuth = !!this.authService.accessToken();
+          }
+        } catch {
+          isAuth = true;
+        }
+      }
+
+      // Also refresh status from backend if authenticated
+      if (isAuth) {
+        this.refreshBackendStatus();
+      }
       return subscribed;
     } catch {
       this.isSubscribed.set(false);

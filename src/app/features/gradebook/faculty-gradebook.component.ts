@@ -2,7 +2,7 @@ import { Component, OnInit, inject, signal, computed, ChangeDetectionStrategy, D
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Subscription } from 'rxjs';
+import { Subscription, catchError, of } from 'rxjs';
 
 // PrimeNG Imports
 import { TableModule } from 'primeng/table';
@@ -25,6 +25,8 @@ import { SchedulingApiService } from '../../core/service/scheduling/scheduling-a
 import { TermService } from '../../core/services/institution.service';
 import { AcademicPeriodStore } from '../../core/services/academic-period.store';
 import { AuthService } from '../../core/service/authentication/auth-service';
+import { WebSocketService } from '../../core/services/websocket.service';
+import { WS_TOPICS } from '../../core/constants/websocket-topics.constants';
 import { SectionDetailResponse } from '../../core/models/scheduling.model';
 import { TermResponse } from '../../core/models/institution.model';
 import {
@@ -79,10 +81,12 @@ export class FacultyGradebookComponent implements OnInit {
   readonly authService = inject(AuthService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly messageService = inject(MessageService);
+  private readonly wsService = inject(WebSocketService, { optional: true });
 
   private sectionsSub?: Subscription;
   private rosterSub?: Subscription;
   private sectionEventsSub?: Subscription;
+  private scheduleWsSub?: Subscription;
 
   // Active Tab State
   readonly activeTab = signal<'ROSTER' | 'CLASS_RECORD'>('ROSTER');
@@ -352,28 +356,81 @@ export class FacultyGradebookComponent implements OnInit {
     if (this.isDean() || this.isRegistrar() || this.isAdmin()) {
       this.loadPendingRequests();
     }
+
+    if (this.wsService) {
+      this.wsService.watch<any>(WS_TOPICS.ADMIN_GRADES).pipe(
+        takeUntilDestroyed(this.destroyRef),
+        catchError(() => of(null))
+      ).subscribe(msg => {
+        if (!msg) return;
+        const currentSecId = this.selectedSectionId();
+        if (currentSecId && msg.classId && msg.classId === currentSecId) {
+          this.loadSectionRoster(currentSecId);
+          if (this.activeTab() === 'CLASS_RECORD') {
+            this.loadClassRecordMatrix(currentSecId);
+          }
+        }
+        if (this.isDean() || this.isRegistrar() || this.isAdmin()) {
+          this.loadPendingRequests();
+        }
+      });
+
+      this.wsService.watch<any>(WS_TOPICS.ACTIVE_TERM).pipe(
+        takeUntilDestroyed(this.destroyRef),
+        catchError(() => of(null))
+      ).subscribe(active => {
+        if (active && active.id) {
+          this.terms.update(list => list.map(t => t.id === active.id ? { ...t, ...active } : t));
+        }
+      });
+    }
+
+    this.destroyRef.onDestroy(() => {
+      this.scheduleWsSub?.unsubscribe();
+      this.sectionsSub?.unsubscribe();
+      this.rosterSub?.unsubscribe();
+      this.sectionEventsSub?.unsubscribe();
+    });
   }
 
   loadTerms(): void {
     this.isLoading.set(true);
-    this.termService.getAll().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (terms: TermResponse[]) => {
-        this.terms.set(terms || []);
-        if (terms && terms.length > 0) {
-          const globalId = this.periodStore.selectedTermId();
-          const active = (globalId ? terms.find(t => t.id === globalId) : null)
-            || terms.find(t => t.isActive)
-            || terms[0];
-          this.onTermSelect(active.id);
-        } else {
+    if (this.termService?.allTerms$?.pipe) {
+      this.termService.allTerms$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (terms: TermResponse[]) => {
+          if (!terms || terms.length === 0) return;
+          this.terms.set(terms);
+          if (!this.selectedTermId()) {
+            const globalId = this.periodStore.selectedTermId();
+            const active = (globalId ? terms.find(t => t.id === globalId) : null)
+              || terms.find(t => t.isActive)
+              || terms[0];
+            this.onTermSelect(active.id);
+          }
+        }
+      });
+    }
+
+    if (this.termService?.getAll) {
+      this.termService.getAll().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (terms: TermResponse[]) => {
+          this.terms.set(terms || []);
+          if (terms && terms.length > 0) {
+            const globalId = this.periodStore.selectedTermId();
+            const active = (globalId ? terms.find(t => t.id === globalId) : null)
+              || terms.find(t => t.isActive)
+              || terms[0];
+            this.onTermSelect(active.id);
+          } else {
+            this.isLoading.set(false);
+          }
+        },
+        error: () => {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to load academic terms.' });
           this.isLoading.set(false);
         }
-      },
-      error: () => {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to load academic terms.' });
-        this.isLoading.set(false);
-      }
-    });
+      });
+    }
   }
 
   onTermSelect(termId: number | { value: number } | null): void {
@@ -471,6 +528,22 @@ export class FacultyGradebookComponent implements OnInit {
     const id = typeof sectionId === 'object' && sectionId !== null ? sectionId.value : Number(sectionId);
     if (!id) return;
     this.selectedSectionId.set(id);
+
+    if (this.scheduleWsSub) {
+      this.scheduleWsSub.unsubscribe();
+      this.scheduleWsSub = undefined;
+    }
+    if (this.wsService && id > 0) {
+      this.scheduleWsSub = this.wsService.watch<any>(WS_TOPICS.CLASS_SCHEDULE(id)).pipe(
+        takeUntilDestroyed(this.destroyRef),
+        catchError(() => of(null))
+      ).subscribe(schedMsg => {
+        if (schedMsg && this.selectedSectionId() === id) {
+          this.loadSectionRoster(id);
+        }
+      });
+    }
+
     this.loadSectionRoster(id);
     if (this.activeTab() === 'CLASS_RECORD') {
       this.loadClassRecordMatrix(id);

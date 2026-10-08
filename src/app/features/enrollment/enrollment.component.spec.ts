@@ -119,4 +119,46 @@ describe('EnrollmentComponent', () => {
     expect(opts.map(o => o.value)).toContain('advising');
     expect(opts.map(o => o.value)).toContain('enlistment');
   });
+
+  it('should dynamically update viewOptions and switch tab when enrollment window state flips', () => {
+    const store = TestBed.inject(EnrollmentStore);
+    store.terms.set([
+      {
+        id: 3,
+        academicYearId: 1,
+        termType: 'FIRST_SEM',
+        startDate: '2026-08-01',
+        endDate: '2026-12-15',
+        enrollmentOpen: true,
+        termName: 'AY 2026-2027 - 1st Semester'
+      }
+    ]);
+    store.setSelectedTermId(3);
+
+    vi.spyOn(component.auth, 'hasRole').mockImplementation((r: any) => r === 'STUDENT');
+    vi.spyOn(component.auth, 'hasAnyRole').mockImplementation(() => false);
+
+    // Initially open
+    expect(component.viewOptions().length).toBe(2);
+    component.setTab('enlistment');
+    expect(component.activeTab()).toBe('enlistment');
+
+    // Admin closes enrollment window
+    store.terms.set([
+      {
+        id: 3,
+        academicYearId: 1,
+        termType: 'FIRST_SEM',
+        startDate: '2026-08-01',
+        endDate: '2026-12-15',
+        enrollmentOpen: false,
+        termName: 'AY 2026-2027 - 1st Semester'
+      }
+    ]);
+    fixture.detectChanges();
+
+    // Dynamically restricted to advising
+    expect(component.viewOptions().length).toBe(1);
+    expect(component.activeTab()).toBe('advising');
+  });
 });

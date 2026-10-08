@@ -28,6 +28,8 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
 import jsQR from 'jsqr';
 import { AuthService } from '../../../core/service/authentication/auth-service';
 import { OfflineAttendanceSyncService } from '../../../core/services/offline-attendance-sync.service';
+import { WebSocketService } from '../../../core/services/websocket.service';
+import { WS_TOPICS } from '../../../core/constants/websocket-topics.constants';
 
 export interface ScheduleOption {
   label: string;
@@ -68,6 +70,10 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
   private readonly schedulingApi = inject(SchedulingApiService);
   private readonly enrollmentApi = inject(EnrollmentApiService);
   private readonly messageService = inject(MessageService);
+  private readonly wsService = inject(WebSocketService, { optional: true });
+
+  private attendanceWsSub?: Subscription;
+  private adminAttendanceWsSub?: Subscription;
 
   constructor() {
     effect(() => {
@@ -167,6 +173,16 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
       // Load instructor management schedules and daily section attendance
       this.loadAssignedSchedules();
       this.loadDailyAttendance();
+
+      if (this.wsService) {
+        this.adminAttendanceWsSub = this.wsService.watch<any>(WS_TOPICS.ADMIN_ATTENDANCE).subscribe({
+          next: (msg) => {
+            if (msg) {
+              this.loadDailyAttendance();
+            }
+          }
+        });
+      }
     }
   }
 
@@ -177,6 +193,14 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
     if (this.livePollTimer) {
       clearInterval(this.livePollTimer);
       this.livePollTimer = null;
+    }
+    if (this.attendanceWsSub) {
+      this.attendanceWsSub.unsubscribe();
+      this.attendanceWsSub = undefined;
+    }
+    if (this.adminAttendanceWsSub) {
+      this.adminAttendanceWsSub.unsubscribe();
+      this.adminAttendanceWsSub = undefined;
     }
     this.stopCameraScanner();
   }
@@ -207,6 +231,19 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
   loadStudentAttendanceHistory(studentId?: number): void {
     this.isLoadingHistory.set(true);
 
+    const targetId = studentId || this.studentProfile()?.id || this.authService.getStudentProfileId() || this.authService.getUserId();
+    if (this.wsService && targetId && targetId > 0 && !this.attendanceWsSub) {
+      this.attendanceWsSub = this.wsService.watch<any>(WS_TOPICS.ATTENDANCE(targetId)).subscribe({
+        next: (msg) => {
+          if (msg) {
+            this.analyticsApi.getCurrentStudentAttendanceSlice(0, 50).subscribe({
+              next: (slice) => this.studentHistoryRecords.set(slice?.content || [])
+            });
+          }
+        }
+      });
+    }
+
     // Prefer dedicated /student/me/slice endpoint
     this.analyticsApi.getCurrentStudentAttendanceSlice(0, 50).subscribe({
       next: (slice) => {
@@ -215,8 +252,8 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
       },
       error: () => {
         // Fallback to numeric endpoint
-        const targetId = studentId || this.studentProfile()?.id || this.authService.getStudentProfileId() || this.authService.getUserId() || 1;
-        this.analyticsApi.getStudentAttendanceSlice(targetId, 0, 50).subscribe({
+        const fallbackId = targetId || 1;
+        this.analyticsApi.getStudentAttendanceSlice(fallbackId, 0, 50).subscribe({
           next: (slice) => {
             this.studentHistoryRecords.set(slice?.content || []);
             this.isLoadingHistory.set(false);

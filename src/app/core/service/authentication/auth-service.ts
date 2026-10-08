@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, Service, signal } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { environment } from '../../../../environments/environment';
 import { Observable, tap, catchError, throwError, finalize, shareReplay } from 'rxjs';
@@ -50,7 +51,7 @@ export class AuthService {
         const parsedProgramId = rawProgramId !== undefined && rawProgramId !== null ? Number(rawProgramId) : null;
         const programId = parsedProgramId !== null && !isNaN(parsedProgramId) ? parsedProgramId : null;
 
-        const rawStudentProfileId = payload.student_profile_id ?? payload.studentProfileId;
+        const rawStudentProfileId = payload.student_profile_id ?? payload.studentProfileId ?? payload.student_id ?? payload.studentId;
         const parsedStudentProfileId = rawStudentProfileId !== undefined && rawStudentProfileId !== null ? Number(rawStudentProfileId) : null;
         const studentProfileId = parsedStudentProfileId !== null && !isNaN(parsedStudentProfileId) ? parsedStudentProfileId : null;
 
@@ -65,6 +66,7 @@ export class AuthService {
           collegeId,
           programId,
           studentProfileId,
+          studentId: studentProfileId,
           studentNumber
         };
       } catch {
@@ -72,12 +74,18 @@ export class AuthService {
       }
     });
 
+    readonly currentUser$ = toObservable(this.currentUser);
+
     getUserId(): number | null {
       return this.currentUser().id;
     }
 
     getStudentProfileId(): number | null {
       return this.currentUser().studentProfileId ?? null;
+    }
+
+    getStudentId(): number | null {
+      return this.currentUser().studentId ?? this.currentUser().studentProfileId ?? null;
     }
 
     getStudentNumber(): string | null {
@@ -131,9 +139,15 @@ export class AuthService {
     }
 
     let savedRefreshToken: string | null = null;
+    let savedToken: string | null = null;
     try {
       savedRefreshToken = localStorage.getItem('refreshToken');
+      savedToken = localStorage.getItem('token');
     } catch {}
+
+    if (!savedRefreshToken && !savedToken && !this.accessTokenSignal()) {
+      return throwError(() => new Error('No authentication session to refresh'));
+    }
 
     this.refreshInProgress$ = this.http.post<AuthResponse>(`${this.baseUrl}/refresh`, 
       { refreshToken: savedRefreshToken || undefined }, 

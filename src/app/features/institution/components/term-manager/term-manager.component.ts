@@ -228,6 +228,8 @@ export class TermManagerComponent implements OnInit {
             this.messageService.add({ severity: 'success', summary: 'Schedule Updated', detail: 'Term schedule adjusted.' });
             this.displayDialog = false;
             this.loadTermsForSelectedAy();
+            this.periodStore.refresh();
+            this.termService.refresh();
           },
           error: (err) => {
             this.isSubmitting = false;
@@ -245,9 +247,11 @@ export class TermManagerComponent implements OnInit {
         .subscribe({
           next: () => {
             this.isSubmitting = false;
-            this.messageService.add({ severity: 'success', summary: 'Term Created', detail: 'Academic term scheduled.' });
+            this.messageService.add({ severity: 'Term Created', summary: 'Term Created', detail: 'Academic term scheduled.' });
             this.displayDialog = false;
             this.loadTermsForSelectedAy();
+            this.periodStore.refresh();
+            this.termService.refresh();
           },
           error: (err) => {
             this.isSubmitting = false;
@@ -268,6 +272,7 @@ export class TermManagerComponent implements OnInit {
             this.messageService.add({ severity: 'success', summary: 'Term Activated', detail: `${this.formatTermType(t.termType)} is now active.` });
             this.loadAcademicYears();
             this.periodStore.refresh();
+            this.termService.refresh();
             this.periodStore.setTerm(t.id);
           },
           error: (err) => {
@@ -293,6 +298,7 @@ export class TermManagerComponent implements OnInit {
         });
         this.loadTermsForSelectedAy();
         this.periodStore.refresh();
+        this.termService.refresh();
         if (this.selectedTermForDetail()?.id === t.id) {
           this.selectedTermForDetail.set(updated);
         }
@@ -318,6 +324,7 @@ export class TermManagerComponent implements OnInit {
         });
         this.loadTermsForSelectedAy();
         this.periodStore.refresh();
+        this.termService.refresh();
         if (this.selectedTermForDetail()?.id === t.id) {
           this.selectedTermForDetail.set(updated);
         }
@@ -339,6 +346,8 @@ export class TermManagerComponent implements OnInit {
           next: () => {
             this.messageService.add({ severity: 'success', summary: 'Deleted', detail: 'Term removed.' });
             this.loadTermsForSelectedAy();
+            this.periodStore.refresh();
+            this.termService.refresh();
           },
           error: (err) => {
             this.messageService.add({ severity: 'error', summary: 'Deletion Guarded', detail: err.error?.detail || 'Cannot delete active operational term.' });

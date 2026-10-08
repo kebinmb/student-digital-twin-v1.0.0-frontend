@@ -1,11 +1,12 @@
 // File: src/app/core/services/academic-period.store.ts
 
-import { inject, Injectable, signal, computed, DestroyRef } from '@angular/core';
+import { inject, Injectable, signal, computed, DestroyRef, effect } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { forkJoin, of } from 'rxjs';
 import { catchError, finalize, tap } from 'rxjs/operators';
 import { AcademicYearService, TermService } from './institution.service';
 import { AcademicYear, Term } from '../models/institution.model';
+import { AuthService } from '../service/authentication/auth-service';
 
 @Injectable({
   providedIn: 'root'
@@ -13,6 +14,7 @@ import { AcademicYear, Term } from '../models/institution.model';
 export class AcademicPeriodStore {
   private readonly ayService = inject(AcademicYearService);
   private readonly termService = inject(TermService);
+  private readonly authService = inject(AuthService, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
 
   // State Signals
@@ -30,8 +32,12 @@ export class AcademicPeriodStore {
   // Computed Derivations
   readonly selectedTerm = computed(() => {
     const id = this.selectedTermId();
-    if (!id) return this.activeTerm() || (this.terms().length > 0 ? this.terms()[0] : null);
-    return this.terms().find(t => t.id === id) || null;
+    const active = this.activeTerm();
+    if (active && (!id || active.id === id)) {
+      return active;
+    }
+    if (!id) return this.terms().length > 0 ? this.terms()[0] : null;
+    return this.terms().find(t => t.id === id) || (active && active.id === id ? active : null);
   });
 
   readonly selectedAcademicYear = computed(() => {
@@ -51,10 +57,103 @@ export class AcademicPeriodStore {
   readonly isAddDropOpen = computed(() => this.selectedTerm()?.addDropOpen ?? false);
 
   constructor() {
-    this.initialize();
+    if (this.authService) {
+      effect(() => {
+        let isAuth = true;
+        try {
+          if (typeof this.authService?.isAuthenticated === 'function') {
+            isAuth = !!this.authService.isAuthenticated();
+          } else if (typeof this.authService?.isAuthenticated === 'boolean') {
+            isAuth = this.authService.isAuthenticated;
+          } else if (typeof this.authService?.accessToken === 'function') {
+            isAuth = !!this.authService.accessToken();
+          } else if (typeof this.authService?.currentUser === 'function') {
+            const user = this.authService.currentUser();
+            isAuth = !!user && user.role !== 'GUEST';
+          }
+        } catch {
+          isAuth = true;
+        }
+
+        if (isAuth) {
+          this.initialize();
+        } else {
+          this.terms.set([]);
+          this.activeTerm.set(null);
+          this.academicYears.set([]);
+          this.currentAcademicYear.set(null);
+          this.selectedTermId.set(null);
+          this.selectedAcademicYearId.set(null);
+        }
+      });
+    } else {
+      this.initialize();
+    }
+
+    if (this.termService?.activeTerm$?.pipe) {
+      this.termService.activeTerm$.pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe(active => {
+        if (active) {
+          this.activeTerm.set(active);
+          const currentTerms = this.terms();
+          const idx = currentTerms.findIndex(t => t.id === active.id);
+          if (idx !== -1) {
+            const updated = [...currentTerms];
+            updated[idx] = { ...updated[idx], ...active };
+            this.terms.set(updated);
+          }
+          if (!this.selectedTermId() || this.selectedTermId() === active.id) {
+            this.selectedTermId.set(active.id);
+            this.selectedAcademicYearId.set(active.academicYearId);
+          }
+        }
+      });
+    }
+
+    if (this.termService?.allTerms$?.pipe) {
+      this.termService.allTerms$.pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe(terms => {
+        if (terms && terms.length > 0) {
+          this.terms.set(terms);
+        }
+      });
+    }
+
+    if (this.ayService?.currentAcademicYear$?.pipe) {
+      this.ayService.currentAcademicYear$.pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe(currYear => {
+        if (currYear) {
+          this.currentAcademicYear.set(currYear);
+        }
+      });
+    }
+
+    if (this.ayService?.allAcademicYears$?.pipe) {
+      this.ayService.allAcademicYears$.pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe(years => {
+        if (years && years.length > 0) {
+          this.academicYears.set(years);
+        }
+      });
+    }
   }
 
   initialize(): void {
+    if (this.authService) {
+      try {
+        if (typeof this.authService.isAuthenticated === 'function' && !this.authService.isAuthenticated()) {
+          return;
+        }
+        if (typeof this.authService.accessToken === 'function' && !this.authService.accessToken()) {
+          return;
+        }
+      } catch {}
+    }
+
     this.isLoading.set(true);
     this.errorMessage.set(null);
 

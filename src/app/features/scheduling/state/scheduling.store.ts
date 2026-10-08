@@ -18,6 +18,8 @@ import {
 import { CurriculumLookupOption } from '../../../core/models/curriculum-designer.model';
 import { EnrollmentStore } from '../../enrollment/state/enrollment.store';
 import { AcademicPeriodStore } from '../../../core/services/academic-period.store';
+import { WebSocketService } from '../../../core/services/websocket.service';
+import { WS_TOPICS } from '../../../core/constants/websocket-topics.constants';
 import { catchError, finalize, forkJoin, map, of, tap, Subscription } from 'rxjs';
 
 @Injectable({
@@ -30,9 +32,11 @@ export class SchedulingStore {
   private readonly programService = inject(ProgramService);
   private readonly enrollmentStore = inject(EnrollmentStore);
   private readonly academicPeriodStore = inject(AcademicPeriodStore);
+  private readonly wsService = inject(WebSocketService, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
 
   private sectionEventsSub?: Subscription;
+  private facultyWorkloadSub?: Subscription;
 
   // Signals
   readonly terms = signal<SchedulingTermDto[]>([]);
@@ -81,6 +85,40 @@ export class SchedulingStore {
       if (globalTermId && globalTermId !== this.selectedTermId()) {
         this.selectedTermId.set(globalTermId);
         this.loadSections(globalTermId);
+      }
+    });
+
+    if (this.wsService) {
+      this.wsService.watch<any>(WS_TOPICS.ACTIVE_TERM).pipe(
+        takeUntilDestroyed(this.destroyRef),
+        catchError(() => of(null))
+      ).subscribe(active => {
+        if (active && active.id) {
+          this.terms.update(list => list.map(t => t.id === active.id ? { ...t, ...active } : t));
+        }
+      });
+
+      this.wsService.watch<any>(WS_TOPICS.ADMIN_ENROLLMENTS).pipe(
+        takeUntilDestroyed(this.destroyRef),
+        catchError(() => of(null))
+      ).subscribe(msg => {
+        if (msg) {
+          const currentTermId = this.selectedTermId();
+          if (currentTermId && currentTermId > 0) {
+            this.loadSections(currentTermId);
+          }
+        }
+      });
+    }
+
+    this.destroyRef.onDestroy(() => {
+      if (this.sectionEventsSub) {
+        this.sectionEventsSub.unsubscribe();
+        this.sectionEventsSub = undefined;
+      }
+      if (this.facultyWorkloadSub) {
+        this.facultyWorkloadSub.unsubscribe();
+        this.facultyWorkloadSub = undefined;
       }
     });
   }
@@ -277,6 +315,23 @@ export class SchedulingStore {
 
   loadFacultyWorkload(termId: number, facultyId: number): void {
     this.isWorkloadLoading.set(true);
+
+    if (this.facultyWorkloadSub) {
+      this.facultyWorkloadSub.unsubscribe();
+      this.facultyWorkloadSub = undefined;
+    }
+
+    if (this.wsService && facultyId > 0) {
+      this.facultyWorkloadSub = this.wsService.watch<FacultyLoadSummaryResponse>(WS_TOPICS.FACULTY(facultyId)).pipe(
+        takeUntilDestroyed(this.destroyRef),
+        catchError(() => of(null))
+      ).subscribe(workload => {
+        if (workload && workload.facultyUserId === facultyId) {
+          this.selectedFacultyWorkload.set(workload);
+        }
+      });
+    }
+
     this.schedulingApi.getFacultyWorkload(termId, facultyId).pipe(
       takeUntilDestroyed(this.destroyRef),
       tap(workload => this.selectedFacultyWorkload.set(workload)),

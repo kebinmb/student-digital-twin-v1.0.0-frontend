@@ -21,7 +21,32 @@
           Student ID: <span class="font-mono-bold">{{ portalData()?.studentNumber || '—' }}</span> &bull;
           Program: <span class="font-semibold-navy">{{ portalData()?.programCode || '—' }}</span> &bull;
           Year Level: <span class="font-semibold-navy">Year {{ portalData()?.yearLevel || '1' }}</span>
+          @if (activeTerm(); as term) {
+            &bull; Term: <span class="font-semibold-navy">{{ term.termName || term.termType }}</span>
+          }
         </p>
+        @if (activeTerm()) {
+          <div class="flex items-center gap-2 mt-2">
+            <p-tag
+              [value]="isEnrollmentOpen() ? 'Enrollment: OPEN' : 'Enrollment: CLOSED'"
+              [severity]="isEnrollmentOpen() ? 'success' : 'secondary'"
+              [icon]="isEnrollmentOpen() ? 'pi pi-lock-open' : 'pi pi-lock'"
+              [rounded]="true">
+            </p-tag>
+            <p-tag
+              [value]="isGradingOpen() ? 'Grading: OPEN' : 'Grading: CLOSED'"
+              [severity]="isGradingOpen() ? 'success' : 'secondary'"
+              [icon]="isGradingOpen() ? 'pi pi-check-circle' : 'pi pi-lock'"
+              [rounded]="true">
+            </p-tag>
+            <p-tag
+              [value]="isAddDropOpen() ? 'Add/Drop: OPEN' : 'Add/Drop: CLOSED'"
+              [severity]="isAddDropOpen() ? 'success' : 'secondary'"
+              [icon]="isAddDropOpen() ? 'pi pi-sync' : 'pi pi-lock'"
+              [rounded]="true">
+            </p-tag>
+          </div>
+        }
       </div>
     </div>
 
@@ -114,9 +139,9 @@
         </div>
         <div class="tag-wrapper">
           <p-tag
-            [value]="data.financialClearance"
-            [severity]="getClearanceSeverity(data.financialClearance)"
-            [icon]="data.financialClearance === 'CLEARED' ? 'pi pi-check' : 'pi pi-exclamation-triangle'"
+            [value]="getDepartmentStatus('ACCOUNTING')"
+            [severity]="getClearanceSeverity(getDepartmentStatus('ACCOUNTING'))"
+            [icon]="getDepartmentStatus('ACCOUNTING') === 'CLEARED' ? 'pi pi-check' : 'pi pi-exclamation-triangle'"
             [rounded]="true" />
         </div>
         <div class="tile-caption">Tuition Assessment & Cashier Audit</div>
@@ -132,9 +157,9 @@
         </div>
         <div class="tag-wrapper">
           <p-tag
-            [value]="data.departmentalClearance"
-            [severity]="getClearanceSeverity(data.departmentalClearance)"
-            [icon]="data.departmentalClearance === 'CLEARED' ? 'pi pi-check' : 'pi pi-info-circle'"
+            [value]="getDepartmentStatus('DEAN')"
+            [severity]="getClearanceSeverity(getDepartmentStatus('DEAN'))"
+            [icon]="getDepartmentStatus('DEAN') === 'CLEARED' ? 'pi pi-check' : 'pi pi-info-circle'"
             [rounded]="true" />
         </div>
         <div class="tile-caption">Academic Program & Department Sign-off</div>
@@ -150,9 +175,9 @@
         </div>
         <div class="tag-wrapper">
           <p-tag
-            [value]="data.departmentalClearance"
-            [severity]="getClearanceSeverity(data.departmentalClearance)"
-            [icon]="data.departmentalClearance === 'CLEARED' ? 'pi pi-check' : 'pi pi-info-circle'"
+            [value]="getDepartmentStatus('LIBRARY')"
+            [severity]="getClearanceSeverity(getDepartmentStatus('LIBRARY'))"
+            [icon]="getDepartmentStatus('LIBRARY') === 'CLEARED' ? 'pi pi-check' : 'pi pi-info-circle'"
             [rounded]="true" />
         </div>
         <div class="tile-caption">Book Returns & Circulation Audit</div>
@@ -168,9 +193,9 @@
         </div>
         <div class="tag-wrapper">
           <p-tag
-            [value]="data.departmentalClearance"
-            [severity]="getClearanceSeverity(data.departmentalClearance)"
-            [icon]="data.departmentalClearance === 'CLEARED' ? 'pi pi-check' : 'pi pi-info-circle'"
+            [value]="getDepartmentStatus('LABORATORY')"
+            [severity]="getClearanceSeverity(getDepartmentStatus('LABORATORY'))"
+            [icon]="getDepartmentStatus('LABORATORY') === 'CLEARED' ? 'pi pi-check' : 'pi pi-info-circle'"
             [rounded]="true" />
         </div>
         <div class="tile-caption">Apparatus & Terminal Sign-off</div>
@@ -186,9 +211,9 @@
         </div>
         <div class="tag-wrapper">
           <p-tag
-            [value]="data.departmentalClearance"
-            [severity]="getClearanceSeverity(data.departmentalClearance)"
-            [icon]="data.departmentalClearance === 'CLEARED' ? 'pi pi-check' : 'pi pi-info-circle'"
+            [value]="getDepartmentStatus('STUDENT_AFFAIRS')"
+            [severity]="getClearanceSeverity(getDepartmentStatus('STUDENT_AFFAIRS'))"
+            [icon]="getDepartmentStatus('STUDENT_AFFAIRS') === 'CLEARED' ? 'pi pi-check' : 'pi pi-info-circle'"
             [rounded]="true" />
         </div>
         <div class="tile-caption">Discipline, Guidance & Activity Audit</div>
@@ -204,8 +229,8 @@
         </div>
         <div class="tag-wrapper">
           <p-tag
-            [value]="data.financialClearance === 'CLEARED' && data.departmentalClearance === 'CLEARED' ? 'CLEARED FOR ENROLMENT' : 'CLEARANCE PENDING'"
-            [severity]="data.financialClearance === 'CLEARED' && data.departmentalClearance === 'CLEARED' ? 'success' : 'warn'"
+            [value]="overallClearanceLabel()"
+            [severity]="overallClearanceSeverity()"
             [rounded]="true" />
         </div>
         <div class="tile-caption">Unified Gate & Enrollment Clearance</div>
@@ -218,13 +243,18 @@
     <div class="two-column-grid">
       <!-- Self-Service Enrolment Card -->
       <div class="bento-card content-card">
-        <div class="bento-card-header">
+        <div class="bento-card-header flex items-center justify-between">
           <div>
             <h3 class="bento-card-title">
               <i class="pi pi-users header-icon-sm" aria-hidden="true"></i> Self-Service Enrolment
             </h3>
             <p class="bento-card-subtitle">Enlist in section slots and submit semester load</p>
           </div>
+          @if (isEnrollmentOpen()) {
+            <p-tag value="WINDOW OPEN" severity="success" icon="pi pi-lock-open" [rounded]="true"></p-tag>
+          } @else {
+            <p-tag value="WINDOW CLOSED" severity="secondary" icon="pi pi-lock" [rounded]="true"></p-tag>
+          }
         </div>
         <div class="action-card-body">
           <p class="action-description">
@@ -233,12 +263,13 @@
           <div class="action-footer">
             <span class="font-semibold-navy">Active Load: <strong>{{ totalActiveUnits() }} Units</strong></span>
             <p-button
-              label="Launch Self-Enrolment"
-              icon="pi pi-th-large"
-              severity="primary"
+              [label]="isEnrollmentOpen() ? 'Launch Self-Enrolment' : 'Enrollment Closed'"
+              [icon]="isEnrollmentOpen() ? 'pi pi-th-large' : 'pi pi-lock'"
+              [severity]="isEnrollmentOpen() ? 'primary' : 'secondary'"
               size="small"
+              [disabled]="!isEnrollmentOpen()"
               (onClick)="navigateToEnrolment()"
-              pTooltip="Select section slots & confirm official term enrollment"
+              [pTooltip]="isEnrollmentOpen() ? 'Select section slots & confirm official term enrollment' : 'Enrollment window is currently closed for this term'"
               tooltipPosition="top"
               aria-label="Launch Self-Enrolment Module" />
           </div>
@@ -544,14 +575,14 @@
         <div class="pass-clearance-row">
           <div class="pass-clearance-col">
             <span class="clearance-label">Financial Clearance</span>
-            <span class="clearance-val font-mono" [class.cleared]="data.financialClearance === 'CLEARED'">
-              {{ data.financialClearance }}
+            <span class="clearance-val font-mono" [class.cleared]="getDepartmentStatus('ACCOUNTING') === 'CLEARED'">
+              {{ getDepartmentStatus('ACCOUNTING') }}
             </span>
           </div>
           <div class="pass-clearance-col">
             <span class="clearance-label">Dept. Clearance</span>
-            <span class="clearance-val font-mono" [class.cleared]="data.departmentalClearance === 'CLEARED'">
-              {{ data.departmentalClearance }}
+            <span class="clearance-val font-mono" [class.cleared]="isFullyCleared()">
+              {{ isFullyCleared() ? 'CLEARED' : 'PENDING' }}
             </span>
           </div>
         </div>

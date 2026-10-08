@@ -17,8 +17,10 @@ import {
 } from '../../../core/models/enrollment.model';
 import { TermResponse } from '../../../core/models/institution.model';
 import { AcademicPeriodStore } from '../../../core/services/academic-period.store';
-import { catchError, finalize, forkJoin, of, tap } from 'rxjs';
+import { catchError, finalize, forkJoin, of, tap, Subscription } from 'rxjs';
 import { AuthService } from '../../../core/service/authentication/auth-service';
+import { WebSocketService } from '../../../core/services/websocket.service';
+import { WS_TOPICS } from '../../../core/constants/websocket-topics.constants';
 
 @Injectable({
   providedIn: 'root'
@@ -28,7 +30,9 @@ export class EnrollmentStore {
   private readonly termService = inject(TermService);
   private readonly authService = inject(AuthService);
   private readonly academicPeriodStore = inject(AcademicPeriodStore);
+  private readonly wsService = inject(WebSocketService, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
+  private wsSubscription?: Subscription;
 
   private currentStudentId: number | null = null;
   private currentTermId: number | null = null;
@@ -53,6 +57,102 @@ export class EnrollmentStore {
         this.setSelectedTermId(globalTermId);
       }
     });
+
+    if (this.termService?.activeTerm$) {
+      this.termService.activeTerm$.pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe(active => {
+        if (active && active.id) {
+          this.handleTermUpdate(active);
+        }
+      });
+    }
+
+    if (this.termService?.allTerms$) {
+      this.termService.allTerms$.pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe(allTerms => {
+        if (allTerms && allTerms.length > 0) {
+          this.terms.update(current => {
+            if (current.length === 0) {
+              return allTerms.map(t => ({
+                ...t,
+                termName: t.academicYearCode ? `${t.academicYearCode} - ${this.formatTermType(t.termType)}` : `Term ${t.id}`
+              }));
+            }
+            return current.map(c => {
+              const matching = allTerms.find(t => t.id === c.id);
+              return matching ? {
+                ...c,
+                ...matching,
+                termName: matching.academicYearCode ? `${matching.academicYearCode} - ${this.formatTermType(matching.termType)}` : c.termName
+              } : c;
+            });
+          });
+        }
+      });
+    }
+
+    if (this.wsService) {
+      this.wsService.watch<TermResponse>(WS_TOPICS.ACTIVE_TERM).pipe(
+        takeUntilDestroyed(this.destroyRef),
+        catchError(() => of(null))
+      ).subscribe(active => {
+        if (active && active.id) {
+          this.handleTermUpdate(active);
+        }
+      });
+
+      this.wsService.watch(WS_TOPICS.ADMIN_ENROLLMENTS).pipe(
+        takeUntilDestroyed(this.destroyRef),
+        catchError(() => of(null))
+      ).subscribe((msg) => {
+        if (msg) {
+          const termId = this.selectedTermId();
+          const sId = this.studentId();
+          if (termId && termId > 0) {
+            this.loadTermEnrollments(termId);
+            if (sId && sId > 0) {
+              this.loadStudentAdvising(sId, termId);
+            }
+          }
+        }
+      });
+    }
+
+    this.destroyRef.onDestroy(() => {
+      this.wsSubscription?.unsubscribe();
+      this.wsSubscription = undefined;
+    });
+  }
+
+  private handleTermUpdate(active: Partial<TermResponse> & { id: number }): void {
+    this.terms.update(currentTerms => {
+      const idx = currentTerms.findIndex(t => t.id === active.id);
+      const existing = idx !== -1 ? currentTerms[idx] : null;
+      const formatted: TermResponse = {
+        ...(existing || ({} as TermResponse)),
+        ...active,
+        termName: active.academicYearCode
+          ? `${active.academicYearCode} - ${this.formatTermType(active.termType || (existing?.termType || ''))}`
+          : (existing?.termName || `Term ${active.id}`)
+      };
+      if (idx !== -1) {
+        const updated = [...currentTerms];
+        updated[idx] = formatted;
+        return updated;
+      }
+      return [...currentTerms, formatted];
+    });
+
+    const currentSelected = this.selectedTermId();
+    if (currentSelected === active.id) {
+      const sid = this.studentId();
+      if (sid && sid > 0) {
+        this.loadStudentAdvising(sid, active.id);
+      }
+      this.loadTermEnrollments(active.id);
+    }
   }
 
   // Computed Derivations
@@ -88,7 +188,18 @@ export class EnrollmentStore {
   readonly selectedTerm = computed(() => {
     const id = this.selectedTermId();
     if (!id) return null;
-    return this.terms().find(t => t.id === id) || null;
+    const fromTerms = this.terms().find(t => t.id === id);
+    if (fromTerms) return fromTerms;
+    const globalTerm = this.academicPeriodStore.selectedTerm();
+    if (globalTerm && globalTerm.id === id) {
+      return {
+        ...globalTerm,
+        termName: globalTerm.academicYearCode
+          ? `${globalTerm.academicYearCode} - ${this.formatTermType(globalTerm.termType)}`
+          : `Term ${globalTerm.id}`
+      } as TermResponse;
+    }
+    return null;
   });
 
   readonly isEnrollmentClosed = computed(() => {
@@ -133,6 +244,7 @@ export class EnrollmentStore {
       this.studentId.set(null);
       this.advising.set(null);
       this.enrollment.set(null);
+      this.wsSubscription?.unsubscribe();
       return;
     }
     if (this.currentStudentId === studentId && this.studentId() === studentId) {
@@ -140,6 +252,7 @@ export class EnrollmentStore {
     }
     this.currentStudentId = studentId;
     this.studentId.set(studentId);
+    this.setupWebSocketSubscription(studentId);
     const termId = this.selectedTermId();
     if (termId && termId > 0) {
       this.loadStudentAdvising(studentId, termId);
@@ -147,6 +260,23 @@ export class EnrollmentStore {
     } else {
       this.advising.set(null);
       this.enrollment.set(null);
+    }
+  }
+
+  private setupWebSocketSubscription(studentId: number): void {
+    this.wsSubscription?.unsubscribe();
+    if (this.wsService && studentId > 0) {
+      this.wsSubscription = this.wsService.watch(WS_TOPICS.ENROLLMENT(studentId)).pipe(
+        catchError(() => of(null))
+      ).subscribe((msg) => {
+        if (msg) {
+          const termId = this.selectedTermId();
+          if (termId && termId > 0) {
+            this.loadStudentAdvising(studentId, termId);
+            this.loadTermEnrollments(termId);
+          }
+        }
+      });
     }
   }
 
@@ -230,16 +360,23 @@ export class EnrollmentStore {
       this.enrollmentApi.getCurrentStudentProfile().pipe(
         takeUntilDestroyed(this.destroyRef),
         tap(profile => {
-          this.currentStudentId = profile.id;
-          this.studentId.set(profile.id);
-          this.searchedStudents.set([{
-            id: profile.id,
-            studentIdNumber: profile.studentNumber,
-            fullName: profile.username || `Student ${profile.studentNumber}`,
-            programCode: profile.programCode,
-            yearLevel: profile.yearLevel,
-            academicStatus: profile.enrollmentStatus || 'REGULAR'
-          }]);
+          if (profile && profile.id && profile.id > 0) {
+            this.currentStudentId = profile.id;
+            this.studentId.set(profile.id);
+            this.setupWebSocketSubscription(profile.id);
+            this.searchedStudents.set([{
+              id: profile.id,
+              studentIdNumber: profile.studentNumber,
+              fullName: profile.username || `Student ${profile.studentNumber}`,
+              programCode: profile.programCode,
+              yearLevel: profile.yearLevel,
+              academicStatus: profile.enrollmentStatus || 'REGULAR'
+            }]);
+            const termId = this.selectedTermId();
+            if (termId && termId > 0) {
+              this.loadStudentAdvising(profile.id, termId);
+            }
+          }
           this.loadTerms();
         }),
         catchError(err => {
@@ -321,6 +458,7 @@ export class EnrollmentStore {
         if (advising?.studentId && advising.studentId > 0 && advising.studentId !== studentId) {
           this.currentStudentId = advising.studentId;
           this.studentId.set(advising.studentId);
+          this.setupWebSocketSubscription(advising.studentId);
           this.searchedStudents.update(list => list.map(s => s.id === studentId ? {
             ...s,
             id: advising.studentId,

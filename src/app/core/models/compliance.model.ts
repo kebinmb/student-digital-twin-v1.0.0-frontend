@@ -24,6 +24,22 @@ export interface ClearanceRequestDto {
   signoffs: ClearanceSignoffDto[];
 }
 
+export interface DepartmentClearanceItem {
+  departmentId?: number | null;
+  departmentName: string;
+  status: string; // "PENDING" | "APPROVED" | "REJECTED"
+  remarks?: string | null;
+  clearedBy?: string | null;
+  clearedAt?: string | null;
+}
+
+export interface ClearanceStatusMessage {
+  studentId: number;
+  termId: number;
+  overallStatus: string;
+  departments: DepartmentClearanceItem[];
+}
+
 export interface ClearanceStudentSuggestionDto {
   studentProfileId: number;
   studentNumber: string;

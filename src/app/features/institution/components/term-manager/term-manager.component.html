@@ -285,6 +285,7 @@
     [header]="isEditing ? 'Update Term Schedule' : 'Schedule Academic Term'"
     [(visible)]="displayDialog"
     [modal]="true"
+    [focusOnShow]="false"
     [breakpoints]="{ '960px': '75vw', '640px': '92vw' }"
     [style]="{ width: '440px', maxWidth: '95vw' }"
     [contentStyle]="{ 'overflow-x': 'hidden' }">
@@ -373,6 +374,7 @@
     [visible]="isHonorRollDialogOpen()"
     (visibleChange)="isHonorRollDialogOpen.set($event)"
     [modal]="true"
+    [focusOnShow]="false"
     [breakpoints]="{ '960px': '85vw', '640px': '95vw' }"
     [style]="{ width: '920px', maxWidth: '95vw' }"
     [contentStyle]="{ 'overflow-x': 'hidden' }">
@@ -518,6 +520,7 @@
   <p-dialog
     [(visible)]="isCertificateDialogOpen"
     [modal]="true"
+    [focusOnShow]="false"
     [draggable]="false"
     [resizable]="false"
     header="Official Certificate of Academic Honor"

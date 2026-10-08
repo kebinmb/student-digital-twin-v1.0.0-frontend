@@ -2,7 +2,7 @@
 
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { SliceResponse } from '../../models/institution.model';
 import {
@@ -30,8 +30,16 @@ export class FinancialApiService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/v1/finance`;
 
+  private readonly _activeBooklet$ = new BehaviorSubject<OrBookletDto | null>(null);
+  public readonly activeBooklet$ = this._activeBooklet$.asObservable();
+
+  private readonly _activeFeeTemplate$ = new BehaviorSubject<FeeTemplateDto | null>(null);
+  public readonly activeFeeTemplate$ = this._activeFeeTemplate$.asObservable();
+
   createFeeTemplate(request: CreateFeeTemplateRequest): Observable<FeeTemplateDto> {
-    return this.http.post<FeeTemplateDto>(`${this.baseUrl}/fee-templates`, request);
+    return this.http.post<FeeTemplateDto>(`${this.baseUrl}/fee-templates`, request).pipe(
+      tap((template) => this._activeFeeTemplate$.next(template))
+    );
   }
 
   getActiveFeeTemplate(academicYearId?: number): Observable<FeeTemplateDto> {
@@ -39,7 +47,9 @@ export class FinancialApiService {
     if (academicYearId) {
       params['academicYearId'] = String(academicYearId);
     }
-    return this.http.get<FeeTemplateDto>(`${this.baseUrl}/fee-templates/active`, { params });
+    return this.http.get<FeeTemplateDto>(`${this.baseUrl}/fee-templates/active`, { params }).pipe(
+      tap((template) => this._activeFeeTemplate$.next(template))
+    );
   }
 
   assessEnrollment(enrollmentId: number): Observable<StudentAssessmentInvoiceDto> {
@@ -90,15 +100,28 @@ export class FinancialApiService {
   }
 
   assignOrBooklet(request: CreateOrBookletRequest): Observable<OrBookletDto> {
-    return this.http.post<OrBookletDto>(`${this.baseUrl}/or-booklets`, request);
+    return this.http.post<OrBookletDto>(`${this.baseUrl}/or-booklets`, request).pipe(
+      tap((booklet) => this._activeBooklet$.next(booklet))
+    );
   }
 
   voidOfficialReceipt(request: VoidOfficialReceiptRequest): Observable<VoidedOfficialReceiptDto> {
-    return this.http.post<VoidedOfficialReceiptDto>(`${this.baseUrl}/or-booklets/void`, request);
+    return this.http.post<VoidedOfficialReceiptDto>(`${this.baseUrl}/or-booklets/void`, request).pipe(
+      tap(() => this.refreshActiveBooklet())
+    );
   }
 
   getActiveBooklet(): Observable<OrBookletDto> {
-    return this.http.get<OrBookletDto>(`${this.baseUrl}/or-booklets/active`);
+    return this.http.get<OrBookletDto>(`${this.baseUrl}/or-booklets/active`).pipe(
+      tap((booklet) => this._activeBooklet$.next(booklet))
+    );
+  }
+
+  refreshActiveBooklet(): void {
+    this.http.get<OrBookletDto>(`${this.baseUrl}/or-booklets/active`).subscribe({
+      next: (b) => this._activeBooklet$.next(b),
+      error: (err) => console.error('[FinancialApiService] refresh active booklet failed', err)
+    });
   }
 
   getCashierBooklets(): Observable<OrBookletDto[]> {

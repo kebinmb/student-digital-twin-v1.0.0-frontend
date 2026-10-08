@@ -17,6 +17,9 @@
           "builder": "@angular/build:application",
           "options": {
             "browser": "src/main.ts",
+            "polyfills": [
+              "src/polyfills.ts"
+            ],
             "tsConfig": "tsconfig.app.json",
             "assets": [
               {
@@ -67,13 +70,15 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "proxyConfig": "proxy.conf.json"
+          },
           "configurations": {
             "production": {
               "buildTarget": "student-digital-twin-v1.0.0-frontend:build:production"
             },
             "development": {
-              "buildTarget": "student-digital-twin-v1.0.0-frontend:build:development",
-              "proxyConfig": "proxy.conf.json"
+              "buildTarget": "student-digital-twin-v1.0.0-frontend:build:development"
             }
           },
           "defaultConfiguration": "development"

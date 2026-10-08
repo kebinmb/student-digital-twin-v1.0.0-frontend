@@ -33,5 +33,6 @@ export interface UserContext {
   collegeId?: number | null;
   programId?: number | null;
   studentProfileId?: number | null;
+  studentId?: number | null;
   studentNumber?: string | null;
 }

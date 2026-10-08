@@ -1,4 +1,5 @@
-import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy, effect } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy, effect, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -59,6 +60,7 @@ export class StudentAccountLedgerComponent implements OnInit {
   private readonly termService = inject(TermService);
   readonly periodStore = inject(AcademicPeriodStore);
   private readonly messageService = inject(MessageService);
+  private readonly destroyRef = inject(DestroyRef);
 
   // RBAC & Student Profile State
   readonly isStudentRole = computed(() => this.authService.hasRole('STUDENT'));
@@ -138,33 +140,69 @@ export class StudentAccountLedgerComponent implements OnInit {
   }
 
   loadTerms(): void {
-    this.termService.getAll().subscribe({
-      next: (terms) => {
-        const formatted = (terms || []).map((t) => ({
-          ...t,
-          termName: `${t.academicYearCode || 'AY'} ${t.termType ? t.termType.replace(/_/g, ' ') : ''}${t.isActive ? ' (Active)' : ''}`
-        }));
-        this.availableTerms.set(formatted);
-      },
-      error: () => this.availableTerms.set([])
-    });
-
-    this.termService.getActive().subscribe({
-      next: (active) => {
-        if (active) {
-          this.selectedTermId.set(active.id);
-          const studentId = this.searchStudentId();
-          if (studentId) {
-            this.loadStudentInvoice(studentId, active.id);
-          }
-          const assessStudent = this.assessStudentId();
-          if (assessStudent) {
-            this.resolveEnrollmentForAssessment(assessStudent, active.id);
+    if (this.termService?.allTerms$?.pipe) {
+      this.termService.allTerms$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (terms) => {
+          if (terms && terms.length > 0) {
+            const formatted = terms.map((t) => ({
+              ...t,
+              termName: `${t.academicYearCode || 'AY'} ${t.termType ? t.termType.replace(/_/g, ' ') : ''}${t.isActive ? ' (Active)' : ''}`
+            }));
+            this.availableTerms.set(formatted);
           }
         }
-      },
-      error: () => {}
-    });
+      });
+    }
+
+    if (this.termService?.getAll) {
+      this.termService.getAll().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (terms) => {
+          const formatted = (terms || []).map((t) => ({
+            ...t,
+            termName: `${t.academicYearCode || 'AY'} ${t.termType ? t.termType.replace(/_/g, ' ') : ''}${t.isActive ? ' (Active)' : ''}`
+          }));
+          this.availableTerms.set(formatted);
+        },
+        error: () => this.availableTerms.set([])
+      });
+    }
+
+    if (this.termService?.activeTerm$?.pipe) {
+      this.termService.activeTerm$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (active) => {
+          if (active) {
+            this.selectedTermId.set(active.id);
+            const studentId = this.searchStudentId();
+            if (studentId) {
+              this.loadStudentInvoice(studentId, active.id);
+            }
+            const assessStudent = this.assessStudentId();
+            if (assessStudent) {
+              this.resolveEnrollmentForAssessment(assessStudent, active.id);
+            }
+          }
+        }
+      });
+    }
+
+    if (this.termService?.getActive) {
+      this.termService.getActive().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (active) => {
+          if (active) {
+            this.selectedTermId.set(active.id);
+            const studentId = this.searchStudentId();
+            if (studentId) {
+              this.loadStudentInvoice(studentId, active.id);
+            }
+            const assessStudent = this.assessStudentId();
+            if (assessStudent) {
+              this.resolveEnrollmentForAssessment(assessStudent, active.id);
+            }
+          }
+        },
+        error: () => {}
+      });
+    }
   }
 
   loadAuthenticatedStudentProfile(): void {

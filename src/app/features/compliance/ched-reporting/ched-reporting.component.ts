@@ -1,4 +1,5 @@
-import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy, effect } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy, effect, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -50,6 +51,7 @@ export class ChedReportingComponent implements OnInit {
   private readonly termService = inject(TermService);
   readonly periodStore = inject(AcademicPeriodStore);
   private readonly messageService = inject(MessageService);
+  private readonly destroyRef = inject(DestroyRef);
 
   // Form Controls Signals
   readonly campusId = signal<number | null>(null);
@@ -104,49 +106,86 @@ export class ChedReportingComponent implements OnInit {
   }
 
   loadCampusOptions(): void {
-    this.campusService.getActive().subscribe({
-      next: (campusesList) => {
-        this.campuses.set(campusesList);
-        const main = campusesList.find((c) => c.isMain) || campusesList[0];
-        if (main && !this.campusId()) {
-          this.campusId.set(main.id);
-          this.loadFormE1();
-        }
-      },
-      error: () => {
-        this.campusService.getAll().subscribe({
-          next: (allCampuses) => {
-            this.campuses.set(allCampuses);
-            if (allCampuses.length > 0 && !this.campusId()) {
-              this.campusId.set(allCampuses[0].id);
+    if (this.campusService?.activeCampuses$?.pipe) {
+      this.campusService.activeCampuses$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (campusesList) => {
+          if (campusesList && campusesList.length > 0) {
+            this.campuses.set(campusesList);
+            const main = campusesList.find((c) => c.isMain) || campusesList[0];
+            if (main && !this.campusId()) {
+              this.campusId.set(main.id);
               this.loadFormE1();
             }
           }
-        });
-      }
-    });
+        }
+      });
+    }
+
+    if (this.campusService?.getActive) {
+      this.campusService.getActive().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (campusesList) => {
+          this.campuses.set(campusesList);
+          const main = campusesList.find((c) => c.isMain) || campusesList[0];
+          if (main && !this.campusId()) {
+            this.campusId.set(main.id);
+            this.loadFormE1();
+          }
+        },
+        error: () => {
+          if (this.campusService?.getAll) {
+            this.campusService.getAll().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+              next: (allCampuses) => {
+                this.campuses.set(allCampuses);
+                if (allCampuses.length > 0 && !this.campusId()) {
+                  this.campusId.set(allCampuses[0].id);
+                  this.loadFormE1();
+                }
+              }
+            });
+          }
+        }
+      });
+    }
   }
 
   loadTermOptions(): void {
-    this.termService.getAll().subscribe({
-      next: (termsList) => {
-        this.terms.set(termsList);
-        const active = termsList.find((t) => t.isActive) || termsList[0];
-        if (active && !this.termId()) {
-          this.termId.set(active.id);
-        }
-      },
-      error: () => {
-        this.termService.getActive().subscribe({
-          next: (active) => {
-            this.terms.set([active]);
-            if (!this.termId()) {
+    if (this.termService?.allTerms$?.pipe) {
+      this.termService.allTerms$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (termsList) => {
+          if (termsList && termsList.length > 0) {
+            this.terms.set(termsList);
+            const active = termsList.find((t) => t.isActive) || termsList[0];
+            if (active && !this.termId()) {
               this.termId.set(active.id);
             }
           }
-        });
-      }
-    });
+        }
+      });
+    }
+
+    if (this.termService?.getAll) {
+      this.termService.getAll().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (termsList) => {
+          this.terms.set(termsList);
+          const active = termsList.find((t) => t.isActive) || termsList[0];
+          if (active && !this.termId()) {
+            this.termId.set(active.id);
+          }
+        },
+        error: () => {
+          if (this.termService?.getActive) {
+            this.termService.getActive().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+              next: (active) => {
+                this.terms.set([active]);
+                if (!this.termId()) {
+                  this.termId.set(active.id);
+                }
+              }
+            });
+          }
+        }
+      });
+    }
   }
 
   onCampusChange(newCampusId: number | null): void {

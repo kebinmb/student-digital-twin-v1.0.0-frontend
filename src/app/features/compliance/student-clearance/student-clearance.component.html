@@ -64,13 +64,11 @@
             filterPlaceholder="Search applicant name or number..."
             placeholder="Select applicant by name or ID number..."
             (onChange)="onSuggestionChange($event)"
-            styleClass="custom-select-trigger">
+            class="custom-select-trigger">
             <ng-template pTemplate="selectedItem" let-selected>
               @if (selected) {
                 <div class="select-item-selected">
-                  <i class="pi pi-user form-label-icon mr-2 text-sm"></i>
                   <span class="font-semibold-navy">{{ selected.suggestion?.studentName || selected.label }}</span>
-                  <span class="code-badge ml-2 font-mono">{{ selected.value }}</span>
                 </div>
               }
             </ng-template>
@@ -86,11 +84,6 @@
                 </div>
                 <div class="suggestion-meta">
                   <span class="code-badge">{{ item.suggestion.programCode }}</span>
-                  <p-tag
-                    [value]="item.suggestion.clearanceStatus"
-                    [severity]="getStatusSeverity(item.suggestion.clearanceStatus)"
-                    styleClass="status-tag-compact">
-                  </p-tag>
                 </div>
               </div>
             </ng-template>
@@ -111,7 +104,7 @@
           optionLabel="label"
           optionValue="value"
           placeholder="Select clearance purpose..."
-          styleClass="custom-select-trigger">
+          class="custom-select-trigger">
           <ng-template pTemplate="selectedItem" let-selected>
             @if (selected) {
               <div class="purpose-pill">
@@ -184,7 +177,6 @@
           <div class="student-meta">
             <div class="flex-row gap-xs mb-1">
               <span class="req-id-tag">CLEARANCE APPLICATION</span>
-              <span class="code-badge">#{{ req.id }}</span>
             </div>
             <h2 class="req-student-name">
               {{ req.studentName }}

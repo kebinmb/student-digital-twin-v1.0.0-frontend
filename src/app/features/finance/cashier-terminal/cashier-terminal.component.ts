@@ -1,6 +1,7 @@
 // File: src/app/features/finance/cashier-terminal/cashier-terminal.component.ts
 
-import { Component, OnInit, OnDestroy, signal, computed, inject, ChangeDetectionStrategy, effect } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, inject, ChangeDetectionStrategy, effect, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
@@ -74,6 +75,7 @@ export class CashierTerminalComponent implements OnInit, OnDestroy {
   private readonly userApi = inject(UserApiService);
   private readonly lmsApi = inject(LmsApiService);
   private readonly messageService = inject(MessageService);
+  private readonly destroyRef = inject(DestroyRef);
 
   private studentStreamSub?: Subscription;
 
@@ -201,27 +203,59 @@ export class CashierTerminalComponent implements OnInit, OnDestroy {
   }
 
   loadTerms(): void {
-    this.termService.getAll().subscribe({
-      next: (terms) => {
-        const formatted = (terms || []).map((t) => ({
-          ...t,
-          termName: `${t.academicYearCode || 'AY'} ${t.termType ? t.termType.replace(/_/g, ' ') : ''}${t.isActive ? ' (Active)' : ''}`
-        }));
-        this.availableTerms.set(formatted);
-      },
-      error: () => this.availableTerms.set([])
-    });
-
-    this.termService.getActive().subscribe({
-      next: (active) => {
-        const targetId = this.periodStore.selectedTermId() || (active ? active.id : null);
-        if (targetId) {
-          this.selectedTermId.set(targetId);
-          this.searchTermId.set(targetId);
+    if (this.termService?.allTerms$?.pipe) {
+      this.termService.allTerms$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (terms) => {
+          if (terms && terms.length > 0) {
+            const formatted = terms.map((t) => ({
+              ...t,
+              termName: `${t.academicYearCode || 'AY'} ${t.termType ? t.termType.replace(/_/g, ' ') : ''}${t.isActive ? ' (Active)' : ''}`
+            }));
+            this.availableTerms.set(formatted);
+          }
         }
-      },
-      error: () => {}
-    });
+      });
+    }
+
+    if (this.termService?.getAll) {
+      this.termService.getAll().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (terms) => {
+          const formatted = (terms || []).map((t) => ({
+            ...t,
+            termName: `${t.academicYearCode || 'AY'} ${t.termType ? t.termType.replace(/_/g, ' ') : ''}${t.isActive ? ' (Active)' : ''}`
+          }));
+          this.availableTerms.set(formatted);
+        },
+        error: () => this.availableTerms.set([])
+      });
+    }
+
+    if (this.termService?.activeTerm$?.pipe) {
+      this.termService.activeTerm$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (active) => {
+          if (active) {
+            const targetId = this.periodStore.selectedTermId() || active.id;
+            if (targetId) {
+              this.selectedTermId.set(targetId);
+              this.searchTermId.set(targetId);
+            }
+          }
+        }
+      });
+    }
+
+    if (this.termService?.getActive) {
+      this.termService.getActive().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (active) => {
+          const targetId = this.periodStore.selectedTermId() || (active ? active.id : null);
+          if (targetId) {
+            this.selectedTermId.set(targetId);
+            this.searchTermId.set(targetId);
+          }
+        },
+        error: () => {}
+      });
+    }
   }
 
   onTermChange(termId: number | null): void {
@@ -275,10 +309,22 @@ export class CashierTerminalComponent implements OnInit, OnDestroy {
   }
 
   loadActiveBooklet(): void {
-    this.financialApi.getActiveBooklet().subscribe({
-      next: (booklet) => this.activeBooklet.set(booklet),
-      error: () => this.activeBooklet.set(null)
-    });
+    if (this.financialApi?.activeBooklet$?.pipe) {
+      this.financialApi.activeBooklet$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (booklet) => {
+          if (booklet) {
+            this.activeBooklet.set(booklet);
+          }
+        }
+      });
+    }
+
+    if (this.financialApi?.getActiveBooklet) {
+      this.financialApi.getActiveBooklet().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (booklet) => this.activeBooklet.set(booklet),
+        error: () => this.activeBooklet.set(null)
+      });
+    }
   }
 
   openAssignBookletModal(): void {

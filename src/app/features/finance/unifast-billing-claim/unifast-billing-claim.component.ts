@@ -1,6 +1,5 @@
-// File: src/app/features/finance/unifast-billing-claim/unifast-billing-claim.component.ts
-
-import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -57,6 +56,7 @@ export class UnifastBillingClaimComponent implements OnInit {
   private readonly campusService = inject(CampusService);
   readonly periodStore = inject(AcademicPeriodStore);
   private readonly messageService = inject(MessageService);
+  private readonly destroyRef = inject(DestroyRef);
 
   // Form Field Signals
   readonly availableTerms = signal<Term[]>([]);
@@ -93,52 +93,95 @@ export class UnifastBillingClaimComponent implements OnInit {
   }
 
   loadTerms(): void {
-    this.termService.getAll().subscribe({
-      next: (terms) => {
-        const formatted = (terms || []).map((t) => ({
-          ...t,
-          termName: `${t.academicYearCode || 'AY'} ${t.termType ? t.termType.replace(/_/g, ' ') : ''}${t.isActive ? ' (Active)' : ''}`
-        }));
-        this.availableTerms.set(formatted);
-      },
-      error: () => this.availableTerms.set([])
-    });
+    if (this.termService?.allTerms$?.pipe) {
+      this.termService.allTerms$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (terms) => {
+          if (terms && terms.length > 0) {
+            const formatted = terms.map((t) => ({
+              ...t,
+              termName: `${t.academicYearCode || 'AY'} ${t.termType ? t.termType.replace(/_/g, ' ') : ''}${t.isActive ? ' (Active)' : ''}`
+            }));
+            this.availableTerms.set(formatted);
+          }
+        }
+      });
+    }
+
+    if (this.termService?.getAll) {
+      this.termService.getAll().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (terms) => {
+          const formatted = (terms || []).map((t) => ({
+            ...t,
+            termName: `${t.academicYearCode || 'AY'} ${t.termType ? t.termType.replace(/_/g, ' ') : ''}${t.isActive ? ' (Active)' : ''}`
+          }));
+          this.availableTerms.set(formatted);
+        },
+        error: () => this.availableTerms.set([])
+      });
+    }
 
     const globalTermId = this.periodStore.selectedTermId();
     if (globalTermId) {
       this.searchTermId.set(globalTermId);
       this.loadClaimBatches();
-      return;
+    } else if (this.termService?.getActive) {
+      this.termService.getActive().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (active) => {
+          if (active) {
+            this.searchTermId.set(this.periodStore.selectedTermId() || active.id);
+            this.loadClaimBatches();
+          }
+        },
+        error: () => {
+          const terms = this.availableTerms();
+          if (terms.length > 0) {
+            this.searchTermId.set(this.periodStore.selectedTermId() || terms[0].id);
+            this.loadClaimBatches();
+          }
+        }
+      });
     }
 
-    this.termService.getActive().subscribe({
-      next: (active) => {
-        if (active) {
-          this.searchTermId.set(this.periodStore.selectedTermId() || active.id);
-          this.loadClaimBatches();
+    if (this.termService?.activeTerm$?.pipe) {
+      this.termService.activeTerm$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (active) => {
+          if (active) {
+            const effectiveId = this.periodStore.selectedTermId() || active.id;
+            if (this.searchTermId() !== effectiveId) {
+              this.searchTermId.set(effectiveId);
+              this.loadClaimBatches();
+            }
+          }
         }
-      },
-      error: () => {
-        // Fallback: if active term endpoint fails, load first available term
-        const terms = this.availableTerms();
-        if (terms.length > 0) {
-          this.searchTermId.set(this.periodStore.selectedTermId() || terms[0].id);
-          this.loadClaimBatches();
-        }
-      }
-    });
+      });
+    }
   }
 
   loadCampuses(): void {
-    this.campusService.getActive().subscribe({
-      next: (campuses) => {
-        this.availableCampuses.set(campuses || []);
-        if (campuses && campuses.length > 0 && !this.createCampusId()) {
-          this.createCampusId.set(campuses[0].id);
+    if (this.campusService?.activeCampuses$?.pipe) {
+      this.campusService.activeCampuses$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (campuses) => {
+          if (campuses && campuses.length > 0) {
+            this.availableCampuses.set(campuses);
+            if (!this.createCampusId()) {
+              this.createCampusId.set(campuses[0].id);
+            }
+          }
         }
-      },
-      error: () => this.availableCampuses.set([])
-    });
+      });
+    }
+
+    if (this.campusService?.getActive) {
+      this.campusService.getActive().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (campuses) => {
+          this.availableCampuses.set(campuses || []);
+          if (campuses && campuses.length > 0 && !this.createCampusId()) {
+            this.createCampusId.set(campuses[0].id);
+          }
+        },
+        error: () => this.availableCampuses.set([])
+      });
+    }
   }
 
   onTermChange(termId: number | null): void {

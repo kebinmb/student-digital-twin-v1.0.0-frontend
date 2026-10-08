@@ -1049,18 +1049,35 @@ export class DashboardComponent implements OnInit {
 
   loadNotices(): void {
     this.isNoticesLoading.set(true);
-    this.noticeApiService.getActiveNotices()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (list) => {
-          this.noticesSignal.set(list || []);
-          this.isNoticesLoading.set(false);
-        },
-        error: () => {
-          this.noticesSignal.set([]);
-          this.isNoticesLoading.set(false);
-        }
-      });
+    if (this.noticeApiService?.activeNotices$?.pipe) {
+      this.noticeApiService.activeNotices$
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (list) => {
+            this.noticesSignal.set(list || []);
+            this.isNoticesLoading.set(false);
+          },
+          error: () => {
+            this.noticesSignal.set([]);
+            this.isNoticesLoading.set(false);
+          }
+        });
+    }
+
+    if (this.noticeApiService?.getActiveNotices) {
+      this.noticeApiService.getActiveNotices()
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (list) => {
+            this.noticesSignal.set(list || []);
+            this.isNoticesLoading.set(false);
+          },
+          error: () => {
+            this.noticesSignal.set([]);
+            this.isNoticesLoading.set(false);
+          }
+        });
+    }
   }
 
   refreshMetrics(): void {

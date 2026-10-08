@@ -38,6 +38,8 @@ import { TextareaModule } from 'primeng/textarea';
 
 import { AuthService } from '../../../core/service/authentication/auth-service';
 import { EquityApiService } from '../../../core/service/compliance/equity-api.service';
+import { WebSocketService } from '../../../core/services/websocket.service';
+import { WS_TOPICS } from '../../../core/constants/websocket-topics.constants';
 import {
   StudentEquityProfileDto,
   UpdateStudentEquityProfileRequest,
@@ -84,6 +86,7 @@ export class StudentEquityProfilingComponent implements OnInit, OnDestroy {
   private readonly equityApi = inject(EquityApiService);
   private readonly authService = inject(AuthService);
   private readonly messageService = inject(MessageService);
+  private readonly wsService = inject(WebSocketService, { optional: true });
 
   readonly isLoading = signal<boolean>(true);
   readonly isSaving = signal<boolean>(false);
@@ -91,6 +94,7 @@ export class StudentEquityProfilingComponent implements OnInit, OnDestroy {
   readonly profile = signal<StudentEquityProfileDto | null>(null);
 
   private readonly subs = new Subscription();
+  private equityWsSub?: Subscription;
   private hasInitialized = false;
 
   private readonly ADMIN_ROLES = ['SUPER_ADMIN', 'ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'GUIDANCE'];
@@ -215,6 +219,10 @@ export class StudentEquityProfilingComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.equityWsSub) {
+      this.equityWsSub.unsubscribe();
+      this.equityWsSub = undefined;
+    }
     this.subs.unsubscribe();
   }
 
@@ -363,6 +371,27 @@ export class StudentEquityProfilingComponent implements OnInit, OnDestroy {
           }
         }
         this.isLoading.set(false);
+
+        const profileId = data.studentProfileId || (sid ? Number(sid) : 0);
+        if (this.wsService && profileId > 0 && !this.equityWsSub) {
+          this.equityWsSub = this.wsService.watch<any>(WS_TOPICS.EQUITY(profileId)).subscribe({
+            next: (msg) => {
+              if (msg) {
+                const s = this.studentId();
+                const refresh$ = (s && s !== '')
+                  ? this.equityApi.getEquityProfileByStudentProfileId(Number(s))
+                  : this.equityApi.getMyEquityProfile();
+                refresh$.subscribe({
+                  next: (refreshed) => {
+                    this.profile.set(refreshed);
+                    this.populateForm(refreshed);
+                  }
+                });
+              }
+            }
+          });
+          this.subs.add(this.equityWsSub);
+        }
       },
       error: (err) => {
         this.messageService.add({
