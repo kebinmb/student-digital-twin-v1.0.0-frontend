@@ -3,15 +3,11 @@
   <!-- Institutional Sticky Header Toolbar -->
   <div class="equity-profiling-toolbar-card">
     <div class="header-branding">
-      <div class="header-icon-box" [ngClass]="{ 'admin-icon-box': isAdminMode() }">
-        <i [class]="isAdminMode() ? 'pi pi-verified header-icon admin-icon' : 'pi pi-id-card header-icon'"></i>
-      </div>
       <div class="header-text-group">
         <div class="header-title-badge-row">
           <h1 class="header-title">
             {{ isAdminMode() ? 'Institutional Statutory Equity Compliance Audit' : 'Philippine Statutory Equity Target Profiling' }}
           </h1>
-          @if (profile()) { <p-tag [value]="statusTagLabel()" [severity]="statusTagSeverity()"></p-tag> }
         </div>
         <p class="header-subtitle">
           {{ isAdminMode() ? 'Administrative compliance audit & documentary verification for Philippine affirmative action statutory indicators' : 'Institutional demographic & affirmative action declaration (RA 10931 UniFAST, RA 8371 IPRA, RA 7277 PWD, RA 11861 Solo Parents, RA 8435 RSBSA, EO 70 E-CLIP, GIDA & First-Gen)' }}

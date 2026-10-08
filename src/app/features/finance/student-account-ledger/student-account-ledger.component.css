@@ -483,36 +483,103 @@
   margin: 0.15rem 0 0 0;
 }
 
+/* Container bar: switches to 4 strictly equal columns */
 .breakdown-meta-bar {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-  background: var(--p-surface-50, #f8fafc);
-  border: 1px solid var(--p-surface-200, #e2e8f0);
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.25rem;
+  padding: 1rem 1.25rem;
+  background-color: var(--surface-card, #ffffff);
+  border: 1px solid var(--surface-border, #e2e8f0);
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
 }
 
+/* Individual data unit */
 .meta-pill {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  justify-content: center;
+  gap: 0.25rem;
+  min-width: 0; /* Ensures text-overflow/truncation stays within the grid track */
+  position: relative;
 }
 
+/* Subtle vertical divider between items on desktop */
+.meta-pill:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  right: calc(-0.625rem - 0.5px); /* Centers the divider inside the 1.25rem gap */
+  top: 15%;
+  height: 70%;
+  width: 1px;
+  background-color: var(--surface-border, #e2e8f0);
+}
+
+/* Label styling */
 .meta-label {
-  font-size: 0.65rem;
+  font-size: 0.6875rem;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   color: var(--chmsu-slate-500, #64748b);
-  letter-spacing: 0.03em;
+  white-space: nowrap;
 }
 
+/* Value styling */
 .meta-val {
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--chmsu-navy-900, #0f172a);
+  line-height: 1.25;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
+/* Ensure PrimeVue p-tag aligns naturally with text values */
+.meta-pill p-tag {
+  align-self: flex-start;
+  margin-top: 0.125rem;
+}
+
+/* Tablet view (2x2 equal grid) */
+@media (max-width: 840px) {
+  .breakdown-meta-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 1rem;
+  }
+
+  /* Reset desktop divider rules */
+  .meta-pill:not(:last-child)::after {
+    display: none;
+  }
+
+  /* Show divider only between column 1 and 2 on each row */
+  .meta-pill:nth-child(odd)::after {
+    display: block;
+  }
+}
+
+/* Mobile view (single column stacked) */
+@media (max-width: 520px) {
+  .breakdown-meta-bar {
+    grid-template-columns: 1fr;
+    gap: 0.875rem;
+    padding: 0.875rem 1rem;
+  }
+
+  /* Remove vertical dividers completely */
+  .meta-pill:nth-child(odd)::after {
+    display: none;
+  }
+
+  /* Optional subtle horizontal divider between stacked rows */
+  .meta-pill:not(:last-child) {
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--surface-border, #e2e8f0);
+  }
+}
 .fee-breakdown-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

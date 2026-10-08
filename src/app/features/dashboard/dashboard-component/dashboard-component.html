@@ -243,20 +243,6 @@
 
     <!-- Health Gauge Card & Bento Grid -->
     <div class="grid-section">
-      <div class="stat-card health-card">
-        <div class="knob-container">
-          <p-knob [ngModel]="adminUserActiveRate()" [readonly]="true" [size]="70" valueTemplate="{value}%"
-            valueColor="var(--chmsu-green-main, #116834)" rangeColor="var(--p-surface-200, #e2e8f0)"></p-knob>
-        </div>
-        <div class="health-meta">
-          <span class="stat-label">Account Provisioning Rate</span>
-          <span class="stat-val health-rate-val">{{ usersList().length }} Accounts Managed</span>
-          <div class="tag-row">
-            <p-tag value="RBAC ENFORCED" severity="success" size="small"></p-tag>
-          </div>
-        </div>
-      </div>
-
       <div class="bento-grid-4col">
         <div class="stat-card bento-tile accent-green">
           <div class="tile-header">
@@ -410,23 +396,6 @@
 
     <!-- Health Gauge Card & Bento Grid -->
     <div class="grid-section">
-      <div class="stat-card health-card">
-        <div class="knob-container">
-          <p-knob [ngModel]="registrarSealingRate()" [readonly]="true" [size]="70" valueTemplate="{value}%"
-            valueColor="var(--chmsu-green-main, #116834)" rangeColor="var(--p-surface-200, #e2e8f0)"></p-knob>
-        </div>
-        <div class="health-meta">
-          <span class="stat-label">Grade Sealing Progress</span>
-          <span class="stat-val health-rate-val">{{ sealedGradeCount() }} of {{ totalRegistrarSections() }}
-            Sealed</span>
-          <div class="tag-row">
-            <p-tag
-              [value]="pendingGradeReviewCount() === 0 ? 'ALL VERIFIED' : pendingGradeReviewCount() + ' PENDING REVIEW'"
-              [severity]="pendingGradeReviewCount() === 0 ? 'success' : 'warn'" size="small"></p-tag>
-          </div>
-        </div>
-      </div>
-
       <div class="bento-grid-4col">
         <div class="stat-card bento-tile accent-green">
           <div class="tile-header">
@@ -742,21 +711,6 @@
 
     <!-- Health Gauge Card & Bento Grid -->
     <div class="grid-section">
-      <div class="stat-card health-card">
-        <div class="knob-container">
-          <p-knob [ngModel]="todayClasses.length > 0 ? 100 : 0" [readonly]="true" [size]="70" valueTemplate="{value}%"
-            valueColor="var(--chmsu-green-main, #116834)" rangeColor="var(--p-surface-200, #e2e8f0)"></p-knob>
-        </div>
-        <div class="health-meta">
-          <span class="stat-label">Instructional Consistency</span>
-          <span class="stat-val health-rate-val">{{ todayClasses.length > 0 ? 'Class Attendance Active' : '0% Class
-            Attendance' }}</span>
-          <div class="tag-row">
-            <p-tag value="ON SCHEDULE" severity="success" size="small"></p-tag>
-          </div>
-        </div>
-      </div>
-
       <div class="bento-grid-4col">
         <div class="stat-card bento-tile accent-green">
           <div class="tile-header">
@@ -894,20 +848,7 @@
 
     <!-- Health Gauge Card & Bento Grid -->
     <div class="grid-section">
-      <div class="stat-card health-card">
-        <div class="knob-container">
-          <p-knob [ngModel]="facultyWorkloadList.length > 0 ? 100 : 0" [readonly]="true" [size]="70"
-            valueTemplate="{value}%" valueColor="var(--chmsu-green-main, #116834)"
-            rangeColor="var(--p-surface-200, #e2e8f0)"></p-knob>
-        </div>
-        <div class="health-meta">
-          <span class="stat-label">Faculty Load Compliance</span>
-          <span class="stat-val health-rate-val">21.0 Max Units Standard</span>
-          <div class="tag-row">
-            <p-tag value="FULL ROSTER" severity="success" size="small"></p-tag>
-          </div>
-        </div>
-      </div>
+      
 
       <div class="bento-grid-4col">
         <div class="stat-card bento-tile accent-green">
@@ -1226,21 +1167,6 @@
 
     <!-- Health Gauge Card & Bento Grid -->
     <div class="grid-section">
-      <div class="stat-card health-card">
-        <div class="knob-container">
-          <p-knob [ngModel]="studentWellnessScore()" [readonly]="true" [size]="70" valueTemplate="{value}%"
-            valueColor="var(--chmsu-green-main, #116834)" rangeColor="var(--p-surface-200, #e2e8f0)"></p-knob>
-        </div>
-        <div class="health-meta">
-          <span class="stat-label">Academic Standing Summary</span>
-          <span class="stat-val health-rate-val">{{ studentStandingText() }}</span>
-          <div class="tag-row">
-            <p-tag [value]="studentStandingTag()" [severity]="studentStandingTag() === 'ON TRACK' ? 'success' : 'warn'"
-              size="small"></p-tag>
-          </div>
-        </div>
-      </div>
-
       <div class="bento-grid-4col">
         <div class="stat-card bento-tile accent-green">
           <div class="tile-header">

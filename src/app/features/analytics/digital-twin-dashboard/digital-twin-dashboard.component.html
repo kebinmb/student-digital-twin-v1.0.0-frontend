@@ -365,10 +365,6 @@
           <div class="health-meta">
             <span class="stat-label">Diagnostic Health Summary</span>
             <span class="stat-val health-rate-val">{{ retentionRate() }}% Retention Index</span>
-            <div class="tag-row">
-              <p-tag [value]="riskProfile()?.compositeRiskLevel || 'OPTIMAL'" [severity]="getRiskSeverity(riskProfile()?.compositeRiskLevel)" size="small"></p-tag>
-              <span class="sync-time"><i class="pi pi-clock sync-icon"></i> {{ (riskProfile()?.evaluatedAt | date:'shortTime') || 'Live Telemetry' }}</span>
-            </div>
           </div>
         </div>
 
@@ -420,7 +416,7 @@
             <div class="tag-wrapper">
               <p-tag [value]="riskProfile()?.compositeRiskLevel || 'LOW'" [severity]="getRiskSeverity(riskProfile()?.compositeRiskLevel)" [rounded]="true"></p-tag>
             </div>
-            <div class="tile-caption">Evaluated via AI Risk Engine</div>
+            <div class="tile-caption">Student Risk Level</div>
           </div>
         </div>
       </div>

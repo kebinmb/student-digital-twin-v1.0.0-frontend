@@ -527,7 +527,7 @@ export class StudentClearanceComponent implements OnInit {
         return 'University Library';
       case 'LABORATORY':
       case 'LAB':
-        return 'Science & Computer Lab';
+        return 'Computer Lab';
       case 'REGISTRAR':
         return 'Office of the Registrar';
       default:

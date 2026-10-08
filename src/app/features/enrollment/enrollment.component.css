@@ -223,6 +223,7 @@
   color: var(--chmsu-slate-500, #64748b);
   display: flex;
   align-items: center;
+  gap: 0.35rem;
 }
 
 .closed-info-item .info-value {
@@ -246,6 +247,7 @@
   color: var(--status-emerald-text, #047857);
   display: flex;
   align-items: center;
+  gap:0.35rem;
 }
 
 .guidelines-list {

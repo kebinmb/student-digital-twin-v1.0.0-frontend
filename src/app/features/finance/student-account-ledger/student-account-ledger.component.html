@@ -12,43 +12,6 @@
   </div>
 
   @if (isStudentRole()) {
-    <!-- Read-Only Student Identity & Security Lock Banner for STUDENT role -->
-    <div class="student-locked-profile-card">
-      <div class="locked-profile-header">
-        <div class="locked-icon-badge">
-          <i class="pi pi-lock field-label-icon"></i>
-        </div>
-        <div class="locked-profile-info">
-          <div class="student-profile-tags">
-            <span class="student-profile-name">{{ currentStudentProfile()?.username || 'Enrolled Student' }}</span>
-            <p-tag [value]="'Student No: ' + (currentStudentProfile()?.studentNumber || 'Loading...')" severity="info"></p-tag>
-            <p-tag [value]="currentStudentProfile()?.programCode || 'BSIT'" severity="secondary"></p-tag>
-            <p-tag [value]="'Year ' + (currentStudentProfile()?.yearLevel || '1')" severity="secondary"></p-tag>
-            <p-tag [value]="'Clearance: ' + (currentStudentProfile()?.financialClearance || 'CLEARED')" severity="success"></p-tag>
-          </div>
-          <p class="locked-security-note">
-            <i class="pi pi-shield security-icon"></i>
-            Authenticated Student Account (Multi-Tenant Isolation enforced under RA 10173 & SDT RBAC). Account view is strictly locked to your records.
-          </p>
-        </div>
-      </div>
-      @if (availableTerms().length > 0) {
-        <div class="term-picker-row">
-          <label class="term-picker-label">
-            <i class="pi pi-calendar field-label-icon"></i> Academic Term Filter:
-          </label>
-          <p-select 
-            [options]="availableTerms()" 
-            [ngModel]="selectedTermId()" 
-            (ngModelChange)="onTermChange($event)"
-            optionLabel="termName" 
-            optionValue="id"
-            placeholder="Select Academic Term"
-            styleClass="term-select-compact">
-          </p-select>
-        </div>
-      }
-    </div>
   } @else {
     <!-- Assessment & Search Header Controls (Staff Only) -->
     <div class="ledger-action-grid">
@@ -334,16 +297,9 @@
           <div>
             <h2 class="breakdown-title">Institutional Statement of Account & Fee Assessment</h2>
             <p class="breakdown-subtitle">
-              Detailed billing breakdown based on Institutional Registry Fee Schedule & CHED-UniFAST Free Higher Education (FHE) Benefits (RA 10931)
+              Detailed billing breakdown
             </p>
           </div>
-        </div>
-        <div class="header-right">
-          <p-tag 
-            [value]="inv.fheEligible ? 'UniFAST FHE COVERED (RA 10931)' : 'REGULAR / SELF-PAYING'" 
-            [severity]="inv.fheEligible ? 'success' : 'info'" 
-            styleClass="text-sm px-3 py-1 font-bold">
-          </p-tag>
         </div>
       </div>
 
@@ -362,7 +318,7 @@
         </div>
         <div class="meta-pill">
           <span class="meta-label">ASSESSMENT STATUS</span>
-          <p-tag [value]="inv.status" severity="success" styleClass="text-xs"></p-tag>
+          <p-tag [value]="inv.status" severity="success" class="text-xs"></p-tag>
         </div>
       </div>
 

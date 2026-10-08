@@ -735,12 +735,13 @@
         <div class="gb-selector-field">
           <label class="gb-field-label">Target Assessment Category</label>
           <p-select 
+          appendTo="body"
             [options]="categoryOptions()" 
             [ngModel]="newItemCategoryId()" 
             (ngModelChange)="newItemCategoryId.set($event)"
             optionLabel="label" 
             optionValue="value" 
-            styleClass="gb-select-compact w-full">
+            class="gb-select-compact w-full">
           </p-select>
         </div>
 

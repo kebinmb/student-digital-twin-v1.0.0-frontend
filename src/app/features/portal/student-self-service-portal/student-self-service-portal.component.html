@@ -25,28 +25,6 @@
             &bull; Term: <span class="font-semibold-navy">{{ term.termName || term.termType }}</span>
           }
         </p>
-        @if (activeTerm()) {
-          <div class="flex items-center gap-2 mt-2">
-            <p-tag
-              [value]="isEnrollmentOpen() ? 'Enrollment: OPEN' : 'Enrollment: CLOSED'"
-              [severity]="isEnrollmentOpen() ? 'success' : 'secondary'"
-              [icon]="isEnrollmentOpen() ? 'pi pi-lock-open' : 'pi pi-lock'"
-              [rounded]="true">
-            </p-tag>
-            <p-tag
-              [value]="isGradingOpen() ? 'Grading: OPEN' : 'Grading: CLOSED'"
-              [severity]="isGradingOpen() ? 'success' : 'secondary'"
-              [icon]="isGradingOpen() ? 'pi pi-check-circle' : 'pi pi-lock'"
-              [rounded]="true">
-            </p-tag>
-            <p-tag
-              [value]="isAddDropOpen() ? 'Add/Drop: OPEN' : 'Add/Drop: CLOSED'"
-              [severity]="isAddDropOpen() ? 'success' : 'secondary'"
-              [icon]="isAddDropOpen() ? 'pi pi-sync' : 'pi pi-lock'"
-              [rounded]="true">
-            </p-tag>
-          </div>
-        }
       </div>
     </div>
 
@@ -186,7 +164,7 @@
       <!-- Science & Computer Lab Clearance Bento Card -->
       <div class="bento-card stat-card">
         <div class="tile-header">
-          <span class="stat-label">Science & Computer Lab</span>
+          <span class="stat-label">Computer Lab</span>
           <div class="tile-icon-box purple">
             <i class="pi pi-desktop" aria-hidden="true"></i>
           </div>
@@ -217,23 +195,6 @@
             [rounded]="true" />
         </div>
         <div class="tile-caption">Discipline, Guidance & Activity Audit</div>
-      </div>
-
-      <!-- Overall Term Clearance Status Bento Card -->
-      <div class="bento-card stat-card">
-        <div class="tile-header">
-          <span class="stat-label">Overall Term Clearance</span>
-          <div class="tile-icon-box green">
-            <i class="pi pi-shield" aria-hidden="true"></i>
-          </div>
-        </div>
-        <div class="tag-wrapper">
-          <p-tag
-            [value]="overallClearanceLabel()"
-            [severity]="overallClearanceSeverity()"
-            [rounded]="true" />
-        </div>
-        <div class="tile-caption">Unified Gate & Enrollment Clearance</div>
       </div>
     </div>
   }

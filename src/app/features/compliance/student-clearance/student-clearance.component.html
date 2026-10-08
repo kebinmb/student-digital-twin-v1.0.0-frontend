@@ -48,7 +48,7 @@
             <div class="identity-details">
               <span class="identity-name font-mono">{{ searchStudentNumber }}</span>
               <span class="identity-meta">
-                <i class="pi pi-shield security-icon"></i>Authenticated Student Session
+                <i class="pi pi-shield security-icon"></i>Student Identification Number
               </span>
             </div>
           </div>
@@ -178,10 +178,7 @@
             <div class="flex-row gap-xs mb-1">
               <span class="req-id-tag">CLEARANCE APPLICATION</span>
             </div>
-            <h2 class="req-student-name">
-              {{ req.studentName }}
-              <span class="font-mono text-slate-500 font-normal">({{ req.studentNumber }})</span>
-            </h2>
+
             <p class="req-sub-info">
               Purpose: <span class="highlight-text">{{ req.purpose }}</span> &bull; Academic Term:
               <span class="highlight-text">{{ req.termName }}</span>
