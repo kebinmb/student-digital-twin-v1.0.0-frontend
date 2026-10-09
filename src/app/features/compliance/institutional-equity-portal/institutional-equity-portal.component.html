@@ -115,6 +115,12 @@
   }
 
   <!-- Real-time Statutory Equity Metric KPI Cards: Post-Exam Admissions -->
+  @if (statsError(); as err) {
+    <div class="mb-3 p-3 bg-red-50 border-round text-red-700 text-sm flex align-items-center gap-2">
+      <i class="pi pi-exclamation-triangle"></i>
+      <span>{{ err }}</span>
+    </div>
+  }
   @if (activeCohort() === 'ADMISSION' && applicantStats(); as appStats) {
   <div class="kpi-grid">
     <div class="kpi-card border-green">
@@ -474,6 +480,7 @@
     header="Audit &amp; Verify Student Equity Declaration"
     [(visible)]="showVerifyDialog"
     [modal]="true"
+    [focusOnShow]="false"
     [style]="{ width: '90vw', maxWidth: '640px' }">
     @if (selectedProfile(); as p) {
     <div class="dialog-form-grid">
@@ -536,6 +543,7 @@
     header="Prospective Student Statutory Equity &amp; Exam Dossier"
     [(visible)]="showApplicantDossierDialog"
     [modal]="true"
+    [focusOnShow]="false"
     [style]="{ width: '90vw', maxWidth: '780px' }">
     @if (selectedApplicant(); as a) {
     <div class="dialog-form-grid">

@@ -289,10 +289,6 @@
                 <i class="pi pi-bell" aria-hidden="true"></i>
               </div>
               <div class="advisory-content">
-                <div class="badge-row">
-                  <p-tag [value]="rec.interventionType" severity="info" [rounded]="true" size="small"></p-tag>
-                  <p-tag [value]="rec.status" [severity]="rec.status === 'ACKNOWLEDGED' || rec.status === 'RESOLVED' ? 'success' : 'warn'" [rounded]="true" size="small"></p-tag>
-                </div>
                 <div class="advisory-text">{{ rec.triggerReason }}</div>
                 <div class="advisory-subtext">Dispatched: {{ rec.dispatchedAt | date:'mediumDate' }}</div>
               </div>

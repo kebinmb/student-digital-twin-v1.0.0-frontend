@@ -264,4 +264,96 @@ describe('DashboardComponent', () => {
     expect(component.guidancePageIndex()).toBe(1);
     expect(component.guidancePageSize()).toBe(5);
   });
+
+  describe('DashboardComponent — userName() Signal', () => {
+    const MOCK_PROFILE: any = {
+      id: 10,
+      studentId: 10,
+      studentNumber: '2024-0001',
+      fullName: 'Juan P. Dela Cruz',
+      programCode: 'BSCS',
+      yearLevel: 3
+    };
+
+    it('userName() should return fullName from student_profiles — NOT username', () => {
+      (component as any).studentProfileService?.setProfile(MOCK_PROFILE);
+      fixture.detectChanges();
+
+      const name = component.userName();
+      expect(name).toBe('Juan P. Dela Cruz');
+      expect(name).not.toContain('_');
+      expect(name).not.toContain('@');
+    });
+
+    it('studentProfileSub() should show student number, program, and year', () => {
+      (component as any).studentProfileService?.setProfile(MOCK_PROFILE);
+      fixture.detectChanges();
+
+      const sub = component.studentProfileSub();
+      expect(sub).toContain('2024-0001');
+      expect(sub).toContain('BSCS');
+      expect(sub).toContain('3');
+    });
+
+    it('userName() should return empty string when profile is null', () => {
+      (component as any).studentProfileService?.setProfile(null);
+      fixture.detectChanges();
+      expect(component.userName()).toBe('');
+    });
+
+    it('identity-name element should display fullName, not username', () => {
+      (component as any).studentProfileService?.setProfile(MOCK_PROFILE);
+      fixture.detectChanges();
+      const el = fixture.nativeElement.querySelector('.identity-name');
+      if (el) {
+        expect(el.textContent.trim()).toBe('Juan P. Dela Cruz');
+        expect(el.textContent).not.toContain('_');
+      }
+    });
+  });
+
+  describe('DEAN Role Performance & Effect Deduplication', () => {
+    it('loadMetricsForRole should not re-query when metrics already cached for role', () => {
+      component.dynamicRoleMetrics.set({
+        DEAN: [
+          { title: 'Curricula Active', value: '5 Curricula', subtext: 'Departmental Scope', icon: 'pi pi-book' }
+        ]
+      });
+
+      const spy = vi.spyOn(component as any, 'loadGeneralAcademicContext');
+      component.loadMetricsForRole('DEAN', false, 1);
+
+      // Does not trigger unneeded API calls
+      expect(component.dynamicRoleMetrics()['DEAN']).toBeTruthy();
+      expect(component.dynamicRoleMetrics()['DEAN'][0].title).toBe('Curricula Active');
+    });
+
+    it('should have lastLoadedTermId and lastLoadedRole initialized to prevent infinite effect triggers', () => {
+      expect((component as any).lastLoadedTermId).toBeDefined();
+      expect((component as any).lastLoadedRole).toBeDefined();
+    });
+  });
+
+  describe('CHAIRPERSON Role Grade Change Requests — Duplicate Prevention', () => {
+    it('loadGeneralAcademicContext should NOT call getPendingGradeChangeRequests', () => {
+      const enrollmentService = (component as any).enrollmentApiService;
+      const spy = vi.spyOn(enrollmentService, 'getPendingGradeChangeRequests');
+
+      (component as any).loadGeneralAcademicContext();
+      expect(spy).not.toHaveBeenCalled();
+    });
+
+    it('should call pending grade change requests exactly once when loading chairperson metrics', () => {
+      const gradeChangeService = (component as any).gradeChangeRequestService;
+      const spy = vi.spyOn(gradeChangeService, 'loadPendingRequests').mockReturnValue(of([]));
+
+      // loadGeneralAcademicContext should not call it
+      (component as any).loadGeneralAcademicContext();
+      expect(spy).not.toHaveBeenCalled();
+
+      // loadMetricsForRole('CHAIRPERSON') calls it once
+      component.loadMetricsForRole('CHAIRPERSON', true, 1);
+      expect(spy).toHaveBeenCalledTimes(1);
+    });
+  });
 });

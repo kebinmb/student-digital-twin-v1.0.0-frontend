@@ -1,6 +1,6 @@
 // File: src/app/features/enrollment/state/enrollment.store.ts
 
-import { inject, Injectable, signal, computed, DestroyRef, effect } from '@angular/core';
+import { inject, Injectable, signal, computed, DestroyRef, effect, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { EnrollmentApiService } from '../../../core/service/enrollment/enrollment-api.service';
 import { TermService } from '../../../core/services/institution.service';
@@ -53,9 +53,11 @@ export class EnrollmentStore {
   constructor() {
     effect(() => {
       const globalTermId = this.academicPeriodStore.selectedTermId();
-      if (globalTermId && globalTermId !== this.selectedTermId()) {
-        this.setSelectedTermId(globalTermId);
-      }
+      untracked(() => {
+        if (globalTermId && globalTermId !== this.selectedTermId()) {
+          this.setSelectedTermId(globalTermId);
+        }
+      });
     });
 
     if (this.termService?.activeTerm$) {

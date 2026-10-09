@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy, DestroyRef, effect, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -18,7 +18,6 @@ import { FinancialApiService } from '../../../core/service/financial/financial-a
 import { TermService, CampusService } from '../../../core/services/institution.service';
 import { Term, Campus } from '../../../core/models/institution.model';
 import { AcademicPeriodStore } from '../../../core/services/academic-period.store';
-import { effect } from '@angular/core';
 import {
   UnifastFheClaimDto,
   CreateUnifastClaimRequest,
@@ -67,10 +66,12 @@ export class UnifastBillingClaimComponent implements OnInit {
   constructor() {
     effect(() => {
       const globalTermId = this.periodStore.selectedTermId();
-      if (globalTermId && globalTermId !== this.searchTermId()) {
-        this.searchTermId.set(globalTermId);
-        this.loadClaimBatches();
-      }
+      untracked(() => {
+        if (globalTermId && globalTermId !== this.searchTermId()) {
+          this.searchTermId.set(globalTermId);
+          this.loadClaimBatches();
+        }
+      });
     });
   }
 

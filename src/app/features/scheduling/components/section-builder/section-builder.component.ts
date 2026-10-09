@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, signal, computed, effect } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, signal, computed, effect, untracked } from '@angular/core';
+import { Subscription } from 'rxjs';
 import {
   AbstractControl,
   FormArray,
@@ -81,7 +82,7 @@ function nonWhitespaceValidator(): ValidatorFn {
   styleUrls: ['./section-builder.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SectionBuilderComponent implements OnInit {
+export class SectionBuilderComponent implements OnInit, OnDestroy {
   readonly store = inject(SchedulingStore);
   readonly periodStore = inject(AcademicPeriodStore);
   readonly auth = inject(AuthService);
@@ -90,6 +91,7 @@ export class SectionBuilderComponent implements OnInit {
   private readonly confirmationService = inject(ConfirmationService);
   private readonly curriculumApi = inject(CurriculumApiService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private formSubscriptions = new Subscription();
 
   // RBAC permissions
   readonly isAdmin = computed(() => this.auth.hasRole('ADMIN'));
@@ -167,17 +169,25 @@ export class SectionBuilderComponent implements OnInit {
   constructor() {
     effect(() => {
       if (this.store.openModalRequest()) {
-        this.store.openModalRequest.set(false);
-        this.openCreateModal();
+        untracked(() => {
+          this.store.openModalRequest.set(false);
+          this.openCreateModal();
+        });
       }
     });
 
     effect(() => {
       const termId = this.store.selectedTermId();
-      if (termId && this.sectionForm && this.sectionForm.get('termId')) {
-        this.sectionForm.get('termId')?.setValue(termId, { emitEvent: false });
-      }
+      untracked(() => {
+        if (termId && this.sectionForm && this.sectionForm.get('termId')) {
+          this.sectionForm.get('termId')?.setValue(termId, { emitEvent: false });
+        }
+      });
     });
+  }
+
+  ngOnDestroy(): void {
+    this.formSubscriptions.unsubscribe();
   }
 
   getDefaultProgramCode(): string {
@@ -310,20 +320,33 @@ export class SectionBuilderComponent implements OnInit {
       }
     };
 
-    this.sectionForm.get('programCode')?.valueChanges.subscribe(updateSectionCode);
-    this.sectionForm.get('yearLevel')?.valueChanges.subscribe(updateSectionCode);
-    this.sectionForm.get('sectionLetter')?.valueChanges.subscribe(updateSectionCode);
+    this.formSubscriptions.unsubscribe();
+    this.formSubscriptions = new Subscription();
 
-    this.sectionForm.valueChanges.subscribe(val => {
-      this.formSlots.set(val?.scheduleSlots || []);
-      this.cdr.markForCheck();
-    });
+    this.formSubscriptions.add(
+      this.sectionForm.get('programCode')?.valueChanges.subscribe(updateSectionCode)
+    );
+    this.formSubscriptions.add(
+      this.sectionForm.get('yearLevel')?.valueChanges.subscribe(updateSectionCode)
+    );
+    this.formSubscriptions.add(
+      this.sectionForm.get('sectionLetter')?.valueChanges.subscribe(updateSectionCode)
+    );
 
-    this.sectionForm.get('courseId')?.valueChanges.subscribe(id => {
-      this.selectedCourseId.set(id ? Number(id) : null);
-      this.formSlots.set(this.sectionForm.value.scheduleSlots || []);
-      this.cdr.markForCheck();
-    });
+    this.formSubscriptions.add(
+      this.sectionForm.valueChanges.subscribe(val => {
+        this.formSlots.set(val?.scheduleSlots || []);
+        this.cdr.markForCheck();
+      })
+    );
+
+    this.formSubscriptions.add(
+      this.sectionForm.get('courseId')?.valueChanges.subscribe(id => {
+        this.selectedCourseId.set(id ? Number(id) : null);
+        this.formSlots.set(this.sectionForm.value.scheduleSlots || []);
+        this.cdr.markForCheck();
+      })
+    );
   }
 
   get scheduleSlotsArray(): FormArray {

@@ -11,6 +11,7 @@ import { Menu } from 'primeng/menu';
 import { MenuItem } from 'primeng/api';
 
 import { AuthService } from '../../../core/service/authentication/auth-service';
+import { StudentProfileService } from '../../../core/services/student-profile.service';
 import { AcademicPeriodStore } from '../../../core/services/academic-period.store';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
@@ -87,9 +88,18 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
   readonly isMobile = signal(false);
   readonly searchQuery = signal('');
 
+  private readonly studentProfileService = inject(StudentProfileService, { optional: true });
+
   // User reactive data
   readonly currentUser = this.authService.currentUser;
-  readonly userName = computed(() => this.currentUser().username || 'Student User');
+  readonly userName = computed(() => {
+    const role = this.currentUser().role;
+    if (role === 'STUDENT' || !role) {
+      const p = this.studentProfileService?.profile();
+      if (p?.fullName) return p.fullName;
+    }
+    return this.currentUser().username || 'Student User';
+  });
   readonly userRole = computed(() => this.currentUser().role || 'Student');
   readonly userInitials = computed(() => {
     const name = this.userName().trim();
@@ -222,6 +232,9 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.checkViewport();
+    if (this.currentUser().role === 'STUDENT') {
+      this.studentProfileService?.loadForCurrentStudent();
+    }
   }
 
   ngOnDestroy(): void {}

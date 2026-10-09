@@ -5,7 +5,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { MessageService } from 'primeng/api';
 
 import { InstitutionalEquityPortalComponent } from './institutional-equity-portal.component';
@@ -203,5 +203,16 @@ describe('InstitutionalEquityPortalComponent', () => {
     expect(component.getVulnerabilitySeverity(45)).toBe('warn');   // Moderate need
     expect(component.getVulnerabilitySeverity(15)).toBe('info');   // Low / baseline
     expect(component.getVulnerabilitySeverity(undefined)).toBe('secondary');
+  });
+
+  it('should handle backend error gracefully without crashing when loadApplicantStats fails', () => {
+    mockEquityApi.getAdmissionApplicantEquityStats.mockReturnValue(throwError(() => new Error('500 Internal Server Error')));
+
+    component.switchCohort('ADMISSION');
+
+    expect(component.activeCohort()).toBe('ADMISSION');
+    expect(component.statsLoading()).toBe(false);
+    expect(component.statsError()).toBeTruthy();
+    expect(component.applicantStats()).toBeNull();
   });
 });

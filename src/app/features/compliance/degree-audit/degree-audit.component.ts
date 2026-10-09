@@ -1,6 +1,6 @@
 // File: src/app/features/compliance/degree-audit/degree-audit.component.ts
 
-import { Component, OnInit, signal, computed, effect, inject, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
+import { Component, OnInit, signal, computed, effect, inject, ChangeDetectionStrategy, DestroyRef, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -74,12 +74,14 @@ export class DegreeAuditComponent implements OnInit {
   constructor() {
     effect(() => {
       const globalTermId = this.periodStore.selectedTermId();
-      if (globalTermId && globalTermId !== this.applyTermId) {
-        this.applyTermId = globalTermId;
-        if (this.searchStudentId) {
-          this.runDegreeAudit();
+      untracked(() => {
+        if (globalTermId && globalTermId !== this.applyTermId) {
+          this.applyTermId = globalTermId;
+          if (this.searchStudentId) {
+            this.runDegreeAudit();
+          }
         }
-      }
+      });
     });
   }
 

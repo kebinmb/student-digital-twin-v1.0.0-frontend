@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal, ChangeDetectionStrategy, OnInit, DestroyRef, effect } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy, OnInit, DestroyRef, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, NonNullableFormBuilder, Validators } from '@angular/forms';
@@ -41,6 +41,8 @@ import { LmsApiService } from '../../../core/service/lms/lms-api.service';
 import { NoticeApiService } from '../../../core/service/notice/notice-api.service';
 import { NoticeItem, CreateNoticeRequest } from '../../../core/models/notice.model';
 import { StudentSelfServiceSummaryDto } from '../../../core/models/lms.model';
+import { StudentProfileService } from '../../../core/services/student-profile.service';
+import { GradeChangeRequestService } from '../../../core/services/grade-change-request.service';
 import { StudentSelfTelemetry } from '../../../core/models/analytics.model';
 import { SectionDetailResponse } from '../../../core/models/scheduling.model';
 import { UserDetail, AuditLogEntry } from '../../../core/models/user-management.model';
@@ -166,16 +168,27 @@ export class DashboardComponent implements OnInit {
   private readonly curriculumApiService = inject(CurriculumApiService);
   private readonly schedulingApiService = inject(SchedulingApiService);
   private readonly enrollmentApiService = inject(EnrollmentApiService);
+  private readonly gradeChangeRequestService = inject(GradeChangeRequestService);
   private readonly lmsApiService = inject(LmsApiService);
   private readonly noticeApiService = inject(NoticeApiService);
   private readonly destroyRef = inject(DestroyRef);
 
+  private lastLoadedTermId: number | null = null;
+  private lastLoadedRole: string | null = null;
+
   constructor() {
     effect(() => {
       const termId = this.periodStore.selectedTermId();
+      const role = this.activeRole();
       if (termId) {
-        this.loadGeneralAcademicContext(termId);
-        this.loadMetricsForRole(this.activeRole(), true, termId);
+        untracked(() => {
+          if (termId !== this.lastLoadedTermId || role !== this.lastLoadedRole) {
+            this.lastLoadedTermId = termId;
+            this.lastLoadedRole = role;
+            this.loadGeneralAcademicContext(termId);
+            this.loadMetricsForRole(role, false, termId);
+          }
+        });
       }
     });
   }
@@ -228,7 +241,20 @@ export class DashboardComponent implements OnInit {
     { label: 'Accounting & UniFAST Free Tuition', value: 'ACCOUNTANT' }
   ];
 
-  readonly userName = computed(() => this.authService.currentUser().username || 'Institutional User');
+  protected readonly studentProfileService = inject(StudentProfileService, { optional: true });
+
+  readonly userName = computed(() => {
+    if (this.isStudent()) {
+      if (this.studentProfileService) {
+        const profile = this.studentProfileService.profile();
+        if (profile === null) return '';
+        if (profile?.fullName) return profile.fullName;
+      }
+      const portal = this.studentPortalSummary();
+      if (portal?.studentName) return portal.studentName;
+    }
+    return this.authService.currentUser().username || 'Institutional User';
+  });
   readonly studentName = this.userName;
   readonly userRole = this.activeRole;
 
@@ -548,6 +574,10 @@ export class DashboardComponent implements OnInit {
   readonly studentSelfTelemetry = signal<StudentSelfTelemetry | null>(null);
 
   readonly studentProfileSub = computed(() => {
+    const profile = this.studentProfileService?.profile();
+    if (profile) {
+      return `${profile.studentNumber ?? ''} — ${profile.programCode ?? ''} (Year ${profile.yearLevel ?? ''})`;
+    }
     const p = this.studentPortalSummary();
     const enrolled = this.todayClassesSignal().length > 0;
     if (!enrolled) return p ? `${p.studentNumber} — ${p.programCode} • Not Enrolled in Term` : 'Not Enrolled in Selected Term';
@@ -758,10 +788,23 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit(): void {
     const termId = this.periodStore.selectedTermId() || undefined;
-    this.loadGeneralAcademicContext(termId);
+    const role = this.activeRole();
+    if (this.isStudent()) {
+      this.studentProfileService?.loadForCurrentStudent();
+    }
     this.loadInterventionTypes();
     this.loadNotices();
-    this.loadMetricsForRole(this.activeRole(), true, termId);
+
+    if (termId && (termId !== this.lastLoadedTermId || role !== this.lastLoadedRole)) {
+      this.lastLoadedTermId = termId;
+      this.lastLoadedRole = role;
+      this.loadGeneralAcademicContext(termId);
+      this.loadMetricsForRole(role, false, termId);
+    } else if (!termId && !this.lastLoadedRole) {
+      this.lastLoadedRole = role;
+      this.loadGeneralAcademicContext(undefined);
+      this.loadMetricsForRole(role, false, undefined);
+    }
   }
 
   loadInterventionTypes(): void {
@@ -917,20 +960,6 @@ export class DashboardComponent implements OnInit {
         }
       });
 
-    if (this.authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON'])) {
-      this.enrollmentApiService.getPendingGradeChangeRequests()
-        .pipe(
-          catchError(() => of([])),
-          takeUntilDestroyed(this.destroyRef)
-        )
-        .subscribe(grades => {
-          if (grades) {
-            this.pendingDisputesCount.set(grades.length);
-            this.chairpersonPendingGrades.set(grades.length > 0 ? `${grades.length} Sheets Pending Review` : 'All Grade Sheets Approved');
-          }
-        });
-    }
-
     if (this.authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'GUIDANCE', 'DEAN', 'CHAIRPERSON'])) {
       this.analyticsApiService.getEarlyWarningRadar()
         .pipe(
@@ -1083,10 +1112,13 @@ export class DashboardComponent implements OnInit {
   refreshMetrics(): void {
     this.isLoading.set(true);
     const termId = this.periodStore.selectedTermId() || undefined;
+    const role = this.activeRole();
+    this.lastLoadedTermId = termId ?? null;
+    this.lastLoadedRole = role;
     this.loadGeneralAcademicContext(termId);
     this.loadInterventionTypes();
     this.loadNotices();
-    this.loadMetricsForRole(this.activeRole(), true, termId);
+    this.loadMetricsForRole(role, true, termId);
     this.messageService.add({
       severity: 'success',
       summary: 'Dashboard Updated',
@@ -1096,6 +1128,7 @@ export class DashboardComponent implements OnInit {
 
   onRoleOverrideChange(newRole: string): void {
     this.selectedRoleOverride.set(newRole);
+    this.lastLoadedRole = newRole;
     this.loadMetricsForRole(newRole, true, this.periodStore.selectedTermId() || undefined);
     this.messageService.add({
       severity: 'info',
@@ -1187,7 +1220,7 @@ export class DashboardComponent implements OnInit {
 
       case 'REGISTRAR':
         forkJoin({
-          pendingGrades: this.enrollmentApiService.getPendingGradeChangeRequests().pipe(catchError(() => of([]))),
+          pendingGrades: this.gradeChangeRequestService.loadPendingRequests(effectiveTermId),
           gradApps: this.complianceApiService.getGraduationApplicationsByTerm(effectiveTermId).pipe(catchError(() => of([]))),
           sections: this.schedulingApiService.getSectionsByTerm(effectiveTermId).pipe(catchError(() => of([])))
         })
@@ -1411,7 +1444,7 @@ export class DashboardComponent implements OnInit {
           curricula: this.curriculumApiService.getCurriculumLookupOptions().pipe(catchError(() => of([]))),
           instructors: this.schedulingApiService.getAvailableInstructors().pipe(catchError(() => of([]))),
           rooms: this.schedulingApiService.getAllRooms().pipe(catchError(() => of([]))),
-          gradeChanges: this.enrollmentApiService.getPendingGradeChangeRequests().pipe(catchError(() => of([]))),
+          gradeChanges: this.gradeChangeRequestService.loadPendingRequests(effectiveTermId),
           sectionsByTerm: this.schedulingApiService.getSectionsByTerm(effectiveTermId).pipe(catchError(() => of([])))
         })
           .pipe(takeUntilDestroyed(this.destroyRef))
@@ -1444,6 +1477,7 @@ export class DashboardComponent implements OnInit {
                 this.chairpersonSectionsList.set([]);
               }
               this.chairpersonPendingGrades.set(gradeChanges.length > 0 ? `${gradeChanges.length} Sheets Pending Review` : 'All Grade Sheets Approved');
+              this.pendingDisputesCount.set(gradeChanges.length);
 
               this.isLoading.set(false);
             },

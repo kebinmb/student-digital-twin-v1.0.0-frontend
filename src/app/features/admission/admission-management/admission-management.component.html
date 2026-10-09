@@ -276,9 +276,6 @@
       <div>
         <div class="flex align-items-center gap-2">
           <h2 class="section-title">Program Chairperson Interview Queue</h2>
-          @if (isChairperson() && assignedProgramName(); as progName) {
-          <p-tag [value]="progName" severity="info" icon="pi pi-lock"></p-tag>
-          }
         </div>
         <p class="section-subtitle">
           Applicants qualified through examination (EXAM_PASSED) with Philippine Statutory Equity Profiling &
@@ -579,9 +576,6 @@
       <div>
         <div class="flex align-items-center gap-2">
           <h2 class="section-title">Admitted Applicants — Enrollment Hand-off</h2>
-          @if (isChairperson() && assignedProgramName(); as progName) {
-          <p-tag [value]="progName" severity="info" icon="pi pi-lock"></p-tag>
-          }
         </div>
         <p class="section-subtitle">
           Applicants marked INTERVIEW_ACCEPTED are seeded directly into Student Enrollment & Advising

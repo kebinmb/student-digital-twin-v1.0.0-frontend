@@ -37,6 +37,7 @@ describe('DigitalTwinAnalyticsDashboardComponent', () => {
     studentNumber: '2026-CS-0001',
     userId: 100,
     username: 'alice',
+    fullName: 'Juan P. Dela Cruz',
     email: 'alice@example.com',
     programId: 1,
     programCode: 'BSIT',
@@ -75,6 +76,7 @@ describe('DigitalTwinAnalyticsDashboardComponent', () => {
         milestones: [],
         lastSync: '2026-09-25T06:00:00Z'
       })),
+      acknowledgeIntervention: vi.fn().mockReturnValue(of({ alreadyAcknowledged: false })),
       acknowledgeStudentIntervention: vi.fn().mockReturnValue(of(undefined)),
       dispatchIntervention: vi.fn().mockReturnValue(of({ id: 1, interventionType: 'GUIDANCE_COUNSELING', status: 'DISPATCHED' })),
       getAdminTelemetryKpi: vi.fn().mockReturnValue(of(null)),
@@ -277,5 +279,39 @@ describe('DigitalTwinAnalyticsDashboardComponent', () => {
     expect(compiled.textContent).toContain('(8 Critical, 12 High)');
     expect(compiled.textContent).toContain('18');
     expect(compiled.textContent).toContain('78.5%');
+  });
+
+  it('should call acknowledgeIntervention with dynamic intervention ID (not hardcoded 1)', () => {
+    fixture = TestBed.createComponent(DigitalTwinAnalyticsDashboardComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    component.acknowledgeStudentRecommendation(42, 'I will seek advising.');
+    expect(mockAnalyticsApi.acknowledgeIntervention).toHaveBeenCalledWith(42, 'I will seek advising.');
+    expect(mockAnalyticsApi.acknowledgeIntervention).not.toHaveBeenCalledWith(1, expect.anything());
+  });
+
+  it('should not call acknowledgeIntervention if interventionId is 0 or negative', () => {
+    fixture = TestBed.createComponent(DigitalTwinAnalyticsDashboardComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    mockAnalyticsApi.acknowledgeIntervention.mockClear();
+    component.acknowledgeStudentRecommendation(0);
+    component.acknowledgeStudentRecommendation(-5);
+    expect(mockAnalyticsApi.acknowledgeIntervention).not.toHaveBeenCalled();
+  });
+
+  it('should display fullName from student_profiles, not username', () => {
+    fixture = TestBed.createComponent(DigitalTwinAnalyticsDashboardComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    expect(component.studentProfile()?.fullName).toBe('Juan P. Dela Cruz');
+    expect(component.studentProfile()?.fullName).not.toContain('_');
+
+    const identityNameEl = fixture.nativeElement.querySelector('.identity-name');
+    expect(identityNameEl?.textContent).toContain('Juan P. Dela Cruz');
+    expect(identityNameEl?.textContent).not.toContain('alice');
   });
 });

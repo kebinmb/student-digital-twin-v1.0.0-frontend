@@ -1,8 +1,10 @@
 import {
   APP_INITIALIZER,
   ApplicationConfig,
+  ErrorHandler,
   provideZonelessChangeDetection
 } from '@angular/core';
+import { GlobalErrorHandler } from './core/services/global-error-handler';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { providePrimeNG } from 'primeng/config';
@@ -48,6 +50,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideZonelessChangeDetection(),
     provideRouter(routes, withComponentInputBinding()),
+    { provide: ErrorHandler, useClass: GlobalErrorHandler },
     { provide: MessageService, useClass: DeduplicatingMessageService },
     ConfirmationService,
     providePrimeNG({

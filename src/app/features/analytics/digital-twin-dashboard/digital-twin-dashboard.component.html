@@ -320,7 +320,7 @@
           <div class="identity-profile">
             <p-avatar [label]="getInitials(studentProfile()?.username || 'ST')" shape="circle" size="large" styleClass="identity-avatar"></p-avatar>
             <div class="identity-meta">
-              <h2 class="identity-name">{{ studentProfile()?.username }}</h2>
+              <h2 class="identity-name">{{ studentProfile()?.fullName }}</h2>
               <p class="identity-sub">{{ studentProfile()?.studentNumber }} — {{ studentProfile()?.programCode }} (Year {{ studentProfile()?.yearLevel }})</p>
             </div>
           </div>
@@ -430,15 +430,40 @@
             AI Support Advisories & Recommendations
           </h3>
 
-          @if (riskProfile()?.recommendedInterventions && (riskProfile()?.recommendedInterventions?.length ?? 0) > 0) {
+          @if (studentSelfTelemetry()?.recommendations && (studentSelfTelemetry()?.recommendations?.length ?? 0) > 0) {
             <div class="advisory-list">
-              @for (rec of riskProfile()?.recommendedInterventions; track rec; let i = $index) {
+              @for (rec of studentSelfTelemetry()?.recommendations; track rec.id) {
+                <div class="advisory-item">
+                  <div class="advisory-icon-wrapper">
+                    <i class="pi pi-info-circle advisory-icon"></i>
+                  </div>
+                  <div style="flex: 1; display: flex; flex-direction: column; gap: 0.25rem;">
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                      <span class="advisory-text">{{ humanizeInterventionType(rec.interventionType) }}</span>
+                      <p-tag [value]="rec.status" [severity]="rec.status === 'ACKNOWLEDGED' || rec.status === 'RESOLVED' ? 'success' : 'warn'" [rounded]="true" size="small"></p-tag>
+                    </div>
+                    @if (rec.triggerReason) {
+                      <span style="font-size: 0.75rem; color: var(--text-color-secondary);">{{ rec.triggerReason }}</span>
+                    }
+                  </div>
+                  @if (rec.status !== 'ACKNOWLEDGED' && rec.status !== 'RESOLVED') {
+                    <p-button label="Acknowledge" icon="pi pi-check" severity="success" [outlined]="true" size="small" [loading]="acknowledgingInterventionId() === rec.id" (onClick)="acknowledgeStudentRecommendation(rec.id)"></p-button>
+                  } @else {
+                    <span class="badge-tag green" style="font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 4px; background: rgba(34, 197, 94, 0.1); color: #16a34a; display: inline-flex; align-items: center; gap: 0.25rem;">
+                      <i class="pi pi-check"></i> Acknowledged
+                    </span>
+                  }
+                </div>
+              }
+            </div>
+          } @else if (riskProfile()?.recommendedInterventions && (riskProfile()?.recommendedInterventions?.length ?? 0) > 0) {
+            <div class="advisory-list">
+              @for (rec of riskProfile()?.recommendedInterventions; track rec) {
                 <div class="advisory-item">
                   <div class="advisory-icon-wrapper">
                     <i class="pi pi-info-circle advisory-icon"></i>
                   </div>
                   <span class="advisory-text">{{ humanizeInterventionType(rec) }}</span>
-                  <p-button label="Acknowledge" icon="pi pi-check" severity="success" [outlined]="true" size="small" (onClick)="acknowledgeStudentRecommendation(i + 1)"></p-button>
                 </div>
               }
             </div>

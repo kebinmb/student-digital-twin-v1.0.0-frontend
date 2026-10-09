@@ -130,6 +130,8 @@ export interface StudentProfileResponse {
   lastName?: string | null;
   suffix?: string | null;
   fullName?: string | null;
+  collegeId?: number | null;
+  collegeName?: string | null;
   programId: number;
   programCode: string;
   programName: string;

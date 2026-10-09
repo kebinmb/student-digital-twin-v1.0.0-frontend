@@ -1,6 +1,6 @@
 // File: src/app/features/scheduling/state/scheduling.store.ts
 
-import { inject, Injectable, signal, computed, DestroyRef, effect } from '@angular/core';
+import { inject, Injectable, signal, computed, DestroyRef, effect, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SchedulingApiService } from '../../../core/service/scheduling/scheduling-api.service';
 import { ProgramService, TermService } from '../../../core/services/institution.service';
@@ -82,10 +82,12 @@ export class SchedulingStore {
   constructor() {
     effect(() => {
       const globalTermId = this.academicPeriodStore.selectedTermId();
-      if (globalTermId && globalTermId !== this.selectedTermId()) {
-        this.selectedTermId.set(globalTermId);
-        this.loadSections(globalTermId);
-      }
+      untracked(() => {
+        if (globalTermId && globalTermId !== this.selectedTermId()) {
+          this.selectedTermId.set(globalTermId);
+          this.loadSections(globalTermId);
+        }
+      });
     });
 
     if (this.wsService) {

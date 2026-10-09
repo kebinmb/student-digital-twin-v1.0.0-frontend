@@ -204,7 +204,7 @@
             styleClass="gb-btn-compact">
           </p-button>
 
-          @if (isDean() || isRegistrar() || isAdmin()) {
+          @if (isDean() || isRegistrar() || isAdmin() || isChairperson()) {
             <p-button
               label="Pending Requests"
               icon="pi pi-inbox"
@@ -768,9 +768,8 @@
       </div>
 
       <ng-template pTemplate="footer">
-        <p-button label="Cancel" severity="secondary" size="small" (onClick)="showAddItemModal.set(false)" (click)="showAddItemModal.set(false)"></p-button>
-        <p-button label="Add Activity" severity="primary" size="small" (onClick)="submitAddItem()" (click)="submitAddItem()"></p-button>
-
+        <p-button label="Cancel" severity="secondary" size="small" (onClick)="showAddItemModal.set(false)" [disabled]="isAddingItem()"></p-button>
+        <p-button label="Add Activity" severity="primary" size="small" (onClick)="submitAddItem()" [loading]="isAddingItem()" [disabled]="isAddingItem()"></p-button>
       </ng-template>
     </p-dialog>
 
@@ -827,7 +826,7 @@
       }
 
       <ng-template pTemplate="footer">
-        <p-button label="Cancel" severity="secondary" size="small" (onClick)="isGradeChangeModalOpen.set(false)" (click)="isGradeChangeModalOpen.set(false)" />
+        <p-button label="Cancel" severity="secondary" size="small" (onClick)="isGradeChangeModalOpen.set(false)" />
         <p-button
           label="Submit Request"
           severity="warn"

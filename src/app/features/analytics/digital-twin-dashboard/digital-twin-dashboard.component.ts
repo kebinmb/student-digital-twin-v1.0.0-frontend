@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed, ChangeDetectionStrategy, effect } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, ChangeDetectionStrategy, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, NonNullableFormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -32,6 +32,7 @@ import {
   TelemetryKpiSummary
 } from '../../../core/models/analytics.model';
 import { StudentProfileResponse } from '../../../core/models/enrollment.model';
+import { StudentProfileService } from '../../../core/services/student-profile.service';
 import { AuthService } from '../../../core/service/authentication/auth-service';
 
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
@@ -74,21 +75,37 @@ export class DigitalTwinAnalyticsDashboardComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly messageService = inject(MessageService);
   private readonly fb = inject(NonNullableFormBuilder);
+  private readonly studentProfileService = inject(StudentProfileService, { optional: true });
+
+  private lastLoadedTermId: number | null = null;
 
   constructor() {
+    if (this.studentProfileService) {
+      effect(() => {
+        const p = this.studentProfileService?.profile();
+        if (p) {
+          untracked(() => this.studentProfile.set(p));
+        }
+      });
+    }
     effect(() => {
       const globalTermId = this.periodStore.selectedTermId();
       if (globalTermId) {
-        if (this.isAdmin()) {
-          this.fetchAdminTelemetry();
-          this.fetchAdminTelemetryKpi();
-        } else if (this.isFaculty()) {
-          this.fetchFacultyAssignedSections();
-          this.fetchFacultyTelemetry();
-          this.fetchFacultyTelemetryKpi();
-        } else if (this.isStudent()) {
-          this.loadStudentViewData();
-        }
+        untracked(() => {
+          if (globalTermId !== this.lastLoadedTermId) {
+            this.lastLoadedTermId = globalTermId;
+            if (this.isAdmin()) {
+              this.fetchAdminTelemetry();
+              this.fetchAdminTelemetryKpi();
+            } else if (this.isFaculty()) {
+              this.fetchFacultyAssignedSections();
+              this.fetchFacultyTelemetry();
+              this.fetchFacultyTelemetryKpi();
+            } else if (this.isStudent()) {
+              this.loadStudentViewData();
+            }
+          }
+        });
       }
     });
   }
@@ -142,7 +159,7 @@ export class DigitalTwinAnalyticsDashboardComponent implements OnInit {
 
   // General & Student Signals
   readonly riskProfile = signal<DigitalTwinRiskProfileDto | null>(null);
-  readonly studentProfile = signal<StudentProfileResponse | null>(null);
+  readonly studentProfile = signal<StudentProfileResponse | null>(this.studentProfileService?.profile() ?? null);
   readonly isLoading = signal<boolean>(false);
   readonly currentStudentId = signal<number | null>(null);
 
@@ -171,6 +188,7 @@ export class DigitalTwinAnalyticsDashboardComponent implements OnInit {
   readonly isDispatchModalOpen = signal<boolean>(false);
   readonly selectedStudentForDispatch = signal<StudentTelemetryAdminSummary | null>(null);
   readonly isDispatching = signal<boolean>(false);
+  readonly acknowledgingInterventionId = signal<number | null>(null);
 
   // Twin Inspection Drawer Signals
   readonly isInspectModalOpen = signal<boolean>(false);
@@ -275,15 +293,30 @@ export class DigitalTwinAnalyticsDashboardComponent implements OnInit {
         }
       });
 
-    if (this.isAdmin()) {
-      this.fetchAdminTelemetry();
-      this.fetchAdminTelemetryKpi();
-    } else if (this.isFaculty()) {
-      this.fetchFacultyAssignedSections();
-      this.fetchFacultyTelemetry();
-      this.fetchFacultyTelemetryKpi();
-    } else if (this.isStudent()) {
-      this.loadStudentViewData();
+    const globalTermId = this.periodStore.selectedTermId();
+    if (globalTermId && globalTermId !== this.lastLoadedTermId) {
+      this.lastLoadedTermId = globalTermId;
+      if (this.isAdmin()) {
+        this.fetchAdminTelemetry();
+        this.fetchAdminTelemetryKpi();
+      } else if (this.isFaculty()) {
+        this.fetchFacultyAssignedSections();
+        this.fetchFacultyTelemetry();
+        this.fetchFacultyTelemetryKpi();
+      } else if (this.isStudent()) {
+        this.loadStudentViewData();
+      }
+    } else if (!globalTermId && !this.lastLoadedTermId) {
+      if (this.isAdmin()) {
+        this.fetchAdminTelemetry();
+        this.fetchAdminTelemetryKpi();
+      } else if (this.isFaculty()) {
+        this.fetchFacultyAssignedSections();
+        this.fetchFacultyTelemetry();
+        this.fetchFacultyTelemetryKpi();
+      } else if (this.isStudent()) {
+        this.loadStudentViewData();
+      }
     }
 
     const paramId = this.route.snapshot.paramMap.get('studentId') || this.route.snapshot.queryParamMap.get('studentId');
@@ -510,9 +543,16 @@ export class DigitalTwinAnalyticsDashboardComponent implements OnInit {
     }
   }
 
-  acknowledgeStudentRecommendation(interventionId: number): void {
-    this.analyticsApi.acknowledgeStudentIntervention(interventionId).subscribe({
+  acknowledgeStudentRecommendation(interventionId: number, responseText: string = ''): void {
+    if (!interventionId || interventionId <= 0) {
+      console.warn('Cannot acknowledge — invalid intervention ID');
+      return;
+    }
+
+    this.acknowledgingInterventionId.set(interventionId);
+    this.analyticsApi.acknowledgeIntervention(interventionId, responseText).subscribe({
       next: () => {
+        this.acknowledgingInterventionId.set(null);
         this.messageService.add({
           severity: 'success',
           summary: 'Recommendation Acknowledged',
@@ -520,12 +560,22 @@ export class DigitalTwinAnalyticsDashboardComponent implements OnInit {
         });
         this.loadStudentViewData();
       },
-      error: () => {
-        this.messageService.add({
-          severity: 'info',
-          summary: 'Acknowledged',
-          detail: 'Recorded feedback for peer support advisory.'
-        });
+      error: (err) => {
+        this.acknowledgingInterventionId.set(null);
+        if (err?.status === 409) {
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Already Acknowledged',
+            detail: 'This recommendation was already acknowledged.'
+          });
+          this.loadStudentViewData();
+        } else {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Action Failed',
+            detail: 'Failed to acknowledge intervention. Please try again.'
+          });
+        }
       }
     });
   }
@@ -580,6 +630,7 @@ export class DigitalTwinAnalyticsDashboardComponent implements OnInit {
     this.enrollmentApi.getCurrentStudentProfile().subscribe({
       next: (profile) => {
         this.studentProfile.set(profile);
+        this.studentProfileService?.setProfile(profile);
         if (profile?.id) {
           this.currentStudentId.set(profile.id);
         }

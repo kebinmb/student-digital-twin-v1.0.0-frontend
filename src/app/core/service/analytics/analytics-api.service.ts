@@ -1,10 +1,12 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { SliceResponse } from '../../models/institution.model';
 import {
+  AcknowledgeInterventionRequest,
+  InterventionAcknowledgeResponse,
   AttendanceRecordResponse,
   AttendanceSessionResponse,
   DigitalTwinRiskProfileDto,
@@ -289,13 +291,48 @@ export class AnalyticsApiService {
     );
   }
 
-  acknowledgeStudentIntervention(id: number): Observable<void> {
-    return this.http.post<void>(`${environment.apiUrl}/v1/student/telemetry/interventions/${id}/acknowledge`, {}).pipe(
+  acknowledgeIntervention(
+    interventionId: number,
+    studentResponse: string = ''
+  ): Observable<InterventionAcknowledgeResponse | any> {
+    if (!interventionId || interventionId <= 0) {
+      console.error('[AnalyticsApiService] Invalid interventionId — cannot acknowledge');
+      return throwError(() => new Error('Invalid interventionId'));
+    }
+
+    const body: AcknowledgeInterventionRequest = {
+      response: studentResponse || ''
+    };
+
+    return this.http.post<InterventionAcknowledgeResponse | any>(
+      `${environment.apiUrl}/v1/student/telemetry/interventions/${interventionId}/acknowledge`,
+      body
+    ).pipe(
+      tap(() => console.log(`[AnalyticsApiService] Intervention ${interventionId} acknowledged`)),
       catchError(err => {
-        console.error(`Failed to acknowledge intervention ${id}:`, err);
+        console.error(`Failed to acknowledge intervention ${interventionId}:`, err);
+
+        // Handle known error cases gracefully
+        if (err.status === 409) {
+          // Already acknowledged — treat as success (idempotent)
+          console.warn(`Intervention ${interventionId} already acknowledged — ignoring 409`);
+          return of({ alreadyAcknowledged: true });
+        }
+
+        if (err.status === 403) {
+          console.error(`Not authorized to acknowledge intervention ${interventionId}`);
+        }
+
         return throwError(() => err);
       })
     );
+  }
+
+  acknowledgeStudentIntervention(
+    id: number,
+    studentResponse: string = ''
+  ): Observable<any> {
+    return this.acknowledgeIntervention(id, studentResponse);
   }
 
   getAdminTelemetryKpi(params?: AdminTelemetryQueryParams): Observable<TelemetryKpiSummary> {

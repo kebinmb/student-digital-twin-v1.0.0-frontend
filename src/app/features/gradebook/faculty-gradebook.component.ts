@@ -1,8 +1,8 @@
-import { Component, OnInit, inject, signal, computed, ChangeDetectionStrategy, DestroyRef, effect } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, ChangeDetectionStrategy, DestroyRef, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Subscription, catchError, of } from 'rxjs';
+import { Subscription, catchError, of, finalize } from 'rxjs';
 
 // PrimeNG Imports
 import { TableModule } from 'primeng/table';
@@ -87,6 +87,8 @@ export class FacultyGradebookComponent implements OnInit {
   private rosterSub?: Subscription;
   private sectionEventsSub?: Subscription;
   private scheduleWsSub?: Subscription;
+  private matrixSub?: Subscription;
+  private matrixLoadingSectionId: number | null = null;
 
   // Active Tab State
   readonly activeTab = signal<'ROSTER' | 'CLASS_RECORD'>('ROSTER');
@@ -98,6 +100,7 @@ export class FacultyGradebookComponent implements OnInit {
   readonly isFaculty = computed(() => this.userRole().includes('FACULTY'));
   readonly isDean = computed(() => this.isAdmin() || this.userRole().includes('DEAN'));
   readonly isRegistrar = computed(() => this.isAdmin() || this.userRole().includes('REGISTRAR'));
+  readonly isChairperson = computed(() => this.isAdmin() || this.userRole().includes('CHAIRPERSON'));
 
   // Term & Section State
   readonly terms = signal<TermResponse[]>([]);
@@ -120,6 +123,7 @@ export class FacultyGradebookComponent implements OnInit {
   readonly newItemCategoryId = signal<number | null>(null);
   readonly newItemTitle = signal<string>('');
   readonly newItemMaxPoints = signal<number>(50);
+  readonly isAddingItem = signal<boolean>(false);
   readonly manualRosterOverride = signal<boolean>(false);
 
   // Post-Seal Grade Change Request State
@@ -346,14 +350,14 @@ export class FacultyGradebookComponent implements OnInit {
     effect(() => {
       const globalTermId = this.periodStore.selectedTermId();
       if (globalTermId && globalTermId !== this.selectedTermId()) {
-        this.onTermSelect(globalTermId);
+        untracked(() => this.onTermSelect(globalTermId));
       }
     });
   }
 
   ngOnInit(): void {
     this.loadTerms();
-    if (this.isDean() || this.isRegistrar() || this.isAdmin()) {
+    if (this.isDean() || this.isRegistrar() || this.isAdmin() || this.isChairperson()) {
       this.loadPendingRequests();
     }
 
@@ -370,7 +374,7 @@ export class FacultyGradebookComponent implements OnInit {
             this.loadClassRecordMatrix(currentSecId);
           }
         }
-        if (this.isDean() || this.isRegistrar() || this.isAdmin()) {
+        if (this.isDean() || this.isRegistrar() || this.isAdmin() || this.isChairperson()) {
           this.loadPendingRequests();
         }
       });
@@ -390,6 +394,7 @@ export class FacultyGradebookComponent implements OnInit {
       this.sectionsSub?.unsubscribe();
       this.rosterSub?.unsubscribe();
       this.sectionEventsSub?.unsubscribe();
+      this.matrixSub?.unsubscribe();
     });
   }
 
@@ -569,18 +574,31 @@ export class FacultyGradebookComponent implements OnInit {
   }
 
   loadClassRecordMatrix(sectionId: number): void {
+    if (!sectionId || sectionId <= 0) return;
+    if (this.isMatrixLoading() && this.matrixLoadingSectionId === sectionId) {
+      return;
+    }
+    if (this.matrixSub) {
+      this.matrixSub.unsubscribe();
+      this.matrixSub = undefined;
+    }
     this.isMatrixLoading.set(true);
-    this.enrollmentApi.getScoreMatrix(sectionId)
-      .pipe(takeUntilDestroyed(this.destroyRef))
+    this.matrixLoadingSectionId = sectionId;
+    this.matrixSub = this.enrollmentApi.getScoreMatrix(sectionId)
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => {
+          this.isMatrixLoading.set(false);
+          this.matrixLoadingSectionId = null;
+        })
+      )
       .subscribe({
         next: matrix => {
           this.classRecordMatrix.set(matrix);
           this.syncMatrixToRoster(matrix);
-          this.isMatrixLoading.set(false);
         },
         error: () => {
           this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to load class record matrix.' });
-          this.isMatrixLoading.set(false);
         }
       });
   }
@@ -862,6 +880,8 @@ export class FacultyGradebookComponent implements OnInit {
   }
 
   submitAddItem(): void {
+    if (this.isAddingItem()) return;
+
     const sid = this.selectedSectionId();
     const catId = this.newItemCategoryId();
     const title = this.newItemTitle();
@@ -884,12 +904,16 @@ export class FacultyGradebookComponent implements OnInit {
       return;
     }
 
+    this.isAddingItem.set(true);
     this.enrollmentApi.addAssessmentItem(sid, {
       categoryId: catId,
       itemTitle: title.trim(),
       maxPoints: max,
       sequenceOrder: 1
-    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    }).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.isAddingItem.set(false))
+    ).subscribe({
       next: () => {
         this.messageService.add({ severity: 'success', summary: 'Item Added', detail: `Added '${title}' (${max} pts)` });
         this.showAddItemModal.set(false);
@@ -1013,7 +1037,7 @@ export class FacultyGradebookComponent implements OnInit {
           this.editableStudents.set(rows);
           this.isLoading.set(false);
 
-          if (!matrix) {
+          if (!matrix && this.activeTab() === 'CLASS_RECORD') {
             this.loadClassRecordMatrix(sectionId);
           }
         },
@@ -1408,7 +1432,7 @@ export class FacultyGradebookComponent implements OnInit {
   }
 
   loadPendingRequests(): void {
-    if (!this.isDean() && !this.isRegistrar() && !this.isAdmin()) return;
+    if (!this.isDean() && !this.isRegistrar() && !this.isAdmin() && !this.isChairperson()) return;
     this.isLoadingPendingRequests.set(true);
     this.enrollmentApi.getPendingGradeChangeRequests()
       .pipe(takeUntilDestroyed(this.destroyRef))

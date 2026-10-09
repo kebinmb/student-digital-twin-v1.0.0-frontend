@@ -7,6 +7,7 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { FacultyGradebookComponent, EditableRosterRow } from './faculty-gradebook.component';
 import { SectionRosterResponse } from '../../core/models/enrollment.model';
 import { AuthService } from '../../core/service/authentication/auth-service';
+import { EnrollmentApiService } from '../../core/service/enrollment/enrollment-api.service';
 
 describe('FacultyGradebookComponent', () => {
   let component: FacultyGradebookComponent;
@@ -368,5 +369,57 @@ describe('FacultyGradebookComponent', () => {
     component.roster.set({ ...mockRoster, gradeStatus: 'SEALED' });
     expect(component.phaseInfo().title).toContain('Tier 4');
     expect(component.phaseInfo().severity).toBe('success');
+  });
+
+  it('should prevent duplicate assessment item submission when already in-flight', () => {
+    const enrollmentApi = TestBed.inject(EnrollmentApiService);
+    const spy = vi.spyOn(enrollmentApi, 'addAssessmentItem');
+
+    component.selectedSectionId.set(12);
+    component.newItemCategoryId.set(1);
+    component.newItemTitle.set('Quiz 1');
+    component.newItemMaxPoints.set(50);
+
+    // Simulate first in-flight state
+    component.isAddingItem.set(true);
+
+    component.submitAddItem();
+
+    // Should not call API while isAddingItem is true
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it('should guard against duplicate matrix load requests for the same section', () => {
+    const enrollmentApi = TestBed.inject(EnrollmentApiService);
+    const spy = vi.spyOn(enrollmentApi, 'getScoreMatrix');
+
+    // Simulate matrix is already loading for section 12
+    component.isMatrixLoading.set(true);
+    (component as any).matrixLoadingSectionId = 12;
+
+    component.loadClassRecordMatrix(12);
+
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it('should use dynamic sectionId when adding assessment item and loading matrix', () => {
+    const enrollmentApi = TestBed.inject(EnrollmentApiService);
+    const addItemSpy = vi.spyOn(enrollmentApi, 'addAssessmentItem');
+    const matrixSpy = vi.spyOn(enrollmentApi, 'getScoreMatrix');
+
+    component.selectedSectionId.set(45);
+    component.newItemCategoryId.set(3);
+    component.newItemTitle.set('Lab Exercise 1');
+    component.newItemMaxPoints.set(100);
+
+    component.submitAddItem();
+    expect(addItemSpy).toHaveBeenCalledWith(45, expect.objectContaining({
+      categoryId: 3,
+      itemTitle: 'Lab Exercise 1',
+      maxPoints: 100
+    }));
+
+    component.loadClassRecordMatrix(45);
+    expect(matrixSpy).toHaveBeenCalledWith(45);
   });
 });

@@ -128,6 +128,15 @@ export interface UpdateInterventionStatusRequest {
   additionalNotes?: string;
 }
 
+export interface AcknowledgeInterventionRequest {
+  response?: string;
+}
+
+export interface InterventionAcknowledgeResponse {
+  alreadyAcknowledged?: boolean;
+  message?: string;
+}
+
 export type RiskLevel = 'LOW' | 'MODERATE' | 'HIGH' | 'CRITICAL';
 export type InterventionStatus = 'PENDING' | 'DISPATCHED' | 'ACKNOWLEDGED' | 'RESOLVED' | 'FAILED' | 'OPEN' | 'ASSIGNED' | 'IN_PROGRESS' | 'ESCALATED';
 

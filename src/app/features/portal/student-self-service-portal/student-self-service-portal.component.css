@@ -50,14 +50,6 @@
   flex-direction: column;
 }
 
-.badge-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.25rem;
-  flex-wrap: wrap;
-}
-
 .badge-tag {
   padding: 0.15rem 0.5rem;
   border-radius: var(--chmsu-border-radius-sm, 6px);
@@ -289,7 +281,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
-  margin-top: 0.875rem;
+  /* margin-top: 0.875rem; */
 }
 
 .advisory-item {

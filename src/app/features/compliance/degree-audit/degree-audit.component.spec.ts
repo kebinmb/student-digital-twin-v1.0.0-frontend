@@ -176,4 +176,10 @@ describe('DegreeAuditComponent', () => {
     expect(mockComplianceApi.applyForGraduation).toHaveBeenCalled();
     expect(component.graduationApp()?.degreeAuditStatus).toBe('QUALIFIED');
   });
+
+  it('should render student full name from audit instead of username', () => {
+    const studentNameEl = fixture.nativeElement.querySelector('.student-name');
+    expect(studentNameEl?.textContent).toContain('Juan Dela Cruz');
+    expect(studentNameEl?.textContent).not.toContain('jdelacruz');
+  });
 });

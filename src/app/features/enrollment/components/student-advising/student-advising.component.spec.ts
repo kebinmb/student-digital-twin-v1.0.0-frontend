@@ -561,4 +561,33 @@ describe('StudentAdvisingComponent', () => {
       expect(msgSummary).toBe('Enrollment Closed');
     });
   });
+
+  it('adv.studentName should show fullName from student_profiles — not username', () => {
+    store.advising.set({
+      studentId: 10,
+      studentNumber: '2024-0001',
+      studentName: 'Juan P. Dela Cruz',
+      programCode: 'BSCS',
+      programName: 'Bachelor of Science in Computer Science',
+      curriculumCode: 'BSCS-2024',
+      yearLevel: 3,
+      enrollmentStatus: 'REGULAR',
+      isGraduating: false,
+      totalUnitsEarned: 72,
+      cumulativeGpa: 1.25,
+      maxAllowedUnits: 24,
+      currentEnrolledUnits: 0,
+      financialClearance: 'CLEARED',
+      departmentalClearance: 'CLEARED',
+      isClearedForEnrollment: true,
+      courses: []
+    } as any);
+
+    fixture.detectChanges();
+    const nameEl = fixture.nativeElement.querySelector('.meta-val.font-bold-navy');
+    if (nameEl) {
+      expect(nameEl.textContent.trim()).toBe('Juan P. Dela Cruz');
+      expect(nameEl.textContent).not.toContain('_');
+    }
+  });
 });

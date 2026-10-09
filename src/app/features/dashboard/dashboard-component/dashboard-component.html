@@ -557,23 +557,6 @@
 
     <!-- Health Gauge Card & Bento Grid -->
     <div class="grid-section">
-      <div class="stat-card health-card">
-        <div class="knob-container">
-          <p-knob [ngModel]="cashierBooklets.length > 0 ? 100 : 0" [readonly]="true" [size]="70"
-            valueTemplate="{value}%" valueColor="var(--chmsu-green-main, #116834)"
-            rangeColor="var(--p-surface-200, #e2e8f0)"></p-knob>
-        </div>
-        <div class="health-meta">
-          <span class="stat-label">Collection Terminal Status</span>
-          <span class="stat-val health-rate-val">{{ cashierBooklets.length > 0 ? 'COA Form 51 Receipts Active' : 'No
-            Receipt Booklets Assigned' }}</span>
-          <div class="tag-row">
-            <p-tag [value]="cashierBooklets.length > 0 ? 'BALANCED' : 'UNASSIGNED'"
-              [severity]="cashierBooklets.length > 0 ? 'success' : 'secondary'" size="small"></p-tag>
-          </div>
-        </div>
-      </div>
-
       <div class="bento-grid-4col">
         <div class="stat-card bento-tile accent-green">
           <div class="tile-header">
@@ -993,21 +976,7 @@
 
     <!-- Health Gauge Card & Bento Grid -->
     <div class="grid-section">
-      <div class="stat-card health-card">
-        <div class="knob-container">
-          <p-knob [ngModel]="chairpersonSectionsList().length > 0 ? chairpersonOutcomeScore() : 0" [readonly]="true"
-            [size]="70" valueTemplate="{value}%" valueColor="var(--chmsu-green-main, #116834)"
-            rangeColor="var(--p-surface-200, #e2e8f0)"></p-knob>
-        </div>
-        <div class="health-meta">
-          <span class="stat-label">Curriculum Compliance</span>
-          <span class="stat-val health-rate-val">{{ chairpersonSectionsList().length > 0 ? chairpersonOutcomeScore() +
-            '% Syllabus Alignment' : '0% Syllabus Alignment' }}</span>
-          <div class="tag-row">
-            <p-tag value="CHED COMPLIANT" severity="success" size="small"></p-tag>
-          </div>
-        </div>
-      </div>
+
 
       <div class="bento-grid-4col">
         <div class="stat-card bento-tile accent-green">

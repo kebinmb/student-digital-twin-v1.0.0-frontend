@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy, effect, DestroyRef } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy, effect, untracked, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -61,12 +61,14 @@ export class ChedReportingComponent implements OnInit {
   constructor() {
     effect(() => {
       const globalTermId = this.periodStore.selectedTermId();
-      if (globalTermId && globalTermId !== this.termId()) {
-        this.termId.set(globalTermId);
-        if (this.activeTab() === 'E3') this.loadFormE3();
-        if (this.activeTab() === 'E4') this.loadFormE4();
-        if (this.activeTab() === 'E5') this.loadFormE5();
-      }
+      untracked(() => {
+        if (globalTermId && globalTermId !== this.termId()) {
+          this.termId.set(globalTermId);
+          if (this.activeTab() === 'E3') this.loadFormE3();
+          if (this.activeTab() === 'E4') this.loadFormE4();
+          if (this.activeTab() === 'E5') this.loadFormE5();
+        }
+      });
     });
   }
 

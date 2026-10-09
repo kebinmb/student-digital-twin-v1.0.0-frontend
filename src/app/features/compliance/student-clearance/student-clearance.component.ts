@@ -1,6 +1,6 @@
 // File: src/app/features/compliance/student-clearance/student-clearance.component.ts
 
-import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy, DestroyRef, effect, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -38,7 +38,6 @@ import { EnrollmentApiService } from '../../../core/service/enrollment/enrollmen
 import { AcademicPeriodStore } from '../../../core/services/academic-period.store';
 import { ClearanceService } from '../../../core/services/clearance.service';
 import { ClearanceRequestsService } from '../../../core/services/clearance-requests.service';
-import { effect } from '@angular/core';
 
 interface StudentSuggestionOption {
   label: string;
@@ -107,18 +106,20 @@ export class StudentClearanceComponent implements OnInit {
   constructor() {
     effect(() => {
       const globalTermId = this.periodStore.selectedTermId();
-      if (globalTermId && globalTermId !== this.searchTermId) {
-        this.searchTermId = globalTermId;
-        const currentTerm = this.periodStore.selectedTerm();
-        if (currentTerm) {
-          const yearCode = currentTerm.academicYearCode || '';
-          const type = currentTerm.termName || currentTerm.termType || `Term ${currentTerm.id}`;
-          this.activeTermDisplay.set(yearCode ? `${type} (${yearCode})` : `${type}`);
+      untracked(() => {
+        if (globalTermId && globalTermId !== this.searchTermId) {
+          this.searchTermId = globalTermId;
+          const currentTerm = this.periodStore.selectedTerm();
+          if (currentTerm) {
+            const yearCode = currentTerm.academicYearCode || '';
+            const type = currentTerm.termName || currentTerm.termType || `Term ${currentTerm.id}`;
+            this.activeTermDisplay.set(yearCode ? `${type} (${yearCode})` : `${type}`);
+          }
+          if (this.searchStudentNumber?.trim()) {
+            this.loadClearanceStatus();
+          }
         }
-        if (this.searchStudentNumber?.trim()) {
-          this.loadClearanceStatus();
-        }
-      }
+      });
     });
   }
 

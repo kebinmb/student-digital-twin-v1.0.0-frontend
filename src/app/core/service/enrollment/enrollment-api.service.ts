@@ -48,7 +48,7 @@ export class EnrollmentApiService {
   }
 
   getEnrollment(studentId: number, termId: number): Observable<StudentEnrollmentResponse> {
-    if (!studentId || studentId <= 0) {
+    if (!studentId || studentId <= 0 || !termId || termId <= 0) {
       return of({
         enrollmentId: null as unknown as number,
         studentId: studentId,
@@ -183,6 +183,9 @@ export class EnrollmentApiService {
     sectionId: number,
     request: import('../../models/enrollment.model').CreateClassRecordItemRequest
   ): Observable<import('../../models/enrollment.model').ClassRecordItemDto> {
+    if (!sectionId || Number(sectionId) <= 0) {
+      throw new Error('Valid numeric sectionId is required to add assessment item');
+    }
     return this.http.post<import('../../models/enrollment.model').ClassRecordItemDto>(
       `${environment.apiUrl}/v1/class-records/sections/${sectionId}/items`,
       request
@@ -194,6 +197,9 @@ export class EnrollmentApiService {
   }
 
   getScoreMatrix(sectionId: number): Observable<import('../../models/enrollment.model').ClassRecordMatrixResponse> {
+    if (!sectionId || Number(sectionId) <= 0) {
+      throw new Error('Valid numeric sectionId is required to get score matrix');
+    }
     return this.http.get<import('../../models/enrollment.model').ClassRecordMatrixResponse>(
       `${environment.apiUrl}/v1/class-records/sections/${sectionId}/matrix`
     );
@@ -227,8 +233,9 @@ export class EnrollmentApiService {
     return this.http.post<any>(`${environment.apiUrl}/v1/grades/change-requests`, request);
   }
 
-  getPendingGradeChangeRequests(): Observable<any[]> {
-    return this.http.get<any[]>(`${environment.apiUrl}/v1/grades/change-requests/pending`);
+  getPendingGradeChangeRequests(termId?: number): Observable<any[]> {
+    const url = `${environment.apiUrl}/v1/grades/change-requests/pending${termId ? `?termId=${termId}` : ''}`;
+    return this.http.get<any[]>(url);
   }
 
   approveGradeChangeRequest(id: number): Observable<any> {

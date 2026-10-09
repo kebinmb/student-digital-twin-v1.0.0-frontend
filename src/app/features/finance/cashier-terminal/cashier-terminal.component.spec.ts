@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { MessageService, ConfirmationService } from 'primeng/api';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { CashierTerminalComponent } from './cashier-terminal.component';
 import { FinancialApiService } from '../../../core/service/financial/financial-api.service';
 import { TermService } from '../../../core/services/institution.service';
@@ -172,5 +172,22 @@ describe('CashierTerminalComponent', () => {
     expect(component.searchStudentId()).toBe(42);
     expect(component.selectedStudent()?.fullName).toBe('Maria Santos');
     expect(mockFinancialApi.getInvoiceByStudentAndTerm).toHaveBeenCalledWith(42, 1);
+  });
+
+  it('should handle 403 Forbidden or API errors gracefully on init without crashing', () => {
+    mockFinancialApi.getActiveBooklet.mockReturnValue(
+      throwError(() => ({ status: 403, statusText: 'Forbidden' }))
+    );
+    mockUserApi.getUsers.mockReturnValue(
+      throwError(() => ({ status: 403, statusText: 'Forbidden' }))
+    );
+
+    expect(() => {
+      component.loadActiveBooklet();
+      component.loadCashierUsers();
+    }).not.toThrow();
+
+    expect(component.cashierUsers().length).toBeGreaterThan(0);
+    expect(component.cashierUsers()[0].label).toContain('Default Cashier');
   });
 });

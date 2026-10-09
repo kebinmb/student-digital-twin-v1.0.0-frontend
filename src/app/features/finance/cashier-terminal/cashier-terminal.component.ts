@@ -1,6 +1,6 @@
 // File: src/app/features/finance/cashier-terminal/cashier-terminal.component.ts
 
-import { Component, OnInit, OnDestroy, signal, computed, inject, ChangeDetectionStrategy, effect, DestroyRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, inject, ChangeDetectionStrategy, effect, untracked, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -155,13 +155,15 @@ export class CashierTerminalComponent implements OnInit, OnDestroy {
   constructor() {
     effect(() => {
       const globalTermId = this.periodStore.selectedTermId();
-      if (globalTermId && globalTermId !== this.selectedTermId()) {
-        this.selectedTermId.set(globalTermId);
-        this.searchTermId.set(globalTermId);
-        if (this.searchStudentId()) {
-          this.lookupStudentInvoice();
+      untracked(() => {
+        if (globalTermId && globalTermId !== this.selectedTermId()) {
+          this.selectedTermId.set(globalTermId);
+          this.searchTermId.set(globalTermId);
+          if (this.searchStudentId()) {
+            this.lookupStudentInvoice();
+          }
         }
-      }
+      });
     });
   }
 

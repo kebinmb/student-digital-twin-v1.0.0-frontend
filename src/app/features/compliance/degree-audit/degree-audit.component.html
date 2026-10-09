@@ -18,7 +18,7 @@
       <div class="banner-text-block">
         <span class="banner-title">Viewing Your Official Degree Audit & Graduation Evaluation</span>
         <span class="banner-desc">
-          Authenticated as <strong>{{ auditResult()?.studentName || currentStudent()?.username }} ({{ currentStudent()?.studentNumber }})</strong>.
+          Authenticated as <strong>{{ auditResult()?.studentName || currentStudent()?.fullName || currentStudent()?.username }} ({{ currentStudent()?.studentNumber }})</strong>.
           Degree audit records are securely mapped and locked to your student twin.
         </span>
       </div>

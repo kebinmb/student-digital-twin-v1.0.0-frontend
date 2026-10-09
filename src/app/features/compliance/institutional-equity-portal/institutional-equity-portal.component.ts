@@ -72,6 +72,8 @@ export class InstitutionalEquityPortalComponent implements OnInit {
 
   readonly isLoading = signal<boolean>(true);
   readonly isSavingVerification = signal<boolean>(false);
+  readonly statsLoading = signal<boolean>(false);
+  readonly statsError = signal<string | null>(null);
   readonly stats = signal<EquityStatisticsSummaryDto | null>(null);
   readonly profiles = signal<StudentEquityProfileDto[]>([]);
   readonly totalElements = signal<number>(0);
@@ -165,16 +167,42 @@ export class InstitutionalEquityPortalComponent implements OnInit {
   }
 
   loadStats(): void {
+    this.statsLoading.set(true);
+    this.statsError.set(null);
     this.equityApi.getEquityStatisticsSummary().subscribe({
-      next: (data) => this.stats.set(data),
-      error: () => {}
+      next: (data) => {
+        this.stats.set(data);
+        this.statsLoading.set(false);
+      },
+      error: (err) => {
+        console.error('[EquityPortal] Failed to load equity statistics summary:', err);
+        this.statsError.set(
+          err?.status === 500
+            ? 'Statistics could not be loaded. The server encountered an error.'
+            : 'Failed to load statistics.'
+        );
+        this.statsLoading.set(false);
+      }
     });
   }
 
   loadApplicantStats(): void {
+    this.statsLoading.set(true);
+    this.statsError.set(null);
     this.equityApi.getAdmissionApplicantEquityStats().subscribe({
-      next: (data) => this.applicantStats.set(data),
-      error: () => {}
+      next: (data) => {
+        this.applicantStats.set(data);
+        this.statsLoading.set(false);
+      },
+      error: (err) => {
+        console.error('[EquityPortal] Failed to load applicant statistics:', err);
+        this.statsError.set(
+          err?.status === 500
+            ? 'Statistics could not be loaded. The server encountered an error.'
+            : 'Failed to load applicant statistics.'
+        );
+        this.statsLoading.set(false);
+      }
     });
   }
 

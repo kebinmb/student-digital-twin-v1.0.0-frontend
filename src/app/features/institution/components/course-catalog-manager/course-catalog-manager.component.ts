@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -59,7 +59,7 @@ import { Skeleton } from 'primeng/skeleton';
   styleUrl: './course-catalog-manager.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class CourseCatalogManagerComponent implements OnInit {
+export class CourseCatalogManagerComponent implements OnInit, OnDestroy {
   private readonly courseService = inject(CourseService);
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
@@ -155,6 +155,13 @@ export class CourseCatalogManagerComponent implements OnInit {
         this.form.get('contactHoursLab')?.setValue(Math.round(Number(lab) * 3));
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+      this.searchTimeout = null;
+    }
   }
 
   loadCourses(): void {
