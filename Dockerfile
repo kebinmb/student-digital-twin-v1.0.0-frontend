@@ -12,8 +12,8 @@ COPY . .
 # Build production distribution bundle
 RUN npx ng build --configuration production
 
-# Production Static Web Server (Nginx Unprivileged / Alpine)
-FROM nginxinc/nginx-unprivileged:alpine-slim AS runner
+# Production Static Web Server (Nginx / Alpine)
+FROM nginx:stable-alpine AS runner
 
 # Copy custom Nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
