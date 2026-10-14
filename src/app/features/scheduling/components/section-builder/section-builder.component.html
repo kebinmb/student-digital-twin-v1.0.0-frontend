@@ -659,18 +659,19 @@
                     <label class="form-label">Faculty / Instructor</label>
                     <p-select 
                       [options]="store.instructors()" 
-                      optionLabel="username" 
+                      optionLabel="fullName" 
                       optionValue="id" 
                       formControlName="instructorUserId" 
                       [filter]="true"
                       filterPlaceholder="Search instructor..."
+                      [filterFields]="['fullName', 'username', 'email']"
                       [showClear]="true"
                       placeholder="Assign Faculty (Optional)"
                       appendTo="body"
                       class="w-full">
                       <ng-template let-i pTemplate="item">
                         <div class="instructor-option-item flex-col gap-xs">
-                          <span>{{ i.username }}</span>
+                          <span>{{ i.fullName || i.username }}</span>
                           <span class="email-subtext text-slate-600">{{ i.email }}</span>
                         </div>
                       </ng-template>
@@ -978,10 +979,11 @@
           </label>
           <p-select 
             [options]="store.instructors()" 
-            optionLabel="username" 
+            optionLabel="fullName" 
             optionValue="id" 
             [filter]="true"
             filterPlaceholder="Search faculty name or email..."
+            [filterFields]="['fullName', 'username', 'email']"
             [ngModel]="selectedFacultyId()" 
             (onChange)="onFacultyWorkloadSelect($event.value)"
             placeholder="Select Faculty Member"
@@ -989,7 +991,7 @@
             class="w-full">
             <ng-template let-i pTemplate="item">
               <div class="instructor-option-item flex-col gap-xs">
-                <span class="instructor-name font-semibold-navy"><strong>{{ i.username }}</strong></span>
+                <span class="instructor-name font-semibold-navy"><strong>{{ i.fullName || i.username }}</strong></span>
                 <span class="email-subtext text-slate-600">{{ i.email }}</span>
               </div>
             </ng-template>

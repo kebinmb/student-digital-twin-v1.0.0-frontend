@@ -31,6 +31,8 @@
   <div class="tab-content">
     @if (activeTab() === 'sections') {
       <app-section-builder></app-section-builder>
+    } @else if (activeTab() === 'overrides') {
+      <app-scheduling-overrides></app-scheduling-overrides>
     } @else {
       @defer (on viewport; prefetch on idle) {
         <app-timetable-grid (addSchedule)="setTab('sections')"></app-timetable-grid>

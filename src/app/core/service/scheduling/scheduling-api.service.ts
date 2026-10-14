@@ -144,4 +144,65 @@ export class SchedulingApiService {
       ['enlistment-updated', 'grade-status-updated']
     );
   }
+
+  // -------------------------------------------------------------------------
+  // Scheduling Override Workflow API
+  // -------------------------------------------------------------------------
+  validateAssignment(sectionId: number, facultyUserId: number): Observable<import('../../models/scheduling.model').OverrideValidationResponse> {
+    return this.http.get<import('../../models/scheduling.model').OverrideValidationResponse>(
+      `${this.baseUrl}/overrides/validate?sectionId=${sectionId}&facultyUserId=${facultyUserId}`
+    );
+  }
+
+  createOverrideRequest(request: import('../../models/scheduling.model').CreateOverrideRequest): Observable<import('../../models/scheduling.model').SchedulingOverrideResponse> {
+    return this.http.post<import('../../models/scheduling.model').SchedulingOverrideResponse>(
+      `${this.baseUrl}/overrides`,
+      request
+    );
+  }
+
+  getOverrideInbox(): Observable<import('../../models/scheduling.model').SchedulingOverrideResponse[]> {
+    return this.http.get<import('../../models/scheduling.model').SchedulingOverrideResponse[]>(
+      `${this.baseUrl}/overrides/inbox`
+    );
+  }
+
+  getPendingOverrideCount(): Observable<import('../../models/scheduling.model').PendingOverrideCountResponse> {
+    return this.http.get<import('../../models/scheduling.model').PendingOverrideCountResponse>(
+      `${this.baseUrl}/overrides/pending-count`
+    );
+  }
+
+  getOverridesBySection(sectionId: number): Observable<import('../../models/scheduling.model').SchedulingOverrideResponse[]> {
+    return this.http.get<import('../../models/scheduling.model').SchedulingOverrideResponse[]>(
+      `${this.baseUrl}/overrides/section/${sectionId}`
+    );
+  }
+
+  getOverrideById(id: number): Observable<import('../../models/scheduling.model').SchedulingOverrideResponse> {
+    return this.http.get<import('../../models/scheduling.model').SchedulingOverrideResponse>(
+      `${this.baseUrl}/overrides/${id}`
+    );
+  }
+
+  approveOverrideStep(requestId: number, approvalId: number, remarks: string): Observable<import('../../models/scheduling.model').SchedulingOverrideResponse> {
+    return this.http.post<import('../../models/scheduling.model').SchedulingOverrideResponse>(
+      `${this.baseUrl}/overrides/${requestId}/approvals/${approvalId}/approve`,
+      { remarks }
+    );
+  }
+
+  rejectOverrideStep(requestId: number, approvalId: number, remarks: string): Observable<import('../../models/scheduling.model').SchedulingOverrideResponse> {
+    return this.http.post<import('../../models/scheduling.model').SchedulingOverrideResponse>(
+      `${this.baseUrl}/overrides/${requestId}/approvals/${approvalId}/reject`,
+      { remarks }
+    );
+  }
+
+  cancelOverrideRequest(requestId: number, remarks: string): Observable<import('../../models/scheduling.model').SchedulingOverrideResponse> {
+    return this.http.post<import('../../models/scheduling.model').SchedulingOverrideResponse>(
+      `${this.baseUrl}/overrides/${requestId}/cancel`,
+      { remarks }
+    );
+  }
 }

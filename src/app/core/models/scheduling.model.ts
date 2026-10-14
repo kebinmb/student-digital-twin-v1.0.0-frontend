@@ -41,6 +41,97 @@ export interface InstructorOptionDto {
   id: number;
   username: string;
   email: string;
+  fullName?: string;
+  programId?: number | null;
+  programCode?: string | null;
+  collegeId?: number | null;
+  collegeCode?: string | null;
+}
+
+export interface OverrideValidationResponse {
+  isMismatch: boolean;
+  overrideType: 'NONE' | 'CROSS_PROGRAM' | 'CROSS_COLLEGE';
+  facultyUserId: number;
+  facultyName: string;
+  facultyEmail: string;
+  homeProgramId?: number | null;
+  homeProgramName?: string | null;
+  homeCollegeId?: number | null;
+  homeCollegeName?: string | null;
+  targetProgramId: number;
+  targetProgramName: string;
+  targetCollegeId: number;
+  targetCollegeName: string;
+  assignedChairpersonId?: number | null;
+  assignedChairpersonName?: string | null;
+  assignedDeanId?: number | null;
+  assignedDeanName?: string | null;
+  hasMissingAuthorities: boolean;
+  missingAuthorityMessages: string[];
+  requiredApprovalSteps: string[];
+}
+
+export interface CreateOverrideRequest {
+  sectionId: number;
+  scheduleId?: number | null;
+  facultyUserId: number;
+  justification: string;
+}
+
+export interface ApprovalDecisionRequest {
+  remarks: string;
+}
+
+export interface ApprovalStepResponse {
+  id: number;
+  approvalType: 'CHAIRPERSON_APPROVAL' | 'DEAN_APPROVAL' | 'FACULTY_ACCEPTANCE';
+  stepOrder: number;
+  requiredRole: string;
+  assignedApproverUserId?: number | null;
+  assignedApproverName?: string | null;
+  decisionByUserId?: number | null;
+  decisionByName?: string | null;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'SKIPPED';
+  decisionAt?: string | null;
+  remarks?: string | null;
+}
+
+export interface SchedulingOverrideResponse {
+  id: number;
+  sectionId: number;
+  sectionCode: string;
+  courseId: number;
+  courseCode: string;
+  courseTitle: string;
+  termId: number;
+  termName: string;
+  scheduleId?: number | null;
+  scheduleSummary?: string | null;
+  facultyUserId: number;
+  facultyName: string;
+  facultyEmail: string;
+  requestedByUserId: number;
+  requestedByName: string;
+  overrideType: 'CROSS_PROGRAM' | 'CROSS_COLLEGE';
+  homeProgramId?: number | null;
+  homeProgramName?: string | null;
+  homeCollegeId?: number | null;
+  homeCollegeName?: string | null;
+  targetProgramId: number;
+  targetProgramName: string;
+  targetCollegeId: number;
+  targetCollegeName: string;
+  status: 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'CONFIGURATION_REQUIRED' | 'SUPERSEDED';
+  justification: string;
+  resolutionNotes?: string | null;
+  createdAt: string;
+  completedAt?: string | null;
+  approvals: ApprovalStepResponse[];
+  isLocked: boolean;
+}
+
+export interface PendingOverrideCountResponse {
+  pendingCount: number;
 }
 
 export interface ScheduleSlotDto {
@@ -79,6 +170,8 @@ export interface ScheduleSlotResponse {
   startTime: string;
   endTime: string;
   scheduleType: string;
+  isLocked?: boolean;
+  lockReason?: string;
 }
 
 export interface SectionDetailResponse {

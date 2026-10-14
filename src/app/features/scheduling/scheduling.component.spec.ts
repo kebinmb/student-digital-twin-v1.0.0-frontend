@@ -29,10 +29,12 @@ describe('SchedulingComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should toggle between sections and timetable tabs', () => {
+  it('should toggle between sections, timetable, and overrides tabs', () => {
     expect(component.activeTab()).toBe('sections');
     component.setTab('timetable');
     expect(component.activeTab()).toBe('timetable');
+    component.setTab('overrides');
+    expect(component.activeTab()).toBe('overrides');
     component.setTab('sections');
     expect(component.activeTab()).toBe('sections');
   });

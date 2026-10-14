@@ -1,0 +1,242 @@
+<div class="overrides-container">
+  <div class="table-card">
+    <div class="toolbar-header">
+      <div class="header-title-group">
+        <h2>Cross-Unit Teaching Assignment Approvals</h2>
+        <p>Review and act upon provisional cross-program and cross-college faculty teaching assignments</p>
+      </div>
+      <div>
+        <button 
+          pButton 
+          type="button" 
+          icon="pi pi-refresh" 
+          label="Refresh" 
+          class="p-button-outlined p-button-sm"
+          (click)="loadOverrides()"
+          [loading]="loading()">
+        </button>
+      </div>
+    </div>
+
+    <!-- PrimeNG Table of Override Requests -->
+    <p-table 
+      [value]="overrides()" 
+      [loading]="loading()" 
+      responsiveLayout="scroll"
+      styleClass="p-datatable-sm p-datatable-striped"
+      [paginator]="true" 
+      [rows]="10"
+      emptyMessage="No scheduling override requests found.">
+      
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Reference #</th>
+          <th>Section / Course</th>
+          <th>Faculty Member</th>
+          <th>Type</th>
+          <th>Affiliation Route</th>
+          <th>Status</th>
+          <th>Approval Steps</th>
+          <th style="width: 140px; text-align: center;">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-req>
+        <tr>
+          <td>
+            <span class="font-bold text-slate-800">REQ-#{{ req.id }}</span>
+            <div class="text-xs text-slate-500">{{ req.createdAt | date:'short' }}</div>
+          </td>
+          <td>
+            <div class="font-bold text-emerald-800">{{ req.sectionCode }}</div>
+            <div class="text-xs text-slate-600">{{ req.courseCode }} - {{ req.courseTitle }}</div>
+            @if (req.scheduleSummary) {
+              <div class="text-xs text-indigo-700 mt-1"><i class="pi pi-clock mr-1"></i>{{ req.scheduleSummary }}</div>
+            }
+          </td>
+          <td>
+            <div class="font-semibold text-slate-900">{{ req.facultyName }}</div>
+            <div class="text-xs text-slate-500">{{ req.facultyEmail }}</div>
+          </td>
+          <td>
+            @if (req.overrideType === 'CROSS_COLLEGE') {
+              <span class="type-tag type-cross-college">Cross-College</span>
+            } @else {
+              <span class="type-tag type-cross-program">Cross-Program</span>
+            }
+          </td>
+          <td>
+            <div class="text-xs text-slate-700">
+              <span class="font-semibold">Home:</span> {{ req.homeProgramName || 'N/A' }} ({{ req.homeCollegeName || 'N/A' }})
+            </div>
+            <div class="text-xs text-slate-700 mt-1">
+              <span class="font-semibold">Target:</span> {{ req.targetProgramName }} ({{ req.targetCollegeName }})
+            </div>
+          </td>
+          <td>
+            @switch (req.status) {
+              @case ('PENDING_APPROVAL') {
+                <span class="badge-tag badge-pending"><i class="pi pi-hourglass"></i> Pending Approval</span>
+              }
+              @case ('APPROVED') {
+                <span class="badge-tag badge-approved"><i class="pi pi-check-circle"></i> Active / Approved</span>
+              }
+              @case ('REJECTED') {
+                <span class="badge-tag badge-rejected"><i class="pi pi-times-circle"></i> Rejected</span>
+              }
+              @case ('CONFIGURATION_REQUIRED') {
+                <span class="badge-tag badge-config"><i class="pi pi-exclamation-triangle"></i> Config Required</span>
+              }
+              @default {
+                <span class="badge-tag badge-cancelled"><i class="pi pi-ban"></i> {{ req.status }}</span>
+              }
+            }
+          </td>
+          <td>
+            <div class="steps-list">
+              @for (step of req.approvals; track step.id) {
+                <div class="step-item">
+                  <div class="step-details">
+                    <span class="step-title">{{ formatStepType(step.approvalType) }}</span>
+                    <span class="step-approver">Assignee: {{ step.assignedApproverName || step.requiredRole }}</span>
+                  </div>
+                  <div>
+                    @switch (step.status) {
+                      @case ('APPROVED') {
+                        <i class="pi pi-check text-emerald-600 font-bold" pTooltip="Approved" tooltipPosition="top"></i>
+                      }
+                      @case ('REJECTED') {
+                        <i class="pi pi-times text-rose-600 font-bold" pTooltip="Rejected" tooltipPosition="top"></i>
+                      }
+                      @case ('PENDING') {
+                        <i class="pi pi-clock text-amber-600" pTooltip="Pending" tooltipPosition="top"></i>
+                      }
+                      @default {
+                        <i class="pi pi-minus text-slate-400" [pTooltip]="step.status" tooltipPosition="top"></i>
+                      }
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </td>
+          <td style="text-align: center;">
+            <div class="flex gap-2 justify-content-center">
+              <button 
+                pButton 
+                type="button" 
+                icon="pi pi-eye" 
+                class="p-button-text p-button-sm p-button-secondary"
+                pTooltip="View Details"
+                tooltipPosition="top"
+                (click)="openDetail(req)">
+              </button>
+
+              @if (canActOnRequest(req)) {
+                <button 
+                  pButton 
+                  type="button" 
+                  icon="pi pi-pencil" 
+                  class="p-button-sm p-button-success"
+                  pTooltip="Take Action"
+                  tooltipPosition="top"
+                  (click)="openActionDialog(req)">
+                </button>
+              }
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- Details & Action Dialog -->
+<p-dialog 
+  [(visible)]="actionDialogVisible" 
+  [header]="selectedRequest() ? 'Override Request REQ-#' + selectedRequest()?.id : 'Override Request Details'"
+  [modal]="true"
+  [style]="{ width: '600px' }"
+  [draggable]="false"
+  [resizable]="false">
+  
+  @if (selectedRequest(); as req) {
+    <div class="dialog-content">
+      <div class="detail-row">
+        <span class="detail-label">Section:</span>
+        <span class="detail-value">{{ req.sectionCode }} ({{ req.courseCode }})</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Faculty Member:</span>
+        <span class="detail-value">{{ req.facultyName }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Override Category:</span>
+        <span class="detail-value">{{ req.overrideType === 'CROSS_COLLEGE' ? 'Cross-College' : 'Cross-Program' }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Home Affiliation:</span>
+        <span class="detail-value">{{ req.homeProgramName || 'N/A' }} / {{ req.homeCollegeName || 'N/A' }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Target Affiliation:</span>
+        <span class="detail-value">{{ req.targetProgramName }} / {{ req.targetCollegeName }}</span>
+      </div>
+      
+      <div>
+        <label class="font-bold text-slate-800 text-sm block mb-1">Justification:</label>
+        <div class="justification-box">"{{ req.justification }}"</div>
+      </div>
+
+      @if (pendingStepForMe(req); as step) {
+        <div class="surface-100 p-3 border-round border-1 border-slate-300 mt-2">
+          <div class="font-bold text-slate-900 mb-2">
+            Action Required: {{ formatStepType(step.approvalType) }}
+          </div>
+          <div class="field mb-3">
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Decision Remarks:</label>
+            <textarea 
+              pInputTextarea 
+              rows="3" 
+              class="w-full" 
+              [(ngModel)]="decisionRemarks"
+              placeholder="Provide context or instructions for your decision...">
+            </textarea>
+          </div>
+          <div class="flex justify-content-end gap-2">
+            <button 
+              pButton 
+              type="button" 
+              label="Reject" 
+              icon="pi pi-times" 
+              class="p-button-danger p-button-sm"
+              [disabled]="!decisionRemarks.trim() || submittingAction()"
+              [loading]="submittingAction()"
+              (click)="submitDecision(req, step, false)">
+            </button>
+            <button 
+              pButton 
+              type="button" 
+              label="Approve" 
+              icon="pi pi-check" 
+              class="p-button-success p-button-sm"
+              [disabled]="!decisionRemarks.trim() || submittingAction()"
+              [loading]="submittingAction()"
+              (click)="submitDecision(req, step, true)">
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <ng-template pTemplate="footer">
+    <button 
+      pButton 
+      type="button" 
+      label="Close" 
+      class="p-button-text p-button-secondary"
+      (click)="actionDialogVisible.set(false)">
+    </button>
+  </ng-template>
+</p-dialog>
