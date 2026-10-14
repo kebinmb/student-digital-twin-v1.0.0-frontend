@@ -42,6 +42,7 @@ import { NoticeApiService } from '../../../core/service/notice/notice-api.servic
 import { NoticeItem, CreateNoticeRequest } from '../../../core/models/notice.model';
 import { StudentSelfServiceSummaryDto } from '../../../core/models/lms.model';
 import { StudentProfileService } from '../../../core/services/student-profile.service';
+import { TeachingAssignmentService } from '../../../core/services/teaching-assignment.service';
 import { GradeChangeRequestService } from '../../../core/services/grade-change-request.service';
 import { StudentSelfTelemetry } from '../../../core/models/analytics.model';
 import { SectionDetailResponse } from '../../../core/models/scheduling.model';
@@ -242,6 +243,7 @@ export class DashboardComponent implements OnInit {
   ];
 
   protected readonly studentProfileService = inject(StudentProfileService, { optional: true });
+  protected readonly teachingService = inject(TeachingAssignmentService);
 
   readonly userName = computed(() => {
     if (this.isStudent()) {
@@ -461,20 +463,30 @@ export class DashboardComponent implements OnInit {
       ];
     }
     if (this.isDean()) {
-      return [
+      const actions: QuickActionItem[] = [
         { label: 'Curriculum Plans', icon: 'pi pi-sitemap', routerLink: '/dashboard/curriculum/designer', severity: 'primary' },
-        { label: 'Class Schedule Planner', icon: 'pi pi-calendar-plus', routerLink: '/dashboard/scheduling', severity: 'info' },
-        { label: 'Approve Clearances', icon: 'pi pi-verified', routerLink: '/dashboard/compliance/clearance', severity: 'success' },
-        { label: 'Student Support Alerts', icon: 'pi pi-info-circle', routerLink: '/dashboard/analytics/early-warning', severity: 'warn' }
+        { label: 'Class Schedule Planner', icon: 'pi pi-calendar-plus', routerLink: '/dashboard/scheduling', severity: 'info' }
       ];
+      if (this.teachingService.hasTeachingAssignments()) {
+        actions.push({ label: 'Take Attendance', icon: 'pi pi-qrcode', routerLink: '/dashboard/analytics/qr-attendance', severity: 'success' });
+      } else {
+        actions.push({ label: 'Approve Clearances', icon: 'pi pi-verified', routerLink: '/dashboard/compliance/clearance', severity: 'success' });
+      }
+      actions.push({ label: 'Student Support Alerts', icon: 'pi pi-info-circle', routerLink: '/dashboard/analytics/early-warning', severity: 'warn' });
+      return actions;
     }
     if (this.isChairperson()) {
-      return [
+      const actions: QuickActionItem[] = [
         { label: 'Curriculum Plans', icon: 'pi pi-sitemap', routerLink: '/dashboard/curriculum/designer', severity: 'primary' },
-        { label: 'Course Outcomes', icon: 'pi pi-th-large', routerLink: '/dashboard/curriculum/designer', severity: 'info' },
-        { label: 'Class Schedule Planner', icon: 'pi pi-calendar', routerLink: '/dashboard/scheduling', severity: 'success' },
-        { label: 'Grade Review Queue', icon: 'pi pi-check-square', routerLink: '/dashboard/grades', severity: 'warn' }
+        { label: 'Course Outcomes', icon: 'pi pi-th-large', routerLink: '/dashboard/curriculum/designer', severity: 'info' }
       ];
+      if (this.teachingService.hasTeachingAssignments()) {
+        actions.push({ label: 'Take Attendance', icon: 'pi pi-qrcode', routerLink: '/dashboard/analytics/qr-attendance', severity: 'success' });
+      } else {
+        actions.push({ label: 'Class Schedule Planner', icon: 'pi pi-calendar', routerLink: '/dashboard/scheduling', severity: 'success' });
+      }
+      actions.push({ label: 'Grade Review Queue', icon: 'pi pi-check-square', routerLink: '/dashboard/grades', severity: 'warn' });
+      return actions;
     }
     if (this.isGuidance()) {
       return [

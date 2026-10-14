@@ -5,11 +5,6 @@
   <header class="gb-header-card">
     <div class="gb-header-top-row">
       <div class="gb-title-group">
-        <div class="gb-title-badge-row">
-          <span class="gb-institution-badge">CHMSU Academic Registrar</span>
-          <span class="gb-meta-dot" aria-hidden="true">•</span>
-          <span class="gb-cmo-notice">CHED CMO No. 25, s. 2015</span>
-        </div>
         <h1 class="gb-module-title">Section Gradebook & Grade Submission</h1>
       </div>
 
@@ -233,7 +228,7 @@
           [class.tab-active]="activeTab() === 'ROSTER'"
           (click)="setTab('ROSTER')">
           <i class="pi pi-list" aria-hidden="true"></i>
-          <span>Official Grade Roster & Workflow</span>
+          <span>Official Grade</span>
         </button>
         <button 
           type="button"
@@ -241,7 +236,7 @@
           [class.tab-active]="activeTab() === 'CLASS_RECORD'"
           (click)="setTab('CLASS_RECORD')">
           <i class="pi pi-table" aria-hidden="true"></i>
-          <span>Dynamic Class Record & Weights</span>
+          <span>Class Record</span>
         </button>
       </nav>
 
@@ -374,7 +369,7 @@
       <div class="gb-roster-control-strip">
         <div class="gb-roster-status-info">
           <i class="pi pi-sync text-emerald-700" aria-hidden="true"></i>
-          <span>Official Roster Grades are derived automatically from the <strong>Dynamic Class Record</strong>.</span>
+          <span>Official Roster Grades are derived automatically from the <strong>Class Record</strong>.</span>
         </div>
 
         @if (canEditGrades()) {

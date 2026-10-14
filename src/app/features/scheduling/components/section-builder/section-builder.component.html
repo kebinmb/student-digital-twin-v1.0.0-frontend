@@ -120,7 +120,7 @@
           <span class="metric-kpi-label">Max Session Cap</span>
           <div class="metric-kpi-value-row flex-row font-bold-navy gap-sm">
             <span class="metric-kpi-value font-bold-navy">{{ store.maxHoursPerClass() }} hrs</span>
-            @if (isAdmin()) {
+            @if (canManageTerm()) {
               <button 
                 type="button"
                 class="kpi-edit-btn" 

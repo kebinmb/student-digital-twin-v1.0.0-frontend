@@ -6,6 +6,7 @@ import { signal } from '@angular/core';
 import { of } from 'rxjs';
 import { DashboardLayoutComponent } from './dashboard-layout.component';
 import { AuthService } from '../../../core/service/authentication/auth-service';
+import { TeachingAssignmentService } from '../../../core/services/teaching-assignment.service';
 
 describe('DashboardLayoutComponent', () => {
   let component: DashboardLayoutComponent;
@@ -112,5 +113,102 @@ describe('DashboardLayoutComponent', () => {
     const portalItem = allItems.find(i => i.routerLink === '/dashboard/compliance/equity-portal');
     expect(portalItem).toBeDefined();
     expect(portalItem?.label).toBe('Statutory Equity Portal');
+  });
+
+  it('should display QR Attendance for STUDENT as "QR Attendance Check-In"', () => {
+    currentUserSignal.set({
+      id: 10,
+      username: 'student.alice',
+      email: 'alice@chmsu.edu.ph',
+      role: 'STUDENT',
+      roles: ['STUDENT']
+    });
+
+    const allItems = component.filteredNavSections().flatMap(s => s.items);
+    const qrItem = allItems.find(i => i.routerLink === '/dashboard/analytics/qr-attendance');
+    expect(qrItem).toBeDefined();
+    expect(qrItem?.label).toBe('QR Attendance Check-In');
+  });
+
+  it('should display QR Attendance for FACULTY as "Take QR Attendance"', () => {
+    currentUserSignal.set({
+      id: 20,
+      username: 'prof.smith',
+      email: 'smith@chmsu.edu.ph',
+      role: 'FACULTY',
+      roles: ['FACULTY']
+    });
+
+    const allItems = component.filteredNavSections().flatMap(s => s.items);
+    const qrItem = allItems.find(i => i.routerLink === '/dashboard/analytics/qr-attendance');
+    expect(qrItem).toBeDefined();
+    expect(qrItem?.label).toBe('Take QR Attendance');
+  });
+
+  it('should display QR Attendance for DEAN only when holding teaching assignments', () => {
+    const teachingService = TestBed.inject(TeachingAssignmentService);
+    currentUserSignal.set({
+      id: 30,
+      username: 'dean.garcia',
+      email: 'garcia@chmsu.edu.ph',
+      role: 'DEAN',
+      roles: ['DEAN']
+    });
+
+    // Case A: No teaching assignments
+    teachingService.hasTeachingAssignments.set(false);
+    let allItems = component.filteredNavSections().flatMap(s => s.items);
+    let qrItem = allItems.find(i => i.routerLink === '/dashboard/analytics/qr-attendance');
+    expect(qrItem).toBeUndefined();
+
+    // Case B: Teaching assignments exist
+    teachingService.hasTeachingAssignments.set(true);
+    allItems = component.filteredNavSections().flatMap(s => s.items);
+    qrItem = allItems.find(i => i.routerLink === '/dashboard/analytics/qr-attendance');
+    expect(qrItem).toBeDefined();
+    expect(qrItem?.label).toBe('Take QR Attendance');
+  });
+
+  it('should display QR Attendance for CHAIRPERSON only when holding teaching assignments', () => {
+    const teachingService = TestBed.inject(TeachingAssignmentService);
+    currentUserSignal.set({
+      id: 40,
+      username: 'chair.lopez',
+      email: 'lopez@chmsu.edu.ph',
+      role: 'CHAIRPERSON',
+      roles: ['CHAIRPERSON']
+    });
+
+    // Case A: No teaching assignments
+    teachingService.hasTeachingAssignments.set(false);
+    let allItems = component.filteredNavSections().flatMap(s => s.items);
+    let qrItem = allItems.find(i => i.routerLink === '/dashboard/analytics/qr-attendance');
+    expect(qrItem).toBeUndefined();
+
+    // Case B: Teaching assignments exist
+    teachingService.hasTeachingAssignments.set(true);
+    allItems = component.filteredNavSections().flatMap(s => s.items);
+    qrItem = allItems.find(i => i.routerLink === '/dashboard/analytics/qr-attendance');
+    expect(qrItem).toBeDefined();
+    expect(qrItem?.label).toBe('Take QR Attendance');
+  });
+
+  it('should hide QR Attendance from non-teaching administrative roles (REGISTRAR, CASHIER, GUIDANCE, ACCOUNTANT)', () => {
+    const teachingService = TestBed.inject(TeachingAssignmentService);
+    const adminRoles = ['REGISTRAR', 'CASHIER', 'GUIDANCE', 'ACCOUNTANT'];
+    for (const adminRole of adminRoles) {
+      currentUserSignal.set({
+        id: 99,
+        username: `admin.${adminRole.toLowerCase()}`,
+        email: `${adminRole.toLowerCase()}@chmsu.edu.ph`,
+        role: adminRole,
+        roles: [adminRole]
+      });
+      teachingService.hasTeachingAssignments.set(false);
+
+      const allItems = component.filteredNavSections().flatMap(s => s.items);
+      const qrItem = allItems.find(i => i.routerLink === '/dashboard/analytics/qr-attendance');
+      expect(qrItem).toBeUndefined();
+    }
   });
 });

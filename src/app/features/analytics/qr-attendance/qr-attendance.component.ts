@@ -3,20 +3,16 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
-import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { TagModule } from 'primeng/tag';
 import { TableModule } from 'primeng/table';
 import { SelectModule } from 'primeng/select';
-import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
 import { KnobModule } from 'primeng/knob';
 import { ProgressBarModule } from 'primeng/progressbar';
-import { AvatarModule } from 'primeng/avatar';
 import { DialogModule } from 'primeng/dialog';
-import { BadgeModule } from 'primeng/badge';
 
 import { AnalyticsApiService } from '../../../core/service/analytics/analytics-api.service';
 import { SchedulingApiService } from '../../../core/service/scheduling/scheduling-api.service';
@@ -43,19 +39,15 @@ export interface ScheduleOption {
     CommonModule,
     FormsModule,
     ButtonModule,
-    CardModule,
     InputTextModule,
     TagModule,
     ToastModule,
     TableModule,
     SelectModule,
-    SkeletonModule,
     TooltipModule,
     KnobModule,
     ProgressBarModule,
-    AvatarModule,
     DialogModule,
-    BadgeModule,
     EmptyStateComponent
   ],
   templateUrl: './qr-attendance.component.html',
@@ -90,6 +82,7 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
   }
 
   @ViewChild('scannerVideo') scannerVideoRef?: ElementRef<HTMLVideoElement>;
+  @ViewChild('presentationBox') presentationBoxRef?: ElementRef<HTMLElement>;
 
   readonly isStudent = computed(() => this.authService.hasRole('STUDENT'));
   readonly studentProfile = signal<StudentProfileResponse | null>(null);
@@ -102,11 +95,31 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
   readonly isVerifyingCreator = signal<boolean>(false);
   readonly qrSeedInput = signal<string>('');
 
+  // Classroom QR Presentation Mode Signals
+  readonly showPresentationDialog = signal<boolean>(false);
+  readonly isFullscreenMode = signal<boolean>(false);
+  readonly currentTimestamp = signal<number>(Date.now());
+  private presentationTimer: ReturnType<typeof setInterval> | null = null;
+
   readonly isGenerating = signal<boolean>(false);
   readonly isScanning = signal<boolean>(false);
   readonly isCameraActive = signal<boolean>(false);
+  readonly isCameraStarting = signal<boolean>(false);
   private cameraStream: MediaStream | null = null;
-  private cameraScanTimer: any = null;
+  private cameraScanTimer: ReturnType<typeof setInterval> | null = null;
+  private barcodeDetectorInstance: any = null;
+
+  // GPS Geolocation & Telemetry Signals
+  readonly gpsStatus = signal<'IDLE' | 'ACQUIRING' | 'ACQUIRED' | 'ERROR'>('IDLE');
+  readonly gpsAccuracy = signal<number | null>(null);
+  readonly gpsCoordinates = signal<{ latitude: number; longitude: number } | null>(null);
+  readonly gpsErrorMessage = signal<string | null>(null);
+  readonly gpsPermissionState = signal<string>('unknown');
+  readonly showGpsDiagnosticsDialog = signal<boolean>(false);
+  readonly isSecureOrigin = computed(() => {
+    if (typeof window === 'undefined') return true;
+    return window.isSecureContext === true;
+  });
 
   // Student Personal Attendance History
   readonly studentHistoryRecords = signal<AttendanceRecordResponse[]>([]);
@@ -153,6 +166,172 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
     return Math.round((valid / total) * 100);
   });
 
+  // Presentation Mode Authorization & Computeds
+  readonly isPresentationAllowed = computed<boolean>(() => {
+    const user = this.authService.currentUser();
+    // Normalize user roles directly without relying on hasRole/hasAnyRole wildcard behaviors
+    const rawRoles = user?.roles && user.roles.length > 0
+      ? user.roles
+      : (user?.role ? [user.role] : []);
+    const normalizedRoles = rawRoles.map(r => r.replace(/^ROLE_/, '').toUpperCase());
+
+    const allowedRoles = ['FACULTY', 'CHAIRPERSON', 'DEAN'];
+    const disallowedRoles = ['SUPER_ADMIN', 'ADMIN', 'REGISTRAR', 'CASHIER', 'STUDENT', 'GUIDANCE', 'ACCOUNTANT'];
+
+    // 1. Must contain at least one of the allowed faculty academic leadership roles
+    const hasAllowedRole = normalizedRoles.some(r => allowedRoles.includes(r));
+    if (!hasAllowedRole) {
+      return false;
+    }
+
+    // 2. Must NOT contain any explicitly disallowed administrative or non-academic roles
+    const hasDisallowedRole = normalizedRoles.some(r => disallowedRoles.includes(r));
+    if (hasDisallowedRole) {
+      return false;
+    }
+
+    // 3. Authoritative schedule requirement - user must have at least one assigned class section schedule
+    if (this.scheduleOptions().length === 0) {
+      return false;
+    }
+
+    return true;
+  });
+
+  readonly canUsePresentationMode = computed<boolean>(() => {
+    return this.isPresentationAllowed() && this.activeSession() !== null;
+  });
+
+  readonly presentationStatus = computed<'ACTIVE' | 'EXPIRING SOON' | 'EXPIRED'>(() => {
+    const sess = this.activeSession();
+    if (!sess?.expiresAt) return 'EXPIRED';
+    const remainingMs = new Date(sess.expiresAt).getTime() - this.currentTimestamp();
+    if (remainingMs <= 0) return 'EXPIRED';
+    if (remainingMs <= 5 * 60 * 1000) return 'EXPIRING SOON';
+    return 'ACTIVE';
+  });
+
+  readonly presentationCountdown = computed<string>(() => {
+    const sess = this.activeSession();
+    if (!sess?.expiresAt) return '00m 00s';
+    const remainingMs = new Date(sess.expiresAt).getTime() - this.currentTimestamp();
+    if (remainingMs <= 0) return 'EXPIRED (00m 00s)';
+    const totalSecs = Math.floor(remainingMs / 1000);
+    const mins = Math.floor(totalSecs / 60);
+    const secs = totalSecs % 60;
+    return `${mins}m ${secs.toString().padStart(2, '0')}s`;
+  });
+
+  readonly activeScheduleLabel = computed<string | null>(() => {
+    const sess = this.activeSession();
+    const targetId = sess?.sectionScheduleId || this.selectedScheduleId();
+    if (!targetId) return null;
+    const match = this.scheduleOptions().find(o => o.value === targetId);
+    return match?.label || null;
+  });
+
+  readonly activeCourseCode = computed<string>(() => {
+    const label = this.activeScheduleLabel();
+    if (!label) return 'Classroom Session';
+    const match = label.match(/\]\s*([^:]+):/);
+    if (match) return match[1].trim();
+    return label;
+  });
+
+  readonly activeSectionCode = computed<string>(() => {
+    const label = this.activeScheduleLabel();
+    if (!label) return 'Assigned Section';
+    const match = label.match(/\[([^\]]+)\]/);
+    if (match) return match[1].trim();
+    return 'Assigned Section';
+  });
+
+  openPresentationMode(fullscreen: boolean = false): void {
+    if (!this.canUsePresentationMode()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Access Restricted',
+        detail: 'Presentation mode is available exclusively for faculty, chairpersons, and deans with active sessions and assigned schedules.'
+      });
+      return;
+    }
+    this.showPresentationDialog.set(true);
+    this.startPresentationCountdown();
+    if (fullscreen) {
+      setTimeout(() => this.enterFullscreen(), 150);
+    }
+  }
+
+  closePresentationMode(): void {
+    this.showPresentationDialog.set(false);
+    this.stopPresentationCountdown();
+    if (this.isFullscreenMode()) {
+      this.exitFullscreen();
+    }
+  }
+
+  onPresentationDialogVisibleChange(visible: boolean): void {
+    if (!visible) {
+      this.closePresentationMode();
+    } else {
+      this.openPresentationMode(false);
+    }
+  }
+
+  enterFullscreen(): void {
+    const elem = this.presentationBoxRef?.nativeElement || document.documentElement;
+    if (!elem) return;
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen().catch(err => console.warn('Fullscreen request error:', err));
+    } else if ((elem as any).webkitRequestFullscreen) {
+      (elem as any).webkitRequestFullscreen();
+    }
+  }
+
+  exitFullscreen(): void {
+    if (typeof document !== 'undefined' && document.fullscreenElement) {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(err => console.warn('Exit fullscreen error:', err));
+      } else if ((document as any).webkitExitFullscreen) {
+        (document as any).webkitExitFullscreen();
+      }
+    }
+  }
+
+  toggleFullscreen(): void {
+    if (this.isFullscreenMode()) {
+      this.exitFullscreen();
+    } else {
+      this.enterFullscreen();
+    }
+  }
+
+  startPresentationCountdown(): void {
+    this.stopPresentationCountdown();
+    this.currentTimestamp.set(Date.now());
+    this.presentationTimer = setInterval(() => {
+      this.currentTimestamp.set(Date.now());
+    }, 1000);
+  }
+
+  stopPresentationCountdown(): void {
+    if (this.presentationTimer) {
+      clearInterval(this.presentationTimer);
+      this.presentationTimer = null;
+    }
+  }
+
+  private readonly onFullscreenChange = (): void => {
+    if (typeof document !== 'undefined') {
+      this.isFullscreenMode.set(!!document.fullscreenElement);
+    }
+  };
+
+  getSimpleCode(qrSeed?: string | null): string {
+    if (!qrSeed) return '';
+    return qrSeed.replace('ATT-', '').replace('QR-ATT-', '');
+  }
+
   getInitials(name?: string): string {
     if (!name) return 'ST';
     const parts = name.trim().split(' ');
@@ -163,9 +342,16 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
   }
 
   private sseSub?: Subscription;
-  private livePollTimer: any = null;
+  private livePollTimer: ReturnType<typeof setInterval> | null = null;
 
   ngOnInit(): void {
+    if (typeof document !== 'undefined') {
+      document.addEventListener('fullscreenchange', this.onFullscreenChange);
+      document.addEventListener('webkitfullscreenchange', this.onFullscreenChange);
+    }
+
+    this.checkGpsPermissions();
+
     if (this.isStudent()) {
       // Resolve student profile and personal attendance history only
       this.loadStudentProfileAndHistory();
@@ -187,6 +373,12 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.stopPresentationCountdown();
+    if (typeof document !== 'undefined') {
+      document.removeEventListener('fullscreenchange', this.onFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', this.onFullscreenChange);
+    }
+
     if (this.sseSub) {
       this.sseSub.unsubscribe();
     }
@@ -268,6 +460,9 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
   }
 
   toggleCameraScanner(): void {
+    if (this.isCameraStarting()) {
+      return;
+    }
     if (this.isCameraActive()) {
       this.stopCameraScanner();
     } else {
@@ -275,56 +470,92 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
     }
   }
 
-  startCameraScanner(): void {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Camera Unsupported',
-        detail: 'Camera access is not supported by your browser. Please enter the QR code manually.'
-      });
+  async startCameraScanner(): Promise<void> {
+    if (this.isCameraStarting() || this.isCameraActive()) {
       return;
     }
 
-    const constraintsList: MediaStreamConstraints[] = [
-      { video: { facingMode: { ideal: 'environment' } } },
-      { video: { facingMode: 'environment' } },
-      { video: true }
-    ];
+    this.isCameraStarting.set(true);
 
-    const tryStream = (index: number) => {
-      if (index >= constraintsList.length) {
-        this.messageService.add({
-          severity: 'warn',
-          summary: 'Camera Unavailable',
-          detail: 'Could not access camera stream. Please enter or paste the QR attendance code manually.'
-        });
-        this.isCameraActive.set(false);
+    try {
+      const isAvailable = await this.checkCameraAvailability();
+      if (!isAvailable) {
         return;
       }
 
-      navigator.mediaDevices.getUserMedia(constraintsList[index])
-        .then((stream) => {
-          this.cameraStream = stream;
-          this.isCameraActive.set(true);
+      const constraintsList: MediaStreamConstraints[] = [
+        {
+          video: {
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
+        },
+        { video: { facingMode: 'environment' } },
+        { video: true }
+      ];
 
-          setTimeout(() => {
-            if (this.scannerVideoRef && this.scannerVideoRef.nativeElement) {
-              const video = this.scannerVideoRef.nativeElement;
-              video.setAttribute('playsinline', 'true');
-              video.setAttribute('muted', 'true');
-              video.srcObject = stream;
-              video.play().catch(err => console.warn('Video play error:', err));
-              this.startQrDetection(video);
-            }
-          }, 150);
-        })
-        .catch((err) => {
-          console.warn(`Camera constraint index ${index} failed:`, err);
-          tryStream(index + 1);
+      let stream: MediaStream | null = null;
+      let lastError: any = null;
+
+      for (let i = 0; i < constraintsList.length; i++) {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia(constraintsList[i]);
+          if (stream) {
+            break;
+          }
+        } catch (err: any) {
+          lastError = err;
+          const errorName = err?.name || '';
+          // If the user explicitly denied permission or security policy blocked access, stop retrying immediately
+          if (errorName === 'NotAllowedError' || errorName === 'PermissionDeniedError' || errorName === 'SecurityError') {
+            break;
+          }
+          console.warn(`[QR Scanner] Camera constraint index ${i} failed (${errorName}):`, err);
+        }
+      }
+
+      if (!stream) {
+        this.handleCameraError(lastError);
+        return;
+      }
+
+      this.cameraStream = stream;
+      this.isCameraActive.set(true);
+
+      // Robustly wait for #scannerVideo to be mounted in the DOM
+      const video = await this.waitForScannerVideo();
+      if (!video) {
+        console.error('[QR Scanner] Scanner video element ref was not mounted within expected timeframe.');
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Video Viewport Error',
+          detail: 'Failed to initialize the camera video viewport. Please try again or enter the code manually.',
+          life: 6000
         });
-    };
+        this.stopCameraScanner();
+        return;
+      }
 
-    tryStream(0);
+      video.setAttribute('playsinline', 'true');
+      video.setAttribute('muted', 'true');
+      video.muted = true;
+      video.srcObject = stream;
+
+      try {
+        await video.play();
+      } catch (playErr) {
+        console.warn('[QR Scanner] Video autoplay thwarted or interrupted:', playErr);
+      }
+
+      this.startQrDetection(video);
+    } catch (unexpectedErr) {
+      console.error('[QR Scanner] Unexpected camera error:', unexpectedErr);
+      this.handleCameraError(unexpectedErr);
+      this.stopCameraScanner();
+    } finally {
+      this.isCameraStarting.set(false);
+    }
   }
 
   stopCameraScanner(): void {
@@ -333,32 +564,168 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
       this.cameraScanTimer = null;
     }
     if (this.cameraStream) {
-      this.cameraStream.getTracks().forEach(track => track.stop());
+      this.cameraStream.getTracks().forEach(track => {
+        try {
+          track.stop();
+        } catch (e) {
+          console.warn('[QR Scanner] Error stopping media track:', e);
+        }
+      });
       this.cameraStream = null;
     }
+    if (this.scannerVideoRef?.nativeElement) {
+      try {
+        this.scannerVideoRef.nativeElement.srcObject = null;
+      } catch {
+        // Ignore detachment errors
+      }
+    }
+    this.barcodeDetectorInstance = null;
     this.isCameraActive.set(false);
+    this.isCameraStarting.set(false);
+  }
+
+  private async checkCameraAvailability(): Promise<boolean> {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    // 1. Insecure Context Check (HTTP vs HTTPS / localhost)
+    if (!window.isSecureContext) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Secure Connection Required (HTTPS)',
+        detail: 'Camera access is disabled by browser security policies on unencrypted HTTP connections. Access the system over HTTPS or localhost, or enter the QR seed manually.',
+        life: 8000
+      });
+      return false;
+    }
+
+    // 2. MediaDevices API support check
+    if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Camera API Unavailable',
+        detail: 'Camera media streaming APIs are not supported or are restricted in your browser. Please enter the QR code manually.',
+        life: 7000
+      });
+      return false;
+    }
+
+    // 3. Permissions API Query (if supported by browser)
+    if (navigator.permissions && typeof navigator.permissions.query === 'function') {
+      try {
+        const permissionStatus = await navigator.permissions.query({ name: 'camera' as PermissionName });
+        if (permissionStatus.state === 'denied') {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Camera Permission Denied',
+            detail: 'Camera access is currently blocked for this site. Please enable camera permissions in your browser address bar or site settings.',
+            life: 8000
+          });
+          return false;
+        }
+      } catch {
+        // Permissions API for camera is unsupported in some browsers (e.g. Safari); ignore safely
+      }
+    }
+
+    return true;
+  }
+
+  private async waitForScannerVideo(maxRetries = 20, delayMs = 50): Promise<HTMLVideoElement | null> {
+    for (let i = 0; i < maxRetries; i++) {
+      if (this.scannerVideoRef && this.scannerVideoRef.nativeElement) {
+        return this.scannerVideoRef.nativeElement;
+      }
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+    return null;
+  }
+
+  private handleCameraError(err: any): void {
+    const errorName = err?.name || '';
+    console.error('[QR Scanner] Camera error handled:', err);
+
+    if (errorName === 'NotAllowedError' || errorName === 'PermissionDeniedError') {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Camera Permission Denied',
+        detail: 'Camera permission was rejected. Please enable camera access in your browser or device permissions.',
+        life: 7000
+      });
+    } else if (errorName === 'NotFoundError' || errorName === 'DevicesNotFoundError') {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'No Camera Detected',
+        detail: 'No camera hardware found on your device. Please use manual QR code entry.',
+        life: 6000
+      });
+    } else if (errorName === 'NotReadableError' || errorName === 'TrackStartError') {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Camera Hardware In Use',
+        detail: 'Could not access camera video stream. The camera may be locked or in use by another application or browser tab.',
+        life: 7000
+      });
+    } else if (errorName === 'OverconstrainedError') {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Camera Settings Unsupported',
+        detail: 'The requested camera resolution or facing mode is not supported by your hardware. Please enter the QR code manually.',
+        life: 6000
+      });
+    } else if (errorName === 'SecurityError') {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Camera Access Restricted',
+        detail: 'Camera access was blocked due to security policies, iframe restrictions, or an insecure origin.',
+        life: 7000
+      });
+    } else {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Camera Unavailable',
+        detail: err?.message
+          ? `Could not access camera: ${err.message}. Please enter the code manually.`
+          : 'Could not access camera stream. Please enter or paste the QR attendance code manually.',
+        life: 6000
+      });
+    }
   }
 
   private startQrDetection(video: HTMLVideoElement): void {
     if (this.cameraScanTimer) {
       clearInterval(this.cameraScanTimer);
+      this.cameraScanTimer = null;
     }
 
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d', { willReadFrequently: true });
 
+    // Initialize single reusable BarcodeDetector instance if supported
+    if ('BarcodeDetector' in window) {
+      try {
+        this.barcodeDetectorInstance = new (window as any).BarcodeDetector({ formats: ['qr_code'] });
+      } catch (e) {
+        console.warn('[QR Scanner] Native BarcodeDetector instantiation failed, using jsQR fallback:', e);
+        this.barcodeDetectorInstance = null;
+      }
+    } else {
+      this.barcodeDetectorInstance = null;
+    }
+
     this.cameraScanTimer = setInterval(async () => {
-      if (!this.isCameraActive() || !video || video.readyState !== video.HAVE_ENOUGH_DATA) {
+      if (!this.isCameraActive() || !video || video.readyState < video.HAVE_ENOUGH_DATA) {
         return;
       }
 
       let scannedText: string | null = null;
 
       // 1. Try BarcodeDetector if natively supported by browser engine
-      if ('BarcodeDetector' in window) {
+      if (this.barcodeDetectorInstance) {
         try {
-          const detector = new (window as any).BarcodeDetector({ formats: ['qr_code'] });
-          const barcodes = await detector.detect(video);
+          const barcodes = await this.barcodeDetectorInstance.detect(video);
           if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
             scannedText = barcodes[0].rawValue;
           }
@@ -368,7 +735,7 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
       }
 
       // 2. Fallback to jsQR canvas processing (Works on ALL mobile devices / iOS Safari / Android)
-      if (!scannedText && context) {
+      if (!scannedText && context && video.videoWidth > 0 && video.videoHeight > 0) {
         try {
           canvas.width = video.videoWidth;
           canvas.height = video.videoHeight;
@@ -440,15 +807,18 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const fingerprint = navigator.userAgent || 'Conductor-Console';
+    const fingerprint = (typeof navigator !== 'undefined' ? navigator.userAgent : null) || 'Conductor-Console';
     this.isScanning.set(true);
     this.isVerifyingCreator.set(true);
 
     this.obtainGeolocation((lat, lon) => {
+      const validLat = (lat !== null && lat !== 0) ? lat : undefined;
+      const validLon = (lon !== null && lon !== 0) ? lon : undefined;
+
       this.analyticsApi.verifyCreatorAttendance({
         qrSeed: seed,
-        latitude: lat,
-        longitude: lon,
+        latitude: validLat,
+        longitude: validLon,
         deviceFingerprint: fingerprint
       }).subscribe({
         next: (res) => {
@@ -463,10 +833,11 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
             return [res, ...filtered];
           });
 
+          const geofenceNotice = res.isGeofenceValid ? 'with GPS Geofencing' : 'with Session Override (Geofence Out of Bounds / Bypassed)';
           this.messageService.add({
-            severity: 'success',
+            severity: res.isGeofenceValid ? 'success' : 'warn',
             summary: 'Conductor Attendance Verified',
-            detail: `Verified attendance for ${res.facultyName} (${res.facultyRole}) in ${res.courseCode || 'Section'} (${res.sectionCode || 'Session'}) with GPS Geofencing!`
+            detail: `Verified attendance for ${res.facultyName} (${res.facultyRole}) in ${res.courseCode || 'Section'} (${res.sectionCode || 'Session'}) ${geofenceNotice}!`
           });
         },
         error: (err) => {
@@ -484,12 +855,15 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
   }
 
   private performScanRequest(seed: string, studentId: number): void {
-    const fingerprint = navigator.userAgent || 'Browser-Client';
+    const fingerprint = (typeof navigator !== 'undefined' ? navigator.userAgent : null) || 'Browser-Client';
 
     this.isScanning.set(true);
     this.obtainGeolocation((lat, lon) => {
+      const validLat = (lat !== null && lat !== 0) ? lat : null;
+      const validLon = (lon !== null && lon !== 0) ? lon : null;
+
       if (typeof navigator !== 'undefined' && !navigator.onLine) {
-        this.offlineSyncService.enqueueScan(seed, studentId, lat, lon, fingerprint);
+        this.offlineSyncService.enqueueScan(seed, studentId, validLat, validLon, fingerprint);
         this.isScanning.set(false);
         this.qrSeedInput.set('');
         this.messageService.add({
@@ -503,8 +877,8 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
       this.analyticsApi.scanAttendance({
         qrSeed: seed,
         studentId: studentId,
-        latitude: lat,
-        longitude: lon,
+        latitude: validLat ?? undefined,
+        longitude: validLon ?? undefined,
         deviceFingerprint: fingerprint
       }).subscribe({
         next: (res) => {
@@ -516,16 +890,17 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
           this.studentHistoryRecords.update(prev => [res, ...prev.filter(r => r.recordId !== res.recordId)]);
           this.dailyRecords.update(prev => [res, ...prev.filter(r => r.recordId !== res.recordId)]);
 
+          const geofenceNotice = res.isGeofenceValid ? 'with GPS Geofence Verification!' : '(Geofence Out of Bounds / Bypassed)';
           this.messageService.add({
-            severity: 'success',
+            severity: res.isGeofenceValid ? 'success' : 'warn',
             summary: 'Attendance Verified',
-            detail: `Checked in for ${res.courseCode} (${res.sectionCode}) with GPS Geofence Verification!`
+            detail: `Checked in for ${res.courseCode} (${res.sectionCode}) ${geofenceNotice}`
           });
         },
         error: (err) => {
           this.isScanning.set(false);
           if (err?.status === 0 || (typeof navigator !== 'undefined' && !navigator.onLine)) {
-            this.offlineSyncService.enqueueScan(seed, studentId, lat, lon, fingerprint);
+            this.offlineSyncService.enqueueScan(seed, studentId, validLat, validLon, fingerprint);
             this.qrSeedInput.set('');
             this.messageService.add({
               severity: 'warn',
@@ -633,9 +1008,19 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
           const options: ScheduleOption[] = [];
           const filterOpts: { label: string; value: number | null }[] = [{ label: 'All Assigned Sections', value: null }];
 
+          const currentUserId = this.authService.getUserId();
+          const user = this.authService.currentUser();
+          const rawRoles = user?.roles && user.roles.length > 0 ? user.roles : (user?.role ? [user.role] : []);
+          const normalizedRoles = rawRoles.map(r => r.replace(/^ROLE_/, '').toUpperCase());
+          const isAcademicLeader = normalizedRoles.includes('DEAN') || normalizedRoles.includes('CHAIRPERSON');
+
           sections.forEach(sec => {
             if (sec.schedules && sec.schedules.length > 0) {
               sec.schedules.forEach(sch => {
+                // If Dean or Chairperson, only include schedule slots specifically assigned to their teaching load
+                if (isAcademicLeader && currentUserId !== null && sch.instructorUserId && sch.instructorUserId !== currentUserId) {
+                  return;
+                }
                 const dayStr = sch.dayOfWeek ? sch.dayOfWeek.substring(0, 3) : 'TBA';
                 const timeStr = sch.startTime ? ` ${sch.startTime.substring(0, 5)}-${sch.endTime ? sch.endTime.substring(0, 5) : ''}` : '';
                 const roomStr = sch.roomCode ? ` - ${sch.roomCode}` : '';
@@ -644,23 +1029,27 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
                   value: sch.id
                 });
               });
-            } else {
+            } else if (!isAcademicLeader) {
               options.push({
                 label: `[${sec.sectionCode}] ${sec.courseCode}: ${sec.courseTitle}`,
                 value: sec.id
               });
             }
 
-            filterOpts.push({
-              label: `[${sec.sectionCode}] ${sec.courseCode}`,
-              value: sec.id
-            });
+            if (!isAcademicLeader || (sec.schedules && sec.schedules.some(s => currentUserId === null || s.instructorUserId === currentUserId))) {
+              filterOpts.push({
+                label: `[${sec.sectionCode}] ${sec.courseCode}`,
+                value: sec.id
+              });
+            }
           });
 
           this.scheduleOptions.set(options);
           this.filterSectionOptions.set(filterOpts);
           if (options.length > 0 && !this.selectedScheduleId()) {
             this.selectedScheduleId.set(options[0].value);
+          } else if (options.length === 0) {
+            this.selectedScheduleId.set(null);
           }
         } else {
           this.scheduleOptions.set([]);
@@ -756,8 +1145,8 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
     });
   }
 
-  onDateChange(event: any): void {
-    const val = typeof event === 'string' ? event : event?.target?.value;
+  onDateChange(event: Event | string): void {
+    const val = typeof event === 'string' ? event : (event?.target as HTMLInputElement)?.value;
     if (val) {
       this.selectedDate.set(val);
       this.loadDailyAttendance();
@@ -814,17 +1203,27 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
     }
     this.isGenerating.set(true);
     this.obtainGeolocation((lat, lon) => {
+      const validLat = (lat !== null && lat !== 0) ? lat : undefined;
+      const validLon = (lon !== null && lon !== 0) ? lon : undefined;
+
       this.analyticsApi.startAttendanceSession({
         sectionScheduleId: targetId,
-        latitude: lat,
-        longitude: lon,
+        latitude: validLat,
+        longitude: validLon,
         allowedRadiusMeters: 50
       }).subscribe({
         next: (session) => {
           this.activeSession.set(session);
           this.qrSeedInput.set(session.qrSeed);
           this.isGenerating.set(false);
-          this.messageService.add({ severity: 'success', summary: 'QR Session Generated', detail: `Dynamic 15-min QR Attendance Session active at (${lat.toFixed(4)}, ${lon.toFixed(4)}).` });
+          const locationNote = (validLat !== undefined && validLon !== undefined)
+            ? `active at (${validLat.toFixed(4)}, ${validLon.toFixed(4)})`
+            : `active with campus centroid bounds`;
+          this.messageService.add({
+            severity: 'success',
+            summary: 'QR Session Generated',
+            detail: `Dynamic 15-min QR Attendance Session ${locationNote}.`
+          });
           this.loadDailyAttendance();
           this.listenToLiveSessionStream(session.sessionId);
         },
@@ -871,30 +1270,160 @@ export class QrAttendanceScannerComponent implements OnInit, OnDestroy {
   }
 
   // =========================================================================
-  // UTILITY METHODS
+  // GPS TELEMETRY & DIAGNOSTICS METHODS
   // =========================================================================
-  private obtainGeolocation(callback: (lat: number, lon: number) => void): void {
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => callback(pos.coords.latitude, pos.coords.longitude),
-        (err) => {
-          console.warn('Geolocation lookup failed:', err.message);
-          this.messageService.add({
-            severity: 'warn',
-            summary: 'GPS Location Unavailable',
-            detail: 'Could not acquire precise GPS telemetry. Geofencing may fail without active coordinates.'
-          });
-          callback(0, 0);
-        },
-        { timeout: 5000, enableHighAccuracy: true }
-      );
-    } else {
+  checkGpsPermissions(): void {
+    if (typeof navigator !== 'undefined' && 'permissions' in navigator && navigator.permissions?.query) {
+      navigator.permissions.query({ name: 'geolocation' as PermissionName }).then((result) => {
+        this.gpsPermissionState.set(result.state);
+        result.onchange = () => {
+          this.gpsPermissionState.set(result.state);
+        };
+      }).catch(() => {
+        this.gpsPermissionState.set('unknown');
+      });
+    }
+  }
+
+  openGpsDiagnostics(): void {
+    this.checkGpsPermissions();
+    this.showGpsDiagnosticsDialog.set(true);
+  }
+
+  refreshGpsTelemetry(): void {
+    this.obtainGeolocation((lat, lon, acc) => {
+      if (lat !== null && lon !== null) {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'GPS Telemetry Acquired',
+          detail: `Coordinates: (${lat.toFixed(6)}, ${lon.toFixed(6)}) with ±${Math.round(acc ?? 0)}m precision.`
+        });
+      }
+    });
+  }
+
+  obtainGeolocation(callback: (lat: number | null, lon: number | null, accuracy: number | null) => void): void {
+    // 1. Guard against non-browser environments (SSR)
+    if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+      callback(null, null, null);
+      return;
+    }
+
+    // 2. Guard against Insecure Context (HTTP over IP / LAN)
+    if (!window.isSecureContext) {
+      this.gpsStatus.set('ERROR');
+      const errorMsg = 'Insecure Context: Geolocation API requires HTTPS or localhost. Modern browsers block GPS access over plain HTTP (e.g. http://192.168.x.x).';
+      this.gpsErrorMessage.set(errorMsg);
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'HTTPS Required for GPS',
+        detail: 'Geolocation requires a secure HTTPS connection or localhost. Check-in will proceed without GPS geofencing.',
+        life: 8000
+      });
+      callback(null, null, null);
+      return;
+    }
+
+    // 3. Guard against unsupported Geolocation API
+    if (!('geolocation' in navigator)) {
+      this.gpsStatus.set('ERROR');
+      const errorMsg = 'Browser does not support Geolocation API.';
+      this.gpsErrorMessage.set(errorMsg);
       this.messageService.add({
         severity: 'warn',
         summary: 'Geolocation Unsupported',
-        detail: 'Browser geolocation is unavailable on this device.'
+        detail: 'Browser geolocation is unavailable on this device. Attendance will proceed without GPS coordinates.',
+        life: 6000
       });
-      callback(0, 0);
+      callback(null, null, null);
+      return;
+    }
+
+    this.gpsStatus.set('ACQUIRING');
+    this.gpsErrorMessage.set(null);
+
+    // Tier 1: High Accuracy GPS (Satellites + Wi-Fi) with 12s timeout and 30s cache tolerance
+    const tier1Options: PositionOptions = {
+      enableHighAccuracy: true,
+      timeout: 12000,
+      maximumAge: 30000
+    };
+
+    // Tier 2: Low-accuracy fallback (Cellular / IP / Network triangulation) with 7s timeout and 60s cache tolerance
+    const tier2Options: PositionOptions = {
+      enableHighAccuracy: false,
+      timeout: 7000,
+      maximumAge: 60000
+    };
+
+    const handleSuccess = (pos: GeolocationPosition) => {
+      this.gpsStatus.set('ACQUIRED');
+      this.gpsCoordinates.set({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+      this.gpsAccuracy.set(pos.coords.accuracy);
+      this.gpsErrorMessage.set(null);
+      callback(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
+    };
+
+    const handleFinalError = (err: GeolocationPositionError) => {
+      console.warn('[QR Attendance] Geolocation lookup failed:', err.code, err.message);
+      this.gpsStatus.set('ERROR');
+      let userMsg = '';
+
+      switch (err.code) {
+        case 1: // PERMISSION_DENIED
+          userMsg = 'Location permission was denied. Please allow location access in your browser or device settings to verify geofence.';
+          this.gpsPermissionState.set('denied');
+          break;
+        case 2: // POSITION_UNAVAILABLE
+          userMsg = 'Position unavailable. Please ensure your device GPS or Location Services are enabled.';
+          break;
+        case 3: // TIMEOUT
+          userMsg = 'GPS acquisition timed out indoors. Attendance will proceed without precise GPS coordinates.';
+          break;
+        default:
+          userMsg = err.message || 'Could not acquire precise GPS telemetry.';
+          break;
+      }
+
+      this.gpsErrorMessage.set(userMsg);
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'GPS Telemetry Unavailable',
+        detail: userMsg,
+        life: 7000
+      });
+      // CRITICAL: NEVER pass (0, 0)! Pass null to prevent 13,000km Null Island geofence violations
+      callback(null, null, null);
+    };
+
+    try {
+      navigator.geolocation.getCurrentPosition(
+        handleSuccess,
+        (tier1Err) => {
+          // If permission was explicitly denied, do NOT retry - fail immediately
+          if (tier1Err.code === 1) { // PERMISSION_DENIED
+            handleFinalError(tier1Err);
+            return;
+          }
+
+          // Otherwise (TIMEOUT or POSITION_UNAVAILABLE), attempt Tier 2 fallback with network positioning
+          console.info('[QR Attendance] Tier 1 high-accuracy GPS failed. Attempting Tier 2 network positioning fallback...');
+          try {
+            navigator.geolocation.getCurrentPosition(
+              handleSuccess,
+              handleFinalError,
+              tier2Options
+            );
+          } catch {
+            handleFinalError(tier1Err);
+          }
+        },
+        tier1Options
+      );
+    } catch (e: any) {
+      this.gpsStatus.set('ERROR');
+      this.gpsErrorMessage.set(e?.message || 'Error executing geolocation request');
+      callback(null, null, null);
     }
   }
 

@@ -168,6 +168,8 @@ export interface Program {
   id: number;
   departmentId: number;
   departmentCode?: string;
+  collegeId?: number;
+  collegeCode?: string;
   code: string;
   name: string;
   degreeLevel: string;

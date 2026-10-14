@@ -1,0 +1,259 @@
+<div class="camera-test-container">
+  <!-- Header Bar -->
+  <header class="test-header">
+    <div class="header-left">
+      <div class="header-icon-box" aria-hidden="true">
+        <i class="pi pi-camera"></i>
+      </div>
+      <div>
+        <h1 class="test-title">Camera & Secure Context Diagnostic Tool</h1>
+        <p class="test-subtitle">
+          Development environment verification for HTTPS, MediaDevices APIs, camera acquisition, and QR scanning.
+        </p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/dashboard" class="dashboard-link">
+        <p-button label="Return to Dashboard" icon="pi pi-arrow-left" [outlined]="true" size="small"></p-button>
+      </a>
+    </div>
+  </header>
+
+  <!-- Security Alert Banner if not in Secure Context -->
+  @if (!isSecureContext()) {
+    <div class="alert-banner alert-banner--danger" role="alert">
+      <i class="pi pi-exclamation-triangle alert-icon"></i>
+      <div class="alert-content">
+        <strong class="alert-heading">Insecure Context Detected (HTTP)!</strong>
+        <p class="alert-text">
+          This page is currently running under unencrypted HTTP or an untrusted origin ({{ currentProtocol() }}//{{ currentHostname() }}).
+          Modern mobile and desktop browsers strictly disable <code>navigator.mediaDevices.getUserMedia()</code> in insecure contexts.
+          To access the camera, connect via trusted HTTPS (e.g., <code>https://localhost</code> or <code>https://student-digital-twin.local</code>).
+        </p>
+      </div>
+    </div>
+  } @else {
+    <div class="alert-banner alert-banner--success" role="status">
+      <i class="pi pi-check-circle alert-icon"></i>
+      <div class="alert-content">
+        <strong class="alert-heading">Secure Context Validated (HTTPS)!</strong>
+        <p class="alert-text">
+          <code>window.isSecureContext</code> is TRUE. Hardware-accelerated camera access and high-accuracy geolocation are fully permitted by browser policies.
+        </p>
+      </div>
+    </div>
+  }
+
+  <!-- Telemetry Cards Grid -->
+  <section class="telemetry-grid" aria-label="Environment Telemetry">
+    <div class="stat-card">
+      <div class="stat-header">
+        <span class="stat-label">Secure Context</span>
+        <i class="pi pi-shield"></i>
+      </div>
+      <div class="stat-value">
+        <p-tag
+          [value]="isSecureContext() ? 'TRUE (Secure)' : 'FALSE (Insecure)'"
+          [severity]="isSecureContext() ? 'success' : 'danger'"
+        ></p-tag>
+      </div>
+      <div class="stat-subtext">window.isSecureContext</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-header">
+        <span class="stat-label">Origin & Protocol</span>
+        <i class="pi pi-globe"></i>
+      </div>
+      <div class="stat-value mono-val">
+        {{ currentProtocol() }}//{{ currentHostname() }}:{{ currentPort() }}
+      </div>
+      <div class="stat-subtext">Current Web Origin</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-header">
+        <span class="stat-label">MediaDevices API</span>
+        <i class="pi pi-desktop"></i>
+      </div>
+      <div class="stat-value">
+        <p-tag
+          [value]="hasMediaDevices() ? 'AVAILABLE' : 'UNDEFINED'"
+          [severity]="hasMediaDevices() ? 'success' : 'danger'"
+        ></p-tag>
+      </div>
+      <div class="stat-subtext">navigator.mediaDevices</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-header">
+        <span class="stat-label">getUserMedia()</span>
+        <i class="pi pi-video"></i>
+      </div>
+      <div class="stat-value">
+        <p-tag
+          [value]="hasGetUserMedia() ? 'SUPPORTED' : 'BLOCKED / NONE'"
+          [severity]="hasGetUserMedia() ? 'success' : 'danger'"
+        ></p-tag>
+      </div>
+      <div class="stat-subtext">navigator.mediaDevices.getUserMedia</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-header">
+        <span class="stat-label">Permission State</span>
+        <i class="pi pi-lock"></i>
+      </div>
+      <div class="stat-value">
+        <p-tag
+          [value]="permissionState() | uppercase"
+          [severity]="permissionState() === 'granted' ? 'success' : (permissionState() === 'denied' ? 'danger' : 'warn')"
+        ></p-tag>
+      </div>
+      <div class="stat-subtext">Camera Permission Query</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-header">
+        <span class="stat-label">BarcodeDetector</span>
+        <i class="pi pi-qrcode"></i>
+      </div>
+      <div class="stat-value">
+        <p-tag
+          [value]="hasBarcodeDetector() ? 'NATIVE (Hardware)' : 'jsQR FALLBACK'"
+          [severity]="hasBarcodeDetector() ? 'info' : 'secondary'"
+        ></p-tag>
+      </div>
+      <div class="stat-subtext">QR Engine Availability</div>
+    </div>
+  </section>
+
+  <!-- Interactive Camera Diagnostics Section -->
+  <section class="diagnostic-panels-grid">
+    <!-- Camera Viewport Card -->
+    <article class="stat-card camera-panel">
+      <div class="panel-header-row">
+        <div>
+          <h2 class="section-title">Hardware Camera Acquisition Test</h2>
+          <p class="section-desc">Stream raw video feed directly from device lenses.</p>
+        </div>
+        <div class="controls-row">
+          <p-button
+            label="Rear Camera (Environment)"
+            icon="pi pi-camera"
+            severity="success"
+            size="small"
+            [disabled]="isCameraLoading() || !hasGetUserMedia()"
+            [loading]="isCameraLoading() && activeFacingMode() === 'environment'"
+            (onClick)="startCamera('environment')"
+          ></p-button>
+
+          <p-button
+            label="Front Camera (User)"
+            icon="pi pi-user"
+            severity="info"
+            size="small"
+            [disabled]="isCameraLoading() || !hasGetUserMedia()"
+            [loading]="isCameraLoading() && activeFacingMode() === 'user'"
+            (onClick)="startCamera('user')"
+          ></p-button>
+
+          @if (isCameraActive()) {
+            <p-button
+              label="Stop Camera"
+              icon="pi pi-stop"
+              severity="secondary"
+              size="small"
+              [outlined]="true"
+              (onClick)="stopCamera()"
+            ></p-button>
+          }
+        </div>
+      </div>
+
+      @if (cameraError()) {
+        <div class="alert-banner alert-banner--danger" style="margin-top: 1rem;">
+          <i class="pi pi-times-circle alert-icon"></i>
+          <div class="alert-content">
+            <strong class="alert-heading">Acquisition Failure</strong>
+            <p class="alert-text">{{ cameraError() }}</p>
+          </div>
+        </div>
+      }
+
+      <div class="viewport-wrapper">
+        @if (isCameraActive()) {
+          <div class="viewport-box">
+            <video #testVideo class="test-video" autoplay playsinline muted></video>
+            <div class="view-overlay" aria-hidden="true">
+              <div class="view-frame">
+                <div class="laser-line"></div>
+              </div>
+            </div>
+            <div class="stream-info-badge">
+              <i class="pi pi-circle-fill stream-live-dot"></i>
+              <span>LIVE | {{ streamResolution() || 'Detecting...' }} | {{ streamTrackLabel() }}</span>
+            </div>
+          </div>
+        } @else {
+          <div class="viewport-empty">
+            <i class="pi pi-camera camera-empty-icon" aria-hidden="true"></i>
+            <span class="empty-title">Camera Preview Inactive</span>
+            <span class="empty-subtext">Click one of the buttons above to request camera access and test live streaming.</span>
+          </div>
+        }
+      </div>
+    </article>
+
+    <!-- QR Detection Telemetry Card -->
+    <article class="stat-card qr-panel">
+      <h2 class="section-title">Real-Time QR Decoding Telemetry</h2>
+      <p class="section-desc">Live decode rate and captured payload from the active video feed.</p>
+
+      <div class="qr-stats-list">
+        <div class="qr-stat-row">
+          <span class="qr-stat-title">Decoded Frame Count</span>
+          <span class="qr-stat-num">{{ qrDetectionCount() }}</span>
+        </div>
+
+        <div class="qr-stat-row">
+          <span class="qr-stat-title">Active Decoder Engine</span>
+          <span class="qr-stat-val">{{ detectedWithEngine() || 'Standby' }}</span>
+        </div>
+
+        <div class="qr-stat-row">
+          <span class="qr-stat-title">Last Detected Timestamp</span>
+          <span class="qr-stat-val">{{ lastScanTimestamp() || 'None yet' }}</span>
+        </div>
+      </div>
+
+      <div class="qr-result-box">
+        <div class="qr-result-header">
+          <span class="qr-result-label">Latest Scanned QR Payload</span>
+          @if (lastDetectedQr()) {
+            <span class="qr-payload-length">{{ lastDetectedQr()?.length }} chars</span>
+          }
+        </div>
+        <div class="qr-result-body">
+          @if (lastDetectedQr()) {
+            <pre class="qr-payload-text">{{ lastDetectedQr() }}</pre>
+          } @else {
+            <div class="qr-payload-empty">
+              <span>Point the camera at an attendance QR code or test pattern to verify instant scanning.</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="notice-box">
+        <div class="notice-title">
+          <i class="pi pi-info-circle"></i>
+          <span>HTTPS & Android Quick Guide</span>
+        </div>
+        <p class="notice-text">
+          On Android devices, install the generated <code>rootCA.pem</code> into <em>Settings &rarr; Security &rarr; Encryption & credentials &rarr; Install a CA certificate</em>. Then navigate to <code>https://&lt;your-host-lan-ip&gt;/camera-test</code>. The padlock will be green and camera prompts will appear immediately.
+        </p>
+      </div>
+    </article>
+  </section>
+</div>

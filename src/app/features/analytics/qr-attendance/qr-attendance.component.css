@@ -1,6 +1,17 @@
-/* File: src/app/features/analytics/qr-attendance/qr-attendance.component.css */
+/* ==========================================================================
+   CHMSU Student Digital Twin - Dynamic QR Attendance Module
+   Enterprise PrimeNG Component Stylesheet (No Tailwind CSS)
+   ========================================================================== */
 
-.qr-container {
+/* --------------------------------------------------------------------------
+   1. HOST AND PAGE LAYOUT
+   -------------------------------------------------------------------------- */
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.qr-attendance {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -10,25 +21,16 @@
   width: 100%;
 }
 
-.mb-4 {
-  margin-bottom: 1rem;
-}
-
-.mt-2 { margin-top: 0.5rem; }
-.mt-3 { margin-top: 0.75rem; }
-.my-1 { margin-top: 0.25rem; margin-bottom: 0.25rem; }
-
-/* ==========================================================================
-   1. INSTITUTIONAL HEADER TOOLBAR
-   ========================================================================== */
-
-.qr-toolbar-card {
+/* --------------------------------------------------------------------------
+   2. PAGE HEADER
+   -------------------------------------------------------------------------- */
+.qr-attendance__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 1rem;
-  background: var(--p-surface-0, #ffffff);
+  background-color: var(--p-surface-0, #ffffff);
   border: 1px solid var(--p-surface-200, #e2e8f0);
   border-radius: var(--chmsu-border-radius-lg, 12px);
   padding: 0.875rem 1.25rem;
@@ -53,33 +55,21 @@
   font-weight: 700;
   color: var(--p-surface-900, #0f172a);
   margin: 0;
-  line-height: 1.2;
+  line-height: 1.25;
 }
 
 .header-subtitle {
   font-size: 0.75rem;
   color: var(--p-surface-500, #64748b);
-  margin: 0.15rem 0 0 0;
+  margin: 0.2rem 0 0 0;
+  line-height: 1.4;
 }
 
-/* ==========================================================================
-   2. STUDENT ACADEMIC INSIGHTS COCKPIT LAYOUT
-   ========================================================================== */
-
-.student-cockpit {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.grid-section {
-  display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 1.25rem;
-}
-
+/* --------------------------------------------------------------------------
+   3. SHARED CARDS
+   -------------------------------------------------------------------------- */
 .stat-card {
-  background: var(--p-surface-0, #ffffff);
+  background-color: var(--p-surface-0, #ffffff);
   border: 1px solid var(--p-surface-200, #e2e8f0);
   border-radius: var(--chmsu-border-radius-lg, 12px);
   padding: 1.25rem;
@@ -89,6 +79,37 @@
 
 .stat-card:hover {
   border-color: var(--p-surface-300, #cbd5e1);
+}
+
+.stat-label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--p-surface-500, #64748b);
+}
+
+.stat-val {
+  font-family: var(--font-family-mono, monospace);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--p-surface-900, #0f172a);
+  margin-top: 0.15rem;
+}
+
+/* --------------------------------------------------------------------------
+   4. STUDENT DASHBOARD
+   -------------------------------------------------------------------------- */
+.student-attendance {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.student-summary-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1.25rem;
 }
 
 .health-card {
@@ -107,22 +128,7 @@
 .health-meta {
   display: flex;
   flex-direction: column;
-}
-
-.stat-label {
-  font-size: 0.625rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--p-surface-500, #64748b);
-}
-
-.stat-val {
-  font-family: var(--font-family-mono, monospace);
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--p-surface-900, #0f172a);
-  margin-top: 0.15rem;
+  min-width: 0;
 }
 
 .health-rate-val {
@@ -152,7 +158,9 @@
   font-size: 0.625rem;
 }
 
-/* Bento 4-Column Metric Grid */
+/* --------------------------------------------------------------------------
+   5. METRIC CARDS (BENTO 4-COLUMN GRID)
+   -------------------------------------------------------------------------- */
 .bento-grid-4col {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -160,7 +168,7 @@
 }
 
 .bento-strip {
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .bento-tile {
@@ -188,13 +196,28 @@
   flex-shrink: 0;
 }
 
-.tile-icon-box.green { background: var(--status-emerald-bg, #ecfdf5); color: var(--status-emerald-text, #047857); }
-.tile-icon-box.blue { background: var(--status-blue-bg, #f0f9ff); color: var(--status-blue-text, #0369a1); }
-.tile-icon-box.amber { background: var(--status-amber-bg, #fffbeb); color: var(--status-amber-text, #b45309); }
-.tile-icon-box.rose { background: var(--status-rose-bg, #fef2f2); color: var(--status-rose-text, #b91c1c); }
+.tile-icon-box.green {
+  background-color: var(--status-emerald-bg, #ecfdf5);
+  color: var(--status-emerald-text, #047857);
+}
+
+.tile-icon-box.blue {
+  background-color: var(--status-blue-bg, #f0f9ff);
+  color: var(--status-blue-text, #0369a1);
+}
+
+.tile-icon-box.amber {
+  background-color: var(--status-amber-bg, #fffbeb);
+  color: var(--status-amber-text, #b45309);
+}
+
+.tile-icon-box.rose {
+  background-color: var(--status-rose-bg, #fef2f2);
+  color: var(--status-rose-text, #b91c1c);
+}
 
 :host ::ng-deep .tile-progress {
-  height: 4px !important;
+  height: 4px;
   border-radius: 2px;
   margin: 0.35rem 0;
 }
@@ -204,20 +227,13 @@
   color: var(--p-surface-500, #64748b);
 }
 
-/* ==========================================================================
-   3. CAMERA & QR SCANNER COCKPIT CARD
-   ========================================================================== */
-
-.scanner-card, .panel-card {
+/* --------------------------------------------------------------------------
+   6. QR SCANNER
+   -------------------------------------------------------------------------- */
+.scanner-card {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-}
-
-.panel-content {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
 }
 
 .scanner-header-row {
@@ -228,7 +244,7 @@
   gap: 1rem;
 }
 
-.scanner-title-group, .panel-title-group {
+.scanner-title-group {
   display: flex;
   align-items: center;
   gap: 0.875rem;
@@ -240,13 +256,21 @@
   font-weight: 700;
   color: var(--p-surface-900, #0f172a);
   margin: 0;
-  line-height: 1.2;
+  line-height: 1.25;
 }
 
 .panel-subtext {
   font-size: 0.75rem;
   color: var(--p-surface-500, #64748b);
-  margin: 0.15rem 0 0 0;
+  margin: 0.2rem 0 0 0;
+  line-height: 1.4;
+}
+
+.scanner-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .camera-viewport-box {
@@ -283,7 +307,7 @@
   width: 220px;
   height: 220px;
   border: 2px dashed var(--chmsu-green-main, #116834);
-  border-radius: 12px;
+  border-radius: var(--chmsu-border-radius-lg, 12px);
   position: relative;
   box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.45);
 }
@@ -329,20 +353,13 @@
 
 .form-label {
   font-size: 0.75rem;
+  font-weight: 600;
   color: var(--p-surface-700, #334155);
 }
 
-.font-mono-bold {
+.form-label--mono {
   font-family: var(--font-family-mono, monospace);
   font-weight: 700;
-}
-
-.font-mono {
-  font-family: var(--font-family-mono, monospace);
-}
-
-.font-semibold {
-  font-weight: 600;
 }
 
 .input-action-wrapper {
@@ -350,13 +367,15 @@
   gap: 0.5rem;
 }
 
-.full-width-input {
+.scan-text-input {
   flex: 1;
+  font-family: var(--font-family-mono, monospace);
 }
 
 .geofence-status-pill {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
   padding: 0.5rem 0.875rem;
   background-color: var(--status-emerald-bg, #ecfdf5);
@@ -366,12 +385,44 @@
   color: var(--status-emerald-text, #047857);
 }
 
-.text-green {
+.geofence-status-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.geofence-status-pill--warn {
+  background-color: var(--status-amber-bg, #fffbeb);
+  border-color: var(--status-amber-border, #fde68a);
+  color: var(--status-amber-text, #b45309);
+}
+
+.geofence-status-pill--error {
+  background-color: var(--status-rose-bg, #fff1f2);
+  border-color: var(--status-rose-border, #fecdd3);
+  color: var(--status-rose-text, #be123c);
+}
+
+.geofence-status-pill--success {
+  background-color: var(--status-emerald-bg, #ecfdf5);
+  border-color: var(--status-emerald-border, #a7f3d0);
   color: var(--status-emerald-text, #047857);
 }
 
-.verification-success-box {
-  background: var(--status-emerald-bg, #ecfdf5);
+.faculty-geofence-pill {
+  margin-bottom: 0.75rem;
+}
+
+.text-accent-green {
+  color: var(--status-emerald-text, #047857);
+}
+
+/* --------------------------------------------------------------------------
+   7. VERIFICATION RESULTS
+   -------------------------------------------------------------------------- */
+.verification-success-card {
+  background-color: var(--status-emerald-bg, #ecfdf5);
   border: 1px solid var(--status-emerald-border, #a7f3d0);
   border-radius: var(--chmsu-border-radius-lg, 12px);
   padding: 1rem 1.25rem;
@@ -380,31 +431,31 @@
   gap: 0.75rem;
 }
 
-.success-header {
+.verification-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.success-title-group {
+.verification-title-group {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.icon-success {
+.verification-icon-success {
   color: var(--status-emerald-text, #047857);
   font-size: 1.25rem;
 }
 
-.success-title {
+.verification-title {
   font-family: var(--font-family-heading, inherit);
   font-weight: 700;
   font-size: 0.9375rem;
   color: var(--status-emerald-text, #047857);
 }
 
-.success-details-grid {
+.verification-details-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 0.75rem;
@@ -430,19 +481,209 @@
   margin-top: 0.15rem;
 }
 
-/* ==========================================================================
-   4. INSTITUTIONAL TABLES & TOOLBAR
-   ========================================================================== */
+.detail-value--mono-bold {
+  font-family: var(--font-family-mono, monospace);
+  font-weight: 700;
+}
 
-.table-card {
-  background: var(--p-surface-0, #ffffff);
-  border: 1px solid var(--p-surface-200, #e2e8f0);
-  border-radius: var(--chmsu-border-radius-lg, 12px);
-  padding: 1.25rem;
-  box-shadow: var(--chmsu-shadow-card, 0 1px 3px 0 rgba(0, 0, 0, 0.05));
+.detail-value--mono {
+  font-family: var(--font-family-mono, monospace);
+}
+
+.detail-value--success {
+  color: var(--status-emerald-text, #047857);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* --------------------------------------------------------------------------
+   8. FACULTY PANELS
+   -------------------------------------------------------------------------- */
+.faculty-attendance {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.faculty-panels-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 1.25rem;
+}
+
+.panel-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  justify-content: space-between;
+}
+
+.panel-content {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.panel-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.section-select-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+:host ::ng-deep .select-full-width {
+  width: 100%;
+}
+
+.panel-action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.presentation-btn-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+:host ::ng-deep .btn-presentation-mode {
+  flex: 1;
+}
+
+:host ::ng-deep .btn-fullscreen-mode {
+  flex: 1;
+}
+
+:host ::ng-deep .btn-full-width {
+  width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   9. ACTIVE QR SESSION
+   -------------------------------------------------------------------------- */
+.active-session-card {
+  background-color: var(--p-surface-950, #020617);
+  border-radius: var(--chmsu-border-radius-lg, 12px);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.3);
+}
+
+.active-session-label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--status-emerald-text, #34d399);
+}
+
+.qr-code-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.qr-display-box {
+  background-color: #ffffff;
+  padding: 0.75rem;
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.qr-matrix-image {
+  width: 130px;
+  height: 130px;
+}
+
+.qr-matrix-svg {
+  width: 110px;
+  height: 110px;
+}
+
+.qr-seed-display {
+  color: var(--p-surface-900, #0f172a);
+  font-family: var(--font-family-mono, monospace);
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-top: 0.35rem;
+  word-break: break-all;
+}
+
+.manual-code-panel {
+  background-color: var(--status-emerald-bg, #ecfdf5);
+  border: 1px solid var(--status-emerald-border, #a7f3d0);
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  padding: 0.625rem 0.875rem;
+  text-align: center;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.manual-code-label {
+  display: block;
+  font-size: 0.6875rem;
+  color: var(--status-emerald-text, #047857);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.manual-code-value {
+  display: block;
+  font-family: var(--font-family-mono, monospace);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--chmsu-navy-950, #020617);
+  letter-spacing: 0.15em;
+  margin: 0.25rem 0;
+}
+
+.manual-code-hint {
+  display: block;
+  font-size: 0.6875rem;
+  color: var(--chmsu-slate-600, #475569);
+}
+
+.session-meta-text {
+  font-size: 0.75rem;
+  color: var(--p-surface-400, #94a3b8);
+  margin: 0.25rem 0 0 0;
+}
+
+.session-meta-time {
+  font-family: var(--font-family-mono, monospace);
+  font-weight: 700;
+  color: var(--status-emerald-text, #34d399);
+}
+
+.session-meta-radius {
+  font-family: var(--font-family-mono, monospace);
+  font-weight: 700;
+  color: var(--p-surface-200, #e2e8f0);
+}
+
+/* --------------------------------------------------------------------------
+   10. FILTERS AND TOOLBARS
+   -------------------------------------------------------------------------- */
+.table-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.table-card--separated {
+  margin-bottom: 0.5rem;
 }
 
 .table-toolbar {
@@ -494,17 +735,32 @@
   color: var(--p-surface-600, #475569);
 }
 
-.date-input {
+.date-filter-input {
   padding: 0.35rem 0.65rem;
   border-radius: var(--chmsu-border-radius-md, 8px);
   border: 1px solid var(--p-surface-300, #cbd5e1);
   font-size: 0.8125rem;
   color: var(--p-surface-900, #0f172a);
   background-color: var(--p-surface-0, #ffffff);
+  font-family: var(--font-family-mono, monospace);
 }
 
-:host ::ng-deep .filter-select {
+.date-filter-input:focus {
+  border-color: var(--chmsu-green-main, #116834);
+  outline: none;
+}
+
+:host ::ng-deep .filter-section-select {
   min-width: 160px;
+}
+
+/* --------------------------------------------------------------------------
+   11. TABLES & RESPONSIVE SCROLL CONTAINER
+   -------------------------------------------------------------------------- */
+.table-scroll-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 :host ::ng-deep .institutional-table {
@@ -520,6 +776,7 @@
   background-color: var(--p-surface-50, #f8fafc);
   color: var(--p-surface-700, #334155);
   border-bottom: 1px solid var(--p-surface-200, #e2e8f0);
+  white-space: nowrap;
 }
 
 :host ::ng-deep .institutional-table .p-datatable-tbody > tr > td {
@@ -535,8 +792,24 @@
   background-color: var(--p-surface-50, #f8fafc) !important;
 }
 
-.course-badge {
+.cell-mono {
+  font-family: var(--font-family-mono, monospace);
+}
+
+.cell-telemetry {
+  color: var(--p-surface-500, #64748b);
+  font-size: 0.75rem;
+}
+
+.course-code-badge {
   color: var(--status-blue-text, #0369a1);
+  font-family: var(--font-family-mono, monospace);
+  font-weight: 700;
+}
+
+.course-code-text {
+  font-family: var(--font-family-mono, monospace);
+  font-weight: 700;
 }
 
 .student-cell {
@@ -552,9 +825,10 @@
 .student-num {
   font-size: 0.6875rem;
   color: var(--p-surface-500, #64748b);
+  font-family: var(--font-family-mono, monospace);
 }
 
-.section-cell {
+.section-badge-cluster {
   display: flex;
   align-items: center;
   gap: 0.35rem;
@@ -564,106 +838,180 @@
   padding: 2.5rem 1rem !important;
 }
 
-/* ==========================================================================
-   5. INSTRUCTOR VIEW SPECIFIC STYLES
-   ========================================================================== */
-
-.qr-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-  gap: 1.25rem;
+/* --------------------------------------------------------------------------
+   12. OFFLINE QUEUE DIALOG
+   -------------------------------------------------------------------------- */
+:host ::ng-deep .offline-queue-dialog {
+  width: 700px;
+  max-width: 95vw;
 }
 
-.section-select-group {
+.offline-queue-dialog-content {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 1rem;
+  padding: 0.5rem 0;
 }
 
-:host ::ng-deep .full-width-select {
-  width: 100% !important;
-}
-
-.qr-active-box {
-  background: var(--p-surface-950, #020617);
-  border-radius: var(--chmsu-border-radius-lg, 12px);
-  padding: 1.25rem;
+.dialog-toolbar {
   display: flex;
-  flex-direction: column;
   align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
   gap: 0.75rem;
-  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.3);
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--p-surface-200, #e2e8f0);
 }
 
-.active-label {
-  font-size: 0.625rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--status-emerald-text, #34d399);
-}
-
-.qr-code-wrapper {
-  display: flex;
-  justify-content: center;
-}
-
-.qr-display-box {
-  background: #ffffff;
-  padding: 0.75rem;
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.qr-img-matrix {
-  width: 130px;
-  height: 130px;
-}
-
-.qr-svg-matrix {
-  width: 110px;
-  height: 110px;
-}
-
-.qr-seed-text {
-  color: var(--p-surface-900, #0f172a);
-  font-weight: 700;
-}
-
-.simple-code-card {
-  background-color: var(--status-emerald-bg, #ecfdf5);
-  border: 1px solid var(--status-emerald-border, #a7f3d0);
-  border-radius: var(--chmsu-border-radius-md, 8px);
-  padding: 0.5rem 0.75rem;
-  text-align: center;
-}
-
-.qr-meta-text {
-  font-size: 0.75rem;
-  color: var(--p-surface-400, #94a3b8);
-  margin: 0;
-}
-
-:host ::ng-deep .full-width-btn {
-  width: 100% !important;
-}
-
-.text-muted {
+.dialog-description {
+  font-size: 0.8125rem;
   color: var(--p-surface-500, #64748b);
 }
 
-.text-xs {
+.dialog-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.offline-queue-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1rem;
+  text-align: center;
+}
+
+.offline-queue-empty__icon {
+  font-size: 2rem;
+  color: var(--status-emerald-text, #047857);
+  margin-bottom: 0.5rem;
+}
+
+.offline-queue-empty__text {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--p-surface-600, #475569);
+  margin: 0;
+}
+
+.offline-queue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.offline-queue-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  border: 1px solid var(--p-surface-200, #e2e8f0);
+  background-color: var(--p-surface-0, #ffffff);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.offline-queue-item--queued,
+.offline-queue-item--syncing {
+  background-color: var(--p-surface-50, #f8fafc);
+  border-color: var(--p-surface-200, #e2e8f0);
+}
+
+.offline-queue-item--conflict,
+.offline-queue-item--failed {
+  background-color: var(--status-rose-bg, #fef2f2);
+  border-color: var(--status-rose-border, #fecaca);
+}
+
+.offline-queue-item__content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.offline-queue-item__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.offline-queue-item__id {
+  font-size: 0.75rem;
+  font-family: var(--font-family-mono, monospace);
+  color: var(--p-surface-700, #334155);
+}
+
+.offline-queue-item__timestamp {
+  font-size: 0.75rem;
+  color: var(--p-surface-500, #64748b);
+}
+
+.offline-queue-item__metadata {
+  font-size: 0.75rem;
+  color: var(--p-surface-600, #475569);
+}
+
+.offline-queue-item__separator {
+  margin: 0 0.35rem;
+  color: var(--p-surface-300, #cbd5e1);
+}
+
+.offline-queue-item__seed {
+  font-family: var(--font-family-mono, monospace);
   font-size: 0.75rem;
 }
 
-/* ==========================================================================
-   6. RESPONSIVE BREAKPOINTS
-   ========================================================================== */
+.offline-queue-item__error {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #b91c1c;
+  margin-top: 0.15rem;
+}
 
-@media (max-width: 1024px) {
-  .grid-section {
+.offline-queue-item__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* --------------------------------------------------------------------------
+   13. ACCESSIBILITY HELPERS
+   -------------------------------------------------------------------------- */
+:host a:focus-visible,
+:host button:focus-visible,
+:host input:focus-visible,
+:host select:focus-visible,
+:host [tabindex]:focus-visible {
+  outline: 2px solid var(--chmsu-green-main, #116834);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   14. RESPONSIVE BREAKPOINTS
+   -------------------------------------------------------------------------- */
+
+/* Desktop: >= 1200px */
+@media (min-width: 1200px) {
+  .student-summary-grid {
+    grid-template-columns: 280px 1fr;
+  }
+}
+
+/* Tablet: 768px to 1199px */
+@media (max-width: 1199px) and (min-width: 768px) {
+  .student-summary-grid {
     grid-template-columns: 1fr;
   }
 
@@ -672,12 +1020,589 @@
   }
 }
 
-@media (max-width: 640px) {
+/* Mobile: <= 767px */
+@media (max-width: 767px) {
+  .qr-attendance {
+    padding: 1rem 0.75rem;
+    gap: 1rem;
+  }
+
+  .student-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
   .bento-grid-4col {
     grid-template-columns: 1fr;
   }
 
-  .qr-grid {
+  .faculty-panels-grid {
     grid-template-columns: 1fr;
   }
+
+  .scanner-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .scanner-actions ::ng-deep .p-button {
+    flex: 1 1 auto;
+  }
+
+  .input-action-wrapper {
+    flex-direction: column;
+  }
+
+  .input-action-wrapper ::ng-deep .p-button {
+    width: 100%;
+  }
+
+  .crosshair-box {
+    width: 180px;
+    height: 180px;
+  }
+
+  .toolbar-controls {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-field {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .date-filter-input {
+    flex: 1;
+  }
+
+  :host ::ng-deep .filter-section-select {
+    flex: 1;
+    width: 100%;
+  }
+
+  .offline-queue-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .offline-queue-item__actions {
+    justify-content: flex-end;
+    margin-top: 0.5rem;
+  }
+
+  .presentation-stage {
+    padding: 1rem;
+    min-height: auto;
+  }
+
+  .presentation-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .presentation-toolbar__controls {
+    justify-content: stretch;
+  }
+
+  .presentation-toolbar__controls ::ng-deep .p-button {
+    flex: 1;
+  }
+
+  .presentation-qr-frame {
+    width: 88vw;
+    height: 88vw;
+    max-height: 45vh;
+  }
+
+  .presentation-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .presentation-btn-group {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .presentation-btn-group ::ng-deep .p-button {
+    width: 100%;
+  }
 }
+
+/* Small mobile: <= 480px */
+@media (max-width: 480px) {
+  .qr-attendance {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .health-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .tag-row {
+    justify-content: center;
+  }
+
+  .crosshair-box {
+    width: 150px;
+    height: 150px;
+  }
+
+  .presentation-hero-title {
+    font-size: 1.375rem;
+  }
+
+  .presentation-course-banner {
+    padding: 0.35rem 1rem;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   15. REDUCED-MOTION SUPPORT
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .scan-laser-line {
+    animation: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   16. CLASSROOM PRESENTATION MODE & FULL-SCREEN PROJECTION
+   -------------------------------------------------------------------------- */
+:host ::ng-deep .classroom-presentation-dialog {
+  max-width: 96vw;
+  width: 1360px;
+}
+
+:host ::ng-deep .classroom-presentation-dialog .p-dialog-content {
+  padding: 0 !important;
+  background-color: #ffffff !important;
+  border-radius: 16px;
+  overflow-y: auto;
+  max-height: 94vh;
+}
+
+.presentation-stage {
+  background-color: #ffffff;
+  color: var(--p-surface-900, #0f172a);
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 2.25rem 2.5rem 2.25rem;
+  min-height: 85vh;
+  box-sizing: border-box;
+}
+
+.presentation-stage--fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  padding: 1.5rem 3.5rem 2rem 3.5rem;
+  overflow-y: auto;
+  background-color: #ffffff;
+}
+
+.presentation-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--p-surface-200, #e2e8f0);
+  margin-bottom: 1.25rem;
+}
+
+.presentation-toolbar__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.presentation-toolbar__icon {
+  font-size: 1.625rem;
+  color: var(--chmsu-green-main, #116834);
+}
+
+.presentation-toolbar__title {
+  font-family: var(--font-family-heading, inherit);
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--p-surface-900, #0f172a);
+}
+
+.presentation-toolbar__subtitle {
+  font-size: 0.6875rem;
+  color: var(--p-surface-500, #64748b);
+  display: block;
+}
+
+.presentation-toolbar__status {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.presentation-countdown-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.875rem;
+  border-radius: 9999px;
+  background-color: var(--status-emerald-bg, #ecfdf5);
+  border: 1px solid var(--status-emerald-border, #a7f3d0);
+  color: var(--status-emerald-text, #047857);
+  font-size: 0.8125rem;
+  font-family: var(--font-family-mono, monospace);
+}
+
+.presentation-countdown-pill--expiring {
+  background-color: var(--status-amber-bg, #fffbeb);
+  border-color: var(--status-amber-border, #fde68a);
+  color: var(--status-amber-text, #b45309);
+}
+
+.presentation-countdown-pill--expired {
+  background-color: var(--status-rose-bg, #fef2f2);
+  border-color: var(--status-rose-border, #fecaca);
+  color: var(--status-rose-text, #b91c1c);
+}
+
+.countdown-label {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.countdown-value {
+  font-weight: 800;
+  font-size: 0.875rem;
+}
+
+.presentation-toolbar__controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.presentation-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1.25rem;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  flex: 1;
+  justify-content: center;
+}
+
+.presentation-hero-title {
+  font-family: var(--font-family-heading, inherit);
+  font-size: clamp(1.5rem, 3.2vw, 2.5rem);
+  font-weight: 800;
+  color: var(--p-surface-900, #0f172a);
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.presentation-course-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.875rem;
+  background-color: var(--p-surface-50, #f8fafc);
+  border: 1px solid var(--p-surface-200, #e2e8f0);
+  border-radius: 9999px;
+  padding: 0.45rem 1.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.course-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.course-meta-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--p-surface-500, #64748b);
+}
+
+.course-meta-value {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: var(--chmsu-green-main, #116834);
+  font-family: var(--font-family-mono, monospace);
+}
+
+.course-meta-divider {
+  color: var(--p-surface-300, #cbd5e1);
+}
+
+.presentation-qr-frame {
+  width: min(580px, 80vw);
+  height: min(580px, 80vw);
+  max-height: 52vh;
+  aspect-ratio: 1 / 1;
+  background-color: #ffffff;
+  border: 4px solid var(--p-surface-900, #0f172a);
+  border-radius: 20px;
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.12);
+  box-sizing: border-box;
+}
+
+.presentation-qr-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: crisp-edges;
+}
+
+.presentation-qr-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.presentation-manual-code-card {
+  background-color: var(--status-emerald-bg, #ecfdf5);
+  border: 2px solid var(--status-emerald-border, #a7f3d0);
+  border-radius: var(--chmsu-border-radius-lg, 16px);
+  padding: 0.75rem 2.5rem;
+  text-align: center;
+  width: 100%;
+  max-width: 580px;
+  box-sizing: border-box;
+}
+
+.presentation-manual-code-label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--status-emerald-text, #047857);
+  margin-bottom: 0.15rem;
+}
+
+.presentation-manual-code-value {
+  display: block;
+  font-family: var(--font-family-mono, monospace);
+  font-size: clamp(3.75rem, 8vw, 6.25rem);
+  font-weight: 900;
+  color: var(--chmsu-navy-950, #020617);
+  letter-spacing: 0.15em;
+  line-height: 1.05;
+}
+
+.presentation-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  width: 100%;
+  max-width: 650px;
+}
+
+.presentation-metric-box {
+  background-color: var(--p-surface-50, #f8fafc);
+  border: 1px solid var(--p-surface-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  padding: 0.625rem 0.875rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.metric-label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--p-surface-500, #64748b);
+}
+
+.metric-val {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--p-surface-900, #0f172a);
+}
+
+.metric-val--countdown {
+  font-family: var(--font-family-mono, monospace);
+  color: var(--chmsu-green-main, #116834);
+  font-size: 1.05rem;
+}
+
+.metric-val--expiring {
+  color: var(--status-amber-text, #b45309);
+}
+
+.presentation-instructions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--p-surface-700, #334155);
+}
+
+.presentation-footer {
+  font-size: 0.75rem;
+  color: var(--p-surface-400, #94a3b8);
+  margin-top: 0.25rem;
+}
+
+/* --------------------------------------------------------------------------
+   14. GPS TELEMETRY & GEOFENCE DIAGNOSTICS MODAL
+   -------------------------------------------------------------------------- */
+.gps-diag-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-top: 0.5rem;
+}
+
+.gps-diag-desc {
+  font-size: 0.875rem;
+  color: var(--p-surface-600, #475569);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.gps-diag-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background-color: var(--p-surface-50, #f8fafc);
+  border: 1px solid var(--p-surface-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  padding: 1rem;
+}
+
+.gps-diag-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.gps-diag-label {
+  font-weight: 600;
+  color: var(--p-surface-700, #334155);
+}
+
+.gps-diag-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+}
+
+.gps-diag-badge--pass {
+  background-color: var(--status-emerald-bg, #ecfdf5);
+  border: 1px solid var(--status-emerald-border, #a7f3d0);
+  color: var(--status-emerald-text, #047857);
+}
+
+.gps-diag-badge--warn {
+  background-color: var(--status-amber-bg, #fffbeb);
+  border: 1px solid var(--status-amber-border, #fde68a);
+  color: var(--status-amber-text, #b45309);
+}
+
+.gps-diag-badge--fail {
+  background-color: var(--status-rose-bg, #fff1f2);
+  border: 1px solid var(--status-rose-border, #fecdd3);
+  color: var(--status-rose-text, #be123c);
+}
+
+.gps-diag-value {
+  font-weight: 600;
+  color: var(--p-surface-800, #1e293b);
+  font-size: 0.8125rem;
+}
+
+.gps-diag-value--mono {
+  font-family: var(--font-family-mono, monospace);
+  font-size: 0.75rem;
+}
+
+.gps-diag-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  background-color: var(--status-amber-bg, #fffbeb);
+  border: 1px solid var(--status-amber-border, #fde68a);
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  color: var(--status-amber-text, #b45309);
+  font-size: 0.8125rem;
+}
+
+.gps-diag-alert i {
+  font-size: 1.125rem;
+  margin-top: 0.125rem;
+}
+
+.gps-diag-alert-title {
+  font-weight: 700;
+  margin-bottom: 0.125rem;
+}
+
+.gps-diag-alert-body {
+  line-height: 1.4;
+}
+
+.gps-diag-tips {
+  background-color: var(--p-surface-50, #f8fafc);
+  border: 1px solid var(--p-surface-200, #e2e8f0);
+  border-radius: var(--chmsu-border-radius-md, 8px);
+  padding: 0.875rem 1rem;
+}
+
+.gps-diag-tips-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--p-surface-800, #1e293b);
+  margin: 0 0 0.5rem 0;
+}
+
+.gps-diag-tips-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 0.75rem;
+  color: var(--p-surface-600, #475569);
+  line-height: 1.5;
+}
+
+.gps-diag-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  width: 100%;
+}
+

@@ -95,9 +95,11 @@ export class SectionBuilderComponent implements OnInit, OnDestroy {
 
   // RBAC permissions
   readonly isAdmin = computed(() => this.auth.hasRole('ADMIN'));
+  readonly isDean = computed(() => this.auth.hasRole('DEAN'));
   readonly isChairperson = computed(() => this.auth.hasRole('CHAIRPERSON'));
   readonly canOverrideWorkload = computed(() => this.auth.hasAnyRole(['ADMIN', 'DEAN']));
-  readonly canAddSchedule = computed(() => this.auth.hasAnyRole(['ADMIN', 'DEAN', 'CHAIRPERSON']));
+  readonly canAddSchedule = computed(() => this.auth.hasAnyRole(['ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON']));
+  readonly canManageTerm = computed(() => this.auth.hasAnyRole(['ADMIN', 'SUPER_ADMIN', 'REGISTRAR']));
 
   // Modals visibility
   readonly isCreateModalVisible = signal<boolean>(false);
@@ -162,6 +164,9 @@ export class SectionBuilderComponent implements OnInit, OnDestroy {
     const progs = this.store.programs();
     if (this.isChairperson() && user?.programId) {
       return progs.filter(p => p.id === user.programId);
+    }
+    if (this.isDean() && user?.collegeId) {
+      return progs.filter(p => p.collegeId === user.collegeId || p.departmentId === user.collegeId);
     }
     return progs;
   });
@@ -594,6 +599,10 @@ export class SectionBuilderComponent implements OnInit, OnDestroy {
     this.sectionForm.get('programCode')?.valueChanges.subscribe(updateSectionCode);
     this.sectionForm.get('yearLevel')?.valueChanges.subscribe(updateSectionCode);
     this.sectionForm.get('sectionLetter')?.valueChanges.subscribe(updateSectionCode);
+
+    if (this.isChairperson()) {
+      this.sectionForm.get('programCode')?.disable();
+    }
 
     this.sectionForm.valueChanges.subscribe(val => {
       this.formSlots.set(val?.scheduleSlots || []);

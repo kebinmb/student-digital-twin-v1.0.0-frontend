@@ -47,6 +47,12 @@ export const routes: Routes = [
     title: 'Access Restricted — Student Digital Twin'
   },
   {
+    path: 'camera-test',
+    loadComponent: () =>
+      import('./features/dev/camera-test/camera-test.component').then(m => m.CameraTestComponent),
+    title: 'Camera & Secure Context Diagnostic Tool — SDT'
+  },
+  {
     path: 'dashboard',
     loadComponent: () =>
       import('./features/dashboard/dashboard-layout/dashboard-layout.component').then(m => m.DashboardLayoutComponent),
@@ -150,7 +156,7 @@ export const routes: Routes = [
       },
       {
         path: 'analytics/qr-attendance',
-        canActivate: [roleGuard(['ADMIN', 'SUPER_ADMIN', 'FACULTY', 'STUDENT'])],
+        canActivate: [roleGuard(['ADMIN', 'SUPER_ADMIN', 'FACULTY', 'DEAN', 'CHAIRPERSON', 'STUDENT'])],
         loadComponent: () =>
           import('./features/analytics/qr-attendance/qr-attendance.component').then(m => m.QrAttendanceScannerComponent)
       },

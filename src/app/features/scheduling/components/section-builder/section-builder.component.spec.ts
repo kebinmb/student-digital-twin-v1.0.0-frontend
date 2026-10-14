@@ -169,4 +169,78 @@ describe('SectionBuilderComponent', () => {
     component.closeEditMaxHoursModal();
     expect(component.isEditMaxHoursModalVisible()).toBe(false);
   });
+
+  it('should verify canAddSchedule allows REGISTRAR, ADMIN, SUPER_ADMIN, DEAN, and CHAIRPERSON', () => {
+    const auth = component.auth;
+    const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+    const payload = btoa(JSON.stringify({
+      sub: '55',
+      username: 'registrar_user',
+      email: 'registrar@chmsu.edu.ph',
+      roles: ['REGISTRAR']
+    }));
+    const fakeToken = `${header}.${payload}.signature`;
+    auth.setAccessToken(fakeToken);
+
+    expect(auth.hasAnyRole(['ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON'])).toBe(true);
+    expect(component.canAddSchedule()).toBe(true);
+
+    auth.clearAuth();
+  });
+
+  it('should correctly scope programOptions for Chairperson', () => {
+    const auth = component.auth;
+    vi.spyOn(component, 'isChairperson').mockReturnValue(true);
+    vi.spyOn(auth, 'currentUser').mockReturnValue({
+      id: 99,
+      username: 'chair_it',
+      programId: 10
+    } as any);
+
+    component.store.programs.set([
+      { id: 10, code: 'BSIT', name: 'BS Information Technology' } as any,
+      { id: 20, code: 'BSCS', name: 'BS Computer Science' } as any
+    ]);
+
+    const scoped = component.programOptions();
+    expect(scoped.length).toBe(1);
+    expect(scoped[0].id).toBe(10);
+    expect(scoped[0].code).toBe('BSIT');
+  });
+
+  it('should correctly scope programOptions for Dean', () => {
+    const auth = component.auth;
+    vi.spyOn(component, 'isDean').mockReturnValue(true);
+    vi.spyOn(component, 'isChairperson').mockReturnValue(false);
+    vi.spyOn(auth, 'currentUser').mockReturnValue({
+      id: 88,
+      username: 'dean_ccs',
+      collegeId: 5
+    } as any);
+
+    component.store.programs.set([
+      { id: 10, collegeId: 5, code: 'BSIT', name: 'BS Information Technology' } as any,
+      { id: 20, collegeId: 5, code: 'BSCS', name: 'BS Computer Science' } as any,
+      { id: 30, collegeId: 9, code: 'BSCE', name: 'BS Civil Engineering' } as any
+    ]);
+
+    const scoped = component.programOptions();
+    expect(scoped.length).toBe(2);
+    expect(scoped.map(p => p.code)).toEqual(['BSIT', 'BSCS']);
+  });
+
+  it('should allow REGISTRAR to manage term (canManageTerm)', () => {
+    const auth = component.auth;
+    const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+    const payload = btoa(JSON.stringify({
+      sub: '42',
+      preferred_username: 'registrar_jane',
+      roles: ['REGISTRAR']
+    }));
+    auth.setAccessToken(`${header}.${payload}.signature`);
+
+    expect(component.canManageTerm()).toBe(true);
+
+    auth.clearAuth();
+  });
 });

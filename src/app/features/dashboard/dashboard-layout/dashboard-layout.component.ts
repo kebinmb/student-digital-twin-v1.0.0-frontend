@@ -13,6 +13,7 @@ import { MenuItem } from 'primeng/api';
 import { AuthService } from '../../../core/service/authentication/auth-service';
 import { StudentProfileService } from '../../../core/services/student-profile.service';
 import { AcademicPeriodStore } from '../../../core/services/academic-period.store';
+import { TeachingAssignmentService } from '../../../core/services/teaching-assignment.service';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { SelectModule } from 'primeng/select';
@@ -57,6 +58,7 @@ export interface NavSection {
 export class DashboardLayoutComponent implements OnInit, OnDestroy {
   protected readonly authService = inject(AuthService);
   protected readonly periodStore = inject(AcademicPeriodStore);
+  protected readonly teachingService = inject(TeachingAssignmentService);
   private readonly router = inject(Router);
 
   // Global Academic Period
@@ -119,7 +121,7 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
         { label: 'Dashboard Overview', icon: 'pi pi-home', routerLink: '/dashboard', exact: true },
         { label: 'Student Self-Service', icon: 'pi pi-user-edit', routerLink: '/dashboard/portal/student', roles: ['SUPER_ADMIN', 'STUDENT'] },
         { label: 'Student Academic Insights', icon: 'pi pi-sparkles', routerLink: '/dashboard/analytics/digital-twin', roles: ['SUPER_ADMIN', 'ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE', 'STUDENT'] },
-        { label: 'QR Attendance Check-In', icon: 'pi pi-qrcode', routerLink: '/dashboard/analytics/qr-attendance', roles: ['SUPER_ADMIN', 'ADMIN', 'FACULTY', 'STUDENT'] }
+        { label: 'QR Attendance Check-In', icon: 'pi pi-qrcode', routerLink: '/dashboard/analytics/qr-attendance', roles: ['SUPER_ADMIN', 'ADMIN', 'FACULTY', 'DEAN', 'CHAIRPERSON', 'STUDENT'] }
       ]
     },
     {
@@ -171,10 +173,37 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
         ...section,
         items: section.items
           .filter(item => {
+            if (item.routerLink === '/dashboard/analytics/qr-attendance') {
+              const user = this.currentUser();
+              const rawRoles = user?.roles && user.roles.length > 0 ? user.roles : (user?.role ? [user.role] : []);
+              const normalizedRoles = rawRoles.map(r => r.replace(/^ROLE_/, '').toUpperCase());
+
+              // 1. Students always see check-in
+              if (normalizedRoles.includes('STUDENT')) return true;
+
+              // 2. Faculty members always see attendance
+              if (normalizedRoles.includes('FACULTY')) return true;
+
+              // 3. Dean or Chairperson ONLY see attendance if they hold assigned teaching schedules
+              if (normalizedRoles.includes('DEAN') || normalizedRoles.includes('CHAIRPERSON')) {
+                return this.teachingService.hasTeachingAssignments();
+              }
+
+              // 4. Non-teaching administrative roles (SUPER_ADMIN, ADMIN, REGISTRAR, CASHIER, GUIDANCE, ACCOUNTANT) do not see attendance
+              return false;
+            }
+
             if (!item.roles || item.roles.length === 0) return true;
             return this.authService.hasAnyRole(item.roles);
           })
           .map(item => {
+            if (item.routerLink === '/dashboard/analytics/qr-attendance') {
+              let label = 'QR Attendance Check-In';
+              if (role.includes('FACULTY') || role.includes('DEAN') || role.includes('CHAIRPERSON')) {
+                label = 'Take QR Attendance';
+              }
+              return { ...item, label };
+            }
             if (item.routerLink === '/dashboard/grades') {
               let label = 'Section Gradebook';
               if (role.includes('REGISTRAR')) {
